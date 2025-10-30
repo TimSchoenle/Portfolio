@@ -100,7 +100,7 @@ importers:
         version: 1.2.0(next@16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(vue-router@4.6.3(vue@3.5.22(typescript@5.0.2)))(vue@3.5.22(typescript@5.0.2))
       autoprefixer:
         specifier: ^10.4.20
-        version: 10.4.21(postcss@8.5.0)
+        version: 10.4.21(postcss@8.5.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -206,7 +206,7 @@ importers:
         version: 16.0.1(@typescript-eslint/parser@8.0.0(eslint@9.0.0)(typescript@5.0.2))(eslint@9.0.0)(typescript@5.0.2)
       postcss:
         specifier: ^8.5
-        version: 8.5.0
+        version: 8.5.6
       prettier:
         specifier: ^3.4.2
         version: 3.6.2
@@ -3025,10 +3025,6 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.0:
-    resolution: {integrity: sha512-27VKOqrYfPncKA2NrFOVhP5MGAfHKLYn/Q0mz9cNQyRAKYi3VNHwYU2qKKqPCqgBmeeJ0uAFB56NumXZ5ZReXg==}
-    engines: {node: ^10 || ^12 || >=14}
-
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
@@ -4792,7 +4788,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.1.16
       '@tailwindcss/oxide': 4.1.16
-      postcss: 8.5.0
+      postcss: 8.5.6
       tailwindcss: 4.1.16
 
   '@tybys/wasm-util@0.10.1':
@@ -5275,14 +5271,14 @@ snapshots:
 
   async-function@1.0.0: {}
 
-  autoprefixer@10.4.21(postcss@8.5.0):
+  autoprefixer@10.4.21(postcss@8.5.6):
     dependencies:
       browserslist: 4.27.0
       caniuse-lite: 1.0.30001751
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
-      postcss: 8.5.0
+      postcss: 8.5.6
       postcss-value-parser: 4.2.0
 
   available-typed-arrays@1.0.7:
@@ -6902,12 +6898,6 @@ snapshots:
   postcss-value-parser@4.2.0: {}
 
   postcss@8.4.31:
-    dependencies:
-      nanoid: 3.3.11
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
-  postcss@8.5.0:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
