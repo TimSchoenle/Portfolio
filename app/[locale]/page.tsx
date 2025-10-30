@@ -8,8 +8,9 @@ import { ContactSection } from "@/components/contact-section"
 import { getDictionary } from "@/lib/get-dictionary"
 import type { Locale } from "@/lib/i18n-config"
 
-export default async function Home({ params }: { params: { locale: Locale } }) {
-  const dict = await getDictionary(params.locale)
+export default async function Home({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = await params
+  const dict = await getDictionary(locale)
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -43,7 +44,7 @@ export default async function Home({ params }: { params: { locale: Locale } }) {
           <ProjectsSection dict={dict} />
           <ExperienceSection dict={dict} />
           <TestimonialsSection dict={dict} />
-          <ContactSection dict={dict} locale={params.locale} />
+          <ContactSection dict={dict} locale={locale} />
         </div>
       </main>
     </>

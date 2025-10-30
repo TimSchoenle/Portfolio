@@ -7,5 +7,10 @@ const dictionaries = {
 }
 
 export const getDictionary = async (locale: Locale) => {
+  if (!(locale in dictionaries)) {
+    console.error(`Invalid locale: ${locale}, falling back to 'en'`)
+    return dictionaries.en()
+  }
+
   return dictionaries[locale]()
 }

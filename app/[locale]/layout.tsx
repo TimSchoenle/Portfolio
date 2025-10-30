@@ -96,17 +96,18 @@ export default async function RootLayout({
   params,
 }: Readonly<{
   children: React.ReactNode
-  params: { locale: Locale }
+  params: Promise<{ locale: Locale }>
 }>) {
-  const dict = await getDictionary(params.locale)
+  const { locale } = await params
+  const dict = await getDictionary(locale)
 
   return (
-    <html lang={params.locale} className="dark">
+    <html lang={locale} className="dark">
       <body className={`font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">
           <ThemeToggle />
-          <LanguageSwitcher currentLocale={params.locale} />
-          <CommandPalette locale={params.locale} dict={dict} />
+          <LanguageSwitcher currentLocale={locale} />
+          <CommandPalette locale={locale} dict={dict} />
           <EasterEggs />
           {children}
           <CookieBanner translations={dict.cookies} />
