@@ -5,7 +5,7 @@ import '../globals.css'
 import {
   Geist,
   Geist_Mono,
-  Source_Serif_4 as V0_Font_Source_Serif_4,
+  Source_Serif_4,
 } from 'next/font/google'
 import { locales, type Locale } from '@/lib/i18n-config'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -16,17 +16,20 @@ import { CommandPalette } from '@/components/command-palette'
 import { EasterEggs } from '@/components/easter-eggs'
 import { getDictionary } from '@/lib/get-dictionary'
 
-const _geist = Geist({
+const geist = Geist({
   subsets: ['latin'],
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-geist',
 })
-const _geistMono = Geist_Mono({
+const geistMono = Geist_Mono({
   subsets: ['latin'],
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-geist-mono',
 })
-const _sourceSerif_4 = V0_Font_Source_Serif_4({
+const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-source-serif',
 })
 
 export const metadata: Metadata = {
@@ -91,7 +94,6 @@ export const metadata: Metadata = {
   verification: {
     google: 'your-google-verification-code',
   },
-  generator: 'v0.app',
 }
 
 export async function generateStaticParams() {
@@ -110,7 +112,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="dark">
-      <body className={`font-sans antialiased`}>
+      <body className={`${geist.variable} ${geistMono.variable} ${sourceSerif.variable} font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">
           <ThemeToggle />
           <LanguageSwitcher currentLocale={locale} />

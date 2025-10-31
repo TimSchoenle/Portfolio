@@ -9,14 +9,15 @@ import type { Metadata } from 'next'
 export async function generateMetadata({
   params,
 }: {
-  params: { locale: Locale }
+  params: Promise<{ locale: Locale }>
 }): Promise<Metadata> {
-  const dict = await getDictionary(params.locale)
+  const { locale } = await params
+  const dict = await getDictionary(locale)
 
   return {
     title: dict.imprint.title,
     description:
-      params.locale === 'de'
+      locale === 'de'
         ? 'Impressum und rechtliche Informationen für Tim - Software Developer Portfolio'
         : 'Imprint and legal information for Tim - Software Developer Portfolio',
     robots: {
@@ -29,14 +30,15 @@ export async function generateMetadata({
 export default async function ImprintPage({
   params,
 }: {
-  params: { locale: Locale }
+  params: Promise<{ locale: Locale }>
 }) {
-  const dict = await getDictionary(params.locale)
+  const { locale } = await params
+  const dict = await getDictionary(locale)
 
   return (
     <main className="bg-background min-h-screen px-4 py-12">
       <div className="mx-auto max-w-3xl">
-        <Link href={`/${params.locale}`}>
+        <Link href={`/${locale}`}>
           <Button variant="ghost" className="mb-8">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {dict.imprint.backHome}

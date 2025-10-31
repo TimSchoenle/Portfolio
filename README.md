@@ -1,30 +1,92 @@
-# Portfolio page creation
+# Portfolio - Tim (Timmi6790)
 
-_Automatically synced with your [v0.app](https://v0.app) deployments_
+Modern, performant portfolio website built with Next.js 15, TypeScript, and Tailwind CSS.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/tims-projects-769e9dc5/v0-portfolio-page-creation)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/vJQh9XT1zJg)
+## Features
 
-## Overview
+- 🌐 **Internationalization (i18n)**: Full support for English and German
+  Source_Serif_4,
+- 🚀 **Performance**: Server-side rendering with optimized caching
+- 🔄 **GitHub Integration**: Automatically fetches projects and contribution graphs
+- 🎯 **Type-Safe**: Fully typed with TypeScript including i18n dictionaries
+- 📱 **Responsive**: Mobile-first design that works on all devices
+- 🐳 **Docker**: Production-ready Docker setup included
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Tech Stack
 
-## Deployment
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI
+- **Icons**: Lucide React
+- **Package Manager**: pnpm
 
-Your project is live at:
+## Getting Started
 
-**[https://vercel.com/tims-projects-769e9dc5/v0-portfolio-page-creation](https://vercel.com/tims-projects-769e9dc5/v0-portfolio-page-creation)**
+### Prerequisites
 
-## Build your app
+- Node.js 18+ or Docker
+- pnpm (recommended) or npm
+- GitHub token (optional, for fetching project data)
 
-Continue building your app on:
+### Installation
 
-**[https://v0.app/chat/vJQh9XT1zJg](https://v0.app/chat/vJQh9XT1zJg)**
+```bash
+# Install dependencies
+pnpm install
 
-## How It Works
+# Run development server
+pnpm dev
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+```
+
+### Docker
+
+```bash
+# Build and run with Docker Compose
+pnpm docker:prod
+
+# Or build and run manually
+pnpm docker:build
+pnpm docker:run
+```
+
+### Environment Variables
+
+Create a `.env.local` file:
+
+```env
+GITHUB_TOKEN=your_github_token_here
+```
+
+## Project Structure
+
+```
+portfolio/
+├── app/              # Next.js app directory
+│   ├── [locale]/    # Localized routes
+│   └── api/         # API routes
+├── components/       # React components
+├── lib/             # Utility functions and configurations
+├── messages/        # i18n translation files
+└── public/          # Static assets
+```
+
+## Scripts
+
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
+- `pnpm lint:fix` - Fix ESLint errors
+- `pnpm format` - Format code with Prettier
+- `pnpm type-check` - Run TypeScript type checking
+
+## License
+
+MIT License - feel free to use this as a template for your own portfolio!

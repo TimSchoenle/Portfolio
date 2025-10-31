@@ -5,29 +5,29 @@ import './globals.css'
 import {
   Geist,
   Geist_Mono,
-  Geist as V0_Font_Geist,
-  Geist_Mono as V0_Font_Geist_Mono,
-  Source_Serif_4 as V0_Font_Source_Serif_4,
+  Source_Serif_4,
 } from 'next/font/google'
 
 // Initialize fonts
-const _geist = V0_Font_Geist({
+const geist = Geist({
   subsets: ['latin'],
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-geist',
 })
-const _geistMono = V0_Font_Geist_Mono({
+const geistMono = Geist_Mono({
   subsets: ['latin'],
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-geist-mono',
 })
-const _sourceSerif_4 = V0_Font_Source_Serif_4({
+const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-source-serif',
 })
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Tim - Software Developer Portfolio',
+  description: 'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
 }
 
 export default function RootLayout({
@@ -37,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>{children}</body>
+      <body className={`${geist.variable} ${geistMono.variable} ${sourceSerif.variable} font-sans antialiased`}>{children}</body>
     </html>
   )
 }

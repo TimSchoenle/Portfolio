@@ -2,10 +2,10 @@ import 'server-only'
 import type { Locale } from './i18n-config'
 import type { Dictionary } from './dictionary'
 
-const dictionaries: Record<Locale, () => Promise<Dictionary>> = {
-  en: () => import('@/messages/en.json').then((module) => module.default),
-  de: () => import('@/messages/de.json').then((module) => module.default),
-}
+const dictionaries = {
+  en: () => import('@/messages/en.json').then((module) => module.default as Dictionary),
+  de: () => import('@/messages/de.json').then((module) => module.default as Dictionary),
+} satisfies Record<Locale, () => Promise<Dictionary>>
 
 export const getDictionary = async (locale: Locale): Promise<Dictionary> => {
   if (!(locale in dictionaries)) {
