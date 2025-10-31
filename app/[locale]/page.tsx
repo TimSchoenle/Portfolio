@@ -12,6 +12,7 @@ import {
   getFeaturedProjects,
   getUserStats,
 } from '@/lib/github'
+import { siteConfig } from '@/lib/config'
 
 export default async function Home({
   params,
@@ -21,26 +22,23 @@ export default async function Home({
   const { locale } = await params
   const dict = await getDictionary(locale)
 
-  const featuredRepos = [
-    'cloudflare-access-webhook-redirect',
-    's3-bucket-perma-link',
-    'helm-charts',
-  ]
+  // Fetch GitHub data in parallel for better performance
   const [projects, stats, contributionGraph] = await Promise.all([
-    getFeaturedProjects('Timmi6790', featuredRepos),
-    getUserStats('Timmi6790'),
-    fetchContributionGraph('Timmi6790'),
+    getFeaturedProjects(siteConfig.githubUsername, siteConfig.featuredRepos),
+    getUserStats(siteConfig.githubUsername),
+    fetchContributionGraph(siteConfig.githubUsername),
   ])
 
+  // Structured data for SEO
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: 'Tim',
-    alternateName: 'Timmi6790',
-    url: 'https://timmi6790.de',
-    image: 'https://timmi6790.de/og-image.jpg',
-    sameAs: ['https://github.com/Timmi6790'],
-    jobTitle: 'Software Developer',
+    name: siteConfig.name,
+    alternateName: siteConfig.username,
+    url: siteConfig.url,
+    image: `${siteConfig.url}/og-image.jpg`,
+    sameAs: [siteConfig.github],
+    jobTitle: siteConfig.title,
     worksFor: {
       '@type': 'Organization',
       name: 'Independent',
@@ -49,7 +47,7 @@ export default async function Home({
       '@type': 'PostalAddress',
       addressCountry: 'DE',
     },
-    email: 'contact@timmi6790.de',
+    email: siteConfig.email,
     knowsAbout: [
       'Java',
       'Rust',

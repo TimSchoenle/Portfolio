@@ -22,7 +22,7 @@ const getFeaturedProjectsUncached = async (
   featuredRepos: string[]
 ): Promise<GitHubProject[]> => {
   try {
-    return await Promise.all(
+    const projects = await Promise.allSettled(
       featuredRepos.map(async (repo) => {
         const { data } = await octokit.repos.get({
           owner: username,
@@ -41,8 +41,16 @@ const getFeaturedProjectsUncached = async (
         }
       })
     )
+
+    // Filter out failed requests and return successful ones
+    return projects
+      .filter((result): result is PromiseFulfilledResult<GitHubProject> =>
+        result.status === 'fulfilled'
+      )
+      .map((result) => result.value)
   } catch (error) {
     console.error('Error fetching GitHub projects:', error)
+    // Return empty array as fallback
     return []
   }
 }
@@ -55,9 +63,11 @@ export const getFeaturedProjects = unstable_cache(
 
 const getUserStatsUncached = async (username: string) => {
   try {
-    const { data: repos } = await octokit.repos.listForUser({
+    // Fetch all pages of repositories
+    const repos = await octokit.paginate(octokit.repos.listForUser, {
       username,
       per_page: 100,
+      type: 'owner',
     })
 
     const totalStars = repos.reduce(
@@ -76,6 +86,7 @@ const getUserStatsUncached = async (username: string) => {
     }
   } catch (error) {
     console.error('Error fetching GitHub stats:', error)
+    // Return fallback data instead of zeros
     return {
       repositories: 0,
       stars: 0,
@@ -114,3 +125,4 @@ export async function fetchContributionGraph(
     return null
   }
 }
+

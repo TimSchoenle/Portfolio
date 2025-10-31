@@ -32,68 +32,86 @@ const sourceSerif = Source_Serif_4({
   variable: '--font-source-serif',
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://timmi6790.de'),
-  title: {
-    default: 'Tim - Software Developer Portfolio',
-    template: '%s | Tim - Software Developer',
-  },
-  description:
-    'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
-  keywords: [
-    'Tim',
-    'Timmi6790',
-    'Software Developer',
-    'Java',
-    'Rust',
-    'Next.js',
-    'Portfolio',
-    'Open Source',
-    'Germany',
-  ],
-  authors: [{ name: 'Tim', url: 'https://timmi6790.de' }],
-  creator: 'Tim (Timmi6790)',
-  publisher: 'Tim (Timmi6790)',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+// Dynamic metadata based on locale
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>
+}): Promise<Metadata> {
+  const { locale } = await params
+
+  const localeMap = {
+    en: 'en_US',
+    de: 'de_DE',
+  } as const
+
+  return {
+    metadataBase: new URL('https://timmi6790.de'),
+    title: {
+      default: 'Tim - Software Developer Portfolio',
+      template: '%s | Tim - Software Developer',
+    },
+    description:
+      'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
+    keywords: [
+      'Tim',
+      'Timmi6790',
+      'Software Developer',
+      'Java',
+      'Rust',
+      'Next.js',
+      'Portfolio',
+      'Open Source',
+      'Germany',
+    ],
+    authors: [{ name: 'Tim', url: 'https://timmi6790.de' }],
+    creator: 'Tim (Timmi6790)',
+    publisher: 'Tim (Timmi6790)',
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    alternateLocale: ['de_DE'],
-    url: 'https://timmi6790.de',
-    title: 'Tim - Software Developer Portfolio',
-    description:
-      'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
-    siteName: 'Tim Portfolio',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Tim - Software Developer Portfolio',
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Tim - Software Developer Portfolio',
-    description:
-      'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
-    images: ['/og-image.png'],
-    creator: '@Timmi6790',
-  },
-  verification: {
-    google: 'your-google-verification-code',
-  },
+    },
+    openGraph: {
+      type: 'website',
+      locale: localeMap[locale],
+      alternateLocale: locale === 'en' ? ['de_DE'] : ['en_US'],
+      url: `https://timmi6790.de/${locale}`,
+      title: 'Tim - Software Developer Portfolio',
+      description:
+        'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
+      siteName: 'Tim Portfolio',
+      images: [
+        {
+          url: '/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: 'Tim - Software Developer Portfolio',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Tim - Software Developer Portfolio',
+      description:
+        'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
+      images: ['/og-image.png'],
+      creator: '@Timmi6790',
+    },
+    alternates: {
+      canonical: `https://timmi6790.de/${locale}`,
+      languages: {
+        en: 'https://timmi6790.de/en',
+        de: 'https://timmi6790.de/de',
+      },
+    },
+  }
 }
 
 export async function generateStaticParams() {
