@@ -3,23 +3,23 @@
 import { Card } from '@/components/ui/card'
 import { Quote } from 'lucide-react'
 import Image from 'next/image'
-import type { TestimonialsSectionProps } from '@/types/testimonials-section'
+import { TestimonialsDictionary } from '@/lib/dictionary'
 
-export function TestimonialsSection({ dict }: TestimonialsSectionProps) {
+export function TestimonialsSection({ dict }: {dict: TestimonialsDictionary}) {
   return (
     <section className="from-muted/20 to-background min-h-screen bg-gradient-to-b px-4 py-20 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <h2 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-            {dict.testimonials.title}
+            {dict.title}
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            {dict.testimonials.subtitle}
+            {dict.subtitle}
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {dict.testimonials.items.map((testimonial: any, index: number) => (
+          {dict.items.map((testimonial: any, index: number) => (
             <Card
               key={index}
               className="group hover:border-primary/50 relative overflow-hidden border-2 p-8 transition-all duration-300 hover:shadow-2xl"

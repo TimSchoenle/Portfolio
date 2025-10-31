@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ExternalLink, Github, Star, GitFork } from 'lucide-react'
 import Image from 'next/image'
 import { GitHubProject } from '@/lib/github'
+import { ProjectsDictionary } from '@/lib/dictionary'
 
 interface Project {
   name: string
@@ -19,7 +20,7 @@ interface Project {
 }
 
 interface ProjectsSectionProps {
-  dict: any
+  dict: ProjectsDictionary
   projects: GitHubProject[]
   stats: {
     repositories: number
@@ -43,10 +44,10 @@ export function ProjectsSection({
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <h2 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-            {dict.projects.title}
+            {dict.title}
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            {dict.projects.subtitle}
+            {dict.subtitle}
           </p>
         </div>
 
@@ -60,7 +61,7 @@ export function ProjectsSection({
               <div>
                 <p className="text-3xl font-bold">{stats.repositories}</p>
                 <p className="text-muted-foreground text-sm">
-                  {dict.projects.stats.repositories}
+                  {dict.stats.repositories}
                 </p>
               </div>
             </div>
@@ -74,7 +75,7 @@ export function ProjectsSection({
               <div>
                 <p className="text-3xl font-bold">{stats.stars}</p>
                 <p className="text-muted-foreground text-sm">
-                  {dict.projects.stats.stars}
+                  {dict.stats.stars}
                 </p>
               </div>
             </div>
@@ -88,7 +89,7 @@ export function ProjectsSection({
               <div>
                 <p className="text-3xl font-bold">{stats.forks}</p>
                 <p className="text-muted-foreground text-sm">
-                  {dict.projects.stats.forks}
+                  {dict.stats.forks}
                 </p>
               </div>
             </div>
@@ -168,7 +169,7 @@ export function ProjectsSection({
         <div className="mt-16">
           <Card className="overflow-hidden p-6">
             <h3 className="mb-6 text-2xl font-bold">
-              {dict.projects.contributions}
+              {dict.contributions}
             </h3>
             <div className="w-full overflow-x-auto">
               {contributionGraph ? (
@@ -197,7 +198,7 @@ export function ProjectsSection({
               target="_blank"
               rel="noopener noreferrer"
             >
-              {dict.projects.viewAll}
+              {dict.viewAll}
               <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
           </Button>

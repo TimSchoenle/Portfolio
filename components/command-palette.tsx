@@ -21,10 +21,11 @@ import {
   Mail,
   FileText,
 } from 'lucide-react'
+import { CommandPaletteDictionary, Dictionary } from '@/lib/dictionary'
 
 interface CommandPaletteProps {
   locale: string
-  dict: any
+  dict: Dictionary
 }
 
 export function CommandPalette({ locale, dict }: CommandPaletteProps) {

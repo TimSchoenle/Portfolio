@@ -1,13 +1,14 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { BookOpen, Code2 } from 'lucide-react'
+import { AboutDictionary } from '@/lib/dictionary'
 
-export function AboutSection({ dict }: { dict: any }) {
+export function AboutSection({ about }: { about: AboutDictionary }) {
   return (
     <section id="about" className="px-4 py-20">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-12 text-center">
           <h2 className="text-foreground mb-3 text-4xl font-bold">
-            {dict.about.title}
+            {about.title}
           </h2>
           <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
         </div>
@@ -20,19 +21,19 @@ export function AboutSection({ dict }: { dict: any }) {
               </div>
               <div>
                 <h3 className="text-foreground mb-2 text-xl font-semibold">
-                  {dict.about.learning.title}
+                  {about.learning.title}
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {dict.about.learning.description
-                    .replace('{rust}', dict.about.learning.rust)
-                    .replace('{nextjs}', dict.about.learning.nextjs)
-                    .split(dict.about.learning.rust)
+                  {about.learning.description
+                    .replace('{rust}', about.learning.rust)
+                    .replace('{nextjs}', about.learning.nextjs)
+                    .split(about.learning.rust)
                     .map((part: string, i: number) => (
                       <span key={i}>
                         {part}
                         {i === 0 && (
                           <span className="text-foreground font-medium">
-                            {dict.about.learning.rust}
+                            {about.learning.rust}
                           </span>
                         )}
                       </span>
@@ -49,17 +50,17 @@ export function AboutSection({ dict }: { dict: any }) {
               </div>
               <div>
                 <h3 className="text-foreground mb-2 text-xl font-semibold">
-                  {dict.about.expertise.title}
+                  {about.expertise.title}
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {dict.about.expertise.description
+                  {about.expertise.description
                     .split('{java}')
                     .map((part: string, i: number) => (
                       <span key={i}>
                         {part}
                         {i === 0 && (
                           <span className="text-foreground font-medium">
-                            {dict.about.expertise.java}
+                            {about.expertise.java}
                           </span>
                         )}
                       </span>

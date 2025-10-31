@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Briefcase, Calendar } from 'lucide-react'
 import Image from 'next/image'
+import { ExperienceDictionary } from '@/lib/dictionary'
 
 interface Experience {
   company: string
@@ -10,15 +11,15 @@ interface Experience {
   description: string
 }
 
-export function ExperienceSection({ dict }: { dict: any }) {
-  const experiences: Experience[] = dict.experience.items
+export function ExperienceSection({ dict }: { dict: ExperienceDictionary }) {
+  const experiences: Experience[] = dict.items
 
   return (
     <section className="px-4 py-20">
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-12 text-center">
           <h2 className="text-foreground mb-3 text-4xl font-bold">
-            {dict.experience.title}
+            {dict.title}
           </h2>
           <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
         </div>

@@ -135,20 +135,6 @@
     "downloadResume": "Lebenslauf herunterladen",
     "imprint": "Impressum"
   },
-  "contactForm": {
-    "name": "Name",
-    "namePlaceholder": "Dein Name",
-    "email": "E-Mail",
-    "emailPlaceholder": "deine.email@beispiel.de",
-    "subject": "Betreff",
-    "subjectPlaceholder": "Worum geht es?",
-    "message": "Nachricht",
-    "messagePlaceholder": "Deine Nachricht...",
-    "send": "Nachricht senden",
-    "sending": "Wird gesendet...",
-    "success": "Nachricht erfolgreich gesendet! Ich melde mich bald bei dir.",
-    "error": "Nachricht konnte nicht gesendet werden. Bitte versuche es erneut oder schreibe mir direkt eine E-Mail."
-  },
   "imprint": {
     "title": "Impressum",
     "backHome": "Zurück zur Startseite",

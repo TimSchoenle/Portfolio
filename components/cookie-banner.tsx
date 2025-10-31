@@ -4,23 +4,10 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { X } from 'lucide-react'
+import { CookiesDictionary } from '@/lib/dictionary'
 
-interface CookieBannerProps {
-  translations: {
-    title: string
-    description: string
-    acceptAll: string
-    rejectAll: string
-    customize: string
-    essential: string
-    essentialDesc: string
-    analytics: string
-    analyticsDesc: string
-    save: string
-  }
-}
 
-export function CookieBanner({ translations }: CookieBannerProps) {
+export function CookieBanner({ translations }: { translations: CookiesDictionary }) {
   const [showBanner, setShowBanner] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
   const [analytics, setAnalytics] = useState(false)

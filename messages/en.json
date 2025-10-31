@@ -128,28 +128,12 @@
   "contact": {
     "title": "Get In Touch",
     "infoTitle": "Contact Information",
-    "formTitle": "Send Me a Message",
     "email": "Email",
     "github": "GitHub",
     "location": "Location",
     "locationValue": "Germany",
-    "sendEmail": "Send me an email",
     "downloadResume": "Download Resume",
     "imprint": "Impressum"
-  },
-  "contactForm": {
-    "name": "Name",
-    "namePlaceholder": "Your name",
-    "email": "Email",
-    "emailPlaceholder": "your.email@example.com",
-    "subject": "Subject",
-    "subjectPlaceholder": "What is this about?",
-    "message": "Message",
-    "messagePlaceholder": "Your message...",
-    "send": "Send Message",
-    "sending": "Sending...",
-    "success": "Message sent successfully! I'll get back to you soon.",
-    "error": "Failed to send message. Please try again or email me directly."
   },
   "imprint": {
     "title": "Impressum",

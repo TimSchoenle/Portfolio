@@ -66,19 +66,19 @@ export default async function Home({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="bg-background h-screen snap-y snap-mandatory overflow-y-scroll">
-        <HeroSection dict={dict} />
+        <HeroSection dict={dict.hero} />
         <div className="snap-start">
-          <AboutSection dict={dict} />
-          <SkillsSection dict={dict} />
+          <AboutSection about={dict.about} />
+          <SkillsSection dict={dict.skills} />
           <ProjectsSection
-            dict={dict}
+            dict={dict.projects}
             projects={projects}
             stats={stats}
             contributionGraph={contributionGraph}
           />
-          <ExperienceSection dict={dict} />
-          <TestimonialsSection dict={dict} />
-          <ContactSection dict={dict} locale={locale} />
+          <ExperienceSection dict={dict.experience} />
+          <TestimonialsSection dict={dict.testimonials} />
+          <ContactSection dict={dict.contact} locale={locale} />
         </div>
       </main>
     </>

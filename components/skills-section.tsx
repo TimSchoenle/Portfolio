@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SkillsDictionary } from '@/lib/dictionary'
 
 const skills = {
   expertise: ['Java', 'Spring Boot', 'Maven', 'Gradle'],
@@ -7,7 +8,7 @@ const skills = {
   tools: ['Git', 'GitHub', 'Docker', 'Linux'],
 }
 
-export function SkillsSection({ dict }: { dict: any }) {
+export function SkillsSection({ dict }: { dict: SkillsDictionary }) {
   return (
     <section id="skills" className="bg-muted/30 relative px-4 py-20">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
@@ -15,7 +16,7 @@ export function SkillsSection({ dict }: { dict: any }) {
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-12 text-center">
           <h2 className="text-foreground mb-3 text-4xl font-bold">
-            {dict.skills.title}
+            {dict.title}
           </h2>
           <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
         </div>
@@ -25,7 +26,7 @@ export function SkillsSection({ dict }: { dict: any }) {
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
                 <div className="bg-primary h-2 w-2 rounded-full" />
-                {dict.skills.expertise}
+                {dict.expertise}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -48,7 +49,7 @@ export function SkillsSection({ dict }: { dict: any }) {
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
                 <div className="bg-primary h-2 w-2 rounded-full" />
-                {dict.skills.learning}
+                {dict.learning}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -71,7 +72,7 @@ export function SkillsSection({ dict }: { dict: any }) {
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
                 <div className="bg-primary h-2 w-2 rounded-full" />
-                {dict.skills.tools}
+                {dict.tools}
               </CardTitle>
             </CardHeader>
             <CardContent>
