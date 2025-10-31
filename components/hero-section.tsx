@@ -1,28 +1,36 @@
-import { Button } from "@/components/ui/button"
-import { Mail, Github, ArrowDown } from "lucide-react"
+import { Button } from '@/components/ui/button'
+import { Mail, Github, ArrowDown } from 'lucide-react'
 
 export function HeroSection({ dict }: { dict: any }) {
   return (
-    <section className="relative flex h-screen min-h-screen items-center justify-center px-4 py-20 snap-start">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+    <section className="relative flex h-screen min-h-screen snap-start items-center justify-center px-4 py-20">
+      <div className="from-primary/5 absolute inset-0 -z-10 bg-gradient-to-b via-transparent to-transparent" />
 
       <div className="max-w-4xl text-center">
-        <h1 className="mb-6 text-balance text-5xl font-bold tracking-tight text-foreground md:text-7xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
-          {dict.hero.greeting}{" "}
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+        <h1 className="text-foreground animate-in fade-in slide-in-from-bottom-4 mb-6 text-5xl font-bold tracking-tight text-balance duration-1000 md:text-7xl">
+          {dict.hero.greeting}{' '}
+          <span className="from-primary to-primary/60 bg-gradient-to-r bg-clip-text text-transparent">
             {dict.hero.name}
           </span>
         </h1>
-        <p className="mb-3 text-pretty text-xl text-muted-foreground md:text-2xl animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
+        <p className="text-muted-foreground animate-in fade-in slide-in-from-bottom-4 mb-3 text-xl text-pretty delay-150 duration-1000 md:text-2xl">
           {dict.hero.title}
         </p>
-        <p className="mb-10 text-lg text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+        <p className="text-muted-foreground animate-in fade-in slide-in-from-bottom-4 mb-10 text-lg delay-300 duration-1000">
           {dict.hero.location} • {dict.hero.tagline}
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
-          <Button asChild size="lg" className="group shadow-lg hover:shadow-xl transition-all">
-            <a href="https://github.com/Timmi6790" target="_blank" rel="noopener noreferrer">
+        <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-wrap items-center justify-center gap-4 delay-500 duration-1000">
+          <Button
+            asChild
+            size="lg"
+            className="group shadow-lg transition-all hover:shadow-xl"
+          >
+            <a
+              href="https://github.com/Timmi6790"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Github className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
               {dict.hero.github}
             </a>
@@ -31,7 +39,7 @@ export function HeroSection({ dict }: { dict: any }) {
             asChild
             variant="outline"
             size="lg"
-            className="group shadow-md hover:shadow-lg transition-all bg-transparent"
+            className="group bg-transparent shadow-md transition-all hover:shadow-lg"
           >
             <a href="mailto:contact@timmi6790.de">
               <Mail className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
@@ -40,8 +48,8 @@ export function HeroSection({ dict }: { dict: any }) {
           </Button>
         </div>
 
-        <div className="mt-16 animate-in fade-in duration-1000 delay-700">
-          <ArrowDown className="mx-auto h-6 w-6 text-muted-foreground animate-bounce" />
+        <div className="animate-in fade-in mt-16 delay-700 duration-1000">
+          <ArrowDown className="text-muted-foreground mx-auto h-6 w-6 animate-bounce" />
         </div>
       </div>
     </section>

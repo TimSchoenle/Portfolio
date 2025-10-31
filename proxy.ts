@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import { locales, defaultLocale } from "@/lib/i18n-config"
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { locales, defaultLocale } from '@/lib/i18n-config'
 
 function getLocale(request: NextRequest): string {
-  const acceptLanguage = request.headers.get("accept-language")
+  const acceptLanguage = request.headers.get('accept-language')
   if (acceptLanguage) {
-    const preferredLocale = acceptLanguage.split(",")[0].split("-")[0]
+    const preferredLocale = acceptLanguage.split(',')[0].split('-')[0]
     if (locales.includes(preferredLocale as any)) {
       return preferredLocale
     }
@@ -16,12 +16,16 @@ function getLocale(request: NextRequest): string {
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  if (pathname.includes(".") || pathname.startsWith("/_next") || pathname.startsWith("/api")) {
+  if (
+    pathname.includes('.') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api')
+  ) {
     return NextResponse.next()
   }
 
   const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`,
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
   )
 
   if (pathnameIsMissingLocale) {
@@ -31,5 +35,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|favicon.ico).*)"],
+  matcher: ['/((?!_next|api|favicon.ico).*)'],
 }

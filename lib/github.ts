@@ -1,4 +1,4 @@
-import "server-only"
+import 'server-only'
 import { Octokit } from '@octokit/rest'
 import { unstable_cache } from 'next/cache'
 
@@ -17,7 +17,10 @@ export interface GitHubProject {
   topics: string[]
 }
 
-const getFeaturedProjectsUncached = async (username: string, featuredRepos: string[]): Promise<GitHubProject[]> => {
+const getFeaturedProjectsUncached = async (
+  username: string,
+  featuredRepos: string[]
+): Promise<GitHubProject[]> => {
   try {
     return await Promise.all(
       featuredRepos.map(async (repo) => {
@@ -39,7 +42,7 @@ const getFeaturedProjectsUncached = async (username: string, featuredRepos: stri
       })
     )
   } catch (error) {
-    console.error("Error fetching GitHub projects:", error)
+    console.error('Error fetching GitHub projects:', error)
     return []
   }
 }
@@ -57,8 +60,14 @@ const getUserStatsUncached = async (username: string) => {
       per_page: 100,
     })
 
-    const totalStars = repos.reduce((acc, repo) => acc + (repo.stargazers_count ?? 0), 0)
-    const totalForks = repos.reduce((acc, repo) => acc + (repo.forks_count ?? 0), 0)
+    const totalStars = repos.reduce(
+      (acc, repo) => acc + (repo.stargazers_count ?? 0),
+      0
+    )
+    const totalForks = repos.reduce(
+      (acc, repo) => acc + (repo.forks_count ?? 0),
+      0
+    )
 
     return {
       repositories: repos.length,
@@ -66,7 +75,7 @@ const getUserStatsUncached = async (username: string) => {
       forks: totalForks,
     }
   } catch (error) {
-    console.error("Error fetching GitHub stats:", error)
+    console.error('Error fetching GitHub stats:', error)
     return {
       repositories: 0,
       stars: 0,
@@ -81,11 +90,16 @@ export const getUserStats = unstable_cache(
   { revalidate: 86400 } // Cache for 24 hours
 )
 
-export async function fetchContributionGraph(username: string): Promise<string | null> {
+export async function fetchContributionGraph(
+  username: string
+): Promise<string | null> {
   try {
-    const response = await fetch(`https://ghchart.rshah.org/2563eb/${username}`, {
-      next: { revalidate: 86400 } // Cache for 24 hours
-    })
+    const response = await fetch(
+      `https://ghchart.rshah.org/2563eb/${username}`,
+      {
+        next: { revalidate: 86400 }, // Cache for 24 hours
+      }
+    )
 
     if (!response.ok) {
       console.error('Failed to fetch contribution graph')

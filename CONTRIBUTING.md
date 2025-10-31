@@ -82,10 +82,13 @@ Example: `feat: add dark mode toggle`
 ### Build and run with Docker:
 
 \`\`\`bash
+
 # Development
+
 pnpm docker:dev
 
 # Production
+
 pnpm docker:build
 pnpm docker:run
 \`\`\`
