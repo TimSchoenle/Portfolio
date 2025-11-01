@@ -58,6 +58,11 @@ export interface ProjectItem {
   topics: string[]
 }
 
+export interface GithubContribution {
+  title: string
+  totalAmount: string
+}
+
 export interface ProjectsDictionary {
   title: string
   subtitle: string
@@ -66,7 +71,7 @@ export interface ProjectsDictionary {
     stars: string
     forks: string
   }
-  contributions: string
+  contributions: GithubContribution
   viewAll: string
   featured: ProjectItem[]
 }

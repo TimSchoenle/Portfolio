@@ -8,7 +8,7 @@ import { ContactSection } from '@/components/contact-section'
 import { getDictionary } from '@/lib/get-dictionary'
 import type { Locale } from '@/lib/i18n-config'
 import {
-  fetchContributionGraph,
+  getContributionData,
   getFeaturedProjects,
   getUserStats,
 } from '@/lib/github'
@@ -80,10 +80,10 @@ export default async function Home({
   const dict = await getDictionary(locale)
 
   // Fetch GitHub data in parallel for better performance
-  const [projects, stats, contributionGraph] = await Promise.all([
+  const [projects, stats, contributionData] = await Promise.all([
     getFeaturedProjects(siteConfig.githubUsername, siteConfig.featuredRepos),
     getUserStats(siteConfig.githubUsername),
-    fetchContributionGraph(siteConfig.githubUsername),
+    getContributionData(siteConfig.githubUsername),
   ])
 
   return (
@@ -94,10 +94,12 @@ export default async function Home({
           <AboutSection about={dict.about} />
           <SkillsSection dict={dict.skills} />
           <ProjectsSection
+            locale={locale}
+            githubUsername={siteConfig.githubUsername}
             dict={dict.projects}
             projects={projects}
             stats={stats}
-            contributionGraph={contributionGraph}
+            contributionData={contributionData}
           />
           <ExperienceSection dict={dict.experience} />
           <TestimonialsSection dict={dict.testimonials} />

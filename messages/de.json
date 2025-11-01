@@ -55,7 +55,10 @@
       "stars": "Gesamt Sterne",
       "forks": "Gesamt Forks"
     },
-    "contributions": "GitHub-Beiträge",
+    "contributions": {
+      "title": "GitHub-Beiträge",
+      "totalAmount": "{count} beiträge im letzten Jahr"
+    },
     "viewAll": "Alle Projekte auf GitHub ansehen",
     "featured": [
       {

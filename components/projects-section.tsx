@@ -4,11 +4,14 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ExternalLink, Github, Star, GitFork } from 'lucide-react'
-import Image from 'next/image'
 import { type GitHubProject } from '@/lib/github'
 import { type ProjectsDictionary } from '@/lib/dictionary'
+import { ContributionGraph } from '@/components/contribution-graph'
+import { type Locale } from '@/lib/i18n-config'
 
 interface ProjectsSectionProps {
+  locale: Locale
+  githubUsername: string
   dict: ProjectsDictionary
   projects: GitHubProject[]
   stats: {
@@ -16,14 +19,20 @@ interface ProjectsSectionProps {
     stars: number
     forks: number
   }
-  contributionGraph: string | null
+  contributionData: Array<{
+    date: string
+    count: number
+    level: 0 | 1 | 2 | 3 | 4
+  }>
 }
 
 export function ProjectsSection({
+  locale,
+  githubUsername,
   dict,
   projects,
   stats,
-  contributionGraph,
+  contributionData,
 }: ProjectsSectionProps) {
   return (
     <section
@@ -156,32 +165,19 @@ export function ProjectsSection({
 
         {/* GitHub Contribution Graph */}
         <div className="mt-16">
-          <Card className="overflow-hidden p-6">
-            <h3 className="mb-6 text-2xl font-bold">{dict.contributions}</h3>
-            <div className="w-full overflow-x-auto">
-              {contributionGraph ? (
-                <Image
-                  src={contributionGraph}
-                  alt="GitHub Contribution Graph"
-                  width={800}
-                  height={150}
-                  className="h-auto w-full dark:invert"
-                  unoptimized
-                />
-              ) : (
-                <div className="text-muted-foreground flex h-32 w-full items-center justify-center">
-                  <p>Unable to load contribution graph</p>
-                </div>
-              )}
-            </div>
-          </Card>
+          <ContributionGraph
+            title={dict.contributions}
+            data={contributionData}
+            locale={locale}
+            dict={dict.contributions}
+          />
         </div>
 
         {/* View All Projects Button */}
         <div className="mt-12 text-center">
           <Button size="lg" asChild className="group">
             <a
-              href="https://github.com/Timmi6790"
+              href={`https://github.com/${githubUsername}`}
               target="_blank"
               rel="noopener noreferrer"
             >

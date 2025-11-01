@@ -102,27 +102,104 @@ export const getUserStats = unstable_cache(
   { revalidate: 86400 } // Cache for 24 hours
 )
 
-export async function fetchContributionGraph(
-  username: string
-): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `https://ghchart.rshah.org/2563eb/${username}`,
-      {
-        next: { revalidate: 86400 }, // Cache for 24 hours
-      }
-    )
+interface ContributionDay {
+  date: string
+  contributionCount: number
+  contributionLevel: string
+}
 
-    if (!response.ok) {
-      console.error('Failed to fetch contribution graph')
-      return null
+interface ContributionWeek {
+  contributionDays: ContributionDay[]
+}
+
+const getContributionDataUncached = async (
+  username: string
+): Promise<
+  Array<{ date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }>
+> => {
+  try {
+    const to = new Date().toISOString()
+    const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
+
+    const query = `
+      query($username: String!, $from: DateTime!, $to: DateTime!) {
+        user(login: $username) {
+          contributionsCollection(from: $from, to: $to) {
+            contributionCalendar {
+              totalContributions
+              weeks {
+                contributionDays {
+                  date
+                  contributionCount
+                  contributionLevel
+                }
+              }
+            }
+          }
+        }
+      }
+    `
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (process.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
     }
 
-    const arrayBuffer = await response.arrayBuffer()
-    const base64 = Buffer.from(arrayBuffer).toString('base64')
-    return `data:image/svg+xml;base64,${base64}`
+    const response = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ query, variables: { username, from, to } }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (data.errors) {
+      console.error('GraphQL errors:', data.errors)
+      return []
+    }
+
+    const weeks =
+      data.data?.user?.contributionsCollection?.contributionCalendar?.weeks ??
+      []
+
+    const levelMap: Record<string, 0 | 1 | 2 | 3 | 4> = {
+      NONE: 0,
+      FIRST_QUARTILE: 1,
+      SECOND_QUARTILE: 2,
+      THIRD_QUARTILE: 3,
+      FOURTH_QUARTILE: 4,
+    }
+
+    const days: Array<{
+      date: string
+      count: number
+      level: 0 | 1 | 2 | 3 | 4
+    }> = []
+    for (const week of weeks as ContributionWeek[]) {
+      for (const day of week.contributionDays) {
+        days.push({
+          date: day.date,
+          count: day.contributionCount,
+          level: levelMap[day.contributionLevel] ?? 0,
+        })
+      }
+    }
+
+    return days
   } catch (error) {
-    console.error('Error fetching contribution graph:', error)
-    return null
+    console.error('Error fetching contribution data:', error)
+    return []
   }
 }
+
+export const getContributionData = unstable_cache(
+  getContributionDataUncached,
+  ['contribution-data'],
+  { revalidate: 3600 } // Cache for 1 hour
+)
