@@ -5,14 +5,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ExternalLink, Github, Star, GitFork } from 'lucide-react'
 import { type GitHubProject } from '@/lib/github'
-import { type ProjectsDictionary } from '@/lib/dictionary'
 import { ContributionGraph } from '@/components/contribution-graph'
-import { type Locale } from '@/lib/i18n-config'
+import { useTranslations } from 'next-intl'
 
 interface ProjectsSectionProps {
-  locale: Locale
   githubUsername: string
-  dict: ProjectsDictionary
   projects: GitHubProject[]
   stats: {
     repositories: number
@@ -27,13 +24,13 @@ interface ProjectsSectionProps {
 }
 
 export function ProjectsSection({
-  locale,
   githubUsername,
-  dict,
   projects,
   stats,
   contributionData,
 }: ProjectsSectionProps) {
+  const t = useTranslations('projects')
+
   return (
     <section
       id="projects"
@@ -42,10 +39,10 @@ export function ProjectsSection({
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <h2 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-            {dict.title}
+            {t('title')}
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            {dict.subtitle}
+            {t('subtitle')}
           </p>
         </div>
 
@@ -59,7 +56,7 @@ export function ProjectsSection({
               <div>
                 <p className="text-3xl font-bold">{stats.repositories}</p>
                 <p className="text-muted-foreground text-sm">
-                  {dict.stats.repositories}
+                  {t('stats.repositories')}
                 </p>
               </div>
             </div>
@@ -73,7 +70,7 @@ export function ProjectsSection({
               <div>
                 <p className="text-3xl font-bold">{stats.stars}</p>
                 <p className="text-muted-foreground text-sm">
-                  {dict.stats.stars}
+                  {t('stats.stars')}
                 </p>
               </div>
             </div>
@@ -87,7 +84,7 @@ export function ProjectsSection({
               <div>
                 <p className="text-3xl font-bold">{stats.forks}</p>
                 <p className="text-muted-foreground text-sm">
-                  {dict.stats.forks}
+                  {t('stats.forks')}
                 </p>
               </div>
             </div>
@@ -165,12 +162,7 @@ export function ProjectsSection({
 
         {/* GitHub Contribution Graph */}
         <div className="mt-16">
-          <ContributionGraph
-            title={dict.contributions}
-            data={contributionData}
-            locale={locale}
-            dict={dict.contributions}
-          />
+          <ContributionGraph data={contributionData} />
         </div>
 
         {/* View All Projects Button */}
@@ -181,7 +173,7 @@ export function ProjectsSection({
               target="_blank"
               rel="noopener noreferrer"
             >
-              {dict.viewAll}
+              {t('viewAll')}
               <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
           </Button>

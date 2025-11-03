@@ -1,12 +1,12 @@
-import { locales } from '@/lib/i18n-config'
 import type { MetadataRoute } from 'next'
+import { routing } from '@/i18n/routing'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://timmi6790.de'
   const currentDate = new Date()
 
   // Generate sitemap entries for all locales
-  const routes = locales.flatMap((locale) => [
+  return routing.locales.flatMap((locale) => [
     {
       url: `${baseUrl}/${locale}`,
       lastModified: currentDate,
@@ -14,7 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
       alternates: {
         languages: Object.fromEntries(
-          locales.map((loc) => [loc, `${baseUrl}/${loc}`])
+          routing.locales.map((loc) => [loc, `${baseUrl}/${loc}`])
         ),
       },
     },
@@ -25,11 +25,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
       alternates: {
         languages: Object.fromEntries(
-          locales.map((loc) => [loc, `${baseUrl}/${loc}/imprint`])
+          routing.locales.map((loc) => [loc, `${baseUrl}/${loc}/imprint`])
         ),
       },
     },
   ])
-
-  return routes
 }

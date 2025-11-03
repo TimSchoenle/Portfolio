@@ -20,14 +20,14 @@ import {
   Mail,
   FileText,
 } from 'lucide-react'
-import { type Dictionary } from '@/lib/dictionary'
+import { useLocale, useTranslations } from 'next-intl'
 
-interface CommandPaletteProps {
-  locale: string
-  dict: Dictionary
-}
+export function CommandPalette() {
+  const paletteT = useTranslations('commandPalette')
+  const allT = useTranslations()
 
-export function CommandPalette({ locale, dict }: CommandPaletteProps) {
+  const locale = useLocale()
+
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -57,59 +57,53 @@ export function CommandPalette({ locale, dict }: CommandPaletteProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput
-        placeholder={
-          dict.commandPalette.placeholder || 'Type a command or search...'
-        }
-      />
+      <CommandInput placeholder={paletteT('placeholder')} />
       <CommandList>
-        <CommandEmpty>
-          {dict.commandPalette.noResults || 'No results found.'}
-        </CommandEmpty>
+        <CommandEmpty>{paletteT('noResults')}</CommandEmpty>
 
-        <CommandGroup heading={dict.commandPalette.navigation || 'Navigation'}>
+        <CommandGroup heading={paletteT('navigation')}>
           <CommandItem
             onSelect={() => runCommand(() => router.push(`/${locale}`))}
           >
             <Home className="mr-2 h-4 w-4" />
-            <span>{dict.commandPalette.home || 'Home'}</span>
+            <span>{paletteT('home')}</span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => router.push(`/${locale}/imprint`))}
           >
             <FileText className="mr-2 h-4 w-4" />
-            <span>{dict.commandPalette.imprint || 'Imprint'}</span>
+            <span>{allT('imprint.title')}</span>
           </CommandItem>
         </CommandGroup>
 
-        <CommandGroup heading={dict.commandPalette.sections || 'Sections'}>
+        <CommandGroup heading={paletteT('sections')}>
           <CommandItem
             onSelect={() => runCommand(() => scrollToSection('about'))}
           >
             <User className="mr-2 h-4 w-4" />
-            <span>{dict.about.title || 'About'}</span>
+            <span>{allT('about.title')}</span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => scrollToSection('skills'))}
           >
             <Code className="mr-2 h-4 w-4" />
-            <span>{dict.skills.title || 'Skills'}</span>
+            <span>{allT('skills.title')}</span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => scrollToSection('projects'))}
           >
             <Briefcase className="mr-2 h-4 w-4" />
-            <span>{dict.projects.title || 'Projects'}</span>
+            <span>{allT('projects.title')}</span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => scrollToSection('contact'))}
           >
             <MessageSquare className="mr-2 h-4 w-4" />
-            <span>{dict.contact.title || 'Contact'}</span>
+            <span>{allT('contact.title')}</span>
           </CommandItem>
         </CommandGroup>
 
-        <CommandGroup heading={dict.commandPalette.actions || 'Actions'}>
+        <CommandGroup heading={paletteT('actions')}>
           <CommandItem
             onSelect={() =>
               runCommand(() =>
@@ -118,7 +112,7 @@ export function CommandPalette({ locale, dict }: CommandPaletteProps) {
             }
           >
             <Github className="mr-2 h-4 w-4" />
-            <span>{dict.commandPalette.github || 'Open GitHub Profile'}</span>
+            <span>{paletteT('github')}</span>
           </CommandItem>
           <CommandItem
             onSelect={() =>
@@ -128,7 +122,7 @@ export function CommandPalette({ locale, dict }: CommandPaletteProps) {
             }
           >
             <Mail className="mr-2 h-4 w-4" />
-            <span>{dict.commandPalette.email || 'Send Email'}</span>
+            <span>{paletteT('email')}</span>
           </CommandItem>
         </CommandGroup>
       </CommandList>

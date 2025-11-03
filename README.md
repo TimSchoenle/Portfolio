@@ -32,26 +32,34 @@ Modern, performant portfolio website built with Next.js 15, TypeScript, and Tail
 ### Installation
 
 \`\`\`bash
+
 # Install dependencies
+
 pnpm install
 
 # Run development server
+
 pnpm dev
 
 # Build for production
+
 pnpm build
 
 # Start production server
+
 pnpm start
 \`\`\`
 
 ### Docker
 
 \`\`\`bash
+
 # Build and run with Docker Compose
+
 pnpm docker:prod
 
 # Or build and run manually
+
 pnpm docker:build
 pnpm docker:run
 \`\`\`
@@ -68,13 +76,13 @@ GITHUB_TOKEN=your_github_token_here
 
 \`\`\`
 portfolio/
-├── app/              # Next.js app directory
-│   ├── [locale]/    # Localized routes
-│   └── api/         # API routes
-├── components/       # React components
-├── lib/             # Utility functions and configurations
-├── messages/        # i18n translation files
-└── public/          # Static assets
+├── app/ # Next.js app directory
+│ ├── [locale]/ # Localized routes
+│ └── api/ # API routes
+├── components/ # React components
+├── lib/ # Utility functions and configurations
+├── messages/ # i18n translation files
+└── public/ # Static assets
 \`\`\`
 
 ## Scripts

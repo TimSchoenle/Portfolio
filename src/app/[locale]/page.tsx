@@ -1,18 +1,19 @@
-import { HeroSection } from "@/components/hero-section"
-import { AboutSection } from "@/components/about-section"
-import { SkillsSection } from "@/components/skills-section"
-import { ProjectsSection } from "@/components/projects-section"
-import { ExperienceSection } from "@/components/experience-section"
-import { TestimonialsSection } from "@/components/testimonials-section"
-import { ContactSection } from "@/components/contact-section"
-import { getContributionData, getFeaturedProjects, getUserStats } from "@/lib/github"
-import { siteConfig } from "@/lib/config"
-import type { Metadata } from "next"
-import { getTranslations } from "next-intl/server"
+import { HeroSection } from '@/components/hero-section'
+import { AboutSection } from '@/components/about-section'
+import { SkillsSection } from '@/components/skills-section'
+import { ProjectsSection } from '@/components/projects-section'
+import { ExperienceSection } from '@/components/experience-section'
+import { TestimonialsSection } from '@/components/testimonials-section'
+import { ContactSection } from '@/components/contact-section'
+import {
+  getContributionData,
+  getFeaturedProjects,
+  getUserStats,
+} from '@/lib/github'
+import { siteConfig } from '@/lib/config'
+import type { Metadata } from 'next'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations()
-
   return {
     metadataBase: new URL(siteConfig.url),
     title: siteConfig.name,
@@ -20,20 +21,20 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: siteConfig.url,
       languages: {
-        "en-US": `${siteConfig.url}/en`,
-        "de-DE": `${siteConfig.url}/de`,
+        'en-US': `${siteConfig.url}/en`,
+        'de-DE': `${siteConfig.url}/de`,
       },
     },
     openGraph: {
-      type: "website",
+      type: 'website',
       url: siteConfig.url,
       siteName: siteConfig.name,
       images: [`${siteConfig.url}/og-image.jpg`],
     },
     other: {
-      "application-ld+json": JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Person",
+      'application-ld+json': JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Person',
         name: siteConfig.name,
         alternateName: siteConfig.username,
         url: siteConfig.url,
@@ -41,15 +42,21 @@ export async function generateMetadata(): Promise<Metadata> {
         sameAs: [siteConfig.github],
         jobTitle: siteConfig.title,
         worksFor: {
-          "@type": "Organization",
-          name: "Independent",
+          '@type': 'Organization',
+          name: 'Independent',
         },
         address: {
-          "@type": "PostalAddress",
-          addressCountry: "DE",
+          '@type': 'PostalAddress',
+          addressCountry: 'DE',
         },
         email: siteConfig.email,
-        knowsAbout: ["Java", "Rust", "Next.js", "Software Development", "Open Source"],
+        knowsAbout: [
+          'Java',
+          'Rust',
+          'Next.js',
+          'Software Development',
+          'Open Source',
+        ],
       }),
     },
   }

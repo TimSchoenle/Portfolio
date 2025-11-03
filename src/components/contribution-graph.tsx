@@ -2,8 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { Card } from '@/components/ui/card'
-import { type Locale } from '@/lib/i18n-config'
-import { type GithubContribution } from '@/lib/dictionary'
+import { useTranslations, useLocale } from 'next-intl'
 
 interface ContributionDay {
   date: string
@@ -13,15 +12,12 @@ interface ContributionDay {
 
 interface ContributionGraphProps {
   data: ContributionDay[]
-  locale: Locale
-  dict: GithubContribution
 }
 
-export function ContributionGraph({
-  data,
-  locale,
-  dict,
-}: ContributionGraphProps) {
+export function ContributionGraph({ data }: ContributionGraphProps) {
+  const t = useTranslations('projects.contributions')
+  const locale = useLocale()
+
   const [hoveredDay, setHoveredDay] = useState<ContributionDay | null>(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
@@ -130,12 +126,11 @@ export function ContributionGraph({
     <Card className="hover:border-primary/50 dark:bg-card/50 w-full overflow-hidden border-2 p-6 transition-all duration-300 hover:shadow-lg">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-2xl font-bold">{dict.title}</h3>
+          <h3 className="text-2xl font-bold">{t('title')}</h3>
           <p className="text-muted-foreground text-sm">
-            {dict.totalAmount.replace(
-              '{count}',
-              totalContributions.toLocaleString(locale)
-            )}
+            {t('totalAmount', {
+              count: totalContributions.toLocaleString(locale),
+            })}
           </p>
         </div>
         <div className="text-muted-foreground flex items-center gap-2 text-xs">

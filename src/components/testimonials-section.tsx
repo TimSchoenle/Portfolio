@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { Card } from "@/components/ui/card"
-import { Quote } from "lucide-react"
-import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { Card } from '@/components/ui/card'
+import { Quote } from 'lucide-react'
+import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 interface TestimonialItem {
   name: string
@@ -14,18 +14,20 @@ interface TestimonialItem {
 }
 
 export function TestimonialsSection() {
-  const t = useTranslations("testimonials")
+  const t = useTranslations('testimonials')
 
-  const testimonials: TestimonialItem[] = t.raw("items")
+  const testimonials: TestimonialItem[] = t.raw('items')
 
   return (
     <section className="from-muted/20 to-background min-h-screen bg-gradient-to-b px-4 py-20 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <h2 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-            {t("title")}
+            {t('title')}
           </h2>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">{t("subtitle")}</p>
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+            {t('subtitle')}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -42,7 +44,7 @@ export function TestimonialsSection() {
                 <div className="mb-6 flex items-center gap-4">
                   <div className="ring-primary/20 group-hover:ring-primary/50 relative h-16 w-16 overflow-hidden rounded-full ring-2 transition-all">
                     <Image
-                      src={testimonial.image || "/placeholder.svg"}
+                      src={testimonial.image || '/placeholder.svg'}
                       alt={testimonial.name}
                       fill
                       className="object-cover"
@@ -50,8 +52,12 @@ export function TestimonialsSection() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold">{testimonial.name}</h3>
-                    <p className="text-muted-foreground text-sm">{testimonial.role}</p>
-                    <p className="text-primary text-xs">{testimonial.company}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {testimonial.role}
+                    </p>
+                    <p className="text-primary text-xs">
+                      {testimonial.company}
+                    </p>
                   </div>
                 </div>
 

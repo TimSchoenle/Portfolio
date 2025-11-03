@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Briefcase, Calendar } from "lucide-react"
-import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { Card, CardContent } from '@/components/ui/card'
+import { Briefcase, Calendar } from 'lucide-react'
+import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 interface Experience {
   company: string
@@ -14,15 +14,17 @@ interface Experience {
 }
 
 export function ExperienceSection() {
-  const t = useTranslations("experience")
+  const t = useTranslations('experience')
 
-  const experiences: Experience[] = t.raw("items")
+  const experiences: Experience[] = t.raw('items')
 
   return (
     <section className="px-4 py-20">
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-12 text-center">
-          <h2 className="text-foreground mb-3 text-4xl font-bold">{t("title")}</h2>
+          <h2 className="text-foreground mb-3 text-4xl font-bold">
+            {t('title')}
+          </h2>
           <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
         </div>
 
@@ -38,7 +40,7 @@ export function ExperienceSection() {
                     <div className="border-border bg-muted relative h-16 w-16 overflow-hidden rounded-xl border-2 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-lg">
                       {exp.logo ? (
                         <Image
-                          src={exp.logo || "/placeholder.svg"}
+                          src={exp.logo || '/placeholder.svg'}
                           alt={`${exp.company} logo`}
                           fill
                           className="object-cover"
@@ -55,7 +57,9 @@ export function ExperienceSection() {
                     <h3 className="text-foreground group-hover:text-primary mb-1 text-xl font-semibold transition-colors">
                       {exp.title}
                     </h3>
-                    <p className="text-foreground/80 mb-2 text-base font-medium">{exp.company}</p>
+                    <p className="text-foreground/80 mb-2 text-base font-medium">
+                      {exp.company}
+                    </p>
                     <div className="text-muted-foreground mb-4 flex items-center gap-2 text-sm">
                       <Calendar className="h-4 w-4" />
                       <p>{exp.dateRange}</p>

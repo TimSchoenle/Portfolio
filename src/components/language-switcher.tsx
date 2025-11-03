@@ -3,15 +3,17 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Globe } from 'lucide-react'
-import type { Locale } from '@/lib/i18n-config'
+import { useLocale } from 'next-intl'
 
-export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
+export function LanguageSwitcher() {
+  const locale = useLocale()
+
   const pathname = usePathname()
   const router = useRouter()
 
   const switchLanguage = () => {
-    const newLocale = currentLocale === 'en' ? 'de' : 'en'
-    const newPath = pathname.replace(`/${currentLocale}`, `/${newLocale}`)
+    const newLocale = locale === 'en' ? 'de' : 'en'
+    const newPath = pathname.replace(`/${locale}`, `/${newLocale}`)
     router.push(newPath)
   }
 
@@ -23,7 +25,7 @@ export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
       className="fixed top-4 right-4 z-50 bg-transparent"
     >
       <Globe className="mr-2 h-4 w-4" />
-      {currentLocale === 'en' ? 'DE' : 'EN'}
+      {locale === 'en' ? 'DE' : 'EN'}
     </Button>
   )
 }

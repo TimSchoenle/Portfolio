@@ -12,14 +12,11 @@
     "title": "About Me",
     "learning": {
       "title": "Currently Learning",
-      "description": "Expanding my skills in {rust} and {nextjs}, exploring modern web development and systems programming.",
-      "rust": "Rust",
-      "nextjs": "Next.js"
+      "description": "Expanding my skills in <highlight>Rust</highlight> and <highlight>Next.js</highlight>, exploring modern web development and systems programming."
     },
     "expertise": {
       "title": "Expertise",
-      "description": "Specialized in {java} development with years of experience building robust applications and contributing to open-source projects.",
-      "java": "Java"
+      "description": "Specialized in <highlight>Java</highlight> development with years of experience building robust applications and contributing to open-source projects."
     }
   },
   "skills": {
@@ -95,7 +92,6 @@
     "sections": "Sections",
     "actions": "Actions",
     "home": "Home",
-    "imprint": "Imprint",
     "github": "Open GitHub Profile",
     "email": "Send Email"
   },
@@ -110,7 +106,7 @@
     "imprint": "Impressum"
   },
   "imprint": {
-    "title": "Impressum",
+    "title": "Imprint",
     "backHome": "Back to Home",
     "infoTitle": "Information according to § 5 TMG",
     "contactTitle": "Contact",

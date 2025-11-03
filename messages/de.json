@@ -12,14 +12,11 @@
     "title": "Über mich",
     "learning": {
       "title": "Derzeit lerne ich",
-      "description": "Erweitere meine Fähigkeiten in {rust} und {nextjs}, erkunde moderne Webentwicklung und Systemprogrammierung.",
-      "rust": "Rust",
-      "nextjs": "Next.js"
+      "description": "Erweitere meine Fähigkeiten in <highlight>Rust</highlight> und <highlight>Next.js</highlight>, erkunde moderne Webentwicklung und Systemprogrammierung."
     },
     "expertise": {
       "title": "Expertise",
-      "description": "Spezialisiert auf {java}-Entwicklung mit jahrelanger Erfahrung im Aufbau robuster Anwendungen und Beiträgen zu Open-Source-Projekten.",
-      "java": "Java"
+      "description": "Spezialisiert auf <highlight>Java</highlight>-Entwicklung mit jahrelanger Erfahrung im Aufbau robuster Anwendungen und Beiträgen zu Open-Source-Projekten."
     }
   },
   "skills": {
@@ -95,7 +92,6 @@
     "sections": "Bereiche",
     "actions": "Aktionen",
     "home": "Startseite",
-    "imprint": "Impressum",
     "github": "GitHub-Profil öffnen",
     "email": "E-Mail senden"
   },
