@@ -30,5 +30,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
         ),
       },
     },
+    {
+      url: `${baseUrl}/${locale}/privacy`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+      alternates: {
+        languages: Object.fromEntries(
+          routing.locales.map((loc) => [loc, `${baseUrl}/${loc}/privacy`])
+        ),
+      },
+    },
   ])
 }

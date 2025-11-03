@@ -13,6 +13,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { siteConfig } from '@/lib/config'
+import { LegalFooter } from '@/components/legal-footer'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -133,6 +134,7 @@ export default async function RootLayout({
             <EasterEggs />
             {children}
             <CookieBanner />
+            <LegalFooter />
             <Toaster position="bottom-right" />
           </ThemeProvider>
         </NextIntlClientProvider>

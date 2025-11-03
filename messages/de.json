@@ -102,11 +102,11 @@
     "github": "GitHub",
     "location": "Standort",
     "locationValue": "Deutschland",
-    "downloadResume": "Lebenslauf herunterladen",
-    "imprint": "Impressum"
+    "downloadResume": "Lebenslauf herunterladen"
   },
   "imprint": {
     "title": "Impressum",
+    "description": "Impressum und rechtliche Informationen",
     "backHome": "Zurück zur Startseite",
     "infoTitle": "Angaben gemäß § 5 TMG",
     "contactTitle": "Kontakt",
@@ -129,5 +129,48 @@
     "analytics": "Analyse-Cookies",
     "analyticsDesc": "Helfen uns zu verstehen, wie Besucher mit unserer Website interagieren, indem Informationen anonym gesammelt und gemeldet werden.",
     "save": "Einstellungen speichern"
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "description": "Die Datenschutzerklärung",
+    "controller": {
+      "title": "1. Verantwortlicher",
+      "name": "Tim Schönle",
+      "address": "[Deine Anschrift hier einfügen]",
+      "email": "[Deine E-Mail hier einfügen]"
+    },
+    "general": {
+      "title": "2. Allgemeine Hinweise",
+      "text": "Diese Website dient ausschließlich der Darstellung meiner beruflichen Tätigkeiten als Software Engineer. Personenbezogene Daten werden nur verarbeitet, soweit dies für den Betrieb der Website erforderlich ist (Art. 6 Abs. 1 lit. f DSGVO)."
+    },
+    "logs": {
+      "title": "3. Zugriffsdaten und Logfiles",
+      "text": "Beim Aufruf dieser Website werden automatisch Server-Logfiles erstellt (IP-Adresse, Zeitstempel, Browsertyp, Betriebssystem, aufgerufene Seite). Diese Daten dienen der Sicherheit und werden nach spätestens 7 Tagen gelöscht."
+    },
+    "cloudflare": {
+      "title": "4. Nutzung von Cloudflare",
+      "pre": "Diese Website wird über einen",
+      "strong": "Cloudflare Tunnel",
+      "post": "bereitgestellt, betrieben von:",
+      "provider": "Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA",
+      "policyLink": "https://www.cloudflare.com/privacypolicy/",
+      "text": "Cloudflare verarbeitet technische Verbindungsdaten (z. B. IP-Adressen) zur Bereitstellung und Absicherung der Website. Die Verarbeitung erfolgt im berechtigten Interesse an einem sicheren und effizienten Betrieb (Art. 6 Abs. 1 lit. f DSGVO)."
+    },
+    "contact": {
+      "title": "5. Kontaktaufnahme",
+      "text": "Bei Kontaktaufnahme per E-Mail werden Ihre Daten zur Bearbeitung gespeichert. Eine Weitergabe an Dritte erfolgt nicht."
+    },
+    "rights": {
+      "title": "6. Rechte der Betroffenen",
+      "text": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch und Datenübertragbarkeit gemäß Art. 15–21 DSGVO. Sie können außerdem Beschwerde bei einer Aufsichtsbehörde einreichen."
+    },
+    "nocookies": {
+      "title": "7. Keine Cookies",
+      "text": "Diese Website verwendet keine Cookies, Tracking-Tools oder Social-Media-Plugins."
+    },
+    "changes": {
+      "title": "8. Änderungen",
+      "text": "Diese Datenschutzerklärung kann bei technischen oder rechtlichen Änderungen angepasst werden. Die jeweils aktuelle Version ist auf dieser Seite verfügbar."
+    }
   }
 }

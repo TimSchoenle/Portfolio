@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Mail, Github, MapPin, Download, FileText } from 'lucide-react'
-import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { siteConfig } from '@/lib/config'
 
@@ -112,15 +111,6 @@ export function ContactSection() {
               </Button>
             </div>
           </Card>
-        </div>
-
-        <div className="mt-8 text-center">
-          <Link
-            href={`/${locale}/imprint`}
-            className="text-muted-foreground hover:text-primary text-sm transition-colors hover:underline"
-          >
-            {t('imprint')}
-          </Link>
         </div>
       </div>
     </section>

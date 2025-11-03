@@ -102,11 +102,11 @@
     "github": "GitHub",
     "location": "Location",
     "locationValue": "Germany",
-    "downloadResume": "Download Resume",
-    "imprint": "Impressum"
+    "downloadResume": "Download Resume"
   },
   "imprint": {
     "title": "Imprint",
+    "description": "Imprint and legal information",
     "backHome": "Back to Home",
     "infoTitle": "Information according to § 5 TMG",
     "contactTitle": "Contact",
@@ -129,5 +129,48 @@
     "analytics": "Analytics Cookies",
     "analyticsDesc": "Help us understand how visitors interact with our website by collecting and reporting information anonymously.",
     "save": "Save Preferences"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "This privacy policy explains how your personal data is processed when you visit this website.",
+    "controller": {
+      "title": "1. Controller",
+      "name": "Tim Schönle",
+      "address": "[Insert your address here]",
+      "email": "[Insert your email here]"
+    },
+    "general": {
+      "title": "2. General Information",
+      "text": "This website is a personal portfolio for professional presentation as a software engineer. Personal data is processed only as necessary to operate this site (Art. 6(1)(f) GDPR)."
+    },
+    "logs": {
+      "title": "3. Access Data and Logs",
+      "text": "When visiting this website, the server automatically records log files (IP address, timestamp, browser type, OS, requested page). These are kept for up to 7 days for security reasons and then deleted."
+    },
+    "cloudflare": {
+      "title": "4. Use of Cloudflare",
+      "pre": "This website is delivered through a",
+      "strong": "Cloudflare Tunnel",
+      "post": "provided by:",
+      "provider": "Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA",
+      "policyLink": "https://www.cloudflare.com/privacypolicy/",
+      "text": "Cloudflare processes technical connection data (e.g. IP addresses) to deliver and secure the website. Processing is based on a legitimate interest in secure and efficient operation (Art. 6(1)(f) GDPR)."
+    },
+    "contact": {
+      "title": "5. Contact",
+      "text": "If you contact me by email, your data will be stored for the purpose of handling the request. Your data will not be shared with third parties."
+    },
+    "rights": {
+      "title": "6. Data Subject Rights",
+      "text": "You have the right to access, rectify, delete, restrict, or object to processing, and to data portability under Articles 15–21 GDPR. You may also lodge a complaint with your local data protection authority."
+    },
+    "nocookies": {
+      "title": "7. No Cookies or Tracking",
+      "text": "This website uses no cookies, analytics, or social media plugins."
+    },
+    "changes": {
+      "title": "8. Changes",
+      "text": "This privacy policy may be updated if technical or legal changes occur. The latest version will always be available on this page."
+    }
   }
 }
