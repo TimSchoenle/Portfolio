@@ -74,18 +74,18 @@ export function ContributionGraph({ data }: ContributionGraphProps) {
     return { weeks, monthLabels }
   }, [data, locale])
 
-  const getLevelColor = (level: number) => {
+  const getLevelColor = (level: number): string => {
     const colors = [
       'bg-muted/40 dark:bg-muted/20 hover:bg-muted/60 dark:hover:bg-muted/40 border border-border/50 dark:border-border/30',
       'bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 border border-emerald-200/50 dark:border-emerald-800/30',
       'bg-emerald-300 dark:bg-emerald-700/60 hover:bg-emerald-400 dark:hover:bg-emerald-700/80 border border-emerald-400/50 dark:border-emerald-600/30',
       'bg-emerald-500 dark:bg-emerald-600/80 hover:bg-emerald-600 dark:hover:bg-emerald-600 border border-emerald-600/50 dark:border-emerald-500/30',
       'bg-emerald-700 dark:bg-emerald-500 hover:bg-emerald-800 dark:hover:bg-emerald-400 border border-emerald-800/50 dark:border-emerald-400/30',
-    ]
+    ] as const
 
     // clamp level to valid range
     const index = Math.max(0, Math.min(level, colors.length - 1))
-    return colors[index]
+    return colors[index] ?? colors[0]
   }
 
   const handleMouseMove = (
