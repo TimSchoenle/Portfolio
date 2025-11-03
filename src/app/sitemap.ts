@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
 import { routing } from '@/i18n/routing'
+import { siteConfig } from '@/lib/config'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://timmi6790.de'
+  const baseUrl = siteConfig.url
   const currentDate = new Date()
 
   // Generate sitemap entries for all locales

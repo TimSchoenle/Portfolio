@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Mail, Github, ArrowDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { siteConfig } from '@/lib/config'
 
 export function HeroSection() {
   const t = useTranslations('hero')
@@ -36,7 +37,7 @@ export function HeroSection() {
             className="group shadow-lg transition-all hover:shadow-xl"
           >
             <a
-              href="https://github.com/Timmi6790"
+              href={siteConfig.github}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -50,7 +51,7 @@ export function HeroSection() {
             size="lg"
             className="group bg-transparent shadow-md transition-all hover:shadow-lg"
           >
-            <a href="mailto:contact@timmi6790.de">
+            <a href={`mailto:${siteConfig.email}`}>
               <Mail className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
               {t('contact')}
             </a>

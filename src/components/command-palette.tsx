@@ -21,6 +21,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { siteConfig } from '@/lib/config'
 
 export function CommandPalette() {
   const paletteT = useTranslations('commandPalette')
@@ -106,9 +107,7 @@ export function CommandPalette() {
         <CommandGroup heading={paletteT('actions')}>
           <CommandItem
             onSelect={() =>
-              runCommand(() =>
-                window.open('https://github.com/Timmi6790', '_blank')
-              )
+              runCommand(() => window.open(siteConfig.github, '_blank'))
             }
           >
             <Github className="mr-2 h-4 w-4" />
@@ -117,7 +116,7 @@ export function CommandPalette() {
           <CommandItem
             onSelect={() =>
               runCommand(
-                () => (window.location.href = 'mailto:contact@timmi6790.de')
+                () => (window.location.href = `mailto:${siteConfig.email}`)
               )
             }
           >

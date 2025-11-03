@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Mail, Github, MapPin, Download, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
+import { siteConfig } from '@/lib/config'
 
 export function ContactSection() {
   const t = useTranslations('contact')
@@ -38,10 +39,10 @@ export function ContactSection() {
                       {t('email')}
                     </p>
                     <a
-                      href="mailto:contact@timmi6790.de"
+                      href={`mailto:${siteConfig.email}`}
                       className="text-foreground hover:text-primary text-lg font-medium transition-colors"
                     >
-                      contact@timmi6790.de
+                      {siteConfig.email}
                     </a>
                   </div>
                 </div>
@@ -55,12 +56,12 @@ export function ContactSection() {
                       {t('github')}
                     </p>
                     <a
-                      href="https://github.com/Timmi6790"
+                      href={siteConfig.github}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-foreground hover:text-primary text-lg font-medium transition-colors"
                     >
-                      @Timmi6790
+                      {`@${siteConfig.githubUsername}`}
                     </a>
                   </div>
                 </div>

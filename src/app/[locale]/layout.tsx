@@ -12,6 +12,7 @@ import { LanguageSwitcher } from '@/components/language-switcher'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
+import { siteConfig } from '@/lib/config'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -37,7 +38,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   return {
-    metadataBase: new URL('https://timmi6790.de'),
+    metadataBase: new URL(siteConfig.url),
     title: {
       default: 'Tim - Software Developer Portfolio',
       template: '%s | Tim - Software Developer',
@@ -55,7 +56,7 @@ export async function generateMetadata({
       'Open Source',
       'Germany',
     ],
-    authors: [{ name: 'Tim', url: 'https://timmi6790.de' }],
+    authors: [{ name: 'Tim', url: siteConfig.url }],
     creator: 'Tim (Timmi6790)',
     publisher: 'Tim (Timmi6790)',
     robots: {
@@ -73,7 +74,7 @@ export async function generateMetadata({
       type: 'website',
       locale: locale,
       alternateLocale: locale === 'en' ? ['de_DE'] : ['en_US'],
-      url: `https://timmi6790.de/${locale}`,
+      url: `https://${siteConfig.url}/${locale}`,
       title: 'Tim - Software Developer Portfolio',
       description:
         'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
@@ -96,10 +97,10 @@ export async function generateMetadata({
       creator: '@Timmi6790',
     },
     alternates: {
-      canonical: `https://timmi6790.de/${locale}`,
+      canonical: `${siteConfig.url}/${locale}`,
       languages: {
-        en: 'https://timmi6790.de/en',
-        de: 'https://timmi6790.de/de',
+        en: `${siteConfig.url}/en`,
+        de: `${siteConfig.url}/de`,
       },
     },
   }

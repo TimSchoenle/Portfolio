@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/config'
 
 export async function generateMetadata({
   params,
@@ -66,10 +67,10 @@ export default async function ImprintPage({
               <p className="text-muted-foreground">
                 {tContact('email')}:{' '}
                 <a
-                  href="mailto:contact@timmi6790.de"
+                  href={`mailto:${siteConfig.email}`}
                   className="text-primary hover:underline"
                 >
-                  contact@timmi6790.de
+                  {siteConfig.email}
                 </a>
               </p>
             </div>
