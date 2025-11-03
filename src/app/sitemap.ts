@@ -1,45 +1,49 @@
 import type { MetadataRoute } from 'next'
-import { routing } from '@/i18n/routing'
 import { siteConfig } from '@/lib/config'
+import { getPathname, routing } from '@/i18n/routing'
+import { type Locale } from 'next-intl'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = siteConfig.url
-  const currentDate = new Date()
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = siteConfig.url.replace(/\/$/, '')
+  const now = new Date()
 
-  // Generate sitemap entries for all locales
-  return routing.locales.flatMap((locale) => [
-    {
-      url: `${baseUrl}/${locale}`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly' as const,
-      priority: 1.0,
-      alternates: {
-        languages: Object.fromEntries(
-          routing.locales.map((loc) => [loc, `${baseUrl}/${loc}`])
-        ),
+  const staticPages = ['imprint', 'privacy']
+
+  // Function to create URL entries
+  function createUrlEntry(
+    path: string,
+    changeFreq: MetadataRoute.Sitemap[0]['changeFrequency'],
+    priority: number
+  ): MetadataRoute.Sitemap {
+    const adjustedBasePath = path.startsWith('/') ? path : `/${path}`
+    return [
+      {
+        url: `${baseUrl}${adjustedBasePath}`,
+        lastModified: now,
+        changeFrequency: changeFreq,
+        priority,
+        alternates: {
+          languages: Object.fromEntries(
+            routing.locales.map((loc: Locale) => [
+              loc,
+              `${baseUrl}${getPathname({ locale: loc, href: adjustedBasePath })}`,
+            ])
+          ),
+        },
       },
-    },
-    {
-      url: `${baseUrl}/${locale}/imprint`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-      alternates: {
-        languages: Object.fromEntries(
-          routing.locales.map((loc) => [loc, `${baseUrl}/${loc}/imprint`])
-        ),
-      },
-    },
-    {
-      url: `${baseUrl}/${locale}/privacy`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-      alternates: {
-        languages: Object.fromEntries(
-          routing.locales.map((loc) => [loc, `${baseUrl}/${loc}/privacy`])
-        ),
-      },
-    },
-  ])
+    ]
+  }
+
+  // Build sitemap array
+  const urls: MetadataRoute.Sitemap = []
+
+  // Root pages
+  urls.push(...createUrlEntry('/', 'weekly', 1.0))
+
+  // Static pages
+  for (const page of staticPages) {
+    urls.push(...createUrlEntry(page, 'monthly', 0.5))
+  }
+
+  return urls
 }
