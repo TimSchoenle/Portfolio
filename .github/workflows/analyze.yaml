@@ -19,5 +19,8 @@ jobs:
       - name: Setup base environment
         uses: ./.github/actions/build-dependency
 
+      - name: Run bundle analyzer (Webpack)
+        run: pnpm run analyze
+
       - name: Analyze bundle sizes
         uses: transferwise/actions-next-bundle-analyzer@v2
