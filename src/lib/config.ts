@@ -3,13 +3,14 @@
  *
  * Centralized configuration for easy customization
  */
-
 export const siteConfig = {
   // Personal Information
   name: 'Tim',
-  description: 'Tim - Software Developer Portfolio',
+  fullName: 'Tim Schönle',
+  description:
+    'Portfolio of Tim - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
   username: 'Timmi6790',
-  title: 'Software Developer',
+  title: 'Tim - Software Developer',
 
   // Contact Information
   email: 'contact@timmi6790.de',
@@ -40,28 +41,13 @@ export const siteConfig = {
       'Open Source',
       'Germany',
     ],
-    ogImage: '/og-image.png',
-    twitterCard: 'summary_large_image',
   },
 
-  // Analytics Configuration (optional)
-  analytics: {
-    // Google Analytics ID
-    googleAnalyticsId: undefined,
-    // Plausible domain
-    plausibleDomain: undefined,
-    // Vercel Analytics (automatically enabled on Vercel)
-    vercelAnalytics: false,
-  },
-
-  // Features Toggle
-  features: {
-    commandPalette: true,
-    themeToggle: true,
-    languageSwitcher: true,
-    cookieBanner: true,
-    easterEggs: true,
-    webVitals: true,
+  // List of skills to display on the skills section
+  skills: {
+    expertise: ['Java', 'Spring Boot', 'Maven', 'Gradle'],
+    learning: ['Rust', 'Next.js', 'React', 'TypeScript'],
+    tools: ['Git', 'GitHub', 'Docker', 'Linux'],
   },
 } as const
 

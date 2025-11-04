@@ -7,11 +7,6 @@ const nextConfig: NextConfig = {
   // Enable strict mode for better development experience
   reactStrictMode: true,
 
-  // Skip type checking during build (types are validated separately)
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
   // Optimize images for better performance
   images: {
     formats: ['image/avif', 'image/webp'],

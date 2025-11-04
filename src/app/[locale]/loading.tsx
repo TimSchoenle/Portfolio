@@ -1,6 +1,10 @@
-'use server'
+'use client'
 
-export default async function Loading() {
+import { useTranslations } from 'next-intl'
+
+export default function Loading() {
+  const t = useTranslations('loading')
+
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
       <div className="space-y-4 text-center">
@@ -9,7 +13,7 @@ export default async function Loading() {
           <div className="border-primary absolute inset-0 animate-spin rounded-full border-4 border-t-transparent" />
         </div>
         <p className="text-muted-foreground animate-pulse text-sm">
-          Loading...
+          {t('title')}
         </p>
       </div>
     </div>

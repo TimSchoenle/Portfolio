@@ -1,4 +1,13 @@
 {
+  "loading": {
+    "title": "Laden..."
+  },
+  "error": {
+    "title": "Etwas ist schief gelaufen",
+    "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie, die Seite zu aktualisieren.",
+    "tryAgain": "Erneut versuchen",
+    "goHome": "Zur Startseite"
+  },
   "hero": {
     "greeting": "Hallo, ich bin",
     "name": "Tim",
@@ -86,6 +95,8 @@
     ]
   },
   "commandPalette": {
+    "title": "Kommandozeile",
+    "description": "Befehl suchen...",
     "placeholder": "Befehl eingeben oder suchen...",
     "noResults": "Keine Ergebnisse gefunden.",
     "navigation": "Navigation",

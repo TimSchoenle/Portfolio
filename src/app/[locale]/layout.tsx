@@ -10,7 +10,7 @@ import { CommandPalette } from '@/components/command-palette'
 import { EasterEggs } from '@/components/easter-eggs'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NextIntlClientProvider, hasLocale, type Locale } from 'next-intl'
-import { routing } from '@/i18n/routing'
+import { getPathname, routing } from '@/i18n/routing'
 import { siteConfig } from '@/lib/config'
 import { LegalFooter } from '@/components/legal-footer'
 import { notFound } from 'next/navigation'
@@ -42,25 +42,14 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(siteConfig.url),
     title: {
-      default: 'Tim - Software Developer Portfolio',
-      template: '%s | Tim - Software Developer',
+      default: siteConfig.title,
+      template: `%s | ${siteConfig.title}`,
     },
-    description:
-      'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
-    keywords: [
-      'Tim',
-      'Timmi6790',
-      'Software Developer',
-      'Java',
-      'Rust',
-      'Next.js',
-      'Portfolio',
-      'Open Source',
-      'Germany',
-    ],
-    authors: [{ name: 'Tim', url: siteConfig.url }],
-    creator: 'Tim (Timmi6790)',
-    publisher: 'Tim (Timmi6790)',
+    description: siteConfig.description,
+    keywords: siteConfig.seo.keywords.join(', '),
+    authors: [{ name: siteConfig.fullName, url: siteConfig.url }],
+    creator: siteConfig.fullName,
+    publisher: siteConfig.fullName,
     robots: {
       index: true,
       follow: true,
@@ -75,41 +64,43 @@ export async function generateMetadata({
     openGraph: {
       type: 'website',
       locale: locale,
-      alternateLocale: locale === 'en' ? ['de_DE'] : ['en_US'],
-      url: `https://${siteConfig.url}/${locale}`,
-      title: 'Tim - Software Developer Portfolio',
-      description:
-        'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
-      siteName: 'Tim Portfolio',
+      alternateLocale: routing.locales
+        .filter((loc: Locale) => loc !== locale)
+        .join(', '),
+      url: `${siteConfig.url}/${locale}`,
+      title: siteConfig.title,
+      description: siteConfig.description,
+      siteName: siteConfig.title,
       images: [
         {
           url: '/og-image.png',
           width: 1200,
           height: 630,
-          alt: 'Tim - Software Developer Portfolio',
+          alt: siteConfig.title,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Tim - Software Developer Portfolio',
-      description:
-        'Portfolio of Tim (Timmi6790) - Software Developer specializing in Java, learning Rust and Next.js',
+      title: siteConfig.title,
+      description: siteConfig.description,
       images: ['/og-image.png'],
-      creator: '@Timmi6790',
+      creator: siteConfig.twitter,
     },
     alternates: {
-      canonical: `${siteConfig.url}/${locale}`,
-      languages: {
-        en: `${siteConfig.url}/en`,
-        de: `${siteConfig.url}/de`,
-      },
+      // canonical: `${siteConfig.url}/${locale}`,
+      languages: Object.fromEntries(
+        routing.locales.map((loc: Locale) => [
+          loc,
+          `${siteConfig.url}/${getPathname({ locale: loc, href: '/' })}`,
+        ])
+      ),
     },
   }
 }
 
 export async function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }))
+  return routing.locales.map((locale: Locale) => ({ locale }))
 }
 
 export default async function RootLayout({
@@ -117,7 +108,7 @@ export default async function RootLayout({
   params,
 }: Readonly<{
   children: React.ReactNode
-  params: Promise<{ locale: Locale }>
+  params: Promise<{ locale: string }>
 }>) {
   // Ensure that the incoming `locale` is valid
   const { locale } = await params

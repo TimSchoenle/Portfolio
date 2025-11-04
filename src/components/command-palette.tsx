@@ -19,6 +19,7 @@ import {
   Github,
   Mail,
   FileText,
+  CookieIcon,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { siteConfig } from '@/lib/config'
@@ -57,7 +58,12 @@ export function CommandPalette() {
   }
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog
+      title={paletteT('title')}
+      description={paletteT('description')}
+      open={open}
+      onOpenChange={setOpen}
+    >
       <CommandInput placeholder={paletteT('placeholder')} />
       <CommandList>
         <CommandEmpty>{paletteT('noResults')}</CommandEmpty>
@@ -74,6 +80,12 @@ export function CommandPalette() {
           >
             <FileText className="mr-2 h-4 w-4" />
             <span>{allT('imprint.title')}</span>
+          </CommandItem>
+          <CommandItem
+            onSelect={() => runCommand(() => router.push(`/${locale}/privacy`))}
+          >
+            <CookieIcon className="mr-2 h-4 w-4" />
+            <span>{allT('privacy.title')}</span>
           </CommandItem>
         </CommandGroup>
 

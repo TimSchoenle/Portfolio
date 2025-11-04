@@ -1,4 +1,13 @@
 {
+  "loading": {
+    "title": "Loading..."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try refreshing the page.",
+    "tryAgain": "Try again",
+    "goHome": "Go home"
+  },
   "hero": {
     "greeting": "Hi, I'm",
     "name": "Tim",
@@ -86,6 +95,8 @@
     ]
   },
   "commandPalette": {
+    "title": "Command Palette",
+    "description": "Search for a command to run...",
     "placeholder": "Type a command or search...",
     "noResults": "No results found.",
     "navigation": "Navigation",

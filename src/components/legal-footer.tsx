@@ -1,8 +1,8 @@
 'use server'
 
-import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { type Locale } from 'next-intl'
+import { Link } from '@/i18n/routing'
 
 export async function LegalFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })

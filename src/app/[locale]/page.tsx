@@ -10,59 +10,9 @@ import {
   getUserStats,
 } from '@/lib/github'
 import { siteConfig } from '@/lib/config'
-import type { Metadata } from 'next'
 import { AboutSection } from '@/components/about-section'
 import { setRequestLocale } from 'next-intl/server'
 import { type Locale } from 'next-intl'
-
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    metadataBase: new URL(siteConfig.url),
-    title: siteConfig.name,
-    description: siteConfig.description,
-    alternates: {
-      canonical: siteConfig.url,
-      languages: {
-        'en-US': `${siteConfig.url}/en`,
-        'de-DE': `${siteConfig.url}/de`,
-      },
-    },
-    openGraph: {
-      type: 'website',
-      url: siteConfig.url,
-      siteName: siteConfig.name,
-      images: [`${siteConfig.url}/og-image.jpg`],
-    },
-    other: {
-      'application-ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'Person',
-        name: siteConfig.name,
-        alternateName: siteConfig.username,
-        url: siteConfig.url,
-        image: `${siteConfig.url}/og-image.jpg`,
-        sameAs: [siteConfig.github],
-        jobTitle: siteConfig.title,
-        worksFor: {
-          '@type': 'Organization',
-          name: 'Independent',
-        },
-        address: {
-          '@type': 'PostalAddress',
-          addressCountry: 'DE',
-        },
-        email: siteConfig.email,
-        knowsAbout: [
-          'Java',
-          'Rust',
-          'Next.js',
-          'Software Development',
-          'Open Source',
-        ],
-      }),
-    },
-  }
-}
 
 export default async function Home({
   params,

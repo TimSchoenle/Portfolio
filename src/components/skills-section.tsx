@@ -4,12 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTranslations } from 'next-intl/server'
 import { type Locale } from 'next-intl'
-
-const skills = {
-  expertise: ['Java', 'Spring Boot', 'Maven', 'Gradle'],
-  learning: ['Rust', 'Next.js', 'React', 'TypeScript'],
-  tools: ['Git', 'GitHub', 'Docker', 'Linux'],
-}
+import { siteConfig } from '@/lib/config'
 
 export async function SkillsSection({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale, namespace: 'skills' })
@@ -36,7 +31,7 @@ export async function SkillsSection({ locale }: { locale: Locale }) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {skills.expertise.map((skill, index) => (
+                {siteConfig.skills.expertise.map((skill, index) => (
                   <Badge
                     key={skill}
                     variant="default"
@@ -59,7 +54,7 @@ export async function SkillsSection({ locale }: { locale: Locale }) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {skills.learning.map((skill, index) => (
+                {siteConfig.skills.learning.map((skill, index) => (
                   <Badge
                     key={skill}
                     variant="secondary"
@@ -82,7 +77,7 @@ export async function SkillsSection({ locale }: { locale: Locale }) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {skills.tools.map((skill, index) => (
+                {siteConfig.skills.tools.map((skill, index) => (
                   <Badge
                     key={skill}
                     variant="outline"
