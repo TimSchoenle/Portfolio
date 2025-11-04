@@ -6,10 +6,12 @@ on:
 
 jobs:
   analyze:
-    uses: ./.github/workflows/setup-node.yaml
     runs-on: ubuntu-latest
 
     steps:
+      - name: Setup base environment
+        uses: ./.github/workflows/setup-node.yaml
+
       - name: Run bundle analyzer (Webpack)
         run: pnpm run analyze
 
