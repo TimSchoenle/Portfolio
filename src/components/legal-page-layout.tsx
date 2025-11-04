@@ -1,9 +1,11 @@
 'use server'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { ReactNode } from 'react'
-import { BackToHome } from '@/components/back_to_home'
 import { type Locale } from 'next-intl'
+import type { ReactNode } from 'react'
+
+import { BackToHome } from '@/components/back_to_home'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 
 interface LegalPageLayoutProps {
   locale: Locale

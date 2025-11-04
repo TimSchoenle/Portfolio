@@ -1,10 +1,11 @@
 'use server'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Briefcase, Calendar } from 'lucide-react'
 import Image from 'next/image'
-import { getTranslations } from 'next-intl/server'
 import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Experience {
   company: string
@@ -14,7 +15,7 @@ interface Experience {
   description: string
 }
 
-export async function ExperienceSection({ locale }: { locale: Locale }) {
+export const ExperienceSection = ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'experience' })
 
   const experiences: Experience[] = t.raw('items')
@@ -32,8 +33,8 @@ export async function ExperienceSection({ locale }: { locale: Locale }) {
         <div className="space-y-6">
           {experiences.map((exp, index) => (
             <Card
-              key={index}
               className="group hover:border-primary/50 border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              key={index}
             >
               <CardContent className="p-6">
                 <div className="flex gap-6">
@@ -41,10 +42,10 @@ export async function ExperienceSection({ locale }: { locale: Locale }) {
                     <div className="border-border bg-muted relative h-16 w-16 overflow-hidden rounded-xl border-2 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-lg">
                       {exp.logo ? (
                         <Image
-                          src={exp.logo || '/placeholder.svg'}
                           alt={`${exp.company} logo`}
-                          fill
                           className="object-cover"
+                          fill={true}
+                          src={exp.logo || '/placeholder.svg'}
                         />
                       ) : (
                         <div className="from-primary/10 to-primary/5 flex h-full w-full items-center justify-center bg-gradient-to-br">

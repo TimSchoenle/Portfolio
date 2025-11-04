@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useState, useEffect } from 'react'
 
-export function CookieBanner() {
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
+export const CookieBanner = () => {
   const t = useTranslations('cookies')
 
   const [showBanner, setShowBanner] = useState(false)
@@ -44,7 +45,7 @@ export function CookieBanner() {
     setShowBanner(false)
   }
 
-  if (!showBanner) return null
+  if (!showBanner) {return null}
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center p-4">
@@ -52,10 +53,10 @@ export function CookieBanner() {
         <div className="mb-4 flex items-start justify-between">
           <h3 className="text-xl font-semibold">{t('title')}</h3>
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRejectAll}
             className="h-8 w-8"
+            size="icon"
+            variant="ghost"
+            onClick={handleRejectAll}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -67,20 +68,20 @@ export function CookieBanner() {
               {t('description')}
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button onClick={handleAcceptAll} className="flex-1">
+              <Button className="flex-1" onClick={handleAcceptAll}>
                 {t('acceptAll')}
               </Button>
               <Button
-                onClick={handleRejectAll}
-                variant="outline"
                 className="flex-1 bg-transparent"
+                variant="outline"
+                onClick={handleRejectAll}
               >
                 {t('rejectAll')}
               </Button>
               <Button
-                onClick={() => setShowCustomize(true)}
-                variant="secondary"
                 className="flex-1"
+                variant="secondary"
+                onClick={() => setShowCustomize(true)}
               >
                 {t('customize')}
               </Button>
@@ -110,10 +111,10 @@ export function CookieBanner() {
                 </div>
                 <label className="relative ml-4 inline-flex cursor-pointer items-center">
                   <input
-                    type="checkbox"
                     checked={analytics}
-                    onChange={(e) => setAnalytics(e.target.checked)}
                     className="peer sr-only"
+                    type="checkbox"
+                    onChange={(e) => setAnalytics(e.target.checked)}
                   />
                   <div className="bg-muted peer-focus:ring-primary/20 peer peer-checked:bg-primary h-6 w-11 rounded-full peer-focus:ring-4 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white" />
                 </label>
@@ -121,13 +122,13 @@ export function CookieBanner() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button onClick={handleSavePreferences} className="flex-1">
+              <Button className="flex-1" onClick={handleSavePreferences}>
                 {t('save')}
               </Button>
               <Button
-                onClick={() => setShowCustomize(false)}
-                variant="outline"
                 className="flex-1"
+                variant="outline"
+                onClick={() => setShowCustomize(false)}
               >
                 Back
               </Button>

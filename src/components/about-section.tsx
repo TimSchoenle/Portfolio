@@ -1,15 +1,16 @@
 'use server'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { BookOpen, Code2 } from 'lucide-react'
-import { getTranslations } from 'next-intl/server'
 import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 
-export async function AboutSection({ locale }: { locale: Locale }) {
+import { Card, CardContent } from '@/components/ui/card'
+
+export const AboutSection = ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'about' })
 
   return (
-    <section id="about" className="px-4 py-20">
+    <section className="px-4 py-20" id="about">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-12 text-center">
           <h2 className="text-foreground mb-3 text-4xl font-bold">

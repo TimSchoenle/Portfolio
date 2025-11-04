@@ -18,10 +18,10 @@ const ThemeProviderContext = React.createContext<
   ThemeProviderState | undefined
 >(undefined)
 
-export function ThemeProvider({
+export const ThemeProvider = ({
   children,
   defaultTheme = 'dark',
-}: ThemeProviderProps) {
+}: ThemeProviderProps) => {
   const [theme, setTheme] = React.useState<Theme>(defaultTheme)
 
   React.useEffect(() => {

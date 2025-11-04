@@ -1,13 +1,15 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Globe } from 'lucide-react'
-import { useLocale } from 'next-intl'
-import { getPathname } from '@/i18n/routing'
 import { type Route } from 'next'
+import { usePathname, useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 
-export function LanguageSwitcher() {
+import { Button } from '@/components/ui/button'
+import { getPathname } from '@/i18n/routing'
+
+
+export const LanguageSwitcher = () => {
   const locale = useLocale()
 
   const pathname = usePathname()
@@ -25,10 +27,10 @@ export function LanguageSwitcher() {
 
   return (
     <Button
-      variant="outline"
-      size="sm"
-      onClick={switchLanguage}
       className="fixed top-4 right-4 z-50 bg-transparent"
+      size="sm"
+      variant="outline"
+      onClick={switchLanguage}
     >
       <Globe className="mr-2 h-4 w-4" />
       {locale === 'en' ? 'DE' : 'EN'}

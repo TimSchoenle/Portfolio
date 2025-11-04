@@ -1,15 +1,5 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import {
   Home,
   User,
@@ -21,10 +11,21 @@ import {
   FileText,
   CookieIcon,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { useEffect, useState, useCallback } from 'react'
+
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { siteConfig } from '@/lib/config'
 
-export function CommandPalette() {
+export const CommandPalette = () => {
   const paletteT = useTranslations('commandPalette')
   const allT = useTranslations()
 
@@ -59,9 +60,9 @@ export function CommandPalette() {
 
   return (
     <CommandDialog
-      title={paletteT('title')}
       description={paletteT('description')}
       open={open}
+      title={paletteT('title')}
       onOpenChange={setOpen}
     >
       <CommandInput placeholder={paletteT('placeholder')} />

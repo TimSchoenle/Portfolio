@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-export function EasterEggs() {
+export const EasterEggs = () => {
   const [_konamiCode, setKonamiCode] = useState<string[]>([])
   const [_clickCount, setClickCount] = useState(0)
 

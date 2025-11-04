@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import { Card } from '@/components/ui/card'
 import { type Locale, useTranslations } from 'next-intl'
+import React, { useState, useMemo } from 'react'
+
+import { Card } from '@/components/ui/card'
 
 interface ContributionDay {
   date: string
@@ -15,7 +16,7 @@ interface ContributionGraphProps {
   data: ContributionDay[]
 }
 
-export function ContributionGraph({ locale, data }: ContributionGraphProps) {
+export const ContributionGraph = ({ locale, data }: ContributionGraphProps) => {
   const t = useTranslations('projects.contributions')
 
   const [hoveredDay, setHoveredDay] = useState<ContributionDay | null>(null)
@@ -27,7 +28,7 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
     const monthLabels: Array<{ month: string; weekIndex: number }> = []
     let currentMonth = ''
 
-    if (data.length === 0) return { weeks: [], monthLabels: [] }
+    if (data.length === 0) {return { weeks: [], monthLabels: [] }}
 
     const dataMap = new Map(data.map((d) => [d.date, d]))
 
@@ -103,7 +104,7 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
   const totalContributions = data.reduce((sum, day) => sum + day.count, 0)
 
   const dayLabels = useMemo(() => {
-    if (data.length === 0) return []
+    if (data.length === 0) {return []}
 
     const sortedData = [...data].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -137,8 +138,8 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <div
-              key={level}
               className={`h-4 w-4 rounded-sm ${getLevelColor(level).split(' ').slice(0, 3).join(' ')}`}
+              key={level}
             />
           ))}
           <span>More</span>
@@ -151,8 +152,8 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
           <div className="relative mb-3 h-5">
             {monthLabels.map(({ month, weekIndex }) => (
               <div
-                key={`${month}-${weekIndex}`}
                 className="text-muted-foreground absolute text-sm font-medium"
+                key={`${month}-${weekIndex}`}
                 style={{
                   left: `${48 + weekIndex * 20}px`,
                 }}
@@ -167,8 +168,8 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
             <div className="flex flex-shrink-0 flex-col gap-1 pr-3">
               {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                 <div
-                  key={day}
                   className="text-muted-foreground flex h-4 w-8 items-center text-xs font-medium"
+                  key={day}
                 >
                   {dayIndices.includes(day)
                     ? dayLabels[dayIndices.indexOf(day)]
@@ -180,8 +181,8 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
             <div className="flex gap-1">
               {weeks.map((week, weekIndex) => (
                 <div
-                  key={weekIndex}
                   className="flex flex-shrink-0 flex-col gap-1"
+                  key={weekIndex}
                 >
                   {week.map((day, dayIndex) => {
                     const uniqueKey = `${weekIndex}-${dayIndex}`
@@ -189,21 +190,21 @@ export function ContributionGraph({ locale, data }: ContributionGraphProps) {
                     if (!day) {
                       return (
                         <div
-                          key={uniqueKey}
                           className="border-border/30 bg-muted/20 dark:border-border/20 dark:bg-muted/10 h-4 w-4 rounded-sm border"
+                          key={uniqueKey}
                         />
                       )
                     }
 
                     return (
                       <div
-                        key={uniqueKey}
                         className={`h-4 w-4 cursor-pointer rounded-sm transition-all duration-200 ${getLevelColor(day.level)}`}
-                        onMouseEnter={(e) => handleMouseMove(e, day)}
-                        onMouseLeave={() => setHoveredDay(null)}
+                        key={uniqueKey}
                         style={{
                           animationDelay: `${(weekIndex * 7 + dayIndex) * 2}ms`,
                         }}
+                        onMouseEnter={(e) => handleMouseMove(e, day)}
+                        onMouseLeave={() => setHoveredDay(null)}
                       />
                     )
                   })}

@@ -1,19 +1,21 @@
 'use server'
 
+import { Mail, Github, MapPin, Download, FileText } from 'lucide-react'
+import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mail, Github, MapPin, Download, FileText } from 'lucide-react'
 import { siteConfig } from '@/lib/config'
-import { getTranslations } from 'next-intl/server'
-import { type Locale } from 'next-intl'
 
-export async function ContactSection({ locale }: { locale: Locale }) {
+
+export const ContactSection = ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'contact' })
 
   const resumePath = locale === 'de' ? '/resume-de.pdf' : '/resume-en.pdf'
 
   return (
-    <section id="contact" className="bg-muted/30 relative px-4 py-20">
+    <section className="bg-muted/30 relative px-4 py-20" id="contact">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
 
       <div className="mx-auto w-full max-w-4xl">
@@ -38,8 +40,8 @@ export async function ContactSection({ locale }: { locale: Locale }) {
                       {t('email')}
                     </p>
                     <a
-                      href={`mailto:${siteConfig.email}`}
                       className="text-foreground hover:text-primary text-lg font-medium transition-colors"
+                      href={`mailto:${siteConfig.email}`}
                     >
                       {siteConfig.email}
                     </a>
@@ -55,10 +57,10 @@ export async function ContactSection({ locale }: { locale: Locale }) {
                       {t('github')}
                     </p>
                     <a
-                      href={siteConfig.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-foreground hover:text-primary text-lg font-medium transition-colors"
+                      href={siteConfig.github}
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
                       {`@${siteConfig.githubUsername}`}
                     </a>
@@ -100,11 +102,11 @@ export async function ContactSection({ locale }: { locale: Locale }) {
                 </div>
               </div>
               <Button
-                asChild
+                asChild={true}
                 className="group bg-primary hover:bg-primary/90 w-full shadow-lg transition-all hover:shadow-xl"
                 size="lg"
               >
-                <a href={resumePath} download>
+                <a download={true} href={resumePath}>
                   <Download className="mr-2 h-5 w-5 transition-transform group-hover:translate-y-0.5 group-hover:scale-110" />
                   {t('downloadResume')}
                 </a>

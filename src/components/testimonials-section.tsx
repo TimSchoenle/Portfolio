@@ -1,10 +1,11 @@
 'use server'
 
-import { Card } from '@/components/ui/card'
 import { Quote } from 'lucide-react'
 import Image from 'next/image'
-import { getTranslations } from 'next-intl/server'
 import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+
+import { Card } from '@/components/ui/card'
 
 interface TestimonialItem {
   name: string
@@ -14,7 +15,7 @@ interface TestimonialItem {
   quote: string
 }
 
-export async function TestimonialsSection({ locale }: { locale: Locale }) {
+export const TestimonialsSection = ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'testimonials' })
 
   const testimonials: TestimonialItem[] = t.raw('items')
@@ -34,8 +35,8 @@ export async function TestimonialsSection({ locale }: { locale: Locale }) {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial: TestimonialItem, index: number) => (
             <Card
-              key={index}
               className="group hover:border-primary/50 relative overflow-hidden border-2 p-8 transition-all duration-300 hover:shadow-2xl"
+              key={index}
             >
               <div className="absolute top-4 right-4 opacity-10 transition-opacity group-hover:opacity-20">
                 <Quote className="text-primary h-16 w-16" />
@@ -45,10 +46,10 @@ export async function TestimonialsSection({ locale }: { locale: Locale }) {
                 <div className="mb-6 flex items-center gap-4">
                   <div className="ring-primary/20 group-hover:ring-primary/50 relative h-16 w-16 overflow-hidden rounded-full ring-2 transition-all">
                     <Image
-                      src={testimonial.image || '/placeholder.svg'}
                       alt={testimonial.name}
-                      fill
                       className="object-cover"
+                      fill={true}
+                      src={testimonial.image || '/placeholder.svg'}
                     />
                   </div>
                   <div>

@@ -1,13 +1,15 @@
 'use server'
 
-import { Card } from '@/components/ui/card'
+import { ExternalLink, Github, Star, GitFork } from 'lucide-react'
+import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+
+import { ContributionGraph } from '@/components/contribution-graph'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, Github, Star, GitFork } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 import { type GitHubProject } from '@/lib/github'
-import { ContributionGraph } from '@/components/contribution-graph'
-import { getTranslations } from 'next-intl/server'
-import { type Locale } from 'next-intl'
+
 
 interface ProjectsSectionProps {
   locale: Locale
@@ -25,19 +27,19 @@ interface ProjectsSectionProps {
   }>
 }
 
-export async function ProjectsSection({
+export const ProjectsSection = ({
   locale,
   githubUsername,
   projects,
   stats,
   contributionData,
-}: ProjectsSectionProps) {
+}: ProjectsSectionProps) => {
   const t = await getTranslations({ locale, namespace: 'projects' })
 
   return (
     <section
-      id="projects"
       className="from-background to-muted/20 min-h-screen bg-gradient-to-b px-4 py-20 md:px-8"
+      id="projects"
     >
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
@@ -98,8 +100,8 @@ export async function ProjectsSection({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, index) => (
             <Card
-              key={index}
               className="group hover:border-primary/50 flex flex-col overflow-hidden border-2 transition-all duration-300 hover:shadow-xl"
+              key={index}
             >
               <div className="from-primary/20 to-primary/5 relative h-48 overflow-hidden bg-gradient-to-br">
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -117,7 +119,7 @@ export async function ProjectsSection({
 
                 <div className="mb-4 flex flex-wrap gap-2">
                   {project.topics.map((topic) => (
-                    <Badge key={topic} variant="secondary" className="text-xs">
+                    <Badge className="text-xs" key={topic} variant="secondary">
                       {topic}
                     </Badge>
                   ))}
@@ -136,21 +138,21 @@ export async function ProjectsSection({
                   </div>
 
                   <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" asChild>
+                    <Button asChild={true} size="sm" variant="ghost">
                       <a
                         href={project.html_url}
-                        target="_blank"
                         rel="noopener noreferrer"
+                        target="_blank"
                       >
                         <Github className="h-4 w-4" />
                       </a>
                     </Button>
                     {project.homepage && (
-                      <Button size="sm" variant="ghost" asChild>
+                      <Button asChild={true} size="sm" variant="ghost">
                         <a
                           href={project.homepage}
-                          target="_blank"
                           rel="noopener noreferrer"
+                          target="_blank"
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
@@ -170,11 +172,11 @@ export async function ProjectsSection({
 
         {/* View All Projects Button */}
         <div className="mt-12 text-center">
-          <Button size="lg" asChild className="group">
+          <Button asChild={true} className="group" size="lg">
             <a
               href={`https://github.com/${githubUsername}`}
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
               {t('viewAll')}
               <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />

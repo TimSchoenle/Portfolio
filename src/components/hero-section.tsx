@@ -1,12 +1,14 @@
 'use server'
 
-import { Button } from '@/components/ui/button'
 import { Mail, Github, ArrowDown } from 'lucide-react'
-import { siteConfig } from '@/lib/config'
-import { getTranslations } from 'next-intl/server'
 import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 
-export async function HeroSection({ locale }: { locale: Locale }) {
+import { Button } from '@/components/ui/button'
+import { siteConfig } from '@/lib/config'
+
+
+export const HeroSection = ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'hero' })
 
   return (
@@ -33,24 +35,24 @@ export async function HeroSection({ locale }: { locale: Locale }) {
 
         <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-wrap items-center justify-center gap-4 delay-500 duration-1000">
           <Button
-            asChild
-            size="lg"
+            asChild={true}
             className="group shadow-lg transition-all hover:shadow-xl"
+            size="lg"
           >
             <a
               href={siteConfig.github}
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
               <Github className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
               {t('github')}
             </a>
           </Button>
           <Button
-            asChild
-            variant="outline"
-            size="lg"
+            asChild={true}
             className="group bg-transparent shadow-md transition-all hover:shadow-lg"
+            size="lg"
+            variant="outline"
           >
             <a href={`mailto:${siteConfig.email}`}>
               <Mail className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />

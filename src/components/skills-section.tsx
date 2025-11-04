@@ -1,16 +1,17 @@
 'use server'
 
+import { type Locale } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getTranslations } from 'next-intl/server'
-import { type Locale } from 'next-intl'
 import { siteConfig } from '@/lib/config'
 
-export async function SkillsSection({ locale }: { locale: Locale }) {
+export const SkillsSection = ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'skills' })
 
   return (
-    <section id="skills" className="bg-muted/30 relative px-4 py-20">
+    <section className="bg-muted/30 relative px-4 py-20" id="skills">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
 
       <div className="mx-auto w-full max-w-6xl">
@@ -33,10 +34,10 @@ export async function SkillsSection({ locale }: { locale: Locale }) {
               <div className="flex flex-wrap gap-2">
                 {siteConfig.skills.expertise.map((skill, index) => (
                   <Badge
-                    key={skill}
-                    variant="default"
                     className="transition-all hover:scale-105 hover:shadow-md"
+                    key={skill}
                     style={{ animationDelay: `${index * 50}ms` }}
+                    variant="default"
                   >
                     {skill}
                   </Badge>
@@ -56,10 +57,10 @@ export async function SkillsSection({ locale }: { locale: Locale }) {
               <div className="flex flex-wrap gap-2">
                 {siteConfig.skills.learning.map((skill, index) => (
                   <Badge
-                    key={skill}
-                    variant="secondary"
                     className="transition-all hover:scale-105 hover:shadow-md"
+                    key={skill}
                     style={{ animationDelay: `${index * 50}ms` }}
+                    variant="secondary"
                   >
                     {skill}
                   </Badge>
@@ -79,10 +80,10 @@ export async function SkillsSection({ locale }: { locale: Locale }) {
               <div className="flex flex-wrap gap-2">
                 {siteConfig.skills.tools.map((skill, index) => (
                   <Badge
-                    key={skill}
-                    variant="outline"
                     className="hover:bg-primary/5 transition-all hover:scale-105 hover:shadow-md"
+                    key={skill}
                     style={{ animationDelay: `${index * 50}ms` }}
+                    variant="outline"
                   >
                     {skill}
                   </Badge>
