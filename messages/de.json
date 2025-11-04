@@ -130,16 +130,46 @@
     "copyright": "Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers."
   },
   "cookies": {
-    "title": "Cookie-Einwilligung",
-    "description": "Wir verwenden Cookies, um Ihr Surferlebnis zu verbessern und unseren Datenverkehr zu analysieren. Durch Klicken auf 'Alle akzeptieren' stimmen Sie der Verwendung von Cookies zu.",
-    "acceptAll": "Alle akzeptieren",
-    "rejectAll": "Alle ablehnen",
-    "customize": "Anpassen",
-    "essential": "Notwendige Cookies",
-    "essentialDesc": "Erforderlich für das ordnungsgemäße Funktionieren der Website. Diese können nicht deaktiviert werden.",
-    "analytics": "Analyse-Cookies",
-    "analyticsDesc": "Helfen uns zu verstehen, wie Besucher mit unserer Website interagieren, indem Informationen anonym gesammelt und gemeldet werden.",
-    "save": "Einstellungen speichern"
+    "common": {
+      "acceptAll": "Alle akzeptieren",
+      "rejectAll": "Alle ablehnen",
+      "customize": "Anpassen",
+      "save": "Einstellungen speichern"
+    },
+    "banner": {
+      "title": "Wir respektieren Deine Privatsphäre.",
+      "description": "Diese Website verwendet Cookies, um Deine Surf-Erfahrung zu verbessern, den Seitenverkehr zu analysieren und persönliche Inhalte anzuzeigen."
+    },
+    "consentManagerDialog": {
+      "title": "Einstellungen",
+      "description": "Passe Deine Datenschutz-Einstellungen hier an. Wähle aus, welche Arten von Cookies und Tracking-Technologien zugelassen werden."
+    },
+    "consentTypes": {
+      "necessary": {
+        "title": "Unbedingt erforderliche Cookies",
+        "description": "Diese Cookies sind für das reibungslose Funktionieren der Website unerlässlich und können nicht deaktiviert werden."
+      },
+      "experience": {
+        "title": "Erfahrung",
+        "description": "Diese Cookies helfen uns dabei, ein besseres Nutzerlebnis zu bieten und neue Funktionen zu testen."
+      },
+      "functionality": {
+        "title": "Funktionalität",
+        "description": "Diese Cookies ermöglichen erweiterte Funktionalitäten und eine Personalisierung der Website."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Diese Cookies werden verwendet, um relevante Werbung anzuzeigen und ihre Wirksamkeit zu messen."
+      },
+      "measurement": {
+        "title": "Analyse",
+        "description": "Diese Cookies helfen uns zu verstehen, wie Besucher mit der Website interagieren um die Surf-Erfahrung zu verbessern."
+      }
+    },
+    "frame": {
+      "title": "Akzeptieren Sie {category}, um diesen Inhalt anzuzeigen.",
+      "actionButton": "Zustimmung für {category} aktivieren"
+    }
   },
   "privacy": {
     "title": "Datenschutzerklärung",

@@ -18,6 +18,7 @@
     "i18n-check": "i18n-check --unused src/ -f next-intl --source en --locales messages"
   },
   "dependencies": {
+    "@c15t/nextjs": "^1.7.1",
     "@commitlint/types": "latest",
     "@hookform/resolvers": "^5.2.2",
     "@octokit/rest": "latest",
@@ -77,12 +78,12 @@
     "zod": "4.1.12"
   },
   "devDependencies": {
-    "@lingual/i18n-check": "latest",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@commitlint/prompt-cli": "^20.1.0",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.38.0",
+    "@lingual/i18n-check": "latest",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.2",

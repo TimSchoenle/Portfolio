@@ -5,7 +5,6 @@ import '../globals.css'
 import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { CookieBanner } from '@/components/cookie-banner'
 import { CommandPalette } from '@/components/command-palette'
 import { EasterEggs } from '@/components/easter-eggs'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -15,6 +14,7 @@ import { siteConfig } from '@/lib/config'
 import { LegalFooter } from '@/components/legal-footer'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
+import ConsentManager from '@/components/consent-manager/consent-manager'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -126,14 +126,15 @@ export default async function RootLayout({
       >
         <NextIntlClientProvider locale={locale}>
           <ThemeProvider defaultTheme="dark">
-            <ThemeToggle />
-            <LanguageSwitcher />
-            <CommandPalette />
-            <EasterEggs />
-            {children}
-            <CookieBanner />
-            <LegalFooter locale={locale} />
-            <Toaster position="bottom-right" />
+            <ConsentManager locale={locale}>
+              <ThemeToggle />
+              <LanguageSwitcher />
+              <CommandPalette />
+              <EasterEggs />
+              {children}
+              <LegalFooter locale={locale} />
+              <Toaster position="bottom-right" />
+            </ConsentManager>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
