@@ -7,11 +7,9 @@ import { type JSX, type ReactNode } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
-import type { Translations } from '@/types/i18n'
+import type { LocalePageProps, Translations } from '@/types/i18n'
 
-interface AboutSectionProps {
-  readonly locale: Locale
-}
+type AboutSectionProps = LocalePageProps
 
 interface InfoCardProps {
   readonly icon: ReactNode
@@ -20,16 +18,16 @@ interface InfoCardProps {
 }
 
 interface AboutTranslations {
-  t: Translations
-  learningDescription: ReactNode
-  expertiseDescription: ReactNode
+  readonly t: Translations
+  readonly learningDescription: ReactNode
+  readonly expertiseDescription: ReactNode
 }
 
 const InfoCard: FCStrict<InfoCardProps> = ({
   icon,
   title,
   description,
-}: Readonly<InfoCardProps>): JSX.Element => (
+}: InfoCardProps): JSX.Element => (
   <Card className="group hover:border-primary/50 border-2 transition-all duration-300 hover:shadow-xl">
     <CardContent className="flex items-start gap-4 p-6">
       <div className="from-primary/10 to-primary/5 rounded-lg bg-gradient-to-br p-3 transition-transform duration-300 group-hover:scale-110">
@@ -52,7 +50,7 @@ async function getAboutTranslations(
   })
 
   const learningDescription: ReactNode = t.rich('learning.description', {
-    highlight: (chunks: Readonly<ReactNode>): JSX.Element => (
+    highlight: (chunks: ReactNode): JSX.Element => (
       <span className="text-foreground font-medium">{chunks}</span>
     ),
   })
@@ -67,12 +65,12 @@ async function getAboutTranslations(
 }
 
 interface CreateDescriptionParams {
-  readonly description: Readonly<ReactNode>
+  readonly description: ReactNode
 }
 
-const createDescription: FCStrict<Readonly<CreateDescriptionParams>> = ({
+const createDescription: FCStrict<CreateDescriptionParams> = ({
   description,
-}: Readonly<CreateDescriptionParams>): JSX.Element => {
+}: CreateDescriptionParams): JSX.Element => {
   return (
     <div className="text-muted-foreground leading-relaxed">{description}</div>
   )

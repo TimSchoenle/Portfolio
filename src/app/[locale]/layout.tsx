@@ -5,8 +5,7 @@ import '../globals.css'
 import type { Metadata } from 'next'
 import type { NextFontWithVariable } from 'next/dist/compiled/@next/font'
 import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google'
-import { notFound } from 'next/navigation'
-import { NextIntlClientProvider, hasLocale, type Locale } from 'next-intl'
+import { NextIntlClientProvider, type Locale } from 'next-intl'
 import { setRequestLocale } from 'next-intl/server'
 import type { JSX } from 'react'
 import { Toaster } from 'sonner'
@@ -18,9 +17,11 @@ import { LanguageSwitcher } from '@/components/language-switcher'
 import { LegalFooter } from '@/components/legal-footer'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { ensureLocaleFromParams } from '@/i18n/locale'
 import { getPathname, routing } from '@/i18n/routing'
 import { siteConfig } from '@/lib/config'
 import type { FCAsyncWithChildren, WithChildren } from '@/types/fc'
+import type { LocalePageProps, UnparsedLocalePageProps } from '@/types/i18n'
 
 /* ---------- fonts ---------- */
 const geist: NextFontWithVariable = Geist({
@@ -67,7 +68,7 @@ const buildAlternateLocales: (current: Locale) => string = (
 /* ---------- generateMetadata ---------- */
 
 interface GenerateMetadataParams {
-  readonly params: Promise<Readonly<{ readonly locale: Locale }>>
+  readonly params: Promise<LocalePageProps>
 }
 
 type GenerateMetadataFn = (
@@ -148,34 +149,24 @@ export const generateStaticParams: GenerateStaticParams =
   }
 
 /* ---------- layout ---------- */
-interface LanguageProps {
-  readonly locale: Locale
-}
-
 interface RootLayoutProps extends WithChildren {
-  readonly params: Readonly<Promise<LanguageProps>>
+  readonly params: Readonly<Promise<UnparsedLocalePageProps>>
 }
 
-const RootLayout: FCAsyncWithChildren<{
-  params: Promise<LanguageProps>
-}> = async (props: RootLayoutProps): Promise<JSX.Element> => {
-  const { children, params }: RootLayoutProps = props
+const RootLayout: FCAsyncWithChildren<RootLayoutProps> = async ({
+  children,
+  params,
+}: RootLayoutProps): Promise<JSX.Element> => {
+  const locale: Locale = await ensureLocaleFromParams(params)
 
-  const { locale }: { locale: string } = await params
-
-  if (!hasLocale(routing.locales as readonly Locale[], locale as Locale)) {
-    notFound()
-  }
-  const loc: Locale = locale as Locale
-
-  setRequestLocale(loc)
+  setRequestLocale(locale)
 
   return (
-    <html className="dark" lang={loc}>
+    <html className="dark" lang={locale}>
       <body
         className={`${geist.variable} ${geistMono.variable} ${sourceSerif.variable} font-sans antialiased`}
       >
-        <NextIntlClientProvider locale={loc}>
+        <NextIntlClientProvider locale={locale}>
           <ThemeProvider defaultTheme="dark">
             <ThemeToggle />
             <LanguageSwitcher />
@@ -183,7 +174,7 @@ const RootLayout: FCAsyncWithChildren<{
             <EasterEggs />
             {children}
             <CookieBanner />
-            <LegalFooter locale={loc} />
+            <LegalFooter locale={locale} />
             <Toaster position="bottom-right" />
           </ThemeProvider>
         </NextIntlClientProvider>

@@ -14,11 +14,13 @@ function goHome(): void {
   window.location.assign('/')
 }
 
-type ErrorHeaderProps = Readonly<{ title: string }>
+interface ErrorHeaderProps {
+  readonly title: string
+}
 
 const ErrorHeader: FCStrict<ErrorHeaderProps> = ({
   title,
-}: Readonly<ErrorHeaderProps>): JSX.Element => {
+}: ErrorHeaderProps): JSX.Element => {
   return (
     <CardHeader>
       <div className="flex items-center gap-2">
@@ -29,15 +31,15 @@ const ErrorHeader: FCStrict<ErrorHeaderProps> = ({
   )
 }
 
-type ErrorInfoProps = Readonly<{
-  digest?: string | undefined
-  label: string
-}>
+interface ErrorInfoProps {
+  readonly digest?: string | undefined
+  readonly label: string
+}
 
 const ErrorInfo: FCNullable<ErrorInfoProps> = ({
   digest,
   label,
-}: Readonly<ErrorInfoProps>): JSX.Element | null => {
+}: ErrorInfoProps): JSX.Element | null => {
   if (typeof digest !== 'string' || digest.length === 0) {
     return null
   }
@@ -49,15 +51,15 @@ const ErrorInfo: FCNullable<ErrorInfoProps> = ({
   )
 }
 
-type ErrorActionsLabels = Readonly<{
-  goHome: string
-  tryAgain: string
-}>
+interface ErrorActionsLabels {
+  readonly goHome: string
+  readonly tryAgain: string
+}
 
-type ErrorActionsProps = Readonly<{
-  labels: ErrorActionsLabels
-  reset: () => void
-}>
+interface ErrorActionsProps {
+  readonly labels: ErrorActionsLabels
+  readonly reset: () => void
+}
 
 const ErrorActions: FCStrict<ErrorActionsProps> = ({
   labels,
@@ -75,15 +77,15 @@ const ErrorActions: FCStrict<ErrorActionsProps> = ({
   )
 }
 
-type ErrorPageProps = Readonly<{
-  error: Readonly<Error> & { readonly digest?: string }
-  reset: () => void
-}>
+interface ErrorPageProps {
+  readonly error: Readonly<Error> & { readonly digest?: string }
+  readonly reset: () => void
+}
 
 const ErrorPage: FCStrict<ErrorPageProps> = ({
   error,
   reset,
-}: Readonly<ErrorPageProps>): JSX.Element => {
+}: ErrorPageProps): JSX.Element => {
   const t: Translations = useTranslations('error')
 
   return (

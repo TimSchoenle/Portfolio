@@ -1,6 +1,6 @@
 import { type Locale } from 'next-intl'
 import { setRequestLocale } from 'next-intl/server'
-import React, { type JSX } from 'react'
+import { type JSX } from 'react'
 
 import AboutSection from '@/components/about-section'
 import { ContactSection } from '@/components/contact-section'
@@ -9,15 +9,18 @@ import { HeroSection } from '@/components/hero-section'
 import { ProjectsSection } from '@/components/projects-section'
 import { SkillsSection } from '@/components/skills-section'
 import { TestimonialsSection } from '@/components/testimonials-section'
+import { ensureLocaleFromParams } from '@/i18n/locale'
 import { siteConfig } from '@/lib/config'
 import {
   getContributionData,
   getFeaturedProjects,
   getUserStats,
 } from '@/lib/github'
+import type { FCAsync, NoChildren } from '@/types/fc'
+import type { UnparsedLocalePageProps } from '@/types/i18n'
 
-interface HomeProps {
-  readonly params: Readonly<Promise<{ locale: Locale }>>
+interface HomeProps extends NoChildren {
+  readonly params: Promise<UnparsedLocalePageProps>
 }
 
 interface GitHubData {
@@ -44,10 +47,10 @@ const fetchGitHubData: () => Promise<
   return { projects, stats, contributionData }
 }
 
-const Home: React.FC<HomeProps> = async ({
+const Home: FCAsync<HomeProps> = async ({
   params,
-}: Readonly<HomeProps>): Promise<JSX.Element> => {
-  const { locale }: { readonly locale: Locale } = await params
+}: HomeProps): Promise<JSX.Element> => {
+  const locale: Locale = await ensureLocaleFromParams(params)
 
   setRequestLocale(locale)
 
