@@ -16,29 +16,27 @@ import {
   getFeaturedProjects,
   getUserStats,
 } from '@/lib/github'
+import type {
+  ContributionPoint,
+  GitHubProject,
+  UserStats,
+} from '@/types/github'
 import type { UnparsedLocalePageProps } from '@/types/i18n'
 import type { PageParams, RoutePageFC } from '@/types/page'
 
 interface GitHubData {
-  projects: Awaited<ReturnType<typeof getFeaturedProjects>>
-  stats: Awaited<ReturnType<typeof getUserStats>>
-  contributionData: Awaited<ReturnType<typeof getContributionData>>
+  projects: GitHubProject[]
+  stats: UserStats
+  contributionData: ContributionPoint[]
 }
 
 // Helper to fetch GitHub data
 const fetchGitHubData: () => Promise<
   Readonly<GitHubData>
 > = async (): Promise<GitHubData> => {
-  const projects: Awaited<ReturnType<typeof getFeaturedProjects>> =
-    await getFeaturedProjects(
-      siteConfig.githubUsername,
-      siteConfig.featuredRepos
-    )
-  const stats: Awaited<ReturnType<typeof getUserStats>> = await getUserStats(
-    siteConfig.githubUsername
-  )
-  const contributionData: Awaited<ReturnType<typeof getContributionData>> =
-    await getContributionData(siteConfig.githubUsername)
+  const projects: GitHubProject[] = await getFeaturedProjects()
+  const stats: UserStats = await getUserStats()
+  const contributionData: ContributionPoint[] = await getContributionData()
 
   return { projects, stats, contributionData }
 }

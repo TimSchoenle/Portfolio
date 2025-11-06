@@ -2,204 +2,277 @@ import 'server-only'
 import { Octokit } from '@octokit/rest'
 import { unstable_cache } from 'next/cache'
 
-const octokit = new Octokit({
+import { siteConfig } from '@/lib/config'
+import type {
+  ContributionPoint,
+  GitHubProject,
+  UserStats,
+} from '@/types/github'
+
+/* ----------------------------- shared interfaces ---------------------------- */
+interface GraphQLCalendarDay {
+  readonly date: string
+  readonly contributionCount: number
+  readonly contributionLevel:
+    | 'NONE'
+    | 'FIRST_QUARTILE'
+    | 'SECOND_QUARTILE'
+    | 'THIRD_QUARTILE'
+    | 'FOURTH_QUARTILE'
+}
+
+interface GraphQLCalendarWeek {
+  readonly contributionDays: readonly GraphQLCalendarDay[]
+}
+
+interface GraphQLCalendar {
+  readonly weeks: readonly GraphQLCalendarWeek[]
+}
+
+interface GraphQLUser {
+  readonly contributionsCollection: {
+    readonly contributionCalendar: GraphQLCalendar
+  }
+}
+
+interface GraphQLResponse {
+  readonly data: {
+    readonly user: GraphQLUser | null | undefined
+  }
+  readonly errors?: readonly unknown[]
+}
+
+/* --------------------------------- octokit --------------------------------- */
+
+const octokit: Octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 })
 
-export interface GitHubProject {
-  name: string
-  description: string
-  html_url: string
-  homepage: string | undefined
-  stargazers_count: number
-  forks_count: number
-  language: string
-  topics: string[]
-}
-
-const getFeaturedProjectsUncached = async (
-  username: string,
-  featuredRepos: readonly string[]
-): Promise<GitHubProject[]> => {
+/* ---------------------------- featured repositories --------------------------- */
+const getFeaturedProjectsUncached: () => Promise<
+  GitHubProject[]
+> = async (): Promise<GitHubProject[]> => {
   try {
-    const projects = await Promise.allSettled(
-      featuredRepos.map(async (repo) => {
-        const { data } = await octokit.repos.get({
-          owner: username,
-          repo,
-        })
+    const projects: PromiseSettledResult<GitHubProject>[] =
+      await Promise.allSettled(
+        siteConfig.featuredRepos.map(
+          async (repo: string): Promise<GitHubProject> => {
+            const resp: Awaited<ReturnType<typeof octokit.repos.get>> =
+              await octokit.repos.get({
+                owner: siteConfig.githubUsername,
+                repo,
+              })
 
-        return {
-          name: data.name,
-          description: data.description ?? '',
-          html_url: data.html_url,
-          homepage: data.homepage ?? undefined,
-          stargazers_count: data.stargazers_count,
-          forks_count: data.forks_count,
-          language: data.language ?? 'Unknown',
-          topics: data.topics ?? [],
-        }
-      })
-    )
+            return {
+              name: resp.data.name,
+              description: resp.data.description ?? '',
+              html_url: resp.data.html_url,
+              homepage: resp.data.homepage ?? undefined,
+              stargazers_count: resp.data.stargazers_count,
+              forks_count: resp.data.forks_count,
+              language: resp.data.language ?? 'Unknown',
+              topics: Array.isArray(resp.data.topics) ? resp.data.topics : [],
+            }
+          }
+        )
+      )
 
-    // Filter out failed requests and return successful ones
+    // Keep only fulfilled results
     return projects
       .filter(
-        (result): result is PromiseFulfilledResult<GitHubProject> =>
-          result.status === 'fulfilled'
+        (
+          r: PromiseSettledResult<GitHubProject>
+        ): r is PromiseFulfilledResult<GitHubProject> =>
+          r.status === 'fulfilled'
       )
-      .map((result) => result.value)
-  } catch (error) {
-    console.error('Error fetching GitHub projects:', error)
-    // Return empty array as fallback
+      .map((r: PromiseFulfilledResult<GitHubProject>): GitHubProject => r.value)
+  } catch (error: unknown) {
+    // Swallow per policy (no-console) and return a safe fallback
+    void error
     return []
   }
 }
 
-export const getFeaturedProjects = unstable_cache(
-  getFeaturedProjectsUncached,
-  ['featured-projects'],
-  { revalidate: 86400 } // Cache for 24 hours
-)
+export const getFeaturedProjects: () => Promise<GitHubProject[]> =
+  unstable_cache(getFeaturedProjectsUncached, ['featured-projects'], {
+    revalidate: 86_400, // 24h
+  })
 
-const getUserStatsUncached = async (username: string) => {
-  try {
-    // Fetch all pages of repositories
-    const repos = await octokit.paginate(octokit.repos.listForUser, {
-      username,
-      per_page: 100,
-      type: 'owner',
-    })
+/* -------------------------------- user stats -------------------------------- */
 
-    const totalStars = repos.reduce(
-      (acc, repo) => acc + (repo.stargazers_count ?? 0),
-      0
-    )
-    const totalForks = repos.reduce(
-      (acc, repo) => acc + (repo.forks_count ?? 0),
-      0
-    )
+const getUserStatsUncached: () => Promise<UserStats> =
+  async (): Promise<UserStats> => {
+    try {
+      const repos: readonly {
+        readonly stargazers_count?: number | null
+        readonly forks_count?: number | null
+      }[] = await octokit.paginate(octokit.repos.listForUser, {
+        username: siteConfig.githubUsername,
+        per_page: 100,
+        type: 'owner',
+      })
 
-    return {
-      repositories: repos.length,
-      stars: totalStars,
-      forks: totalForks,
-    }
-  } catch (error) {
-    console.error('Error fetching GitHub stats:', error)
-    // Return fallback data instead of zeros
-    return {
-      repositories: 0,
-      stars: 0,
-      forks: 0,
+      const totalStars: number = repos.reduce(
+        (
+          acc: number,
+          repo: { readonly stargazers_count?: number | null }
+        ): number => acc + (repo.stargazers_count ?? 0),
+        0
+      )
+
+      const totalForks: number = repos.reduce(
+        (acc: number, repo: { readonly forks_count?: number | null }): number =>
+          acc + (repo.forks_count ?? 0),
+        0
+      )
+
+      return {
+        repositories: repos.length,
+        stars: totalStars,
+        forks: totalForks,
+      }
+    } catch {
+      return { repositories: 0, stars: 0, forks: 0 }
     }
   }
-}
 
-export const getUserStats = unstable_cache(
+export const getUserStats: () => Promise<UserStats> = unstable_cache(
   getUserStatsUncached,
   ['user-stats'],
-  { revalidate: 86400 } // Cache for 24 hours
+  { revalidate: 86_400 }
 )
 
-interface ContributionDay {
-  date: string
-  contributionCount: number
-  contributionLevel: string
-}
+/* ------------------------ contributions (GraphQL API) ----------------------- */
 
-interface ContributionWeek {
-  contributionDays: ContributionDay[]
-}
-
-const getContributionDataUncached = async (
-  username: string
-): Promise<
-  { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }[]
-> => {
-  try {
-    const to = new Date().toISOString()
-    const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
-
-    const query = `
-      query($username: String!, $from: DateTime!, $to: DateTime!) {
-        user(login: $username) {
-          contributionsCollection(from: $from, to: $to) {
-            contributionCalendar {
-              totalContributions
-              weeks {
-                contributionDays {
-                  date
-                  contributionCount
-                  contributionLevel
-                }
-              }
+const buildContributionQuery: () => string = (): string => `
+  query($username: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $username) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          totalContributions
+          weeks {
+            contributionDays {
+              date
+              contributionCount
+              contributionLevel
             }
           }
         }
       }
-    `
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
     }
-    if (process.env.GITHUB_TOKEN) {
-      headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
-    }
+  }
+`
 
-    const response = await fetch('https://api.github.com/graphql', {
+const buildHeaders: () => Record<string, string> = (): Record<
+  string,
+  string
+> => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const token: string | undefined = process.env.GITHUB_TOKEN
+  if (token !== undefined && token !== '') {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
+}
+
+const isGraphQLResponse: (u: unknown) => u is GraphQLResponse = (
+  u: unknown
+): u is GraphQLResponse => {
+  if (typeof u !== 'object' || u === null) {
+    return false
+  }
+  const o: Record<string, unknown> = u as Record<string, unknown>
+  return 'data' in o
+}
+
+const levelToInt: (
+  level: GraphQLCalendarDay['contributionLevel']
+) => ContributionPoint['level'] = (
+  level: GraphQLCalendarDay['contributionLevel']
+): ContributionPoint['level'] => {
+  switch (level) {
+    case 'NONE':
+      return 0
+    case 'FIRST_QUARTILE':
+      return 1
+    case 'SECOND_QUARTILE':
+      return 2
+    case 'THIRD_QUARTILE':
+      return 3
+    case 'FOURTH_QUARTILE':
+      return 4
+    default:
+      return 0
+  }
+}
+
+const flattenWeeks: (
+  weeks: readonly GraphQLCalendarWeek[]
+) => ContributionPoint[] = (
+  weeks: readonly GraphQLCalendarWeek[]
+): ContributionPoint[] => {
+  const out: ContributionPoint[] = []
+  for (const week of weeks) {
+    for (const day of week.contributionDays) {
+      out.push({
+        date: day.date,
+        count: day.contributionCount,
+        level: levelToInt(day.contributionLevel),
+      })
+    }
+  }
+  return out
+}
+
+const getContributionDataUncached: () => Promise<
+  ContributionPoint[]
+> = async (): Promise<ContributionPoint[]> => {
+  try {
+    const to: string = new Date().toISOString()
+    const from: string = new Date(
+      Date.now() - 365 * 24 * 60 * 60 * 1000
+    ).toISOString()
+    const query: string = buildContributionQuery()
+    const headers: Record<string, string> = buildHeaders()
+
+    const response: Response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
-      headers: headers,
-      body: JSON.stringify({ query, variables: { username, from, to } }),
+      headers,
+      body: JSON.stringify({
+        query,
+        variables: { username: siteConfig.githubUsername, from, to },
+      }),
     })
 
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.status}`)
+      // avoid template-literal on number (restrict-template-expressions)
+      throw new Error('GitHub API error: ' + String(response.status))
     }
 
-    const data = await response.json()
+    const json: unknown = await response.json()
 
-    if (data.errors) {
-      console.error('GraphQL errors:', data.errors)
+    // Validate & extract weeks
+    if (!isGraphQLResponse(json)) {
+      return []
+    }
+    const hasErrors: boolean =
+      Array.isArray(json.errors) && json.errors.length > 0
+    if (hasErrors) {
+      // silently drop per no-console policy
       return []
     }
 
-    const weeks =
-      data.data?.user?.contributionsCollection?.contributionCalendar?.weeks ??
-      []
+    const weeks: readonly GraphQLCalendarWeek[] =
+      json.data.user?.contributionsCollection.contributionCalendar.weeks ?? []
 
-    const levelMap: Record<string, 0 | 1 | 2 | 3 | 4> = {
-      NONE: 0,
-      FIRST_QUARTILE: 1,
-      SECOND_QUARTILE: 2,
-      THIRD_QUARTILE: 3,
-      FOURTH_QUARTILE: 4,
-    }
-
-    const days: {
-      date: string
-      count: number
-      level: 0 | 1 | 2 | 3 | 4
-    }[] = []
-    for (const week of weeks as ContributionWeek[]) {
-      for (const day of week.contributionDays) {
-        days.push({
-          date: day.date,
-          count: day.contributionCount,
-          level: levelMap[day.contributionLevel] ?? 0,
-        })
-      }
-    }
-
-    return days
-  } catch (error) {
-    console.error('Error fetching contribution data:', error)
+    return flattenWeeks(weeks)
+  } catch (error: unknown) {
+    void error
     return []
   }
 }
 
-export const getContributionData = unstable_cache(
-  getContributionDataUncached,
-  ['contribution-data'],
-  { revalidate: 3600 } // Cache for 1 hour
-)
+export const getContributionData: () => Promise<ContributionPoint[]> =
+  unstable_cache(getContributionDataUncached, ['contribution-data'], {
+    revalidate: 3_600,
+  })

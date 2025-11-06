@@ -41,7 +41,7 @@ function createUrlEntry({
   ]
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl: string = siteConfig.url.replace(/\/$/, '')
   const now: Date = new Date()
 
