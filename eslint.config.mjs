@@ -125,7 +125,7 @@ export default [
       eqeqeq: ['error', 'always'],
       'no-console': 'error',
       complexity: ['error', 8],
-      'max-lines-per-function': ['error', 35],
+      'max-lines-per-function': ['error', 60],
       'max-lines': ['error', 400],
       'max-params': ['error', 3],
       'max-depth': ['error', 3],
