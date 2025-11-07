@@ -5,7 +5,7 @@ import { type Locale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { JSX } from 'react'
 
-import LegalPageLayout from '@/components/legal-page-layout'
+import { LegalPageLayout } from '@/components/legal-page-layout'
 import { ensureLocaleFromParams, maybeLocaleFromParams } from '@/i18n/locale'
 import { siteConfig } from '@/lib/config'
 import type { FCStrict } from '@/types/fc'

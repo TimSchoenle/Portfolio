@@ -6,7 +6,8 @@
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try refreshing the page.",
     "tryAgain": "Try again",
-    "goHome": "Go home"
+    "goHome": "Go home",
+    "errorIdLabel": "Error ID:"
   },
   "hero": {
     "greeting": "Hi, I'm",
@@ -63,7 +64,9 @@
     },
     "contributions": {
       "title": "GitHub Contributions",
-      "totalAmount": "{count} contributions in the last year"
+      "totalAmount": "{count} contributions in the last year",
+      "more": "More",
+      "less": "Less"
     },
     "viewAll": "View All Projects on GitHub"
   },

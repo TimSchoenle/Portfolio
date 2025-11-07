@@ -6,7 +6,8 @@
     "title": "Etwas ist schief gelaufen",
     "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie, die Seite zu aktualisieren.",
     "tryAgain": "Erneut versuchen",
-    "goHome": "Zur Startseite"
+    "goHome": "Zur Startseite",
+    "errorIdLabel": "Error ID:"
   },
   "hero": {
     "greeting": "Hallo, ich bin",
@@ -63,7 +64,9 @@
     },
     "contributions": {
       "title": "GitHub-Beiträge",
-      "totalAmount": "{count} beiträge im letzten Jahr"
+      "totalAmount": "{count} beiträge im letzten Jahr",
+      "more": "Mehr",
+      "less": "Weniger"
     },
     "viewAll": "Alle Projekte auf GitHub ansehen"
   },

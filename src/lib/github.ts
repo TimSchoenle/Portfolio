@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache'
 
 import { siteConfig } from '@/lib/config'
 import type {
+  ContributionLevel,
   ContributionPoint,
   GitHubProject,
   UserStats,
@@ -187,9 +188,9 @@ const isGraphQLResponse: (u: unknown) => u is GraphQLResponse = (
 
 const levelToInt: (
   level: GraphQLCalendarDay['contributionLevel']
-) => ContributionPoint['level'] = (
+) => ContributionLevel = (
   level: GraphQLCalendarDay['contributionLevel']
-): ContributionPoint['level'] => {
+): ContributionLevel => {
   switch (level) {
     case 'NONE':
       return 0

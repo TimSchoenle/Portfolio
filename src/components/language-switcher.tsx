@@ -1,28 +1,22 @@
 'use client'
 
 import { Globe } from 'lucide-react'
-import { type Route } from 'next'
-import { usePathname, useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { type Locale, useLocale } from 'next-intl'
+import { type JSX } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { getPathname } from '@/i18n/routing'
+import { usePathname, useRouter } from '@/i18n/routing'
+import type { FCStrict } from '@/types/fc'
 
+export const LanguageSwitcher: FCStrict = (): JSX.Element => {
+  const locale: Locale = useLocale()
 
-export const LanguageSwitcher = () => {
-  const locale = useLocale()
+  const pathname: string = usePathname()
+  const router: ReturnType<typeof useRouter> = useRouter()
 
-  const pathname = usePathname()
-  const router = useRouter()
-
-  const switchLanguage = () => {
-    const newLocale = locale === 'en' ? 'de' : 'en'
-    router.push(
-      getPathname({
-        href: pathname,
-        locale: newLocale,
-      }) as Route
-    )
+  const switchLanguage: () => void = (): void => {
+    const newLocale: Locale = locale === 'en' ? 'de' : 'en'
+    router.replace(pathname, { locale: newLocale })
   }
 
   return (

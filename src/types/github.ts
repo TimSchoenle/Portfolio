@@ -15,8 +15,14 @@ export interface UserStats {
   readonly forks: number
 }
 
+export const CONTRIBUTION_LEVELS: readonly [0, 1, 2, 3, 4] = [
+  0, 1, 2, 3, 4,
+] as const
+
+export type ContributionLevel = (typeof CONTRIBUTION_LEVELS)[number]
+
 export interface ContributionPoint {
   readonly date: string
   readonly count: number
-  readonly level: 0 | 1 | 2 | 3 | 4
+  readonly level: ContributionLevel
 }
