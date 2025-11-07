@@ -3,7 +3,7 @@ import { XIcon } from 'lucide-react'
 import type { ComponentProps, JSX } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { FCStrict, FCWithRequiredChildren } from '@/types/fc'
+import type { FCWithChildren } from '@/types/fc'
 
 /* ───────────── props ───────────── */
 
@@ -23,27 +23,27 @@ type DialogDescriptionProps = ComponentProps<typeof DialogPrimitive.Description>
 
 /* ───────────── components ───────────── */
 
-const Dialog: FCStrict<DialogRootProps> = (
+const Dialog: FCWithChildren<DialogRootProps> = (
   props: DialogRootProps
 ): JSX.Element => <DialogPrimitive.Root data-slot="dialog" {...props} />
 
-const DialogTrigger: FCStrict<DialogTriggerProps> = (
+const DialogTrigger: FCWithChildren<DialogTriggerProps> = (
   props: DialogTriggerProps
 ): JSX.Element => (
   <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 )
 
-const DialogPortal: FCStrict<DialogPortalProps> = (
+const DialogPortal: FCWithChildren<DialogPortalProps> = (
   props: DialogPortalProps
 ): JSX.Element => (
   <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 )
 
-const DialogClose: FCStrict<DialogCloseProps> = (
+const DialogClose: FCWithChildren<DialogCloseProps> = (
   props: DialogCloseProps
 ): JSX.Element => <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 
-const DialogOverlay: FCStrict<DialogOverlayProps> = ({
+const DialogOverlay: FCWithChildren<DialogOverlayProps> = ({
   className,
   ...props
 }: DialogOverlayProps): JSX.Element => {
@@ -59,7 +59,7 @@ const DialogOverlay: FCStrict<DialogOverlayProps> = ({
   )
 }
 
-const DialogContent: FCWithRequiredChildren<DialogContentBaseProps> = ({
+const DialogContent: FCWithChildren<DialogContentBaseProps> = ({
   className,
   children,
   showCloseButton = true,
@@ -91,7 +91,7 @@ const DialogContent: FCWithRequiredChildren<DialogContentBaseProps> = ({
   )
 }
 
-const DialogHeader: FCStrict<DialogHeaderProps> = ({
+const DialogHeader: FCWithChildren<DialogHeaderProps> = ({
   className,
   ...props
 }: DialogHeaderProps): JSX.Element => {
@@ -104,7 +104,7 @@ const DialogHeader: FCStrict<DialogHeaderProps> = ({
   )
 }
 
-const DialogFooter: FCStrict<DialogFooterProps> = ({
+const DialogFooter: FCWithChildren<DialogFooterProps> = ({
   className,
   ...props
 }: DialogFooterProps): JSX.Element => {
@@ -120,7 +120,7 @@ const DialogFooter: FCStrict<DialogFooterProps> = ({
   )
 }
 
-const DialogTitle: FCStrict<DialogTitleProps> = ({
+const DialogTitle: FCWithChildren<DialogTitleProps> = ({
   className,
   ...props
 }: DialogTitleProps): JSX.Element => {
@@ -133,7 +133,7 @@ const DialogTitle: FCStrict<DialogTitleProps> = ({
   )
 }
 
-const DialogDescription: FCStrict<DialogDescriptionProps> = ({
+const DialogDescription: FCWithChildren<DialogDescriptionProps> = ({
   className,
   ...props
 }: DialogDescriptionProps): JSX.Element => {

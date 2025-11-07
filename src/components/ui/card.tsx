@@ -1,17 +1,17 @@
 import type { ComponentProps, JSX } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { FCStrict } from '@/types/fc'
+import type { FCWithChildren } from '@/types/fc'
 
-interface CardProps extends ComponentProps<'div'> {}
-interface CardHeaderProps extends ComponentProps<'div'> {}
-interface CardTitleProps extends ComponentProps<'div'> {}
-interface CardDescriptionProps extends ComponentProps<'div'> {}
-interface CardActionProps extends ComponentProps<'div'> {}
-interface CardContentProps extends ComponentProps<'div'> {}
-interface CardFooterProps extends ComponentProps<'div'> {}
+type CardProps = ComponentProps<'div'>
+type CardHeaderProps = ComponentProps<'div'>
+type CardTitleProps = ComponentProps<'div'>
+type CardDescriptionProps = ComponentProps<'div'>
+type CardActionProps = ComponentProps<'div'>
+type CardContentProps = ComponentProps<'div'>
+type CardFooterProps = ComponentProps<'div'>
 
-const Card: FCStrict<CardProps> = ({
+const Card: FCWithChildren<CardProps> = ({
   className,
   ...props
 }: CardProps): JSX.Element => {
@@ -27,7 +27,7 @@ const Card: FCStrict<CardProps> = ({
   )
 }
 
-const CardHeader: FCStrict<CardHeaderProps> = ({
+const CardHeader: FCWithChildren<CardHeaderProps> = ({
   className,
   ...props
 }: CardHeaderProps): JSX.Element => {
@@ -43,7 +43,7 @@ const CardHeader: FCStrict<CardHeaderProps> = ({
   )
 }
 
-const CardTitle: FCStrict<CardTitleProps> = ({
+const CardTitle: FCWithChildren<CardTitleProps> = ({
   className,
   ...props
 }: CardTitleProps): JSX.Element => {
@@ -56,7 +56,7 @@ const CardTitle: FCStrict<CardTitleProps> = ({
   )
 }
 
-const CardDescription: FCStrict<CardDescriptionProps> = ({
+const CardDescription: FCWithChildren<CardDescriptionProps> = ({
   className,
   ...props
 }: CardDescriptionProps): JSX.Element => {
@@ -69,7 +69,7 @@ const CardDescription: FCStrict<CardDescriptionProps> = ({
   )
 }
 
-const CardAction: FCStrict<CardActionProps> = ({
+const CardAction: FCWithChildren<CardActionProps> = ({
   className,
   ...props
 }: CardActionProps): JSX.Element => {
@@ -85,7 +85,7 @@ const CardAction: FCStrict<CardActionProps> = ({
   )
 }
 
-const CardContent: FCStrict<CardContentProps> = ({
+const CardContent: FCWithChildren<CardContentProps> = ({
   className,
   ...props
 }: CardContentProps): JSX.Element => {
@@ -98,7 +98,7 @@ const CardContent: FCStrict<CardContentProps> = ({
   )
 }
 
-const CardFooter: FCStrict<CardFooterProps> = ({
+const CardFooter: FCWithChildren<CardFooterProps> = ({
   className,
   ...props
 }: CardFooterProps): JSX.Element => {

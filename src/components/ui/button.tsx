@@ -3,24 +3,26 @@ import { cva } from 'class-variance-authority'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import type { FCStrict } from '@/types/fc'
+import type { FCWithChildren } from '@/types/fc'
 
-/* ──────────────────── types ──────────────────── */
+/* ─────────── types ─────────── */
+
+type ButtonVariant =
+  | 'default'
+  | 'destructive'
+  | 'outline'
+  | 'secondary'
+  | 'ghost'
+  | 'link'
+
+type ButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'icon-sm' | 'icon-lg'
 
 interface ButtonVariantProps {
-  readonly variant?:
-    | 'default'
-    | 'destructive'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link'
-  readonly size?: 'default' | 'sm' | 'lg' | 'icon' | 'icon-sm' | 'icon-lg'
+  readonly variant?: ButtonVariant
+  readonly size?: ButtonSize
 }
 
-type ButtonClassGenerator = (
-  options?: ButtonVariantProps & { readonly className?: string }
-) => string
+type ButtonClassGenerator = (options?: ButtonVariantProps) => string
 
 export interface ButtonProps
   extends React.ComponentProps<'button'>,
@@ -28,7 +30,7 @@ export interface ButtonProps
   readonly asChild?: boolean
 }
 
-/* ───────────────── implementations ───────────────── */
+/* ───────── implementations ───────── */
 
 export const buttonVariants: ButtonClassGenerator = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
@@ -62,7 +64,7 @@ export const buttonVariants: ButtonClassGenerator = cva(
   }
 )
 
-export const Button: FCStrict<ButtonProps> = ({
+export const Button: FCWithChildren<ButtonProps> = ({
   className,
   variant,
   size,
@@ -71,11 +73,16 @@ export const Button: FCStrict<ButtonProps> = ({
 }: ButtonProps): React.JSX.Element => {
   const Comp: React.ElementType = asChild ? Slot : 'button'
 
-  return (
-    <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
-      data-slot="button"
-      {...props}
-    />
-  )
+  // Omit undefined keys for exactOptionalPropertyTypes
+  let opts: ButtonVariantProps | undefined
+  if (variant !== undefined || size !== undefined) {
+    opts = {
+      ...(variant !== undefined ? { variant } : {}),
+      ...(size !== undefined ? { size } : {}),
+    }
+  }
+
+  const classes: string = cn(buttonVariants(opts), className)
+
+  return <Comp className={classes} data-slot="button" {...props} />
 }

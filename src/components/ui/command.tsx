@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import type { FCStrict, FCWithRequiredChildren } from '@/types/fc'
+import type { FCWithChildren } from '@/types/fc'
 
 /* ───────────── types ───────────── */
 
@@ -39,7 +39,7 @@ type CommandShortcutProps = ComponentProps<'span'>
 
 /* ───────────── components ───────────── */
 
-const Command: FCStrict<CommandRootProps> = ({
+const Command: FCWithChildren<CommandRootProps> = ({
   className,
   ...props
 }: CommandRootProps): JSX.Element => {
@@ -55,7 +55,7 @@ const Command: FCStrict<CommandRootProps> = ({
   )
 }
 
-const CommandDialog: FCWithRequiredChildren<CommandDialogProps> = ({
+const CommandDialog: FCWithChildren<CommandDialogProps> = ({
   title,
   description,
   children,
@@ -81,7 +81,7 @@ const CommandDialog: FCWithRequiredChildren<CommandDialogProps> = ({
   )
 }
 
-const CommandInput: FCStrict<CommandInputProps> = ({
+const CommandInput: FCWithChildren<CommandInputProps> = ({
   className,
   ...props
 }: CommandInputProps): JSX.Element => {
@@ -103,7 +103,7 @@ const CommandInput: FCStrict<CommandInputProps> = ({
   )
 }
 
-const CommandList: FCStrict<CommandListProps> = ({
+const CommandList: FCWithChildren<CommandListProps> = ({
   className,
   ...props
 }: CommandListProps): JSX.Element => {
@@ -119,7 +119,7 @@ const CommandList: FCStrict<CommandListProps> = ({
   )
 }
 
-const CommandEmpty: FCStrict<CommandEmptyProps> = (
+const CommandEmpty: FCWithChildren<CommandEmptyProps> = (
   props: CommandEmptyProps
 ): JSX.Element => {
   return (
@@ -131,7 +131,7 @@ const CommandEmpty: FCStrict<CommandEmptyProps> = (
   )
 }
 
-const CommandGroup: FCStrict<CommandGroupProps> = ({
+const CommandGroup: FCWithChildren<CommandGroupProps> = ({
   className,
   ...props
 }: CommandGroupProps): JSX.Element => {
@@ -147,7 +147,7 @@ const CommandGroup: FCStrict<CommandGroupProps> = ({
   )
 }
 
-const CommandSeparator: FCStrict<CommandSeparatorProps> = ({
+const CommandSeparator: FCWithChildren<CommandSeparatorProps> = ({
   className,
   ...props
 }: CommandSeparatorProps): JSX.Element => {
@@ -160,7 +160,7 @@ const CommandSeparator: FCStrict<CommandSeparatorProps> = ({
   )
 }
 
-const CommandItem: FCStrict<CommandItemProps> = ({
+const CommandItem: FCWithChildren<CommandItemProps> = ({
   className,
   ...props
 }: CommandItemProps): JSX.Element => {
@@ -176,7 +176,7 @@ const CommandItem: FCStrict<CommandItemProps> = ({
   )
 }
 
-const CommandShortcut: FCStrict<CommandShortcutProps> = ({
+const CommandShortcut: FCWithChildren<CommandShortcutProps> = ({
   className,
   ...props
 }: CommandShortcutProps): JSX.Element => {

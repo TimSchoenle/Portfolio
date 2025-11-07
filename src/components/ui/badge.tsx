@@ -3,7 +3,7 @@ import { cva } from 'class-variance-authority'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import type { FCStrict } from '@/types/fc'
+import type { FCWithChildren } from '@/types/fc'
 
 /* ── types ───────────────────────────────────────────────────────────── */
 
@@ -13,9 +13,7 @@ interface BadgeVariantProps {
   readonly variant?: BadgeVariant
 }
 
-type BadgeClassGenerator = (
-  options?: BadgeVariantProps & { readonly className?: string }
-) => string
+type BadgeClassGenerator = (options?: BadgeVariantProps) => string
 
 export interface BadgeProps
   extends React.ComponentProps<'span'>,
@@ -24,7 +22,6 @@ export interface BadgeProps
 }
 
 /* ── implementations ─────────────────────────────────────────────────── */
-
 export const badgeVariants: BadgeClassGenerator = cva(
   'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden',
   {
@@ -46,7 +43,7 @@ export const badgeVariants: BadgeClassGenerator = cva(
   }
 )
 
-export const Badge: FCStrict<BadgeProps> = ({
+export const Badge: FCWithChildren<BadgeProps> = ({
   className,
   variant,
   asChild = false,
@@ -54,11 +51,11 @@ export const Badge: FCStrict<BadgeProps> = ({
 }: BadgeProps): React.JSX.Element => {
   const Comp: React.ElementType = asChild ? Slot : 'span'
 
-  return (
-    <Comp
-      className={cn(badgeVariants({ variant, className }))}
-      data-slot="badge"
-      {...props}
-    />
-  )
+  // With exactOptionalPropertyTypes: omit the key when undefined.
+  const variantArg: BadgeVariantProps | undefined =
+    variant !== undefined ? { variant } : undefined
+
+  const classes: string = cn(badgeVariants(variantArg), className)
+
+  return <Comp className={classes} data-slot="badge" {...props} />
 }

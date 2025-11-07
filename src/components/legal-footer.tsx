@@ -1,12 +1,18 @@
 'use server'
 
-import { type Locale } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
+import { type JSX } from 'react'
 
 import { Link } from '@/i18n/routing'
+import type { AsyncPageFC } from '@/types/fc'
+import type { LocalePageProps, Translations } from '@/types/i18n'
 
-export const LegalFooter = async ({ locale }: { locale: Locale }) => {
-  const t = await getTranslations({ locale })
+type LegalFooterProps = LocalePageProps
+
+export const LegalFooter: AsyncPageFC<LegalFooterProps> = async ({
+  locale,
+}: LegalFooterProps): Promise<JSX.Element> => {
+  const t: Translations<''> = await getTranslations({ locale })
 
   return (
     <footer className="mt-8 text-center">
