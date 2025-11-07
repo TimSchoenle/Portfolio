@@ -23,7 +23,7 @@ export const generateMetadata: GenerateMetadataFC<
     return {}
   }
 
-  const t: Translations = await getTranslations({
+  const t: Translations<'imprint'> = await getTranslations({
     locale,
     namespace: 'imprint',
   })
@@ -98,17 +98,16 @@ const ImprintPage: RoutePageFC<ImprintPageProps> = async ({
 
   setRequestLocale(locale)
 
-  const t: Translations = await getTranslations({
+  const t: Translations<'imprint'> = await getTranslations({
     locale,
     namespace: 'imprint',
   })
-  const tContact: Translations = await getTranslations({
+  const tContact: Translations<'contact'> = await getTranslations({
     locale,
     namespace: 'contact',
   })
 
   const ownerName: string = siteConfig.fullName
-  // eslint-disable-next-line @typescript-eslint/no-inferrable-types
   const ownerCountry: string = 'Germany'
 
   return (

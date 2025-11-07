@@ -14,7 +14,7 @@ type BackToHomeProps = LocalePageProps
 export const BackToHome: AsyncPageFC<BackToHomeProps> = async ({
   locale,
 }: BackToHomeProps): Promise<JSX.Element> => {
-  const t: Translations = await getTranslations({
+  const t: Translations<'imprint'> = await getTranslations({
     locale,
     namespace: 'imprint',
   })

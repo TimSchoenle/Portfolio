@@ -18,7 +18,7 @@ interface InfoCardProps {
 }
 
 interface AboutTranslations {
-  readonly t: Translations
+  readonly t: Translations<'about'>
   readonly learningDescription: ReactNode
   readonly expertiseDescription: ReactNode
 }
@@ -44,7 +44,7 @@ const InfoCard: FCStrict<InfoCardProps> = ({
 async function getAboutTranslations(
   locale: Locale
 ): Promise<AboutTranslations> {
-  const t: Translations = await getTranslations({
+  const t: Translations<'about'> = await getTranslations({
     locale,
     namespace: 'about',
   })

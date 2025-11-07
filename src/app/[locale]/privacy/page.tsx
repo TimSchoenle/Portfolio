@@ -5,7 +5,7 @@ import { type Locale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { JSX } from 'react'
 
-import LegalPageLayout from '@/components/legal-page-layout'
+import { LegalPageLayout } from '@/components/legal-page-layout'
 import { ensureLocaleFromParams, maybeLocaleFromParams } from '@/i18n/locale'
 import type { FCStrict } from '@/types/fc'
 import type { Translations, UnparsedLocalePageProps } from '@/types/i18n'
@@ -22,7 +22,7 @@ export const generateMetadata: GenerateMetadataFC<
     return {}
   }
 
-  const t: Translations = await getTranslations({
+  const t: Translations<'privacy'> = await getTranslations({
     locale,
     namespace: 'privacy',
   })
@@ -150,7 +150,7 @@ const PrivacyPolicyPage: RoutePageFC<PrivacyPageProps> = async ({
 
   setRequestLocale(locale)
 
-  const t: Translations = await getTranslations({
+  const t: Translations<'privacy'> = await getTranslations({
     locale,
     namespace: 'privacy',
   })

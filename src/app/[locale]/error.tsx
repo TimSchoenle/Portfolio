@@ -86,7 +86,7 @@ const ErrorPage: FCStrict<ErrorPageProps> = ({
   error,
   reset,
 }: ErrorPageProps): JSX.Element => {
-  const t: Translations = useTranslations('error')
+  const t: Translations<'error'> = useTranslations('error')
 
   return (
     <div className="bg-background flex min-h-screen items-center justify-center p-4">

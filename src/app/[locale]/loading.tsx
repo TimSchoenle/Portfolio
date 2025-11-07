@@ -7,7 +7,7 @@ import type { PageFC } from '@/types/fc'
 import type { Translations } from '@/types/i18n'
 
 const Loading: PageFC = (): JSX.Element => {
-  const t: Translations = useTranslations('loading')
+  const t: Translations<'loading'> = useTranslations('loading')
 
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
