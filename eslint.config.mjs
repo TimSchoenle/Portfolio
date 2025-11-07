@@ -148,6 +148,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unnecessary-condition': 'error',
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/typedef': [
         'error',
         {
