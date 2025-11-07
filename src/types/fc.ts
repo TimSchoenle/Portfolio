@@ -83,13 +83,15 @@ export type ForwardRefComponentWithChildren<P, R> = ForwardRefExoticComponent<
  * becomes noisy here. We keep props readonly and suppress the rule for `ref` only.
  */
 
-export type ForwardRefRender<P, R> =
-   
-  (props: Readonly<P & NoChildren>, ref: ForwardedRef<R>) => JSX.Element
+export type ForwardRefRender<P, R> = (
+  props: Readonly<P & NoChildren>,
+  ref: ForwardedRef<R>
+) => JSX.Element
 
-export type ForwardRefRenderWithChildren<P, R> =
-   
-  (props: Readonly<P & WithChildren>, ref: ForwardedRef<R>) => JSX.Element
+export type ForwardRefRenderWithChildren<P, R> = (
+  props: Readonly<P & WithChildren>,
+  ref: ForwardedRef<R>
+) => JSX.Element
 
 /** ------------------------------------------------------------------------
  *  Polymorphic "as" pattern
