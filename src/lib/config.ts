@@ -1,34 +1,39 @@
-/**
- * Site Configuration
- *
- * Centralized configuration for easy customization
- */
-export const siteConfig = {
-  // Personal Information
-  name: 'Tim',
-  fullName: 'Tim Schönle',
+export interface SiteConfig {
+  readonly description: string
+  readonly email: string
+  readonly featuredRepos: readonly string[]
+  readonly fullName: string
+  readonly github: string
+  readonly githubUsername: string
+  readonly name: string
+  readonly seo: {
+    readonly keywords: readonly string[]
+  }
+  readonly skills: {
+    readonly expertise: readonly string[]
+    readonly learning: readonly string[]
+    readonly tools: readonly string[]
+  }
+  readonly title: string
+  readonly twitter: string
+  readonly url: string
+  readonly username: string
+}
+
+export const siteConfig: SiteConfig = {
   description:
     'Portfolio of Tim - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
-  username: 'Timmi6790',
-  title: 'Tim - Software Developer',
-
-  // Contact Information
   email: 'contact@timmi6790.de',
-  github: 'https://github.com/Timmi6790',
-  twitter: '@Timmi6790',
-
-  // Site URLs
-  url: 'https://timmi6790.de',
-
-  // GitHub Configuration
-  githubUsername: 'Timmi6790',
   featuredRepos: [
     'cloudflare-access-webhook-redirect',
     's3-bucket-perma-link',
     'helm-charts',
   ],
+  fullName: 'Tim Schönle',
+  github: 'https://github.com/Timmi6790',
 
-  // SEO Configuration
+  githubUsername: 'Timmi6790',
+  name: 'Tim',
   seo: {
     keywords: [
       'Tim',
@@ -42,13 +47,16 @@ export const siteConfig = {
       'Germany',
     ],
   },
-
-  // List of skills to display on the skills section
   skills: {
     expertise: ['Java', 'Spring Boot', 'Maven', 'Gradle'],
     learning: ['Rust', 'Next.js', 'React', 'TypeScript'],
     tools: ['Git', 'GitHub', 'Docker', 'Linux'],
   },
-} as const
 
-export type SiteConfig = typeof siteConfig
+  title: 'Tim - Software Developer',
+  twitter: '@Timmi6790',
+
+  url: 'https://timmi6790.de',
+
+  username: 'Timmi6790',
+}

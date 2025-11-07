@@ -3,25 +3,29 @@
   "compilerOptions": {
     // ======================================================================
     // Language & Environment
-    // Defines JavaScript version and runtime environment
     // ======================================================================
-    "target": "ES2017",
-    "module": "esnext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022", // Modern JS target
+    "module": "ESNext", // Keep ESNext modules for tree-shaking
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "moduleResolution": "bundler",
     "isolatedModules": true,
+    "allowJs": false, // Only TypeScript files allowed for stricter typing
+    "checkJs": false, // No JS checking
+    "jsx": "react-jsx",
+
     // ======================================================================
-    // Type Safety - Foundation
-    // Core type checking settings for a robust codebase
+    // Type Safety - Core
     // ======================================================================
-    "strict": true,
+    "strict": true, // Enable all strict checks
     "alwaysStrict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "useUnknownInCatchVariables": true,
+
     // ======================================================================
     // Type Safety - Advanced
-    // Additional checks for higher code quality
     // ======================================================================
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
@@ -29,49 +33,45 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "allowUnreachableCode": false,
-    "useUnknownInCatchVariables": true,
     "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true, // Prevent undefined sneaking in optional properties
+    "verbatimModuleSyntax": true, // Preserve type-only imports for stricter checking
+
     // ======================================================================
     // Interoperability
-    // Settings for working with different file types and modules
     // ======================================================================
-    "allowJs": true,
-    "checkJs": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "allowArbitraryExtensions": true,
+
     // ======================================================================
     // Build & Performance
-    // Settings that affect compilation output and build performance
     // ======================================================================
-    "skipLibCheck": true,
+    "skipLibCheck": false, // Enforce library type checks for maximum safety
     "removeComments": true,
-    "preserveConstEnums": true,
     "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+
     // ======================================================================
-    // Project Structure
-    // Configure import paths and module resolution
+    // Module Path Aliases
     // ======================================================================
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/public/*": ["./public/*"]
     },
+
     // ======================================================================
-    // Next.js Project Configuration
-    // Controls settings specific to Next.js framework
+    // Plugins
     // ======================================================================
-    "jsx": "react-jsx", // Uses the React automatic runtime
-    "incremental": true, // Enable faster incremental builds
-    "noEmit": true, // Skip emitting files (Next.js handles this)
-    "allowArbitraryExtensions": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ] // Enable Next.js TypeScript plugin
+    "plugins": [{ "name": "next" }]
   },
-  // Files to include/exclude from the project
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.e2e.ts"],
+
+  // ======================================================================
+  // Include/Exclude
+  // ======================================================================
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.e2e.ts", ".next"],
   "include": [
     "next-env.d.ts",
     "**/*.ts",

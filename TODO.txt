@@ -1,3 +1,4 @@
 * Update privacy policy
 * Update imprint (https://online-impressum.de/produkt/basis-paket-impressum/)
 * I might need to put the permanent cookies for language and theme behind a cookie consent
+* Improve dark reader support for the hero title

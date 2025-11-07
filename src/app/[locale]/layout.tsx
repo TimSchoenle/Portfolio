@@ -1,126 +1,171 @@
-import type React from 'react'
-import type { Metadata } from 'next'
-import { Toaster } from 'sonner'
 import '../globals.css'
+
+import type { JSX } from 'react'
+
+import type { Metadata } from 'next'
+import { type Locale, NextIntlClientProvider } from 'next-intl'
+
 import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google'
-import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { CookieBanner } from '@/components/cookie-banner'
+import { setRequestLocale } from 'next-intl/server'
+import { Toaster } from 'sonner'
+
 import { CommandPalette } from '@/components/command-palette'
+import { CookieBanner } from '@/components/cookie-banner'
 import { EasterEggs } from '@/components/easter-eggs'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { NextIntlClientProvider, hasLocale, type Locale } from 'next-intl'
+import { LegalFooter } from '@/components/legal-footer'
+import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeToggle } from '@/components/theme-toggle'
+import {
+  ensureLocaleFromParameters,
+  maybeLocaleFromParameters,
+} from '@/i18n/locale'
 import { getPathname, routing } from '@/i18n/routing'
 import { siteConfig } from '@/lib/config'
-import { LegalFooter } from '@/components/legal-footer'
-import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import type { UnparsedLocalePageProperties } from '@/types/i18n'
+import type {
+  GenerateMetadataFC,
+  PageParameters,
+  PageParametersWithChildren,
+  RoutePageWithChildrenFC,
+} from '@/types/page'
 
-const geist = Geist({
+import type { NextFontWithVariable } from 'next/dist/compiled/@next/font'
+
+/* ---------- fonts ---------- */
+const geist: NextFontWithVariable = Geist({
   subsets: ['latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
   variable: '--font-geist',
-})
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-geist-mono',
-})
-const sourceSerif = Source_Serif_4({
-  subsets: ['latin'],
-  weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-source-serif',
 })
 
-// Dynamic metadata based on locale
-export async function generateMetadata({
+const geistMono: NextFontWithVariable = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+})
+
+const sourceSerif: NextFontWithVariable = Source_Serif_4({
+  subsets: ['latin'],
+  variable: '--font-source-serif',
+  weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
+})
+
+/* ---------- helpers (readonly params, no inline callbacks) ---------- */
+const buildLanguages: () => Record<string, string> = (): Record<
+  string,
+  string
+> => {
+  return Object.fromEntries(
+    (routing.locales as readonly Locale[]).map(
+      (loc: Locale): readonly [Locale, string] => [
+        loc,
+        `${siteConfig.url}/${getPathname({ href: '/', locale: loc })}`,
+      ]
+    )
+  )
+}
+
+const buildAlternateLocales: (current: Locale) => string = (
+  current: Locale
+): string => {
+  return (routing.locales as readonly Locale[])
+    .filter((loc: Locale): boolean => loc !== current)
+    .join(', ')
+}
+
+/* ---------- generateMetadata ---------- */
+export const generateMetadata: GenerateMetadataFC<
+  UnparsedLocalePageProperties
+> = async ({
   params,
-}: {
-  params: Promise<{ locale: Locale }>
-}): Promise<Metadata> {
-  const { locale } = await params
+}: PageParameters<UnparsedLocalePageProperties>): Promise<Metadata> => {
+  const locale: Locale | null = await maybeLocaleFromParameters(params)
+  if (locale === null) {
+    return {}
+  }
+
   return {
+    alternates: {
+      languages: buildLanguages(),
+    },
+    authors: [{ name: siteConfig.fullName, url: siteConfig.url }],
+    creator: siteConfig.fullName,
+    description: siteConfig.description,
+    keywords: siteConfig.seo.keywords.join(', '),
     metadataBase: new URL(siteConfig.url),
+    openGraph: {
+      alternateLocale: buildAlternateLocales(locale),
+      description: siteConfig.description,
+      images: [
+        {
+          alt: siteConfig.title,
+          height: 630,
+          url: '/og-image.png',
+          width: 1200,
+        },
+      ],
+      locale,
+      siteName: siteConfig.title,
+      title: siteConfig.title,
+      type: 'website',
+      url: `${siteConfig.url}/${locale}`,
+    },
+    publisher: siteConfig.fullName,
+    robots: {
+      follow: true,
+      googleBot: {
+        follow: true,
+        index: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+      index: true,
+    },
     title: {
       default: siteConfig.title,
       template: `%s | ${siteConfig.title}`,
     },
-    description: siteConfig.description,
-    keywords: siteConfig.seo.keywords.join(', '),
-    authors: [{ name: siteConfig.fullName, url: siteConfig.url }],
-    creator: siteConfig.fullName,
-    publisher: siteConfig.fullName,
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
-    },
-    openGraph: {
-      type: 'website',
-      locale: locale,
-      alternateLocale: routing.locales
-        .filter((loc: Locale) => loc !== locale)
-        .join(', '),
-      url: `${siteConfig.url}/${locale}`,
-      title: siteConfig.title,
-      description: siteConfig.description,
-      siteName: siteConfig.title,
-      images: [
-        {
-          url: '/og-image.png',
-          width: 1200,
-          height: 630,
-          alt: siteConfig.title,
-        },
-      ],
-    },
     twitter: {
       card: 'summary_large_image',
-      title: siteConfig.title,
+      creator: siteConfig.twitter,
       description: siteConfig.description,
       images: ['/og-image.png'],
-      creator: siteConfig.twitter,
-    },
-    alternates: {
-      // canonical: `${siteConfig.url}/${locale}`,
-      languages: Object.fromEntries(
-        routing.locales.map((loc: Locale) => [
-          loc,
-          `${siteConfig.url}/${getPathname({ locale: loc, href: '/' })}`,
-        ])
-      ),
+      title: siteConfig.title,
     },
   }
 }
 
-export async function generateStaticParams() {
-  return routing.locales.map((locale: Locale) => ({ locale }))
-}
+/* ---------- generateStaticParams ---------- */
 
-export default async function RootLayout({
+interface StaticParameter {
+  readonly locale: Locale
+}
+type GenerateStaticParameters = () => readonly StaticParameter[]
+
+export const generateStaticParams: GenerateStaticParameters =
+  (): readonly StaticParameter[] => {
+    const out: StaticParameter[] = []
+    for (const loc of routing.locales as readonly Locale[]) {
+      out.push({ locale: loc })
+    }
+    return out
+  }
+
+/* ---------- layout ---------- */
+type RootLayoutProperties = UnparsedLocalePageProperties
+
+const RootLayout: RoutePageWithChildrenFC<RootLayoutProperties> = async ({
   children,
   params,
-}: Readonly<{
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
-}>) {
-  // Ensure that the incoming `locale` is valid
-  const { locale } = await params
-  if (!hasLocale(routing.locales, locale)) {
-    notFound()
-  }
+}: PageParametersWithChildren<RootLayoutProperties>): Promise<JSX.Element> => {
+  const locale: Locale = await ensureLocaleFromParameters(params)
 
-  // Enable static rendering
   setRequestLocale(locale)
 
   return (
-    <html lang={locale} className="dark">
+    <html className="dark" lang={locale}>
       <body
         className={`${geist.variable} ${geistMono.variable} ${sourceSerif.variable} font-sans antialiased`}
       >
@@ -140,3 +185,5 @@ export default async function RootLayout({
     </html>
   )
 }
+
+export default RootLayout

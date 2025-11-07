@@ -1,18 +1,38 @@
-import { getRequestConfig } from 'next-intl/server'
-import { routing } from './routing'
 import { type Locale } from 'next-intl'
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  // This typically corresponds to the `[locale]` segment
-  let locale = await requestLocale
+import { getRequestConfig, type GetRequestConfigParams } from 'next-intl/server'
 
-  // Ensure that a valid locale is used
-  if (!locale || !routing.locales.includes(locale as never)) {
-    locale = routing.defaultLocale
-  }
+import { routing } from './routing'
 
-  return {
-    locale: locale as Locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+import type en from '../../messages/en.json'
+
+// Infer the messages schema from a known file (requires "resolveJsonModule": true)
+type Messages = typeof en
+
+const isSupportedLocale: (value: unknown) => value is Locale = (
+  value: unknown
+): value is Locale => {
+  return (
+    typeof value === 'string' &&
+    (routing.locales as readonly string[]).includes(value)
+  )
+}
+
+export default getRequestConfig(
+  async (
+    parameters: GetRequestConfigParams
+  ): Promise<{ locale: Locale; messages: Messages }> => {
+    const requested: string | undefined = await parameters.requestLocale
+    const locale: Locale = isSupportedLocale(requested)
+      ? requested
+      : routing.defaultLocale
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const module_: { readonly default: Messages } = await import(
+      `../../messages/${locale}.json`
+    )
+    const messages: Messages = module_.default
+
+    return { locale, messages }
   }
-})
+)

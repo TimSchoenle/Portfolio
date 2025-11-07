@@ -1,53 +1,55 @@
 'use client'
 
 import * as React from 'react'
+import { type JSX } from 'react'
 
-type Theme = 'dark' | 'light'
+import type { FCWithChildren, WithChildren } from '@/types/fc'
 
-type ThemeProviderProps = {
-  children: React.ReactNode
-  defaultTheme?: Theme
+export type Theme = 'dark' | 'light'
+
+interface ThemeProviderProperties extends WithChildren {
+  readonly defaultTheme?: Theme
 }
 
-type ThemeProviderState = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
+interface ThemeProviderState {
+  readonly setTheme: (theme: Theme) => void
+  readonly theme: Theme
 }
 
-const ThemeProviderContext = React.createContext<
-  ThemeProviderState | undefined
->(undefined)
+const ThemeProviderContext: React.Context<ThemeProviderState | undefined> =
+  React.createContext<ThemeProviderState | undefined>(undefined)
 
-export function ThemeProvider({
+export const ThemeProvider: FCWithChildren<ThemeProviderProperties> = ({
   children,
   defaultTheme = 'dark',
-}: ThemeProviderProps) {
-  const [theme, setTheme] = React.useState<Theme>(defaultTheme)
+}: ThemeProviderProperties): JSX.Element => {
+  const [theme, setTheme]: [
+    Theme,
+    React.Dispatch<React.SetStateAction<Theme>>,
+  ] = React.useState<Theme>(defaultTheme)
 
-  React.useEffect(() => {
-    const root = window.document.documentElement
-    const savedTheme = localStorage.getItem('theme') as Theme | null
+  React.useEffect((): void => {
+    const root: HTMLElement = window.document.documentElement
+    const savedTheme: Theme | null = localStorage.getItem(
+      'theme'
+    ) as Theme | null
 
-    if (savedTheme) {
-      setTheme(savedTheme)
-      root.classList.remove('light', 'dark')
-      root.classList.add(savedTheme)
-    } else {
-      root.classList.remove('light', 'dark')
-      root.classList.add(defaultTheme)
-    }
+    const next: Theme = savedTheme ?? defaultTheme
+    setTheme(next)
+    root.classList.remove('light', 'dark')
+    root.classList.add(next)
   }, [defaultTheme])
 
-  const value = React.useMemo(
-    () => ({
-      theme,
-      setTheme: (newTheme: Theme) => {
+  const value: ThemeProviderState = React.useMemo<ThemeProviderState>(
+    (): ThemeProviderState => ({
+      setTheme: (newTheme: Theme): void => {
         localStorage.setItem('theme', newTheme)
-        const root = window.document.documentElement
+        const root: HTMLElement = window.document.documentElement
         root.classList.remove('light', 'dark')
         root.classList.add(newTheme)
         setTheme(newTheme)
       },
+      theme,
     }),
     [theme]
   )
@@ -59,8 +61,9 @@ export function ThemeProvider({
   )
 }
 
-export const useTheme = () => {
-  const context = React.useContext(ThemeProviderContext)
+export const useTheme: () => ThemeProviderState = (): ThemeProviderState => {
+  const context: ThemeProviderState | undefined =
+    React.useContext(ThemeProviderContext)
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider')
   }

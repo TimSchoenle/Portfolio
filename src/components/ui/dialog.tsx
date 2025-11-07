@@ -1,130 +1,192 @@
 'use client'
 
-import * as React from 'react'
+import type { ComponentProps, JSX, ReactNode } from 'react'
+
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { XIcon } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utilities'
+import type { FCWithChildren } from '@/types/fc'
 
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+/* ───────────── props ───────────── */
+
+type DialogRootProperties = ComponentProps<typeof DialogPrimitive.Root>
+type DialogTriggerProperties = ComponentProps<typeof DialogPrimitive.Trigger>
+type DialogPortalProperties = ComponentProps<typeof DialogPrimitive.Portal>
+type DialogCloseProperties = ComponentProps<typeof DialogPrimitive.Close>
+type DialogOverlayProperties = ComponentProps<typeof DialogPrimitive.Overlay>
+interface DialogContentBaseProperties
+  extends ComponentProps<typeof DialogPrimitive.Content> {
+  readonly showCloseButton?: boolean
 }
 
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+interface DialogContentProperties extends DialogContentBaseProperties {
+  readonly description?: ReactNode
+  readonly title?: string
 }
 
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
-}
+type DialogHeaderProperties = ComponentProps<'div'>
+type DialogFooterProperties = ComponentProps<'div'>
+type DialogTitleProperties = ComponentProps<typeof DialogPrimitive.Title>
+type DialogDescriptionProperties = ComponentProps<
+  typeof DialogPrimitive.Description
+>
 
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
-}
+/* ───────────── components ───────────── */
+const Dialog: FCWithChildren<DialogRootProperties> = (
+  properties: DialogRootProperties
+): JSX.Element => <DialogPrimitive.Root data-slot="dialog" {...properties} />
 
-function DialogOverlay({
+const DialogTrigger: FCWithChildren<DialogTriggerProperties> = (
+  properties: DialogTriggerProperties
+): JSX.Element => (
+  <DialogPrimitive.Trigger data-slot="dialog-trigger" {...properties} />
+)
+
+const DialogPortal: FCWithChildren<DialogPortalProperties> = (
+  properties: DialogPortalProperties
+): JSX.Element => (
+  <DialogPrimitive.Portal data-slot="dialog-portal" {...properties} />
+)
+
+const DialogClose: FCWithChildren<DialogCloseProperties> = (
+  properties: DialogCloseProperties
+): JSX.Element => (
+  <DialogPrimitive.Close data-slot="dialog-close" {...properties} />
+)
+
+const DialogOverlay: FCWithChildren<DialogOverlayProperties> = ({
   className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  ...properties
+}: DialogOverlayProperties): JSX.Element => {
   return (
     <DialogPrimitive.Overlay
-      data-slot="dialog-overlay"
       className={cn(
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50',
         className
       )}
-      {...props}
+      data-slot="dialog-overlay"
+      {...properties}
     />
   )
 }
 
-function DialogContent({
-  className,
+// eslint-disable-next-line max-lines-per-function
+const DialogContent: FCWithChildren<DialogContentProperties> = ({
   children,
+  className,
+  description,
   showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean
-}) {
+  title,
+  ...properties
+}: DialogContentProperties): JSX.Element => {
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
-        data-slot="dialog-content"
         className={cn(
           'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
           className
         )}
-        {...props}
+        data-slot="dialog-content"
+        {...properties}
       >
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+        {title !== undefined || description !== undefined ? (
+          <div
+            className="flex flex-col gap-2 text-center sm:text-left"
+            data-slot="dialog-header"
           >
-            <XIcon />
-            <span className="sr-only">Close</span>
+            {title !== undefined ? (
+              <DialogPrimitive.Title
+                /** Force a single, semantic heading; avoid asChild & nested headings */
+                asChild={false}
+                className="text-lg leading-none font-semibold"
+                data-slot="dialog-title"
+                suppressHydrationWarning={true}
+              >
+                {title}
+              </DialogPrimitive.Title>
+            ) : null}
+            {description !== undefined ? (
+              <DialogPrimitive.Description
+                className="text-muted-foreground text-sm"
+                data-slot="dialog-description"
+              >
+                {description}
+              </DialogPrimitive.Description>
+            ) : null}
+          </div>
+        ) : null}
+
+        {children}
+
+        {showCloseButton ? (
+          <DialogPrimitive.Close
+            aria-label="Close"
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            data-slot="dialog-close"
+          >
+            <XIcon aria-hidden="true" />
           </DialogPrimitive.Close>
-        )}
+        ) : null}
       </DialogPrimitive.Content>
     </DialogPortal>
   )
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
+const DialogHeader: FCWithChildren<DialogHeaderProperties> = ({
+  className,
+  ...properties
+}: DialogHeaderProperties): JSX.Element => {
   return (
     <div
-      data-slot="dialog-header"
       className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
-      {...props}
+      data-slot="dialog-header"
+      {...properties}
     />
   )
 }
 
-function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
+const DialogFooter: FCWithChildren<DialogFooterProperties> = ({
+  className,
+  ...properties
+}: DialogFooterProperties): JSX.Element => {
   return (
     <div
-      data-slot="dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
         className
       )}
-      {...props}
+      data-slot="dialog-footer"
+      {...properties}
     />
   )
 }
 
-function DialogTitle({
+const DialogTitle: FCWithChildren<DialogTitleProperties> = ({
   className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  ...properties
+}: DialogTitleProperties): JSX.Element => {
   return (
     <DialogPrimitive.Title
-      data-slot="dialog-title"
+      asChild={false}
       className={cn('text-lg leading-none font-semibold', className)}
-      {...props}
+      data-slot="dialog-title"
+      suppressHydrationWarning={true}
+      {...properties}
     />
   )
 }
 
-function DialogDescription({
+const DialogDescription: FCWithChildren<DialogDescriptionProperties> = ({
   className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  ...properties
+}: DialogDescriptionProperties): JSX.Element => {
   return (
     <DialogPrimitive.Description
-      data-slot="dialog-description"
       className={cn('text-muted-foreground text-sm', className)}
-      {...props}
+      data-slot="dialog-description"
+      {...properties}
     />
   )
 }

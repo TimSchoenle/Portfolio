@@ -1,34 +1,32 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { type JSX } from 'react'
+
+import { type Locale, useLocale } from 'next-intl'
+
 import { Globe } from 'lucide-react'
-import { useLocale } from 'next-intl'
-import { getPathname } from '@/i18n/routing'
-import { type Route } from 'next'
 
-export function LanguageSwitcher() {
-  const locale = useLocale()
+import { Button } from '@/components/ui/button'
+import { usePathname, useRouter } from '@/i18n/routing'
+import type { FCStrict } from '@/types/fc'
 
-  const pathname = usePathname()
-  const router = useRouter()
+export const LanguageSwitcher: FCStrict = (): JSX.Element => {
+  const locale: Locale = useLocale()
 
-  const switchLanguage = () => {
-    const newLocale = locale === 'en' ? 'de' : 'en'
-    router.push(
-      getPathname({
-        href: pathname,
-        locale: newLocale,
-      }) as Route
-    )
+  const pathname: string = usePathname()
+  const router: ReturnType<typeof useRouter> = useRouter()
+
+  const switchLanguage: () => void = (): void => {
+    const newLocale: Locale = locale === 'en' ? 'de' : 'en'
+    router.replace(pathname, { locale: newLocale })
   }
 
   return (
     <Button
-      variant="outline"
-      size="sm"
-      onClick={switchLanguage}
       className="fixed top-4 right-4 z-50 bg-transparent"
+      size="sm"
+      variant="outline"
+      onClick={switchLanguage}
     >
       <Globe className="mr-2 h-4 w-4" />
       {locale === 'en' ? 'DE' : 'EN'}
