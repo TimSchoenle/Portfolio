@@ -91,12 +91,12 @@ const DialogContent: FCWithChildren<DialogContentProperties> = ({
         data-slot="dialog-content"
         {...properties}
       >
-        {title !== null || description !== null ? (
+        {title !== undefined || description !== undefined ? (
           <div
             className="flex flex-col gap-2 text-center sm:text-left"
             data-slot="dialog-header"
           >
-            {title !== null ? (
+            {title !== undefined ? (
               <DialogPrimitive.Title
                 /** Force a single, semantic heading; avoid asChild & nested headings */
                 asChild={false}
@@ -107,7 +107,7 @@ const DialogContent: FCWithChildren<DialogContentProperties> = ({
                 {title}
               </DialogPrimitive.Title>
             ) : null}
-            {description !== null ? (
+            {description !== undefined ? (
               <DialogPrimitive.Description
                 className="text-muted-foreground text-sm"
                 data-slot="dialog-description"
