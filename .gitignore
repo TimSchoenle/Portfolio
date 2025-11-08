@@ -53,3 +53,7 @@ Thumbs.db
 .eslintcache
 storybook-static
 messages/*.d.json.ts
+reports/
+playwright-report/
+test-results/
+tests/.cache

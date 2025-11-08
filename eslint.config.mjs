@@ -35,6 +35,10 @@ export default tseslint.config(
       '**/out/',
       '**/public/',
       '**next-env.d.ts',
+      '**/playwright-report/',
+      '**/test-results/',
+      '**/tests/',
+      '**/test/',
     ],
   },
 
