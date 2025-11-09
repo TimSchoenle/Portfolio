@@ -20,14 +20,24 @@ jobs:
 
       - name: Determine Playwright version from pnpm-lock.yaml
         id: pw
+        shell: bash
         run: |
-          node -e "
-            const fs = require('fs');
-            const text = fs.readFileSync('pnpm-lock.yaml', 'utf8');
-            let m = text.match(/['\"]?@playwright\/test@(\d+\.\d+\.\d+)/) || text.match(/\/@playwright\/test@(\d+\.\d+\.\d+)/);
-            if (!m) { console.error('Playwright version not found in pnpm-lock.yaml'); process.exit(1); }
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${m[1]}\n`);
-          "
+          set -euo pipefail
+          # Parse pnpm v7–v9 lockfile formats
+          node - <<'NODE' > .pw-version
+          const fs = require('fs');
+          const text = fs.readFileSync('pnpm-lock.yaml','utf8');
+          // v9 snapshots: "@playwright/test@1.48.0":
+          let m = text.match(/['"]@playwright\/test@(\d+\.\d+\.\d+)['"]\s*:/);
+          // v7/8 packages: "/@playwright/test@1.48.0":
+          if (!m) m = text.match(/\/@playwright\/test@(\d+\.\d+\.\d+)\b/);
+          if (!m) { console.error('Playwright version not found in pnpm-lock.yaml'); process.exit(2); }
+          process.stdout.write(m[1]);
+          NODE
+          
+          # Read the version without using command substitution
+          read -r PW_VERSION < .pw-version
+          echo "version=$PW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Cache Playwright browsers
         id: pw-cache
