@@ -381,6 +381,7 @@ const DayCell: FCStrict<DayCellProperties> = ({
       className={`h-4 w-4 rounded-sm transition-all duration-200 ${levelClass(day.level)} ${styles['cell'] ?? ''}`}
       data-commits={commitsText}
       data-date={dateText}
+      data-row={dayIndex}
       key={day.date}
       style={{ animationDelay: delayMs }}
     />

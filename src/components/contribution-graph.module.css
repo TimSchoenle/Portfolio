@@ -1,12 +1,34 @@
 .cell {
   position: relative;
-  transform: translateZ(0);
-  will-change: transform;
 }
 
 .cell:hover,
 .cell:focus-visible {
   transform: scale(1.06); /* no outlines */
+  z-index: 1000;
+}
+
+/* Flip tooltip DOWN for the top rows to avoid being under labels */
+.cell[data-row='0']::after,
+.cell[data-row='1']::after {
+  top: auto;
+  bottom: -6px;
+  transform: translate(-50%, calc(100% + 4px)) scale(0.98);
+}
+.cell[data-row='0']::before,
+.cell[data-row='1']::before {
+  top: auto;
+  bottom: -2px;
+  transform: translate(-50%, 50%) rotate(225deg); /* arrow flips */
+}
+
+/* animate to final position on hover/focus */
+.cell[data-row='0']:hover::after,
+.cell[data-row='0']:focus-visible::after,
+.cell[data-row='1']:hover::after,
+.cell[data-row='1']:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, calc(100% + 8px)) scale(1);
 }
 
 /* Two-line tooltip: line 1 = commits, line 2 = date */
