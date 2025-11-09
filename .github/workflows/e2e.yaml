@@ -18,40 +18,17 @@ jobs:
       - name: Setup base environment
         uses: ./.github/actions/build-dependency
 
-      - name: Determine Playwright version from pnpm-lock.yaml
-        id: pw
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Parse pnpm v7–v9 lockfile formats
-          node - <<'NODE' > .pw-version
-          const fs = require('fs');
-          const text = fs.readFileSync('pnpm-lock.yaml','utf8');
-          // v9 snapshots: "@playwright/test@1.48.0":
-          let m = text.match(/['"]@playwright\/test@(\d+\.\d+\.\d+)['"]\s*:/);
-          // v7/8 packages: "/@playwright/test@1.48.0":
-          if (!m) m = text.match(/\/@playwright\/test@(\d+\.\d+\.\d+)\b/);
-          if (!m) { console.error('Playwright version not found in pnpm-lock.yaml'); process.exit(2); }
-          process.stdout.write(m[1]);
-          NODE
-          
-          # Read the version without using command substitution
-          read -r PW_VERSION < .pw-version
-          echo "version=$PW_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        id: pw-cache
+      - name: Cache playwright
         uses: actions/cache@v4
+        id: playwright-cache
         with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-${{ runner.arch }}-ms-playwright-${{ steps.pw.outputs.version }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-ms-playwright-${{ steps.pw.outputs.version }}-
-            ${{ runner.os }}-${{ runner.arch }}-ms-playwright-
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install Playwright browsers (only on cold cache)
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Build
         run: pnpm run build
