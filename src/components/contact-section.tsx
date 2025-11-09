@@ -166,10 +166,7 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
 
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-12 text-center">
-          <Heading
-            as="h2"
-            className="text-foreground mb-3 text-4xl font-bold"
-          >
+          <Heading as="h2" className="text-foreground mb-3 text-4xl font-bold">
             {translations('title')}
           </Heading>
           <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />

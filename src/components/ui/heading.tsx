@@ -1,22 +1,29 @@
-import { type ComponentPropsWithoutRef, type JSX } from 'react'
+import { type HTMLAttributes, type JSX } from 'react'
 
-const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const
+import type { FCWithChildren } from '@/types/fc'
 
-type HeadingTag = (typeof HEADING_TAGS)[number]
+type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 
-type HeadingProperties<Tag extends HeadingTag = 'h2'> = {
-  readonly as?: Tag
-} & Omit<ComponentPropsWithoutRef<Tag>, 'as'>
+type NativeHeadingProperties = HTMLAttributes<HTMLHeadingElement>
 
-export function Heading<Tag extends HeadingTag = 'h2'>(
-  { as, ...properties }: HeadingProperties<Tag>,
-): JSX.Element {
-  const Tag = (as ?? 'h2') as HeadingTag
-  const dataHeadingTag = Tag.toUpperCase() as Uppercase<HeadingTag>
+type HeadingProperties = Omit<NativeHeadingProperties, 'tw'> & {
+  readonly as?: HeadingTag
+  readonly tw?: string
+}
+
+export const Heading: FCWithChildren<HeadingProperties> = ({
+  as: asTag,
+  tw: twProperty,
+  ...rest
+}: HeadingProperties): JSX.Element => {
+  const Element: HeadingTag = asTag ?? 'h2'
+  const dataHeadingTag: Uppercase<HeadingTag> =
+    Element.toUpperCase() as Uppercase<HeadingTag>
 
   return (
-    <Tag
-      {...properties}
+    <Element
+      {...rest}
+      {...(twProperty === undefined ? {} : { tw: twProperty })}
       data-heading-tag={dataHeadingTag}
     />
   )
