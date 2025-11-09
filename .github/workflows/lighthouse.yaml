@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      URL_DOMAIN: 'http://localhost:3000'
+      BASE_URL: 'http://localhost:3000'
+      URLS: |
+        '$BASE_URL/en'
+        '$BASE_URL/de'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
@@ -24,7 +27,7 @@ jobs:
       - name: Audit URLs using Lighthouse
         uses: treosh/lighthouse-ci-action@v12
         with:
-          urls: '$URL_DOMAIN'
+          urls: '$URLS'
           configPath: './.github/lighthouse/lighthouserc.json'
           uploadArtifacts: true
           temporaryPublicStorage: true
