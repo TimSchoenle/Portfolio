@@ -25,19 +25,30 @@ jobs:
           sleep 2
           curl -sS http://localhost:3000/en >/dev/null
 
-      - name: Lighthouse CI (assert budgets)
+      - name: Lighthouse CI - collect
         run: >
-          npx lhci autorun
+          npx lhci collect
           --collect.url=http://localhost:3000/en
           --collect.numberOfRuns=3
-          --upload.target=temporary-public-storage
-          --assert.preset=lighthouse:recommended
+          --collect.html
 
-      - name: Upload Lighthouse JSON
+      - name: List collected reports
+        run: ls -la .lighthouseci || true
+
+      - name: Lighthouse CI - assert
+        run: npx lhci assert --assert.preset=lighthouse:recommended
+
+      - name: Lighthouse CI - upload
+        run: npx lhci upload --upload.target=temporary-public-storage
+
+      - name: Upload Lighthouse artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lighthouse-json-${{ github.run_number }}
-          path: .lighthouseci/*.json
-          if-no-files-found: warn
+          name: lighthouse-${{ github.run_number }}
+          path: |
+            .lighthouseci/manifest.json
+            .lighthouseci/*.json
+            .lighthouseci/*.html
+          if-no-files-found: error
           retention-days: 14
