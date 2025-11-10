@@ -4,12 +4,6 @@ const isDesktop = (process.env.LHCI_FORM_FACTOR || 'mobile') === 'desktop'
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'pnpm build && pnpm start -p 3000',
-      url: [
-        'http://localhost:3000/',
-        'http://localhost:3000/work',
-        'http://localhost:3000/contact',
-      ],
       numberOfRuns: isDesktop ? 3 : 5,
       settings: {
         emulatedFormFactor: isDesktop ? 'desktop' : 'mobile',
