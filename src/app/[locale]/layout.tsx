@@ -7,15 +7,11 @@ import { type Locale, type Messages, NextIntlClientProvider } from 'next-intl'
 
 import { Inter } from 'next/font/google'
 import { getMessages, setRequestLocale } from 'next-intl/server'
-import { Toaster } from 'sonner'
 
-import { CommandPalette } from '@/components/command-palette'
+import DeferredClientUi from '@/app/[locale]/deferred-client-ui'
 import { CookieBanner } from '@/components/cookie-banner'
-import { EasterEggs } from '@/components/easter-eggs'
-import { LanguageSwitcher } from '@/components/language-switcher'
 import { LegalFooter } from '@/components/legal-footer'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeToggle } from '@/components/theme-toggle'
 import {
   ensureLocaleFromParameters,
   maybeLocaleFromParameters,
@@ -128,7 +124,6 @@ export const generateMetadata: GenerateMetadataFC<
 }
 
 /* ---------- generateStaticParams ---------- */
-
 interface StaticParameter {
   readonly locale: Locale
 }
@@ -151,7 +146,6 @@ const RootLayout: RoutePageWithChildrenFC<RootLayoutProperties> = async ({
   params,
 }: PageParametersWithChildren<RootLayoutProperties>): Promise<JSX.Element> => {
   const locale: Locale = await ensureLocaleFromParameters(params)
-
   setRequestLocale(locale)
 
   const messages: DeepPartial<Messages> = await getMessages()
@@ -161,14 +155,11 @@ const RootLayout: RoutePageWithChildrenFC<RootLayoutProperties> = async ({
       <body className="font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider defaultTheme="dark">
-            <ThemeToggle />
-            <LanguageSwitcher />
-            <CommandPalette />
-            <EasterEggs />
+            {/* Non-critical client UI mounts after idle inside this wrapper */}
+            <DeferredClientUi />
             {children}
             <CookieBanner />
             <LegalFooter locale={locale} />
-            <Toaster position="bottom-right" />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
