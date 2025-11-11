@@ -9,6 +9,7 @@ jobs:
   lhci:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         formFactor: [mobile, desktop]
     timeout-minutes: 15
