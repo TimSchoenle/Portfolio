@@ -6,6 +6,6 @@ export function GET(): NextResponse {
       status: 'healthy',
       timestamp: new Date().toISOString(),
     },
-    { status: 200 }
+    { headers: { 'Cache-Control': 'no-store' }, status: 200 }
   )
 }

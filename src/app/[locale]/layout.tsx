@@ -2,7 +2,7 @@ import '../globals.css'
 
 import type { JSX } from 'react'
 
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { type Locale, type Messages, NextIntlClientProvider } from 'next-intl'
 
 import { Inter } from 'next/font/google'
@@ -116,10 +116,24 @@ export const generateMetadata: GenerateMetadataFC<
       card: 'summary_large_image',
       creator: siteConfig.twitter,
       description: siteConfig.description,
-      images: ['/og-image.png'],
+      images: ['/og-image.jpg'],
       title: siteConfig.title,
     },
   }
+}
+
+/* ---------- viewport ---------- */
+export const viewport: Viewport = {
+  initialScale: 1,
+  // Avoids auto-detecting phone numbers/emails as links on iOS:
+  interactiveWidget: 'resizes-content',
+  themeColor: [
+    { color: '#000000', media: '(prefers-color-scheme: dark)' },
+    { color: '#ffffff', media: '(prefers-color-scheme: light)' },
+  ],
+  // Optional but helpful:
+  viewportFit: 'cover',
+  width: 'device-width',
 }
 
 /* ---------- generateStaticParams ---------- */
