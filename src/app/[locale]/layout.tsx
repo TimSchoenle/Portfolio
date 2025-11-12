@@ -9,7 +9,6 @@ import { Inter } from 'next/font/google'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 
 import DeferredClientUi from '@/app/[locale]/deferred-client-ui'
-import { CookieBanner } from '@/components/cookie-banner'
 import { LegalFooter } from '@/components/legal-footer'
 import { ThemeProvider } from '@/components/theme-provider'
 import {
@@ -158,7 +157,6 @@ const RootLayout: RoutePageWithChildrenFC<RootLayoutProperties> = async ({
             {/* Non-critical client UI mounts after idle inside this wrapper */}
             <DeferredClientUi />
             {children}
-            <CookieBanner />
             <LegalFooter locale={locale} />
           </ThemeProvider>
         </NextIntlClientProvider>
