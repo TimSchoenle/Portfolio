@@ -10,7 +10,7 @@ import { getTranslations } from 'next-intl/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Heading } from '@/components/ui/heading'
-import { siteConfig } from '@/lib/config'
+import { siteConfig } from '@/config'
 import type { FCAsync, FCStrict, NoChildren } from '@/types/fc'
 import type { Translations } from '@/types/i18n'
 

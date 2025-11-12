@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva } from 'class-variance-authority'
 
-import { cn } from '@/lib/utilities'
+import { cn } from '@/shared/utils'
 import type { FCWithChildren } from '@/types/fc'
 
 /* ─────────── types ─────────── */

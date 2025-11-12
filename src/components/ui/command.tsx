@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { cn } from '@/lib/utilities'
+import { cn } from '@/shared/utils'
 import type { FCWithChildren } from '@/types/fc'
 
 /* ───────────── types ───────────── */

@@ -11,12 +11,12 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import DeferredClientUi from '@/app/[locale]/deferred-client-ui'
 import { LegalFooter } from '@/components/legal-footer'
 import { ThemeProvider } from '@/components/theme-provider'
+import { siteConfig } from '@/config'
 import {
   ensureLocaleFromParameters,
   maybeLocaleFromParameters,
 } from '@/i18n/locale'
 import { getPathname, routing } from '@/i18n/routing'
-import { siteConfig } from '@/lib/config'
 import type { UnparsedLocalePageProperties } from '@/types/i18n'
 import type {
   GenerateMetadataFC,

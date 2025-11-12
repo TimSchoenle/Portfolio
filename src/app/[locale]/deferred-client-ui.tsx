@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react'
 
-import { lazyClient } from '@/lib/lazy-client'
+import { lazyClient } from '@/shared/utils'
 import type { FCNullable } from '@/types/fc'
 
 /* ---------- local types ---------- */

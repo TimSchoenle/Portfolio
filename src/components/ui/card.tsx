@@ -1,6 +1,6 @@
 import type { ComponentProps, JSX } from 'react'
 
-import { cn } from '@/lib/utilities'
+import { cn } from '@/shared/utils'
 import type { FCWithChildren } from '@/types/fc'
 
 type CardProperties = ComponentProps<'div'>

@@ -7,7 +7,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Button } from '@/components/ui/button'
 import { Heading } from '@/components/ui/heading'
-import { siteConfig } from '@/lib/config'
+import { siteConfig } from '@/config'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { LocalePageProperties, Translations } from '@/types/i18n'
 

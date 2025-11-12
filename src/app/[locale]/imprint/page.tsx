@@ -9,11 +9,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { LegalPageLayout } from '@/components/legal-page-layout'
 import { Heading } from '@/components/ui/heading'
+import { siteConfig } from '@/config'
 import {
   ensureLocaleFromParameters,
   maybeLocaleFromParameters,
 } from '@/i18n/locale'
-import { siteConfig } from '@/lib/config'
 import type { FCStrict } from '@/types/fc'
 import type { Translations, UnparsedLocalePageProperties } from '@/types/i18n'
 import type {

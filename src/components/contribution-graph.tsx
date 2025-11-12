@@ -9,7 +9,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Card } from '@/components/ui/card'
 import { Heading } from '@/components/ui/heading'
-import { panic } from '@/lib/utilities'
+import { panic } from '@/shared/utils'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import {
   CONTRIBUTION_LEVELS,

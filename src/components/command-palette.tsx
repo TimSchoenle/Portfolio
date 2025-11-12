@@ -31,8 +31,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import { siteConfig } from '@/config'
 import { usePathname, useRouter } from '@/i18n/routing'
-import { siteConfig } from '@/lib/config'
 import type { FCStrict } from '@/types/fc'
 import type { Translations } from '@/types/i18n'
 

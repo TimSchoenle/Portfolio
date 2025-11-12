@@ -1,8 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { type Locale } from 'next-intl'
 
+import { siteConfig } from '@/config'
 import { getPathname, routing } from '@/i18n/routing'
-import { siteConfig } from '@/lib/config'
 
 type ChangeFreq = MetadataRoute.Sitemap[0]['changeFrequency']
 

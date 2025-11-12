@@ -12,6 +12,7 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md,yaml,yml}\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "verify": "pnpm lint && pnpm type-check && pnpm test:run",
     "start": "cross-env PORT=3000 HOSTNAME=0.0.0.0 NODE_ENV=production pnpm dlx tsx scripts/start-standalone.ts",
     "type-check": "tsc --noEmit",
     "i18n-check": "i18n-check --unused src/ -f next-intl --source en --locales messages || echo \"::warning::i18n-check found issues (non-blocking)\"",

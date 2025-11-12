@@ -5,7 +5,7 @@ import type { ComponentProps, JSX, ReactNode } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { XIcon } from 'lucide-react'
 
-import { cn } from '@/lib/utilities'
+import { cn } from '@/shared/utils'
 import type { FCWithChildren } from '@/types/fc'
 
 /* ───────────── props ───────────── */

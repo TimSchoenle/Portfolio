@@ -11,13 +11,13 @@ import { HeroSection } from '@/components/hero-section'
 import { ProjectsSection } from '@/components/projects-section'
 import { SkillsSection } from '@/components/skills-section'
 import { TestimonialsSection } from '@/components/testimonials-section'
+import { siteConfig } from '@/config'
 import { ensureLocaleFromParameters } from '@/i18n/locale'
-import { siteConfig } from '@/lib/config'
 import {
   getContributionData,
   getFeaturedProjects,
   getUserStats,
-} from '@/lib/github'
+} from '@/server/github'
 import type {
   ContributionPoint,
   GitHubProject,
