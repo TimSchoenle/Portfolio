@@ -51,10 +51,9 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      # Install browsers only on cache miss
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps
 
       - name: Ensure plawright is correctly installed
         run: pnpm exec playwright install
