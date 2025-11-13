@@ -16,12 +16,6 @@ import type { FCNullable } from '@/types/fc'
 type NoProperties = Record<string, never>
 type UnknownProperties = Record<string, unknown>
 
-interface ThemeToggleModule {
-  ThemeToggle: ComponentType<NoProperties>
-}
-interface LanguageSwitcherModule {
-  LanguageSwitcher: ComponentType<NoProperties>
-}
 interface CommandPaletteModule {
   CommandPalette: ComponentType<NoProperties>
 }
@@ -33,18 +27,6 @@ interface SonnerModule {
 }
 
 /* ---------- typed selectors (no bracket indexing) ---------- */
-const pickThemeToggle: (
-  moduleNamespace: ThemeToggleModule
-) => ComponentType<NoProperties> = (
-  moduleNamespace: ThemeToggleModule
-): ComponentType<NoProperties> => moduleNamespace.ThemeToggle
-
-const pickLanguageSwitcher: (
-  moduleNamespace: LanguageSwitcherModule
-) => ComponentType<NoProperties> = (
-  moduleNamespace: LanguageSwitcherModule
-): ComponentType<NoProperties> => moduleNamespace.LanguageSwitcher
-
 const pickCommandPalette: (
   moduleNamespace: CommandPaletteModule
 ) => ComponentType<NoProperties> = (
@@ -64,13 +46,6 @@ const pickToaster: (
 ): ComponentType<UnknownProperties> => moduleNamespace.Toaster
 
 /* ---------- typed importers (explicit return types) ---------- */
-const importThemeToggle: () => Promise<ThemeToggleModule> =
-  (): Promise<ThemeToggleModule> => import('@/components/theme-toggle')
-
-const importLanguageSwitcher: () => Promise<LanguageSwitcherModule> =
-  (): Promise<LanguageSwitcherModule> =>
-    import('@/components/language-switcher')
-
 const importCommandPalette: () => Promise<CommandPaletteModule> =
   (): Promise<CommandPaletteModule> => import('@/components/command-palette')
 
@@ -81,16 +56,6 @@ const importSonner: () => Promise<SonnerModule> = (): Promise<SonnerModule> =>
   import('sonner')
 
 /* ---------- lazy client widgets ---------- */
-const ThemeToggle: ComponentType<NoProperties> = lazyClient<
-  NoProperties,
-  ThemeToggleModule
->(importThemeToggle, pickThemeToggle)
-
-const LanguageSwitcher: ComponentType<NoProperties> = lazyClient<
-  NoProperties,
-  LanguageSwitcherModule
->(importLanguageSwitcher, pickLanguageSwitcher)
-
 const CommandPalette: ComponentType<NoProperties> = lazyClient<
   NoProperties,
   CommandPaletteModule
@@ -157,8 +122,6 @@ const DeferredClientUi: FCNullable = (): JSX.Element | null => {
 
   return (
     <>
-      <ThemeToggle />
-      <LanguageSwitcher />
       <CommandPalette />
       <EasterEggs />
       <Toaster position="bottom-right" />
