@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.20
 
 FROM node:24-bookworm-slim AS build_base
 WORKDIR /app
