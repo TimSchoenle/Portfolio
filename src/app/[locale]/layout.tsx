@@ -9,10 +9,8 @@ import { Inter } from 'next/font/google'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 
 import DeferredClientUi from '@/app/[locale]/deferred-client-ui'
-import { LanguageSwitcher } from '@/components/language-switcher'
 import { LegalFooter } from '@/components/legal-footer'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeToggle } from '@/components/theme-toggle'
 import {
   ensureLocaleFromParameters,
   maybeLocaleFromParameters,
@@ -170,9 +168,6 @@ const RootLayout: RoutePageWithChildrenFC<RootLayoutProperties> = async ({
       <body className="font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider defaultTheme="dark">
-            <ThemeToggle />
-            <LanguageSwitcher />
-
             {/* Non-critical client UI mounts after idle inside this wrapper */}
             <DeferredClientUi />
             <main id="content">{children}</main>
