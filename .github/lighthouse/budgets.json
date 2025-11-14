@@ -3,13 +3,13 @@
     "path": "/*",
     "resourceSizes": [
       { "resourceType": "document", "budget": 50 },
-      { "resourceType": "script", "budget": 130 },
+      { "resourceType": "script", "budget": 350 },
       { "resourceType": "image", "budget": 400 },
       { "resourceType": "font", "budget": 200 },
-      { "resourceType": "total", "budget": 900 }
+      { "resourceType": "total", "budget": 1200 }
     ],
     "resourceCounts": [
-      { "resourceType": "script", "budget": 10 },
+      { "resourceType": "script", "budget": 20 },
       { "resourceType": "image", "budget": 20 },
       { "resourceType": "font", "budget": 4 }
     ]

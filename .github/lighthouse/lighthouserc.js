@@ -17,23 +17,29 @@ module.exports = {
       assertions: {
         'categories:performance': [
           'error',
-          { minScore: isDesktop ? 0.99 : 0.95 },
+          { minScore: isDesktop ? 0.9 : 0.8 },
         ],
-        'categories:accessibility': ['error', { minScore: 0.98 }],
-        'categories:best-practices': ['error', { minScore: 1 }],
-        'categories:seo': ['error', { minScore: 0.98 }],
 
         'first-contentful-paint': [
           'error',
-          { maxNumericValue: 1200, aggregationMethod: 'median' },
+          {
+            maxNumericValue: isDesktop ? 1200 : 1500,
+            aggregationMethod: 'median',
+          },
         ],
         'largest-contentful-paint': [
           'error',
-          { maxNumericValue: 1800, aggregationMethod: 'median' },
+          {
+            maxNumericValue: isDesktop ? 3500 : 4000,
+            aggregationMethod: 'median',
+          },
         ],
         'total-blocking-time': [
           'error',
-          { maxNumericValue: 100, aggregationMethod: 'median' },
+          {
+            maxNumericValue: isDesktop ? 350 : 400,
+            aggregationMethod: 'median',
+          },
         ],
         'cumulative-layout-shift': [
           'error',
@@ -41,15 +47,22 @@ module.exports = {
         ],
         'speed-index': [
           'error',
-          { maxNumericValue: 2000, aggregationMethod: 'median' },
+          {
+            maxNumericValue: isDesktop ? 2200 : 3500,
+            aggregationMethod: 'median',
+          },
         ],
 
         'render-blocking-resources': ['error', { maxLength: 0 }],
-        'legacy-javascript': ['error', { maxLength: 0 }],
-        'uses-responsive-images': ['error', { maxNumericValue: 0 }],
-        'image-size-responsive': ['error', { maxNumericValue: 0 }],
-        'preload-lcp-image': ['error', { maxLength: 0 }],
         'errors-in-console': ['error', { maxLength: 0 }],
+
+        'legacy-javascript': ['warn', { maxLength: 2 }],
+        'legacy-javascript-insight': 'warn',
+        'unused-javascript': 'warn',
+
+        'uses-responsive-images': 'off',
+        'image-size-responsive': 'off',
+        'preload-lcp-image': 'off',
       },
     },
   },

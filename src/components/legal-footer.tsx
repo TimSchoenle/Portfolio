@@ -21,12 +21,14 @@ export const LegalFooter: AsyncPageFC<LegalFooterProperties> = async ({
         <Link
           className="text-muted-foreground hover:text-primary text-sm transition-colors hover:underline"
           href="/imprint"
+          prefetch={false}
         >
           {translations('imprint.title')}
         </Link>
         <Link
           className="text-muted-foreground hover:text-primary text-sm transition-colors hover:underline"
           href="/privacy"
+          prefetch={false}
         >
           {translations('privacy.title')}
         </Link>

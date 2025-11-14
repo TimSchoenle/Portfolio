@@ -31,7 +31,7 @@ import type { DeepPartial } from 'react-hook-form'
 /* ---------- fonts (auto-fetched via next/font/google) ---------- */
 const inter: NextFontWithVariable = Inter({
   adjustFontFallback: true,
-  display: 'swap',
+  display: 'optional',
   subsets: ['latin'],
   variable: '--font-inter',
 })
