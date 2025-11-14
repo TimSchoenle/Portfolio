@@ -1,4 +1,4 @@
-import { type JSX, Suspense, use } from 'react'
+import { type JSX } from 'react'
 
 import { type Locale } from 'next-intl'
 
@@ -32,43 +32,15 @@ interface GitHubData {
   stats: UserStats
 }
 
+// Helper to fetch GitHub data
 const fetchGitHubData: () => Promise<
   Readonly<GitHubData>
 > = async (): Promise<GitHubData> => {
   const projects: GitHubProject[] = await getFeaturedProjects()
   const stats: UserStats = await getUserStats()
   const contributionData: ContributionPoint[] = await getContributionData()
+
   return { contributionData, projects, stats }
-}
-
-interface DeferredSectionsProperties {
-  dataPromise: Promise<GitHubData>
-  locale: Locale
-}
-
-const DeferredSections: (
-  properties: DeferredSectionsProperties
-) => JSX.Element = ({
-  dataPromise,
-  locale,
-}: DeferredSectionsProperties): JSX.Element => {
-  const { contributionData, projects, stats }: GitHubData = use(dataPromise)
-  return (
-    <div className="snap-start">
-      <AboutSection locale={locale} />
-      <SkillsSection locale={locale} />
-      <ProjectsSection
-        contributionData={contributionData}
-        githubUsername={siteConfig.githubUsername}
-        locale={locale}
-        projects={projects}
-        stats={stats}
-      />
-      <ExperienceSection locale={locale} />
-      <TestimonialsSection locale={locale} />
-      <ContactSection locale={locale} />
-    </div>
-  )
 }
 
 type HomeProperties = UnparsedLocalePageProperties
@@ -77,16 +49,29 @@ const Home: RoutePageFC<HomeProperties> = async ({
   params,
 }: PageParameters<HomeProperties>): Promise<JSX.Element> => {
   const locale: Locale = await ensureLocaleFromParameters(params)
+
   setRequestLocale(locale)
 
-  const dataPromise: Promise<GitHubData> = fetchGitHubData()
+  const { contributionData, projects, stats }: GitHubData =
+    await fetchGitHubData()
 
   return (
     <main className="bg-background h-screen snap-y snap-mandatory overflow-y-scroll">
       <HeroSection locale={locale} />
-      <Suspense fallback={null}>
-        <DeferredSections dataPromise={dataPromise} locale={locale} />
-      </Suspense>
+      <div className="snap-start">
+        <AboutSection locale={locale} />
+        <SkillsSection locale={locale} />
+        <ProjectsSection
+          contributionData={contributionData}
+          githubUsername={siteConfig.githubUsername}
+          locale={locale}
+          projects={projects}
+          stats={stats}
+        />
+        <ExperienceSection locale={locale} />
+        <TestimonialsSection locale={locale} />
+        <ContactSection locale={locale} />
+      </div>
     </main>
   )
 }
