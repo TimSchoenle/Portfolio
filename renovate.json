@@ -6,12 +6,10 @@
     "helpers:pinGitHubActionDigests"
   ],
   "timezone": "Europe/Berlin",
-
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
   },
-
   "packageRules": [
     {
       "description": "Auto-merge safe dev updates",
@@ -21,9 +19,9 @@
     },
     {
       "description": "Auto-merge @types/* (non-major)",
-      "matchPackagePatterns": ["^@types/"],
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": ["/^@types//"]
     },
     {
       "description": "Review majors for Next/React",
@@ -42,9 +40,9 @@
     {
       "description": "Review majors for Tailwind",
       "groupName": "tailwind major",
-      "matchPackagePatterns": ["^tailwindcss$", "^@tailwindcss/"],
       "matchUpdateTypes": ["major"],
-      "automerge": false
+      "automerge": false,
+      "matchPackageNames": ["/^tailwindcss$/", "/^@tailwindcss//"]
     },
     {
       "description": "CI actions: safe to auto-merge",
