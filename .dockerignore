@@ -1,53 +1,123 @@
-# Dependencies
+# -------- VCS / CI / Local tooling
+.git
+.github
+.git-*
+.husky
+*.patch
+.hlint*
+.hooks
+.gitattributes
+.gpg
+.gnupg
+.editorconfig
+.eslintcache
+.prettier*
+.lintstagedrc*
+.commitlintrc*
+.stylelint*
+.npmrc
+.pnpm-debug.log*
+.nvmrc
+.direnv
+.envrc
+.devcontainer
+Dockerfile.*
+docker-compose*.yml
+cst.yaml
+goss.yaml
+hadolint*.yaml
+.trivyignore
+image.tar
+
+# -------- Package managers / caches / logs
 node_modules
+.pnpm-store
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.tsbuildinfo
 
-# Next.js
+# -------- Framework / build outputs
 .next
+.next/cache
 out
 dist
 build
+.turbo
+.vercel
+.parcel-cache
+.cache
+storybook-static
 
-# Testing
+# -------- Tests & e2e assets
+__tests__
+__mocks__
+**/*.test.*
+**/*.spec.*
+**/*.snap
 coverage
 .nyc_output
+playwright-report
+test-results
+playwright/
+cypress/
+.cypress-cache
+cypress/screenshots
+cypress/videos
+.storybook
 
-# Misc
-.DS_Store
+# -------- Docs & misc project assets
+docs
+design
+designs
+*.drawio
+*.sketch
+*.fig
+*.psd
+*.ai
+
+# -------- Secrets / env / credentials
+.env
+.env.*
+!.env.example
 *.pem
-.env*.local
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+*.key
+*.crt
+*.pfx
+*.p12
+*.kubeconfig
+*.tfstate
+*.tfstate.*
 
-# Debug
-*.log
-
-# IDE
+# -------- OS/editor noise
 .vscode
 .idea
+*.iml
 *.swp
 *.swo
-*~
+.DS_Store
+Thumbs.db
 
-# Git
-.git
-.gitignore
-.gitattributes
+# -------- Data dumps & local dbs
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql
 
-# CI/CD
-.github
+# -------- Deployment manifests
+k8s
+helm
+charts
+manifests
 
-# Docker
-Dockerfile*
-docker-compose*.yml
-.dockerignore
-
-# Documentation
-README.md
-CONTRIBUTING.md
-LICENSE
+# -------- Archives & binaries
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.gz
+*.bz2
+*.xz
