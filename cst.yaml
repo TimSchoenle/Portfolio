@@ -1,18 +1,18 @@
 schemaVersion: 2.0.0
 metadataTest:
-  entrypoint: ["/nodejs/bin/node"]
-  cmd: ["server.js"]
-  workdir: "/app"
-  exposedPorts: ["3000"]
+  entrypoint: ['/nodejs/bin/node']
+  cmd: ['server.js']
+  workdir: '/app'
+  exposedPorts: ['3000']
   env:
     - key: NODE_ENV
       value: production
     - key: NEXT_TELEMETRY_DISABLED
-      value: "1"
+      value: '1'
     - key: HOSTNAME
-      value: "0.0.0.0"
+      value: '0.0.0.0'
     - key: PORT
-      value: "3000"
+      value: '3000'
 
 fileExistenceTests:
   - name: server.js present
@@ -24,4 +24,4 @@ fileExistenceTests:
 
 userTests:
   - name: running as nonroot
-    user: "nonroot"
+    user: 'nonroot'
