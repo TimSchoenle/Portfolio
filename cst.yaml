@@ -1,4 +1,5 @@
 schemaVersion: 2.0.0
+
 metadataTest:
   entrypoint: ['/nodejs/bin/node']
   cmd: ['server.js']
@@ -22,3 +23,76 @@ fileExistenceTests:
   - name: next static present
     path: /app/.next/static
     shouldExist: true
+  - name: node binary present
+    path: /nodejs/bin/node
+    shouldExist: true
+  - name: /bin/sh absent
+    path: /bin/sh
+    shouldExist: false
+  - name: bash absent
+    path: /usr/bin/bash
+    shouldExist: false
+  - name: apt-get absent
+    path: /usr/bin/apt-get
+    shouldExist: false
+  - name: dpkg absent
+    path: /usr/bin/dpkg
+    shouldExist: false
+  - name: yum absent
+    path: /usr/bin/yum
+    shouldExist: false
+  - name: apk absent
+    path: /sbin/apk
+    shouldExist: false
+  - name: npm absent
+    path: /usr/bin/npm
+    shouldExist: false
+  - name: pnpm absent
+    path: /usr/bin/pnpm
+    shouldExist: false
+
+commandTests:
+  - name: uid is non-root
+    command: ['/nodejs/bin/node', '-p', 'process.getuid()']
+    exitCode: 0
+    expectedOutput: ['65532']
+  - name: gid is non-root
+    command: ['/nodejs/bin/node', '-p', 'process.getgid()']
+    exitCode: 0
+    expectedOutput: ['65532']
+
+  - name: NODE_ENV is production
+    command: ['/nodejs/bin/node', '-p', 'process.env.NODE_ENV']
+    exitCode: 0
+    expectedOutput: ['production']
+  - name: telemetry disabled
+    command: ['/nodejs/bin/node', '-p', 'process.env.NEXT_TELEMETRY_DISABLED']
+    exitCode: 0
+    expectedOutput: ['1']
+
+  - name: rootfs not writable by app user
+    command:
+      [
+        '/nodejs/bin/node',
+        '-e',
+        "require('fs').writeFile('/.cst_wr', 'x', e => process.exit(e?0:1))",
+      ]
+    exitCode: 0
+
+  - name: cannot bind privileged port 80
+    command:
+      [
+        '/nodejs/bin/node',
+        '-e',
+        "const http=require('http');const s=http.createServer(()=>{});s.listen(80,()=>process.exit(1)).on('error',err=>process.exit(err&&err.code==='EACCES'?0:1))",
+      ]
+    exitCode: 0
+
+  - name: server.js readable
+    command:
+      [
+        '/nodejs/bin/node',
+        '-e',
+        "require('fs').access('/app/server.js',require('fs').constants.R_OK,e=>process.exit(e?1:0))",
+      ]
+    exitCode: 0
