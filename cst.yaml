@@ -4,7 +4,7 @@ metadataTest:
   cmd: ['server.js']
   workdir: '/app'
   exposedPorts: ['3000']
-  user: "nonroot"
+  user: 'nonroot'
   envVars:
     - key: NODE_ENV
       value: production
