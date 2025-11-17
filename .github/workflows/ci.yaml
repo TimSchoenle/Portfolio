@@ -69,32 +69,10 @@ jobs:
           config: .hadolint.yaml
           format: tty
 
-  unit:
-    name: Unit / Lint / Typecheck
-    runs-on: ubuntu-latest
-    needs: dockerfile-lint
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-
-      - name: Setup base environment
-        uses: ./.github/actions/build-dependency
-
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Typecheck
-        run: pnpm run type-check
-
-      - name: Unit tests
-        env:
-          CI: 'true'
-        run: pnpm run test:unit
-
   build-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: unit
+    needs: test
     steps:
       - name: Checkout repo
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
