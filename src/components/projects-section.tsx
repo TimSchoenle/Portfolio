@@ -41,7 +41,7 @@ const SectionHeader: FCStrict<SectionHeaderProperties> = ({
     <div className="mb-16 text-center">
       <Heading
         as="h2"
-        className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl"
+        className="from-primary to-primary/60 mb-4 inline-block bg-gradient-to-r bg-clip-text py-px text-4xl leading-[1.15] font-bold [text-wrap:balance] text-transparent md:text-5xl md:leading-[1.2]"
       >
         {title}
       </Heading>
