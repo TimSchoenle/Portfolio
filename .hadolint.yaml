@@ -1,0 +1,4 @@
+ignored:
+  - DL3008 # pin-versions (optional; tighten later)
+  - DL3018 # non-pinned apk/apt (if you intentionally skip pinning)
+failure-threshold: warning

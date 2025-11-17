@@ -1,0 +1,105 @@
+schemaVersion: 2.0.0
+
+metadataTest:
+  entrypoint: ['/nodejs/bin/node']
+  cmd: ['server.js']
+  workdir: '/app'
+  exposedPorts: ['3000']
+  user: '65532'
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: NEXT_TELEMETRY_DISABLED
+      value: '1'
+    - key: HOSTNAME
+      value: '0.0.0.0'
+    - key: PORT
+      value: '3000'
+
+fileExistenceTests:
+  - name: server.js present
+    path: /app/server.js
+    shouldExist: true
+  - name: next static present
+    path: /app/.next/static
+    shouldExist: true
+  - name: node binary present
+    path: /nodejs/bin/node
+    shouldExist: true
+  - name: /bin/sh absent
+    path: /bin/sh
+    shouldExist: false
+  - name: bash absent
+    path: /usr/bin/bash
+    shouldExist: false
+  - name: apt-get absent
+    path: /usr/bin/apt-get
+    shouldExist: false
+  - name: dpkg absent
+    path: /usr/bin/dpkg
+    shouldExist: false
+  - name: yum absent
+    path: /usr/bin/yum
+    shouldExist: false
+  - name: apk absent
+    path: /sbin/apk
+    shouldExist: false
+  - name: npm absent
+    path: /usr/bin/npm
+    shouldExist: false
+  - name: pnpm absent
+    path: /usr/bin/pnpm
+    shouldExist: false
+
+commandTests:
+  - name: uid is non-root
+    command: '/nodejs/bin/node'
+    args: ['-p', 'process.getuid()']
+    exitCode: 0
+    expectedOutput: ['65532']
+
+  - name: gid is non-root
+    command: '/nodejs/bin/node'
+    args: ['-p', 'process.getgid()']
+    exitCode: 0
+    expectedOutput: ['65532']
+
+  - name: NODE_ENV is production
+    command: '/nodejs/bin/node'
+    args: ['-p', 'process.env.NODE_ENV']
+    exitCode: 0
+    expectedOutput: ['production']
+
+  - name: telemetry disabled
+    command: '/nodejs/bin/node'
+    args: ['-p', 'process.env.NEXT_TELEMETRY_DISABLED']
+    exitCode: 0
+    expectedOutput: ['1']
+
+  - name: rootfs not writable by app user
+    command: '/nodejs/bin/node'
+    args:
+      ['-e', "require('fs').writeFile('/.cst_wr','x',e=>process.exit(e?0:1))"]
+    exitCode: 0
+
+  - name: CAP_SYS_ADMIN absent
+    command: '/nodejs/bin/node'
+    args:
+      - '-e'
+      - |
+        const fs=require('fs');
+        const m=fs.readFileSync('/proc/self/status','utf8').match(/^CapEff:\s*([0-9A-Fa-f]+)$/m);
+        if(!m){process.exit(1)}
+        const eff=BigInt('0x'+m[1]);
+        const CAP_SYS_ADMIN=1n<<21n;
+        process.exit((eff & CAP_SYS_ADMIN)===0n?0:1);
+    exitCode: 0
+
+  - name: server.js readable
+    command: '/nodejs/bin/node'
+    args:
+      [
+        '-e',
+        "require('fs').access('/app/server.js',require('fs').constants.R_OK,e=>process.exit(e?1:0))",
+      ]
+    exitCode: 0
