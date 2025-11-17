@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
       - name: Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
         with:
           dockerfile: Dockerfile
           config: .hadolint.yaml
@@ -146,7 +146,7 @@ jobs:
           name: $STORED_IMAGE_NAME
 
       - name: Setup scanner
-        uses: aquasecurity/setup-trivy@v0.2.1
+        uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
       - name: Scan image tar
         run: |
           trivy image --input image.tar \
