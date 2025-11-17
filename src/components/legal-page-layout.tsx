@@ -15,7 +15,7 @@ export const LegalPageLayout: FCWithChildren<LegalPageLayoutProperties> = ({
   title,
 }: LegalPageLayoutProperties): JSX.Element => {
   return (
-    <main className="bg-background min-h-screen px-4 py-12">
+    <main className="min-h-screen bg-background px-4 py-12">
       <div className="mx-auto max-w-3xl">
         <BackToHome locale={locale} />
 

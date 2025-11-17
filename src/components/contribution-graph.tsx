@@ -262,7 +262,7 @@ const LegendBar: FCStrict<LegendBarProperties> = ({
   more,
 }: LegendBarProperties): JSX.Element => {
   return (
-    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
       <span>{less}</span>
       {CONTRIBUTION_LEVELS.map(
         (lvl: ContributionLevel): JSX.Element => (
@@ -286,7 +286,7 @@ const MonthLabelsRow: FCStrict<MonthLabelsRowProperties> = ({
       {labels.map(
         (monthLabel: MonthLabel): JSX.Element => (
           <div
-            className="text-muted-foreground absolute text-sm font-medium"
+            className="absolute text-sm font-medium text-muted-foreground"
             key={`${monthLabel.month}-${String(monthLabel.weekIndex)}`}
             style={{ left: String(48 + monthLabel.weekIndex * 20) + 'px' }}
           >
@@ -340,7 +340,7 @@ const WeekdayLabelCol: FCStrict<WeekdayLabelColProperties> = ({
 
           return (
             <div
-              className="text-muted-foreground flex h-4 w-8 items-center text-xs font-medium"
+              className="flex h-4 w-8 items-center text-xs font-medium text-muted-foreground"
               key={`wd-${String(index)}`}
             >
               {label}
@@ -389,7 +389,7 @@ const DayCell: FCStrict<DayCellProperties> = ({
 }
 
 const EmptyCell: FCStrict = (): JSX.Element => (
-  <div className="border-border/30 bg-muted/20 dark:border-border/20 dark:bg-muted/10 h-4 w-4 rounded-sm border" />
+  <div className="h-4 w-4 rounded-sm border border-border/30 bg-muted/20 dark:border-border/20 dark:bg-muted/10" />
 )
 
 interface WeekColumnProperties {
@@ -478,13 +478,13 @@ export const ContributionGraph: AsyncPageFC<
   const total: number = sumCount(data)
 
   return (
-    <Card className="hover:border-primary/50 dark:bg-card/50 w-full overflow-hidden border-2 p-6 transition-all duration-300 hover:shadow-lg">
+    <Card className="w-full overflow-hidden border-2 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg dark:bg-card/50">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Heading as="h3" className="text-2xl font-bold">
             {translations('title')}
           </Heading>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             {translations('totalAmount', {
               count: total.toLocaleString(locale),
             })}

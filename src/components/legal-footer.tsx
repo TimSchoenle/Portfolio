@@ -19,14 +19,14 @@ export const LegalFooter: AsyncPageFC<LegalFooterProperties> = async ({
     <footer className="mt-8 text-center">
       <nav aria-label="Legal navigation" className="flex justify-center gap-4">
         <Link
-          className="text-muted-foreground hover:text-primary text-sm transition-colors hover:underline"
+          className="text-sm text-muted-foreground transition-colors hover:text-primary hover:underline"
           href="/imprint"
           prefetch={false}
         >
           {translations('imprint.title')}
         </Link>
         <Link
-          className="text-muted-foreground hover:text-primary text-sm transition-colors hover:underline"
+          className="text-sm text-muted-foreground transition-colors hover:text-primary hover:underline"
           href="/privacy"
           prefetch={false}
         >

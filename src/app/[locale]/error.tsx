@@ -26,7 +26,7 @@ const ErrorHeader: FCStrict<ErrorHeaderProperties> = ({
   return (
     <CardHeader>
       <div className="flex items-center gap-2">
-        <AlertTriangle className="text-destructive h-6 w-6" />
+        <AlertTriangle className="h-6 w-6 text-destructive" />
         <CardTitle>{title}</CardTitle>
       </div>
     </CardHeader>
@@ -47,7 +47,7 @@ const ErrorInfo: FCNullable<ErrorInfoProperties> = ({
   }
 
   return (
-    <p className="text-muted-foreground text-xs">
+    <p className="text-xs text-muted-foreground">
       <span>{label}</span> {digest}
     </p>
   )
@@ -91,11 +91,11 @@ const ErrorPage: FCStrict<ErrorPageProperties> = ({
   const translations: Translations<'error'> = useTranslations('error')
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <ErrorHeader title={translations('title')} />
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             {translations('description')}
           </p>
           <ErrorInfo

@@ -97,7 +97,7 @@ const Section: FCStrict<SectionProperties> = ({
       <Heading as="h2" className="mb-2 text-xl font-semibold">
         {title}
       </Heading>
-      <p className="text-muted-foreground text-sm leading-relaxed">{body}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
     </div>
   )
 }

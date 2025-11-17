@@ -44,10 +44,10 @@ const HeroTitle: FCStrict<HeroTitleProperties> = ({
 }: HeroTitleProperties): JSX.Element => (
   <Heading
     as="h1"
-    className="text-foreground mb-6 text-5xl font-bold tracking-tight text-balance md:text-7xl"
+    className="mb-6 text-5xl font-bold tracking-tight text-balance text-foreground md:text-7xl"
   >
     {greeting}{' '}
-    <span className="from-primary to-primary/60 bg-gradient-to-r bg-clip-text text-transparent">
+    <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
       {name}
     </span>
   </Heading>
@@ -56,7 +56,7 @@ const HeroTitle: FCStrict<HeroTitleProperties> = ({
 const HeroSubtitle: FCStrict<HeroSubtitleProperties> = ({
   title,
 }: HeroSubtitleProperties): JSX.Element => (
-  <p className="text-muted-foreground mb-3 text-xl text-pretty md:text-2xl">
+  <p className="mb-3 text-xl text-pretty text-muted-foreground md:text-2xl">
     {title}
   </p>
 )
@@ -67,7 +67,7 @@ const HeroLocationTagline: FCStrict<HeroLocationTaglineProperties> = ({
 }: HeroLocationTaglineProperties): JSX.Element => {
   const separator: string = ' \u00B7 '
   return (
-    <p className="text-muted-foreground mb-10 text-lg">
+    <p className="mb-10 text-lg text-muted-foreground">
       {location}
       {separator}
       {tagline}
@@ -109,7 +109,7 @@ const HeroButtons: FCStrict<HeroButtonsProperties> = ({
 
 const HeroScrollHint: FCStrict = (): JSX.Element => (
   <div className="mt-16">
-    <ArrowDown className="text-muted-foreground mx-auto h-6 w-6 animate-bounce" />
+    <ArrowDown className="mx-auto h-6 w-6 animate-bounce text-muted-foreground" />
   </div>
 )
 
@@ -124,7 +124,7 @@ export const HeroSection: AsyncPageFC<HeroSectionProperties> = async ({
 
   return (
     <section className="relative flex h-screen min-h-screen snap-start items-center justify-center px-4 py-20">
-      <div className="from-primary/5 absolute inset-0 -z-10 bg-gradient-to-b via-transparent to-transparent" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
 
       <div className="max-w-4xl text-center">
         <HeroTitle

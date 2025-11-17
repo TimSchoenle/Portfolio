@@ -41,11 +41,11 @@ const SectionHeader: FCStrict<SectionHeaderProperties> = ({
     <div className="mb-16 text-center">
       <Heading
         as="h2"
-        className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl"
+        className="mb-4 inline-block bg-gradient-to-r from-primary to-primary/60 bg-clip-text py-px text-4xl leading-[1.15] font-bold [text-wrap:balance] text-transparent md:text-5xl md:leading-[1.2]"
       >
         {title}
       </Heading>
-      <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+      <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
         {subtitle}
       </p>
     </div>
@@ -63,12 +63,12 @@ const StatsCard: FCStrict<StatsCardProperties> = ({
   value,
 }: StatsCardProperties): JSX.Element => {
   return (
-    <Card className="hover:border-primary/50 border-2 p-6 transition-all duration-300 hover:shadow-lg">
+    <Card className="border-2 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg">
       <div className="flex items-center gap-4">
-        <div className="bg-primary/10 rounded-lg p-3">{icon}</div>
+        <div className="rounded-lg bg-primary/10 p-3">{icon}</div>
         <div>
           <p className="text-3xl font-bold">{value}</p>
-          <p className="text-muted-foreground text-sm">{label}</p>
+          <p className="text-sm text-muted-foreground">{label}</p>
         </div>
       </div>
     </Card>
@@ -88,21 +88,21 @@ const ProjectCard: FCStrict<ProjectCardProperties> = ({
     typeof project.homepage === 'string' && project.homepage.length > 0
 
   return (
-    <Card className="group hover:border-primary/50 flex flex-col overflow-hidden border-2 transition-all duration-300 hover:shadow-xl">
-      <div className="from-primary/20 to-primary/5 relative h-48 overflow-hidden bg-gradient-to-br">
+    <Card className="group flex flex-col overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
         <div className="absolute inset-0 flex items-center justify-center">
-          <Code2 className="text-primary/40 h-20 w-20 transition-transform duration-300 group-hover:scale-110" />
+          <Code2 className="h-20 w-20 text-primary/40 transition-transform duration-300 group-hover:scale-110" />
         </div>
       </div>
 
       <div className="flex flex-1 flex-col p-6">
         <Heading
           as="h3"
-          className="group-hover:text-primary mb-2 text-xl font-bold transition-colors"
+          className="mb-2 text-xl font-bold transition-colors group-hover:text-primary"
         >
           {project.name}
         </Heading>
-        <p className="text-muted-foreground mb-4 flex-1">
+        <p className="mb-4 flex-1 text-muted-foreground">
           {project.description}
         </p>
 
@@ -117,7 +117,7 @@ const ProjectCard: FCStrict<ProjectCardProperties> = ({
         </div>
 
         <div className="flex items-center justify-between border-t pt-4">
-          <div className="text-muted-foreground flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Star className="h-4 w-4" />
               {project.stargazers_count}
@@ -228,7 +228,7 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
 
   return (
     <section
-      className="from-background to-muted/20 min-h-screen bg-gradient-to-b px-4 py-20 md:px-8"
+      className="min-h-screen bg-gradient-to-b from-background to-muted/20 px-4 py-20 md:px-8"
       id="projects"
     >
       <div className="mx-auto max-w-7xl">
@@ -240,17 +240,17 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
         {/* GitHub Stats Cards */}
         <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-3">
           <StatsCard
-            icon={<Code2 className="text-primary h-8 w-8" />}
+            icon={<Code2 className="h-8 w-8 text-primary" />}
             label={translations('stats.repositories')}
             value={stats.repositories}
           />
           <StatsCard
-            icon={<Star className="text-primary h-8 w-8" />}
+            icon={<Star className="h-8 w-8 text-primary" />}
             label={translations('stats.stars')}
             value={stats.stars}
           />
           <StatsCard
-            icon={<GitFork className="text-primary h-8 w-8" />}
+            icon={<GitFork className="h-8 w-8 text-primary" />}
             label={translations('stats.forks')}
             value={stats.forks}
           />
