@@ -31,16 +31,16 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
   icon,
   title,
 }: InfoCardProperties): JSX.Element => (
-  <Card className="group hover:border-primary/50 border-2 transition-all duration-300 hover:shadow-xl">
+  <Card className="group border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
     <CardContent className="flex items-start gap-4 p-6">
-      <div className="from-primary/10 to-primary/5 rounded-lg bg-gradient-to-br p-3 transition-transform duration-300 group-hover:scale-110">
+      <div className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110">
         {icon}
       </div>
       <div>
-        <Heading as="h3" className="text-foreground mb-2 text-xl font-semibold">
+        <Heading as="h3" className="mb-2 text-xl font-semibold text-foreground">
           {title}
         </Heading>
-        <div className="text-muted-foreground leading-relaxed">
+        <div className="leading-relaxed text-muted-foreground">
           {description}
         </div>
       </div>
@@ -60,7 +60,7 @@ async function getAboutTranslations(
     'learning.description',
     {
       highlight: (chunks: ReactNode): JSX.Element => (
-        <span className="text-foreground font-medium">{chunks}</span>
+        <span className="font-medium text-foreground">{chunks}</span>
       ),
     }
   )
@@ -69,7 +69,7 @@ async function getAboutTranslations(
     'expertise.description',
     {
       highlight: (chunks: ReactNode): JSX.Element => (
-        <span className="text-foreground font-medium">{chunks}</span>
+        <span className="font-medium text-foreground">{chunks}</span>
       ),
     }
   )
@@ -89,21 +89,21 @@ const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
     <section className="px-4 py-20" id="about">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-12 text-center">
-          <Heading as="h2" className="text-foreground mb-3 text-4xl font-bold">
+          <Heading as="h2" className="mb-3 text-4xl font-bold text-foreground">
             {t('title')}
           </Heading>
-          <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
+          <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary to-primary/60" />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <InfoCard
             description={learningDescription}
-            icon={<BookOpen className="text-primary h-6 w-6" />}
+            icon={<BookOpen className="h-6 w-6 text-primary" />}
             title={t('learning.title')}
           />
           <InfoCard
             description={expertiseDescription}
-            icon={<Code2 className="text-primary h-6 w-6" />}
+            icon={<Code2 className="h-6 w-6 text-primary" />}
             title={t('expertise.title')}
           />
         </div>

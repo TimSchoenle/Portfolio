@@ -106,13 +106,13 @@ const CloudflareBlock: FCStrict<CloudflareBlockProperties> = ({
       <Heading as="h2" className="mb-2 text-xl font-semibold">
         {title}
       </Heading>
-      <p className="text-muted-foreground text-sm leading-relaxed">
+      <p className="text-sm leading-relaxed text-muted-foreground">
         {pre} <strong>{strong}</strong> {post}
       </p>
-      <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         {provider}
       </p>
-      <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         <a
           className="text-primary hover:underline"
           href={policyLink}
@@ -122,7 +122,7 @@ const CloudflareBlock: FCStrict<CloudflareBlockProperties> = ({
           {policyLink}
         </a>
       </p>
-      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         {text}
       </p>
     </div>
@@ -148,7 +148,7 @@ const Sections: (properties: SectionsProperties) => JSX.Element[] = ({
         <Heading as="h2" className="mb-2 text-xl font-semibold">
           {section.title}
         </Heading>
-        <p className="text-muted-foreground text-sm leading-relaxed">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           {section.text}
         </p>
       </div>

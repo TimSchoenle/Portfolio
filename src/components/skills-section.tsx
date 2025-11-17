@@ -35,10 +35,10 @@ const SkillCard: FCStrict<SkillCardProperties> = ({
   variant,
 }: SkillCardProperties): JSX.Element => {
   return (
-    <Card className="group hover:border-primary/50 border-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <Card className="group border-2 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl">
       <CardHeader>
-        <CardTitle className="text-foreground flex items-center gap-2">
-          <div className="bg-primary h-2 w-2 rounded-full" />
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <div className="h-2 w-2 rounded-full bg-primary" />
           {title}
         </CardTitle>
       </CardHeader>
@@ -78,15 +78,15 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
   const tools: readonly string[] = siteConfig.skills.tools
 
   return (
-    <section className="bg-muted/30 relative px-4 py-20" id="skills">
+    <section className="relative bg-muted/30 px-4 py-20" id="skills">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
 
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-12 text-center">
-          <Heading as="h2" className="text-foreground mb-3 text-4xl font-bold">
+          <Heading as="h2" className="mb-3 text-4xl font-bold text-foreground">
             {translations('title')}
           </Heading>
-          <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
+          <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary to-primary/60" />
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">

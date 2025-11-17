@@ -82,7 +82,7 @@ const Home: RoutePageFC<HomeProperties> = async ({
   const dataPromise: Promise<GitHubData> = fetchGitHubData()
 
   return (
-    <main className="bg-background h-screen snap-y snap-mandatory overflow-y-scroll">
+    <main className="h-screen snap-y snap-mandatory overflow-y-scroll bg-background">
       <HeroSection locale={locale} />
       <Suspense fallback={null}>
         <DeferredSections dataPromise={dataPromise} locale={locale} />

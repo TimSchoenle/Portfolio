@@ -230,7 +230,7 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full;
+    @apply rounded-full bg-primary/20;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {

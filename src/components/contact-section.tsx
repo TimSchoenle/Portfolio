@@ -43,12 +43,12 @@ const InfoItem: FCStrict<InfoItemProperties> = ({
   label,
 }: InfoItemProperties): JSX.Element => {
   return (
-    <div className="group hover:bg-muted/50 flex items-center gap-4 rounded-lg p-3 transition-all">
-      <div className="from-primary/10 to-primary/5 rounded-lg bg-gradient-to-br p-3 transition-transform duration-300 group-hover:scale-110">
+    <div className="group flex items-center gap-4 rounded-lg p-3 transition-all hover:bg-muted/50">
+      <div className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110">
         {icon}
       </div>
       <div>
-        <p className="text-muted-foreground text-sm">{label}</p>
+        <p className="text-sm text-muted-foreground">{label}</p>
         {content}
       </div>
     </div>
@@ -69,20 +69,20 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
           <InfoItem
             content={
               <a
-                className="text-foreground hover:text-primary text-lg font-medium transition-colors"
+                className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                 href={`mailto:${siteConfig.email}`}
               >
                 {siteConfig.email}
               </a>
             }
-            icon={<Mail className="text-primary h-6 w-6" />}
+            icon={<Mail className="h-6 w-6 text-primary" />}
             label={translations('email')}
           />
 
           <InfoItem
             content={
               <a
-                className="text-foreground hover:text-primary text-lg font-medium transition-colors"
+                className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                 href={siteConfig.github}
                 rel="noopener noreferrer"
                 target="_blank"
@@ -90,17 +90,17 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
                 {`@${siteConfig.githubUsername}`}
               </a>
             }
-            icon={<GitBranch className="text-primary h-6 w-6" />}
+            icon={<GitBranch className="h-6 w-6 text-primary" />}
             label={translations('github')}
           />
 
           <InfoItem
             content={
-              <p className="text-foreground text-lg font-medium">
+              <p className="text-lg font-medium text-foreground">
                 {translations('locationValue')}
               </p>
             }
-            icon={<MapPin className="text-primary h-6 w-6" />}
+            icon={<MapPin className="h-6 w-6 text-primary" />}
             label={translations('location')}
           />
         </div>
@@ -120,24 +120,24 @@ const ResumeCard: FCStrict<ResumeCardProperties> = ({
 
   return (
     <Card className="overflow-hidden border-2 shadow-xl">
-      <div className="from-primary/20 via-primary/10 to-primary/5 bg-gradient-to-br p-8">
+      <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 p-8">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 rounded-lg p-3">
-              <FileText className="text-primary h-6 w-6" />
+            <div className="rounded-lg bg-primary/10 p-3">
+              <FileText className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <Heading as="h3" className="text-foreground text-xl font-bold">
+              <Heading as="h3" className="text-xl font-bold text-foreground">
                 {translations('downloadResume')}
               </Heading>
-              <p className="text-muted-foreground text-sm">{pdfLabel}</p>
+              <p className="text-sm text-muted-foreground">{pdfLabel}</p>
             </div>
           </div>
         </div>
 
         <Button
           asChild={true}
-          className="group bg-primary hover:bg-primary/90 w-full shadow-lg transition-all hover:shadow-xl"
+          className="group w-full bg-primary shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl"
           size="lg"
         >
           <a download={true} href={resumePath}>
@@ -161,15 +161,15 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
   })
 
   return (
-    <section className="bg-muted/30 relative px-4 py-20" id="contact">
+    <section className="relative bg-muted/30 px-4 py-20" id="contact">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
 
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-12 text-center">
-          <Heading as="h2" className="text-foreground mb-3 text-4xl font-bold">
+          <Heading as="h2" className="mb-3 text-4xl font-bold text-foreground">
             {translations('title')}
           </Heading>
-          <div className="from-primary to-primary/60 mx-auto h-1 w-20 rounded-full bg-gradient-to-r" />
+          <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary to-primary/60" />
         </div>
 
         <div className="mx-auto max-w-2xl space-y-6">

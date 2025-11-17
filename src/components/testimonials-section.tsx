@@ -64,17 +64,17 @@ const TestimonialCard: FCStrict<TestimonialCardProperties> = ({
   item,
 }: TestimonialCardProperties): JSX.Element => {
   return (
-    <Card className="group hover:border-primary/50 relative overflow-hidden border-2 p-8 transition-all duration-300 hover:shadow-2xl">
+    <Card className="group relative overflow-hidden border-2 p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-2xl">
       <div
         aria-hidden="true"
         className="absolute top-4 right-4 opacity-10 transition-opacity group-hover:opacity-20"
       >
-        <Quote className="text-primary h-16 w-16" />
+        <Quote className="h-16 w-16 text-primary" />
       </div>
 
       <div className="relative z-10">
         <div className="mb-6 flex items-center gap-4">
-          <div className="ring-primary/20 group-hover:ring-primary/50 relative h-16 w-16 overflow-hidden rounded-full ring-2 transition-all">
+          <div className="relative h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary/20 transition-all group-hover:ring-primary/50">
             <Image
               alt={`${item.name} avatar`}
               className="object-cover"
@@ -87,12 +87,12 @@ const TestimonialCard: FCStrict<TestimonialCardProperties> = ({
             <Heading as="h3" className="text-lg font-bold">
               {item.name}
             </Heading>
-            <p className="text-foreground text-sm">{item.role}</p>
-            <p className="text-foreground text-sm">{item.company}</p>
+            <p className="text-sm text-foreground">{item.role}</p>
+            <p className="text-sm text-foreground">{item.company}</p>
           </div>
         </div>
 
-        <blockquote className="text-muted-foreground leading-relaxed italic">
+        <blockquote className="leading-relaxed text-muted-foreground italic">
           {`“${item.quote}”`}
         </blockquote>
       </div>
@@ -123,16 +123,16 @@ export const TestimonialsSection: AsyncPageFC<
   const subtitleText: string = translations('subtitle')
 
   return (
-    <section className="from-muted/20 to-background min-h-screen bg-gradient-to-b px-4 py-20 md:px-8">
+    <section className="min-h-screen bg-gradient-to-b from-muted/20 to-background px-4 py-20 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <Heading
             as="h2"
-            className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl"
+            className="mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-4xl font-bold text-transparent md:text-5xl"
           >
             {titleText}
           </Heading>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
             {subtitleText}
           </p>
         </div>
