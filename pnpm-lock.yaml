@@ -68,7 +68,7 @@ importers:
         version: 20.0.0
       '@lingual/i18n-check':
         specifier: latest
-        version: 0.8.12
+        version: 0.8.13
       '@next/bundle-analyzer':
         specifier: ^16.0.1
         version: 16.0.3
@@ -158,7 +158,7 @@ importers:
         version: 27.2.0
       knip:
         specifier: ^5.69.1
-        version: 5.69.1(@types/node@24.10.1)(typescript@5.9.3)
+        version: 5.70.0(@types/node@24.10.1)(typescript@5.9.3)
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -905,8 +905,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lingual/i18n-check@0.8.12':
-    resolution: {integrity: sha512-acHNkd697vW8QKs/4ZtJhSgovunQ3F3nHqsW+L3kaCmT+qrL3pE1zPzthH4ULy73R0AjRYTvfBVoS2vQgmIbjg==}
+  '@lingual/i18n-check@0.8.13':
+    resolution: {integrity: sha512-kveIQHIGp92pM6ECv6MV1ndEwnISGVif45m0HoW1kaboTE0Lx40lVRV6Wlti3v74Q11fVfSAHm8WYb13QQB9dw==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -2932,8 +2932,8 @@ packages:
   glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
 
-  glob@11.0.2:
-    resolution: {integrity: sha512-YT7U7Vye+t5fZ/QMkBFrTJ7ZQxInIUjwyAjVj84CYXqgBdv30MFUPGnBR6sQaVq6Is15wYJUsnzTuWaGRBhBAQ==}
+  glob@12.0.0:
+    resolution: {integrity: sha512-5Qcll1z7IKgHr5g485ePDdHcNQY0k2dtv/bjYy0iuyGxQw2qSOiiXUXJ+AYQpg3HNoUMHqAruX478Jeev7UULw==}
     engines: {node: 20 || >=22}
     hasBin: true
 
@@ -3362,8 +3362,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  knip@5.69.1:
-    resolution: {integrity: sha512-duK61dmrk9O3RiPQtDrsWGzxGyNoyf9gQyjXPcvmcecZypdv9x0ixzPdBU4YTPRbwvUaRtNGulHYUyixz2fbKg==}
+  knip@5.70.0:
+    resolution: {integrity: sha512-ZRO7GzegusadOqR0ICxEQfbM1RS+1Uu/LtATpzO71pHXZQnoj4K47/QtuCtfvJVjWb2R4a7YwHv+Ey9xoxjQCw==}
     engines: {node: '>=18.18.0'}
     hasBin: true
     peerDependencies:
@@ -4304,8 +4304,8 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  strip-json-comments@5.0.2:
-    resolution: {integrity: sha512-4X2FR3UwhNUE9G49aIsJW5hRRR3GXGTBTZRMfv568O60ojM8HcWjV/VxAxCDW3SUND33O6ZY66ZuRcdkj73q2g==}
+  strip-json-comments@5.0.3:
+    resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
 
   styled-jsx@5.1.6:
@@ -5540,13 +5540,13 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lingual/i18n-check@0.8.12':
+  '@lingual/i18n-check@0.8.13':
     dependencies:
       '@formatjs/cli-lib': 6.6.6
       '@formatjs/icu-messageformat-parser': 2.11.4
       chalk: 4.1.2
       commander: 12.1.0
-      glob: 11.0.2
+      glob: 12.0.0
       i18next-parser: 9.3.0
       js-yaml: 4.1.1
       typescript: 5.9.3
@@ -7736,7 +7736,7 @@ snapshots:
 
   glob-to-regexp@0.4.1: {}
 
-  glob@11.0.2:
+  glob@12.0.0:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 4.1.1
@@ -8198,7 +8198,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knip@5.69.1(@types/node@24.10.1)(typescript@5.9.3):
+  knip@5.70.0(@types/node@24.10.1)(typescript@5.9.3):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
       '@types/node': 24.10.1
@@ -8211,7 +8211,7 @@ snapshots:
       picocolors: 1.1.1
       picomatch: 4.0.3
       smol-toml: 1.5.2
-      strip-json-comments: 5.0.2
+      strip-json-comments: 5.0.3
       typescript: 5.9.3
       zod: 4.1.12
 
@@ -9150,7 +9150,7 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  strip-json-comments@5.0.2: {}
+  strip-json-comments@5.0.3: {}
 
   styled-jsx@5.1.6(@babel/core@7.28.5)(react@19.2.0):
     dependencies:
