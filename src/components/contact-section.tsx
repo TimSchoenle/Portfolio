@@ -1,6 +1,6 @@
 'use server'
 
-import { access } from 'node:fs/promises'
+import { access, constants } from 'node:fs/promises'
 import path from 'node:path'
 
 import { type JSX } from 'react'
@@ -154,7 +154,7 @@ const getResumeDetails: (
   )
 
   try {
-    await access(fileSystemPath)
+    await access(fileSystemPath, constants.F_OK)
     const pdfLabel: string = `PDF • ${languageName}`
 
     return {
