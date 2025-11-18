@@ -45,7 +45,7 @@ interface ResolvedOptions {
 
 interface ScrollSnapState {
   bottomElement: HTMLElement
-
+  isSnapping: boolean
   options: ResolvedOptions
   topElement: HTMLElement
 }
@@ -86,10 +86,16 @@ function takeGeometrySnapshot(state: ScrollSnapState): GeometrySnapshot {
 function startSmoothScroll(targetY: number, state: ScrollSnapState): void {
   state.isSnapping = true
 
+  const timeoutId: ReturnType<typeof setTimeout> = setTimeout((): void => {
+    state.isSnapping = false
+    window.removeEventListener('scroll', handleScroll)
+  }, 2000) // Cleanup after reasonable timeout
+
   function handleScroll(): void {
     const distance: number = Math.abs(window.scrollY - targetY)
 
     if (distance <= state.options.snapTolerance) {
+      clearTimeout(timeoutId)
       state.isSnapping = false
       window.removeEventListener('scroll', handleScroll)
     }
@@ -210,9 +216,7 @@ export const ScrollSnapPairController: FC<
   useEffect(effectCallback, [
     properties.topSectionId,
     properties.bottomSectionId,
-    properties.options?.minDelta,
-    properties.options?.snapTolerance,
-    properties.options?.topZone,
+    properties.options,
   ])
 
   return null
