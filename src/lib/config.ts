@@ -27,6 +27,7 @@ export const siteConfig: SiteConfig = {
   featuredRepos: [
     'cloudflare-access-webhook-redirect',
     's3-bucket-perma-link',
+    'Portfolio',
     'helm-charts',
   ],
   fullName: 'Tim',

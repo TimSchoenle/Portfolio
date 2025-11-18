@@ -88,7 +88,7 @@ const ProjectCard: FCStrict<ProjectCardProperties> = ({
     typeof project.homepage === 'string' && project.homepage.length > 0
 
   return (
-    <Card className="group flex flex-col overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
+    <Card className="group flex h-full flex-col overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
         <div className="absolute inset-0 flex items-center justify-center">
           <Code2 className="h-20 w-20 text-primary/40 transition-transform duration-300 group-hover:scale-110" />
@@ -162,21 +162,59 @@ interface ProjectsGridProperties {
   readonly projects: readonly GitHubProject[]
   readonly translations: Translations<'projects'>
 }
+
 const ProjectsGrid: FCStrict<ProjectsGridProperties> = ({
   projects,
   translations,
 }: ProjectsGridProperties): JSX.Element => {
+  const hasManyProjects: boolean = projects.length > 3
+  const mobileProjects: readonly GitHubProject[] = projects.slice(0, 3)
+
+  const renderProject: (
+    project: GitHubProject,
+    wrapperClassName?: string
+  ) => JSX.Element = (
+    project: GitHubProject,
+    wrapperClassName?: string
+  ): JSX.Element => (
+    <div className={wrapperClassName} key={project.html_url}>
+      <ProjectCard project={project} translations={translations} />
+    </div>
+  )
+
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {projects.map(
-        (project: GitHubProject): JSX.Element => (
-          <ProjectCard
-            key={project.html_url}
-            project={project}
-            translations={translations}
-          />
-        )
-      )}
+    <div className="space-y-6">
+      {/* Mobile: limit to the first 3 projects in a simple grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:hidden">
+        {mobileProjects.map(
+          (project: GitHubProject): JSX.Element => renderProject(project)
+        )}
+      </div>
+
+      {/* Tablet / Desktop */}
+      <div className="hidden md:block">
+        {hasManyProjects ? (
+          // Slider on md+ when we have more than 3 projects
+          <div className="relative">
+            <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4">
+              {projects.map(
+                (project: GitHubProject): JSX.Element =>
+                  renderProject(
+                    project,
+                    'snap-start flex-none w-[18rem] md:w-[20rem] lg:w-[22rem]'
+                  )
+              )}
+            </div>
+          </div>
+        ) : (
+          // No slider needed: regular grid
+          <div className="grid grid-cols-2 gap-6 lg:grid-cols-3">
+            {projects.map(
+              (project: GitHubProject): JSX.Element => renderProject(project)
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
