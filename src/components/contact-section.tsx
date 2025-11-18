@@ -33,6 +33,12 @@ interface InfoCardProperties {
   readonly translations: Translations<'contact'>
 }
 
+interface ResumeDetails {
+  readonly languageName: string
+  readonly path: string
+  readonly pdfLabel: string
+}
+
 interface ResumeCardProperties {
   readonly details: ResumeDetails
   readonly translations: Translations<'contact'>
@@ -62,13 +68,16 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
   translations,
 }: InfoCardProperties): JSX.Element => {
   return (
-    <Card className="border-2 shadow-xl">
-      <CardContent className="p-8">
-        <Heading as="h3" className="mb-6 text-2xl font-bold">
+    <Card className="group border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
+      <CardContent className="p-6">
+        <Heading
+          as="h3"
+          className="mb-4 text-2xl font-semibold text-foreground"
+        >
           {translations('infoTitle')}
         </Heading>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <InfoItem
             content={
               <a
@@ -110,12 +119,6 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
       </CardContent>
     </Card>
   )
-}
-
-interface ResumeDetails {
-  readonly languageName: string
-  readonly path: string
-  readonly pdfLabel: string
 }
 
 const getResumeLanguageName: (locale: Locale) => string = (
@@ -171,33 +174,33 @@ const ResumeCard: FCStrict<ResumeCardProperties> = ({
   const { path: resumePath, pdfLabel }: ResumeDetails = details
 
   return (
-    <Card className="overflow-hidden border-2 shadow-xl">
-      <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 p-8">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <FileText className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <Heading as="h3" className="text-xl font-bold text-foreground">
-                {translations('downloadResume')}
-              </Heading>
-              <p className="text-sm text-muted-foreground">{pdfLabel}</p>
-            </div>
-          </div>
+    <Card className="group border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
+      <CardContent className="flex items-start gap-4 p-6">
+        <div className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110">
+          <FileText className="h-6 w-6 text-primary" />
         </div>
 
-        <Button
-          asChild={true}
-          className="group w-full bg-primary shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl"
-          size="lg"
-        >
-          <a download={true} href={resumePath}>
-            <Download className="mr-2 h-5 w-5 transition-transform group-hover:translate-y-0.5 group-hover:scale-110" />
+        <div className="flex-1">
+          <Heading
+            as="h3"
+            className="mb-1 text-xl font-semibold text-foreground"
+          >
             {translations('downloadResume')}
-          </a>
-        </Button>
-      </div>
+          </Heading>
+          <p className="mb-4 text-sm text-muted-foreground">{pdfLabel}</p>
+
+          <Button
+            asChild={true}
+            className="group w-full bg-primary shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl"
+            size="lg"
+          >
+            <a download={true} href={resumePath}>
+              <Download className="mr-2 h-5 w-5 transition-transform group-hover:translate-y-0.5 group-hover:scale-110" />
+              {translations('downloadResume')}
+            </a>
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   )
 }
@@ -230,7 +233,7 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
           <InfoCard translations={translations} />
           {resumeDetails === null ? null : (
             <ResumeCard details={resumeDetails} translations={translations} />
-          )}{' '}
+          )}
         </div>
       </div>
     </section>
