@@ -317,13 +317,16 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Cache build artifact
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - name: Upload build artifact
+        if: success()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
+          name: nextjs-build
+          include-hidden-files: true
           path: |
-            .next
+            .next/**/*
             !.next/cache
-          key: nextjs-build-${{ github.run_id }}
+          retention-days: 1
 
   # E2E tests using shared build
   e2e:
@@ -587,3 +590,18 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+
+  # Cleanup build artifacts after all consuming jobs complete
+  cleanup-artifacts:
+    name: Cleanup Build Artifacts
+    runs-on: ubuntu-latest
+    needs: [e2e, lighthouse, bundle-analysis]
+    if: always()
+    permissions:
+      actions: write
+    steps:
+      - name: Delete build artifact
+        uses: ./.github/actions/delete-artifact
+        with:
+          artifact-name: nextjs-build
+          github-token: ${{ secrets.GITHUB_TOKEN }}

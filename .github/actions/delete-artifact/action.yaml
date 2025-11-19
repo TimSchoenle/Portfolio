@@ -1,0 +1,42 @@
+name: 'Delete Workflow Artifact'
+description: 'Deletes a specified artifact from the current workflow run to save storage'
+
+inputs:
+  artifact-name:
+    description: 'Name of the artifact to delete'
+    required: true
+  github-token:
+    description: 'GitHub token with actions:write permission'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Delete artifact
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const artifactName = '${{ inputs.artifact-name }}';
+
+          console.log(`Searching for artifact: ${artifactName}`);
+
+          const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: context.runId,
+          });
+
+          const artifact = artifacts.data.artifacts.find(a => a.name === artifactName);
+
+          if (artifact) {
+            console.log(`Found artifact: ${artifact.name} (ID: ${artifact.id})`);
+            await github.rest.actions.deleteArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: artifact.id,
+            });
+            console.log(`✓ Successfully deleted artifact: ${artifactName}`);
+          } else {
+            console.log(`⚠ Artifact not found: ${artifactName}`);
+          }
