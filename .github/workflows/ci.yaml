@@ -41,9 +41,18 @@ jobs:
         run: pnpm run i18n-check
 
       - name: Unit/DOM tests
-        run: pnpm test -- --coverage --run
+        run: pnpm run test:ci
 
-      - name: Knip Depenedency check
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Knip Dependency check
         run: pnpm run lint:deps
 
   build:

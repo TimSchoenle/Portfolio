@@ -13,12 +13,15 @@ export default defineConfig({
   },
   test: {
     coverage: {
-      exclude: ['src/**/*.d.ts'],
+      exclude: [
+        'src/**/*.d.ts',
+        'test/**/*',
+        '**/*.config.*',
+        '**/node_modules/**',
+      ],
       include: ['src/**/*.{ts,tsx}'],
       provider: 'v8',
-      reporter: ['text', 'lcov'],
-      // thresholds (optional):
-      // thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 }
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
     },
     css: false,
     environment: 'jsdom',

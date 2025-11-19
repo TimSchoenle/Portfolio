@@ -289,3 +289,20 @@ export const getContributionData: () => Promise<ContributionPoint[]> =
   unstable_cache(getContributionDataUncached, ['contribution-data'], {
     revalidate: 3600,
   })
+
+/* -------------------------------- aggregate -------------------------------- */
+
+export interface GitHubData {
+  contributionData: ContributionPoint[]
+  projects: GitHubProject[]
+  stats: UserStats
+}
+
+export const fetchGitHubData: () => Promise<
+  Readonly<GitHubData>
+> = async (): Promise<GitHubData> => {
+  const projects: GitHubProject[] = await getFeaturedProjects()
+  const stats: UserStats = await getUserStats()
+  const contributionData: ContributionPoint[] = await getContributionData()
+  return { contributionData, projects, stats }
+}

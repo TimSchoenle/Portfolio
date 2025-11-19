@@ -21,6 +21,7 @@
     "analyze": "cross-env NEXT_IGNORE_TURBOPACK=true ANALYZE=true next build --webpack",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:ci": "vitest run --coverage --reporter=dot",
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",

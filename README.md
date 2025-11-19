@@ -1,5 +1,7 @@
 # Portfolio
 
+[![codecov](https://codecov.io/gh/Timmi6790/Portfolio/branch/main/graph/badge.svg)](https://codecov.io/gh/Timmi6790/Portfolio)
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)

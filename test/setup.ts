@@ -40,3 +40,37 @@ vi.mock('next/link', () => {
       React.createElement('a', { ...properties }, properties.children),
   }
 })
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// Mock PointerEvent
+if (!global.PointerEvent) {
+  class PointerEvent extends Event {
+    button: number
+    ctrlKey: boolean
+    metaKey: boolean
+    shiftKey: boolean
+    altKey: boolean
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params)
+      this.button = params.button ?? 0
+      this.ctrlKey = params.ctrlKey ?? false
+      this.metaKey = params.metaKey ?? false
+      this.shiftKey = params.shiftKey ?? false
+      this.altKey = params.altKey ?? false
+    }
+  }
+  global.PointerEvent = PointerEvent as any
+}
+
+// Mock HTMLElement methods
+Object.assign(window.HTMLElement.prototype, {
+  scrollIntoView: vi.fn(),
+  releasePointerCapture: vi.fn(),
+  hasPointerCapture: vi.fn(),
+})
