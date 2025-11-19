@@ -9,7 +9,7 @@ inputs:
     description: 'pnpm version'
     required: true
   mode:
-    description: 'Setup mode: "install" to install deps, "cache" to restore from cache'
+    description: 'Setup mode: "install" to install deps, "cache" to restore from cache, "artifact" to restore from artifact'
     required: true
   cache-key:
     description: 'Cache key for node_modules (required when mode is "cache")'
@@ -40,3 +40,7 @@ runs:
       with:
         path: node_modules
         key: ${{ inputs.cache-key }}
+
+    - name: Restore node_modules from artifact
+      if: ${{ inputs.mode == 'artifact' }}
+      uses: ./.github/actions/restore-node-modules

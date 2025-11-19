@@ -159,6 +159,13 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
+      - name: Upload node_modules artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: node-modules
+          path: node_modules
+          retention-days: 1
+
   # Quality checks - run in parallel using cached dependencies
   lint:
     name: Lint (ESLint)
@@ -298,13 +305,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
-      - name: Setup with cache
+      - name: Setup with artifact
         uses: ./.github/actions/setup-pnpm-node
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-          mode: 'cache'
-          cache-key: *cache_key
+          mode: 'artifact'
 
       - name: Restore Next.js cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -607,4 +613,10 @@ jobs:
         uses: ./.github/actions/delete-artifact
         with:
           artifact-name: nextjs-build
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete node_modules artifact
+        uses: ./.github/actions/delete-artifact
+        with:
+          artifact-name: node-modules
           github-token: ${{ secrets.GITHUB_TOKEN }}

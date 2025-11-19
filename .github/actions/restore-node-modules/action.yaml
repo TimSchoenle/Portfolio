@@ -1,0 +1,21 @@
+name: 'Restore node_modules artifact'
+description: 'Downloads node_modules artifact for immediate availability'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download node_modules artifact
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+      with:
+        name: node-modules
+        path: node_modules
+
+    - name: Verify node_modules
+      shell: bash
+      run: |
+        if [ ! -d "node_modules" ]; then
+          echo "Error: node_modules directory not found after artifact download"
+          exit 1
+        fi
+        echo "✓ node_modules restored successfully"
+        du -sh node_modules
