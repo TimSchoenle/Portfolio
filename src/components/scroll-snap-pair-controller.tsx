@@ -83,23 +83,47 @@ function takeGeometrySnapshot(state: ScrollSnapState): GeometrySnapshot {
   }
 }
 
+// Track the currently active scroll handler and timeout for cleanup
+let activeTimeoutId: ReturnType<typeof setTimeout> | null = null
+let activeScrollHandler: ((this: Window, event_: Event) => void) | null = null
+
 function startSmoothScroll(targetY: number, state: ScrollSnapState): void {
+  // Clean up any previous scroll handler and timeout
+  if (activeScrollHandler !== null) {
+    window.removeEventListener('scroll', activeScrollHandler)
+    activeScrollHandler = null
+  }
+  if (activeTimeoutId !== null) {
+    clearTimeout(activeTimeoutId)
+    activeTimeoutId = null
+  }
+
   state.isSnapping = true
 
-  const timeoutId: ReturnType<typeof setTimeout> = setTimeout((): void => {
-    state.isSnapping = false
-    window.removeEventListener('scroll', handleScroll)
-  }, 2000) // Cleanup after reasonable timeout
-
-  function handleScroll(): void {
+  // Define the scroll handler and store its reference
+  const handleScroll: (this: Window, event_: Event) => void = (): void => {
     const distance: number = Math.abs(window.scrollY - targetY)
-
     if (distance <= state.options.snapTolerance) {
-      clearTimeout(timeoutId)
+      if (activeTimeoutId !== null) {
+        clearTimeout(activeTimeoutId)
+        activeTimeoutId = null
+      }
       state.isSnapping = false
       window.removeEventListener('scroll', handleScroll)
+      activeScrollHandler = null
     }
   }
+  activeScrollHandler = handleScroll
+
+  // Set the timeout and store its reference
+  activeTimeoutId = setTimeout((): void => {
+    state.isSnapping = false
+    if (activeScrollHandler !== null) {
+      window.removeEventListener('scroll', activeScrollHandler)
+      activeScrollHandler = null
+    }
+    activeTimeoutId = null
+  }, 2000) // Cleanup after reasonable timeout
 
   window.addEventListener('scroll', handleScroll)
   window.scrollTo({ behavior: 'smooth', top: targetY })
@@ -182,6 +206,11 @@ function createWheelHandler(
 export const ScrollSnapPairController: FC<
   ScrollSnapPairControllerProperties
 > = (properties: ScrollSnapPairControllerProperties): JSX.Element | null => {
+  // Extract individual option values to use as dependencies
+  const minDelta: number | undefined = properties.options?.minDelta
+  const snapTolerance: number | undefined = properties.options?.snapTolerance
+  const topZone: number | undefined = properties.options?.topZone
+
   const effectCallback: EffectCallback = (): (() => void) | undefined => {
     const topSelector: string = `#${properties.topSectionId}`
     const bottomSelector: string = `#${properties.bottomSectionId}`
@@ -195,7 +224,14 @@ export const ScrollSnapPairController: FC<
       return
     }
 
-    const resolvedOptions: ResolvedOptions = resolveOptions(properties.options)
+    // Build options object only with defined values to satisfy exactOptionalPropertyTypes
+    const options: ScrollSnapPairOptions = {
+      ...(minDelta !== undefined && { minDelta }),
+      ...(snapTolerance !== undefined && { snapTolerance }),
+      ...(topZone !== undefined && { topZone }),
+    }
+
+    const resolvedOptions: ResolvedOptions = resolveOptions(options)
 
     const state: ScrollSnapState = {
       bottomElement,
@@ -216,7 +252,9 @@ export const ScrollSnapPairController: FC<
   useEffect(effectCallback, [
     properties.topSectionId,
     properties.bottomSectionId,
-    properties.options,
+    minDelta,
+    snapTolerance,
+    topZone,
   ])
 
   return null
