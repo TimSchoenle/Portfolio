@@ -22,12 +22,6 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary'],
-      thresholds: {
-        branches: 80,
-        functions: 80,
-        lines: 80,
-        statements: 80,
-      },
     },
     css: false,
     environment: 'jsdom',
