@@ -34,10 +34,8 @@ describe('DeferredClientUi', () => {
 
     const { default: DeferredClientUi } = await import('../deferred-client-ui')
 
-    let container: any
     await act(async () => {
-      const result = render(<DeferredClientUi />)
-      container = result.container
+      render(<DeferredClientUi />)
     })
 
     expect(screen.getAllByTestId('lazy-component').length).toBeGreaterThan(0)

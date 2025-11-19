@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import ErrorPage from '../error'
 
@@ -43,7 +43,7 @@ describe('ErrorPage', () => {
 
   it('does not render digest when not provided', () => {
     const errorWithoutDigest = { ...mockError, digest: undefined }
-    render(<ErrorPage error={errorWithoutDigest} reset={mockReset} />)
+    render(<ErrorPage error={errorWithoutDigest as any} reset={mockReset} />)
 
     expect(screen.queryByText('abc123')).toBeNull()
   })

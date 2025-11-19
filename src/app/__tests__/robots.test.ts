@@ -21,8 +21,8 @@ describe('robots.ts', () => {
     const result = robots()
 
     expect(result.rules).toHaveLength(1)
-    expect(result.rules[0].userAgent).toBe('*')
-    expect(result.rules[0].allow).toBe('/')
-    expect(result.rules[0].disallow).toContain('/api/')
+    expect((result.rules as any)[0].userAgent).toBe('*')
+    expect((result.rules as any)[0].allow).toBe('/')
+    expect((result.rules as any)[0].disallow).toContain('/api/')
   })
 })

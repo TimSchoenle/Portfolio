@@ -140,7 +140,7 @@ describe('RootLayout generateStaticParams', () => {
     const params = generateStaticParams()
 
     expect(params).toHaveLength(2)
-    expect(params[0].locale).toBe('en')
-    expect(params[1].locale).toBe('de')
+    expect((params as any)[0].locale).toBe('en')
+    expect((params as any)[1].locale).toBe('de')
   })
 })

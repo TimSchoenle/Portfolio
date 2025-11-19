@@ -22,7 +22,7 @@ describe('lazyClient', () => {
     })
     const mockSelect = vi.fn((mod: any) => mod.MyComponent)
 
-    const result = lazyClient(mockImporter, mockSelect)
+    const result = lazyClient(mockImporter, mockSelect as any)
 
     expect(result).toBeDefined()
     // @ts-ignore
@@ -36,7 +36,9 @@ describe('lazyClient', () => {
     const mockSelect = vi.fn(() => 'Component')
     const Loading = () => <div>Loading </div>
 
-    const result = lazyClient(mockImporter, mockSelect, { loading: Loading })
+    const result = lazyClient(mockImporter, mockSelect as any, {
+      loading: Loading,
+    })
 
     // @ts-ignore
     expect(result.options.loading).toBe(Loading)
@@ -48,7 +50,7 @@ describe('lazyClient', () => {
     const mockImporter = vi.fn().mockResolvedValue({})
     const mockSelect = vi.fn(() => 'Component')
 
-    const result = lazyClient(mockImporter, mockSelect)
+    const result = lazyClient(mockImporter, mockSelect as any)
 
     // @ts-ignore
     expect(result.options.loading()).toBeNull()

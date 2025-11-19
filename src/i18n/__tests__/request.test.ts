@@ -30,8 +30,28 @@ vi.mock('./routing', () => ({
 }))
 
 describe('request configuration', () => {
-  it('exports configuration', async () => {
+  it('loads messages for valid locale', async () => {
     const config = await import('../request')
-    expect(config.default).toBeDefined()
+    const getConfig = config.default as any
+
+    const result = await getConfig({
+      requestLocale: Promise.resolve('en'),
+    })
+
+    expect(result.locale).toBe('en')
+    expect(result.messages).toHaveProperty('hero')
+    expect(result.messages).toHaveProperty('about')
+  })
+
+  it('falls back to default locale for invalid locale', async () => {
+    const config = await import('../request')
+    const getConfig = config.default as any
+
+    const result = await getConfig({
+      requestLocale: Promise.resolve('fr'),
+    })
+
+    expect(result.locale).toBe('en')
+    expect(result.messages).toHaveProperty('hero')
   })
 })

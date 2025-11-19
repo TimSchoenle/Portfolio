@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildCalendar,
-  computeMonthLabel,
   dayLabelTriple,
   isoDate,
   makeDataMap,
@@ -75,7 +74,20 @@ describe('contribution-calendar', () => {
       // Should span at least 2 weeks
       const result = buildCalendar({ data, locale: 'en-US' })
       expect(result.weeks.length).toBeGreaterThanOrEqual(2)
-      expect(result.weeks[0].days[0]?.date).toBe('2023-01-01')
+      expect(result.weeks[0]!.days[0]?.date).toBe('2023-01-01')
+    })
+    it('handles gaps in data (empty weeks)', () => {
+      const data: ContributionPoint[] = [
+        { date: '2023-01-01', count: 1, level: 1 }, // Sunday
+        { date: '2023-01-15', count: 1, level: 1 }, // 2 weeks later
+      ]
+      const result = buildCalendar({ data, locale: 'en-US' })
+      // Should have 3 weeks: Jan 1-7, Jan 8-14 (empty), Jan 15-21
+      expect(result.weeks.length).toBeGreaterThanOrEqual(3)
+      // Middle week should be empty of contributions
+      const middleWeek = result.weeks[1]
+      const hasContributions = middleWeek!.days.some((d) => d !== null)
+      expect(hasContributions).toBe(false)
     })
   })
 
