@@ -4,12 +4,10 @@ description: 'Sets up pnpm and Node.js, then either installs dependencies or res
 inputs:
   node-version:
     description: 'Node.js version'
-    required: false
-    default: '24'
+    required: true
   pnpm-version:
     description: 'pnpm version'
-    required: false
-    default: '10'
+    required: true
   mode:
     description: 'Setup mode: "install" to install deps, "cache" to restore from cache'
     required: true
@@ -30,7 +28,6 @@ runs:
       uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
       with:
         node-version: ${{ inputs.node-version }}
-        cache: 'pnpm'
 
     - name: Install dependencies
       if: ${{ inputs.mode == 'install' }}
