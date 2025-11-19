@@ -459,13 +459,14 @@ jobs:
       - name: Download base branch bundle stats
         uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
         if: success() && github.event.number
+        continue-on-error: true
         with:
           workflow: ci.yaml
           branch: ${{ github.event.pull_request.base.ref }}
           path: .next/analyze/base
 
       - name: Compare with base branch bundle
-        if: success() && github.event.number
+        if: success() && github.event.number && hashFiles('.next/analyze/base/**/*') != ''
         run: ls -laR .next/analyze/base && npx -p nextjs-bundle-analysis compare
 
       - name: Get comment body
