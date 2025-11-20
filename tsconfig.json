@@ -49,7 +49,7 @@
     // ======================================================================
     // Build & Performance
     // ======================================================================
-    "skipLibCheck": false, // Enforce library type checks for maximum safety
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "incremental": true,

@@ -1,8 +1,5 @@
 'use server'
 
-import { access, constants } from 'node:fs/promises'
-import path from 'node:path'
-
 import { type JSX } from 'react'
 
 import { type Locale } from 'next-intl'
@@ -138,33 +135,19 @@ const getResumeLanguageName: (locale: Locale) => string = (
 }
 
 const getResumeDetails: (
-  locale: Locale
-) => Promise<ResumeDetails | null> = async (
-  locale: Locale
-): Promise<ResumeDetails | null> => {
-  const fileName: string = `${locale}.pdf`
+  locale: Locale,
+  translations: Translations<'contact'>
+) => ResumeDetails = (
+  locale: Locale,
+  translations: Translations<'contact'>
+): ResumeDetails => {
   const languageName: string = getResumeLanguageName(locale)
+  const path: string = `/resume/resume-${locale}.pdf`
+  const pdfLabel: string = translations('pdfVersion', {
+    language: languageName,
+  })
 
-  const publicPath: string = `/${siteConfig.resumeDirectory}/${fileName}`
-  const fileSystemPath: string = path.join(
-    process.cwd(),
-    'public',
-    siteConfig.resumeDirectory,
-    fileName
-  )
-
-  try {
-    await access(fileSystemPath, constants.F_OK)
-    const pdfLabel: string = `PDF • ${languageName}`
-
-    return {
-      languageName,
-      path: publicPath,
-      pdfLabel,
-    }
-  } catch {
-    return null
-  }
+  return { languageName, path, pdfLabel }
 }
 
 const ResumeCard: FCStrict<ResumeCardProperties> = ({
@@ -215,7 +198,7 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
     namespace: 'contact',
   })
 
-  const resumeDetails: ResumeDetails | null = await getResumeDetails(locale)
+  const resumeDetails: ResumeDetails = getResumeDetails(locale, translations)
 
   return (
     <section className="relative bg-muted/30 px-4 py-20" id="contact">
@@ -231,9 +214,7 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
 
         <div className="mx-auto max-w-2xl space-y-6">
           <InfoCard translations={translations} />
-          {resumeDetails === null ? null : (
-            <ResumeCard details={resumeDetails} translations={translations} />
-          )}
+          <ResumeCard details={resumeDetails} translations={translations} />
         </div>
       </div>
     </section>

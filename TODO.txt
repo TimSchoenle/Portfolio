@@ -3,5 +3,4 @@
 * I might need to put the permanent cookies for language and theme behind a cookie consent
 * Improve dark reader support for the hero title
 * Reset github token
-* Main page snap issues with footer
-* Add resumes
+* Replace resume test data with real data

@@ -5,6 +5,8 @@ export interface SiteConfig {
   readonly fullName: string
   readonly github: string
   readonly githubUsername: string
+  readonly jobTitle: string
+  readonly location: string
   readonly name: string
   readonly resumeDirectory: string
   readonly seo: {
@@ -35,6 +37,8 @@ export const siteConfig: SiteConfig = {
   github: 'https://github.com/Timmi6790',
 
   githubUsername: 'Timmi6790',
+  jobTitle: 'Software Developer',
+  location: 'Germany',
   name: 'Tim',
   resumeDirectory: 'resume',
   seo: {

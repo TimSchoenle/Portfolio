@@ -76,6 +76,7 @@ designs
 *.fig
 *.psd
 *.ai
+public/resume/**
 
 # -------- Secrets / env / credentials
 .env

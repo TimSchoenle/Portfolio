@@ -57,3 +57,4 @@ reports/
 playwright-report/
 test-results/
 tests/.cache
+public/resume/**

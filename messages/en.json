@@ -80,7 +80,20 @@
     "github": "GitHub",
     "location": "Location",
     "locationValue": "Germany",
-    "downloadResume": "Download Resume"
+    "downloadResume": "Download Resume",
+    "pdfVersion": "{language} version",
+    "sectionTitles": {
+      "contact": "Contact",
+      "email": "Email",
+      "location": "Location",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "summary": "Professional Summary",
+      "experience": "Experience",
+      "skills": "Technical Skills",
+      "projects": "Projects",
+      "education": "Education"
+    }
   },
   "imprint": {
     "title": "Imprint",

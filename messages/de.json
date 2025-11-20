@@ -80,7 +80,20 @@
     "github": "GitHub",
     "location": "Standort",
     "locationValue": "Deutschland",
-    "downloadResume": "Lebenslauf herunterladen"
+    "downloadResume": "Lebenslauf herunterladen",
+    "pdfVersion": "{language} Version",
+    "sectionTitles": {
+      "contact": "Kontakt",
+      "email": "E-Mail",
+      "location": "Standort",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "summary": "Zusammenfassung",
+      "experience": "Berufserfahrung",
+      "skills": "Technische Fähigkeiten",
+      "projects": "Projekte",
+      "education": "Bildung"
+    }
   },
   "imprint": {
     "title": "Impressum",
