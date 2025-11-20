@@ -465,6 +465,7 @@ jobs:
     if: needs.changes.outputs.bundle == 'true' && needs.changes.outputs.source == 'true'
     permissions:
       pull-requests: write
+      issues: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
