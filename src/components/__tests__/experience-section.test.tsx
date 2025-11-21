@@ -1,26 +1,32 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
 import { render, screen } from '@testing-library/react'
+
 import { ExperienceSection } from '../experience-section'
 
 // Mock next-intl
 vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(async () => {
-    return Object.assign((key: string) => key, {
-      raw: (key: string) => {
-        if (key === 'items') {
-          return [
-            {
-              company: 'Test Company',
-              title: 'Senior Developer',
-              dateRange: '2020 - Present',
-              description: 'Working on cool stuff',
-              logo: null,
-            },
-          ]
-        }
-        return key
-      },
-    })
+    const t = (key: string) => {
+      if (key === 'sectionTitles.experience') return 'Experience'
+      return key
+    }
+    t.raw = (key: string) => {
+      if (key === 'experience') {
+        return [
+          {
+            achievements: ['Working on cool stuff'],
+            company: 'Test Company',
+            endDate: 'Present',
+            location: 'Remote',
+            startDate: '2020',
+            title: 'Senior Developer',
+          },
+        ]
+      }
+      return key
+    }
+    return t
   }),
 }))
 
@@ -33,6 +39,7 @@ vi.mock('next/image', () => ({
 vi.mock('lucide-react', () => ({
   Briefcase: () => <div data-testid="briefcase-icon">Briefcase</div>,
   Calendar: () => <div data-testid="calendar-icon">Calendar</div>,
+  MapPin: () => <div data-testid="map-pin-icon">MapPin</div>,
 }))
 
 describe('Experience_section', () => {
@@ -40,7 +47,7 @@ describe('Experience_section', () => {
     const Component = await ExperienceSection({ locale: 'en' })
     render(Component)
 
-    expect(screen.getByText('title')).toBeDefined()
+    expect(screen.getByText('Experience')).toBeDefined()
   })
 
   it('renders experience items', async () => {
@@ -53,7 +60,7 @@ describe('Experience_section', () => {
     expect(screen.getByText('Working on cool stuff')).toBeDefined()
   })
 
-  it('renders briefcase icon when no logo', async () => {
+  it('renders briefcase icon', async () => {
     const Component = await ExperienceSection({ locale: 'en' })
     render(Component)
 
