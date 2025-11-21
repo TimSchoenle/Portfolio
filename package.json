@@ -65,7 +65,7 @@
     "@types/react-dom": "^19.2.2",
     "@types/webpack": "^5.28.5",
     "@vitejs/plugin-react": "^5.1.0",
-    "@vitest/coverage-v8": "4.0.12",
+    "@vitest/coverage-v8": "4.0.13",
     "cross-env": "^10.1.0",
     "eslint": "^9.38.0",
     "eslint-import-resolver-typescript": "^4.4.4",
