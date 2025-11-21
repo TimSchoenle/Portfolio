@@ -117,7 +117,8 @@ const HeroScrollHint: FCStrict = (): JSX.Element => (
 export const HeroSection: AsyncPageFC<HeroSectionProperties> = async ({
   locale,
 }: HeroSectionProperties): Promise<JSX.Element> => {
-  const translations: Translations<'hero'> = await getTranslations({
+  const translation: Translations<''> = await getTranslations({ locale })
+  const heroTranslation: Translations<'hero'> = await getTranslations({
     locale,
     namespace: 'hero',
   })
@@ -128,18 +129,20 @@ export const HeroSection: AsyncPageFC<HeroSectionProperties> = async ({
 
       <div className="max-w-4xl text-center">
         <HeroTitle
-          greeting={translations('greeting')}
-          name={translations('name')}
+          greeting={heroTranslation('greeting')}
+          name={siteConfig.fullName}
         />
-        <HeroSubtitle title={translations('title')} />
+        <HeroSubtitle title={translation('personalInfo.jobTitle')} />
         <HeroLocationTagline
-          location={translations('location')}
-          tagline={translations('tagline')}
+          location={heroTranslation('location', {
+            country: translation('personalInfo.country'),
+          })}
+          tagline={heroTranslation('tagline')}
         />
         <HeroButtons
-          contactLabel={translations('contact')}
+          contactLabel={heroTranslation('contact')}
           email={siteConfig.email}
-          githubLabel={translations('github')}
+          githubLabel={translation('common.socials.github')}
           githubUrl={siteConfig.github}
         />
         <HeroScrollHint />

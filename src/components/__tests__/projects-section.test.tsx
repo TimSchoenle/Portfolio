@@ -22,7 +22,7 @@ vi.mock('lucide-react', () => ({
   ExternalLink: () => <div data-testid="external-icon">External</div>,
 }))
 
-describe('ProjectsSection', () => {
+describe('Projects_section', () => {
   const mockProjects = [
     {
       name: 'Test Project',

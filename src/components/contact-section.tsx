@@ -27,6 +27,7 @@ interface InfoItemProperties {
 }
 
 interface InfoCardProperties {
+  readonly country: string
   readonly translations: Translations<'contact'>
 }
 
@@ -62,6 +63,7 @@ const InfoItem: FCStrict<InfoItemProperties> = ({
 }
 
 const InfoCard: FCStrict<InfoCardProperties> = ({
+  country,
   translations,
 }: InfoCardProperties): JSX.Element => {
   return (
@@ -105,9 +107,7 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
 
           <InfoItem
             content={
-              <p className="text-lg font-medium text-foreground">
-                {translations('locationValue')}
-              </p>
+              <p className="text-lg font-medium text-foreground">{country}</p>
             }
             icon={<MapPin className="h-6 w-6 text-primary" />}
             label={translations('location')}
@@ -193,12 +193,17 @@ const ResumeCard: FCStrict<ResumeCardProperties> = ({
 export const ContactSection: FCAsync<ContactSectionProperties> = async ({
   locale,
 }: ContactSectionProperties): Promise<JSX.Element> => {
-  const translations: Translations<'contact'> = await getTranslations({
+  const translation: Translations<''> = await getTranslations({ locale })
+
+  const contactTranslations: Translations<'contact'> = await getTranslations({
     locale,
     namespace: 'contact',
   })
 
-  const resumeDetails: ResumeDetails = getResumeDetails(locale, translations)
+  const resumeDetails: ResumeDetails = getResumeDetails(
+    locale,
+    contactTranslations
+  )
 
   return (
     <section className="relative bg-muted/30 px-4 py-20" id="contact">
@@ -207,14 +212,20 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-12 text-center">
           <Heading as="h2" className="mb-3 text-4xl font-bold text-foreground">
-            {translations('title')}
+            {contactTranslations('title')}
           </Heading>
           <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary to-primary/60" />
         </div>
 
         <div className="mx-auto max-w-2xl space-y-6">
-          <InfoCard translations={translations} />
-          <ResumeCard details={resumeDetails} translations={translations} />
+          <InfoCard
+            country={translation('personalInfo.country')}
+            translations={contactTranslations}
+          />
+          <ResumeCard
+            details={resumeDetails}
+            translations={contactTranslations}
+          />
         </div>
       </div>
     </section>

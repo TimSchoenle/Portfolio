@@ -35,7 +35,7 @@ vi.mock('lucide-react', () => ({
   Calendar: () => <div data-testid="calendar-icon">Calendar</div>,
 }))
 
-describe('ExperienceSection', () => {
+describe('Experience_section', () => {
   it('renders section with title', async () => {
     const Component = await ExperienceSection({ locale: 'en' })
     render(Component)

@@ -11,24 +11,8 @@ import { createTranslator, type Messages } from 'next-intl'
 import { renderToBuffer } from '@react-pdf/renderer'
 
 import { ResumePDFDocument } from '@/components/resume/resume-pdf-document'
-import {
-  getResumeSummary,
-  resumeEducation,
-  resumeExperience,
-  resumeProjects,
-  resumeSkills,
-} from '@/data/resume'
-import { siteConfig } from '@/lib/config'
+import { routing } from '@/i18n/routing'
 import type { Translations } from '@/types/i18n'
-import type {
-  ResumeData,
-  ResumePersonalInfo,
-  ResumeSectionTitleTranslations,
-} from '@/types/resume-types'
-
-type Locale = 'de' | 'en'
-
-const LOCALES: readonly Locale[] = ['en', 'de']
 
 // Main execution wrapped in async IIFE to support CJS output format
 void (async (): Promise<void> => {
@@ -45,16 +29,7 @@ void (async (): Promise<void> => {
   // Create fresh directory
   await mkdir(publicDirectory, { recursive: true })
 
-  // Build personal info from siteConfig
-  const personalInfo: ResumePersonalInfo = {
-    email: siteConfig.email,
-    github: siteConfig.github,
-    location: siteConfig.location,
-    name: siteConfig.fullName,
-    title: siteConfig.jobTitle,
-  }
-
-  for (const locale of LOCALES) {
+  for (const locale of routing.locales) {
     console.log(`Generating resume for locale: ${locale}`)
 
     // Load messages for the locale
@@ -67,24 +42,8 @@ void (async (): Promise<void> => {
       messages,
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const sectionTitles: ResumeSectionTitleTranslations = translations.raw(
-      'contact.sectionTitles'
-    )
-
-    // Build complete resume data
-    const resumeData: ResumeData = {
-      education: resumeEducation,
-      experience: resumeExperience,
-      personalInfo,
-      projects: resumeProjects,
-      skills: resumeSkills,
-      summary: getResumeSummary(locale),
-    }
-
     const element: React.ReactElement = React.createElement(ResumePDFDocument, {
-      data: resumeData,
-      translations: sectionTitles,
+      translations: translations,
     })
 
     // @ts-expect-error - React PDF type mismatch

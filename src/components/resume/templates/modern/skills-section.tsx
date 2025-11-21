@@ -1,31 +1,30 @@
-/* eslint-disable react/jsx-curly-brace-presence */
 import { type FC, type ReactElement } from 'react'
 
 import { Text, View } from '@react-pdf/renderer'
 
-import type {
-  ResumeSectionTitleTranslations,
-  ResumeSkills,
-} from '@/types/resume-types'
+import { siteConfig } from '@/lib/config'
+import type { ResumeTranslations } from '@/types/resume'
 
 import { styles } from './modern.styles'
 
 interface SkillsSectionProperties {
-  readonly skills: ResumeSkills
-  readonly translations: ResumeSectionTitleTranslations
+  readonly translations: ResumeTranslations
 }
 
 export const SkillsSection: FC<SkillsSectionProperties> = ({
-  skills,
   translations,
 }: SkillsSectionProperties): ReactElement => (
   <>
-    <Text style={styles.sectionTitle}>{translations.skills}</Text>
+    <Text style={styles.sectionTitle}>
+      {translations('resume.sectionTitles.skills')}
+    </Text>
     <View style={styles.sectionDivider} />
 
-    <Text style={styles.contactLabel}>{'Expertise'}</Text>
+    <Text style={styles.contactLabel}>
+      {translations('resume.sectionTitles.skillsSubTypes.expertise')}
+    </Text>
     <View style={styles.skillsContainer}>
-      {skills.expertise.map(
+      {siteConfig.skills.expertise.map(
         (skill: string): ReactElement => (
           <Text key={skill} style={styles.skillTag}>
             {skill}
@@ -34,9 +33,11 @@ export const SkillsSection: FC<SkillsSectionProperties> = ({
       )}
     </View>
 
-    <Text style={styles.contactLabel}>{'Currently Learning'}</Text>
+    <Text style={styles.contactLabel}>
+      {translations('resume.sectionTitles.skillsSubTypes.learning')}
+    </Text>
     <View style={styles.skillsContainer}>
-      {skills.learning.map(
+      {siteConfig.skills.learning.map(
         (skill: string): ReactElement => (
           <Text key={skill} style={styles.skillTag}>
             {skill}
@@ -45,9 +46,11 @@ export const SkillsSection: FC<SkillsSectionProperties> = ({
       )}
     </View>
 
-    <Text style={styles.contactLabel}>{'Tools & Platforms'}</Text>
+    <Text style={styles.contactLabel}>
+      {translations('resume.sectionTitles.skillsSubTypes.tools')}
+    </Text>
     <View style={styles.skillsContainer}>
-      {skills.tools.map(
+      {siteConfig.skills.tools.map(
         (skill: string): ReactElement => (
           <Text key={skill} style={styles.skillTag}>
             {skill}

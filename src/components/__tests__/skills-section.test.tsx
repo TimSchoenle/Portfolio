@@ -18,7 +18,7 @@ vi.mock('@/lib/config', () => ({
   },
 }))
 
-describe('SkillsSection', () => {
+describe('Skills_section', () => {
   it('renders section with title', async () => {
     const Component = await SkillsSection({ locale: 'en' })
     render(Component)

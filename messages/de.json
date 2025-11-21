@@ -9,13 +9,20 @@
     "goHome": "Zur Startseite",
     "errorIdLabel": "Error ID:"
   },
+  "personalInfo": {
+    "country": "Deutschland",
+    "jobTitle": "Softwareentwickler"
+  },
+  "common": {
+    "socials": {
+      "github": "Github",
+      "linkedin": "LinkedIn"
+    }
+  },
   "hero": {
     "greeting": "Hallo, ich bin",
-    "name": "Tim",
-    "title": "Software-Entwickler",
-    "location": "Ansässig in Deutschland",
+    "location": "Ansässig in {country}",
     "tagline": "Leidenschaftlich daran interessiert, großartige Software zu entwickeln",
-    "github": "GitHub",
     "contact": "Kontakt"
   },
   "about": {
@@ -79,21 +86,72 @@
     "email": "E-Mail",
     "github": "GitHub",
     "location": "Standort",
-    "locationValue": "Deutschland",
+    "linkedin": "LinkedIn",
     "downloadResume": "Lebenslauf herunterladen",
-    "pdfVersion": "{language} Version",
+    "pdfVersion": "{language} Version"
+  },
+  "resume": {
     "sectionTitles": {
-      "contact": "Kontakt",
-      "email": "E-Mail",
-      "location": "Standort",
-      "github": "GitHub",
-      "linkedin": "LinkedIn",
-      "summary": "Zusammenfassung",
+      "summary": "Professionelle Zusammenfassung",
       "experience": "Berufserfahrung",
       "skills": "Technische Fähigkeiten",
+      "skillsSubTypes": {
+        "expertise": "Expertise",
+        "learning": "Derzeit lerne ich",
+        "tools": "Tools & Plattformen"
+      },
       "projects": "Projekte",
-      "education": "Bildung"
-    }
+      "education": "Ausbildung",
+      "contact": "Kontakt",
+      "viewProject": "Projekt ansehen"
+    },
+    "summary": "Erfahrener Software-Ingenieur mit über 5 Jahren Expertise in der Entwicklung skalierbarer Webanwendungen. Leidenschaftlich für sauberen Code, moderne Technologien und das Lösen komplexer Probleme.",
+    "education": [
+      {
+        "degree": "B.S. Computer Science",
+        "institution": "University of California, Berkeley",
+        "year": "2019"
+      }
+    ],
+    "experience": [
+      {
+        "achievements": [
+          "Leitete die Entwicklung einer Microservices-Architektur für über 1 Million Benutzer",
+          "Reduzierte die Ladezeit der Anwendung durch Optimierung um 60%",
+          "Betreute ein Team von 5 Junior-Entwicklern"
+        ],
+        "company": "Tech Company Inc.",
+        "endDate": "Gegenwart",
+        "location": "San Francisco, CA",
+        "startDate": "2021",
+        "title": "Senior Software Engineer"
+      },
+      {
+        "achievements": [
+          "Baute ein Echtzeit-Messaging-System mit WebSockets",
+          "Implementierte eine CI/CD-Pipeline, die die Bereitstellungszeit um 80% reduzierte",
+          "Entwickelte RESTful-APIs, die 10.000 Anfragen/Minute verarbeiten"
+        ],
+        "company": "Startup XYZ",
+        "endDate": "2021",
+        "location": "Remote",
+        "startDate": "2019",
+        "title": "Software Engineer"
+      }
+    ],
+    "projects": [
+      {
+        "description": "Full-Stack-Online-Shop mit Zahlungsintegration und Echtzeit-Bestandsverwaltung",
+        "name": "E-Commerce Platform",
+        "technologies": ["React", "Node.js", "MongoDB", "Stripe"],
+        "url": "https://github.com/johndoe/ecommerce"
+      },
+      {
+        "description": "Kollaboratives Projektmanagement-Tool mit Echtzeit-Updates und Teamfunktionen",
+        "name": "Task Management App",
+        "technologies": ["Next.js", "TypeScript", "PostgreSQL", "Prisma"]
+      }
+    ]
   },
   "imprint": {
     "title": "Impressum",

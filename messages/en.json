@@ -9,13 +9,20 @@
     "goHome": "Go home",
     "errorIdLabel": "Error ID:"
   },
+  "personalInfo": {
+    "country": "Germany",
+    "jobTitle": "Senior Software Developer"
+  },
+  "common": {
+    "socials": {
+      "github": "Github",
+      "linkedin": "LinkedIn"
+    }
+  },
   "hero": {
     "greeting": "Hi, I'm",
-    "name": "Tim",
-    "title": "Software Developer",
-    "location": "Based in Germany",
+    "location": "Based in {country}",
     "tagline": "Passionate about building great software",
-    "github": "GitHub",
     "contact": "Contact Me"
   },
   "about": {
@@ -79,21 +86,72 @@
     "email": "Email",
     "github": "GitHub",
     "location": "Location",
-    "locationValue": "Germany",
+    "linkedin": "LinkedIn",
     "downloadResume": "Download Resume",
-    "pdfVersion": "{language} version",
+    "pdfVersion": "{language} version"
+  },
+  "resume": {
     "sectionTitles": {
-      "contact": "Contact",
-      "email": "Email",
-      "location": "Location",
-      "github": "GitHub",
-      "linkedin": "LinkedIn",
       "summary": "Professional Summary",
       "experience": "Experience",
       "skills": "Technical Skills",
+      "skillsSubTypes": {
+        "expertise": "Expertise",
+        "learning": "Currently Learning",
+        "tools": "Tools & Platforms"
+      },
       "projects": "Projects",
-      "education": "Education"
-    }
+      "education": "Education",
+      "contact": "Contact",
+      "viewProject": "View Project"
+    },
+    "summary": "Experienced software engineer with 5+ years of expertise in building scalable web applications. Passionate about clean code, modern technologies, and solving complex problems.",
+    "education": [
+      {
+        "degree": "B.S. Computer Science",
+        "institution": "University of California, Berkeley",
+        "year": "2019"
+      }
+    ],
+    "experience": [
+      {
+        "achievements": [
+          "Led development of microservices architecture serving 1M+ users",
+          "Reduced application load time by 60% through optimization",
+          "Mentored team of 5 junior developers"
+        ],
+        "company": "Tech Company Inc.",
+        "endDate": "Present",
+        "location": "San Francisco, CA",
+        "startDate": "2021",
+        "title": "Senior Software Engineer"
+      },
+      {
+        "achievements": [
+          "Built real-time messaging system using WebSockets",
+          "Implemented CI/CD pipeline reducing deployment time by 80%",
+          "Developed RESTful APIs handling 10k requests/minute"
+        ],
+        "company": "Startup XYZ",
+        "endDate": "2021",
+        "location": "Remote",
+        "startDate": "2019",
+        "title": "Software Engineer"
+      }
+    ],
+    "projects": [
+      {
+        "description": "Full-stack online store with payment integration and real-time inventory management",
+        "name": "E-Commerce Platform",
+        "technologies": ["React", "Node.js", "MongoDB", "Stripe"],
+        "url": "https://github.com/johndoe/ecommerce"
+      },
+      {
+        "description": "Collaborative project management tool with real-time updates and team features",
+        "name": "Task Management App",
+        "technologies": ["Next.js", "TypeScript", "PostgreSQL", "Prisma"]
+      }
+    ]
   },
   "imprint": {
     "title": "Imprint",
