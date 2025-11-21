@@ -38,7 +38,7 @@ jobs:
       bundle: ${{ steps.filter.outputs.bundle }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Check for file changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3
@@ -105,7 +105,7 @@ jobs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
@@ -166,7 +166,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -185,7 +185,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -204,7 +204,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -223,7 +223,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -242,7 +242,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -263,7 +263,7 @@ jobs:
     if: needs.changes.outputs.tests == 'true'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -305,7 +305,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -350,7 +350,7 @@ jobs:
       BASE_URL: http://localhost:3000
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -408,7 +408,7 @@ jobs:
         /de
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -468,7 +468,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup with cache
         uses: ./.github/actions/setup-pnpm-node
@@ -495,7 +495,7 @@ jobs:
     if: needs.changes.outputs.dockerfile-lint == 'true'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Hadolint
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
@@ -512,7 +512,7 @@ jobs:
     if: needs.changes.outputs.docker == 'true'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Setup Docker QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
@@ -559,7 +559,7 @@ jobs:
       actions: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
 
       - name: Delete build artifact
         uses: ./.github/actions/delete-artifact
