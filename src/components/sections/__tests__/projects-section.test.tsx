@@ -8,7 +8,7 @@ vi.mock('next-intl/server', () => ({
 }))
 
 // Mock ContributionGraph
-vi.mock('../contribution-graph', () => ({
+vi.mock('../../contribution-graph', () => ({
   ContributionGraph: () => <div data-testid="contribution-graph">Graph</div>,
 }))
 

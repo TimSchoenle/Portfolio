@@ -46,14 +46,14 @@ vi.mock('@/lib/config', () => ({
 }))
 
 // Mock components to avoid deep rendering complexity in integration test
-vi.mock('@/components/hero-section', () => ({
+vi.mock('@/components/sections/hero-section', () => ({
   HeroSection: () => <div data-testid="hero-section">Hero</div>,
 }))
 
 vi.mock('@/components/scroll-snap-pair-controller', () => ({
   ScrollSnapPairController: () => null,
 }))
-vi.mock('@/components/deferred-sections', () => ({
+vi.mock('@/components/sections/deferred-sections', () => ({
   DeferredSections: () => (
     <div data-testid="deferred-sections">Deferred Sections</div>
   ),

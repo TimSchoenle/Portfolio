@@ -4,9 +4,9 @@ import { type Locale } from 'next-intl'
 
 import { setRequestLocale } from 'next-intl/server'
 
-import { DeferredSections } from '@/components/deferred-sections'
-import { HeroSection } from '@/components/hero-section'
 import { ScrollSnapPairController } from '@/components/scroll-snap-pair-controller'
+import { DeferredSections } from '@/components/sections/deferred-sections'
+import { HeroSection } from '@/components/sections/hero-section'
 import { ensureLocaleFromParameters } from '@/i18n/locale'
 import { fetchGitHubData, type GitHubData } from '@/lib/github'
 import type { UnparsedLocalePageProperties } from '@/types/i18n'

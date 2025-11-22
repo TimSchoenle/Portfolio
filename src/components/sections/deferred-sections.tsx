@@ -2,12 +2,12 @@ import { type JSX, use } from 'react'
 
 import { type Locale } from 'next-intl'
 
-import AboutSection from '@/components/about-section'
-import { ContactSection } from '@/components/contact-section'
-import { ExperienceSection } from '@/components/experience-section'
-import { ProjectsSection } from '@/components/projects-section'
-import { SkillsSection } from '@/components/skills-section'
-import { TestimonialsSection } from '@/components/testimonials-section'
+import AboutSection from '@/components/sections/about-section'
+import { ContactSection } from '@/components/sections/contact-section'
+import { ExperienceSection } from '@/components/sections/experience-section'
+import { ProjectsSection } from '@/components/sections/projects-section'
+import { SkillsSection } from '@/components/sections/skills-section'
+import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { siteConfig } from '@/lib/config'
 import { type GitHubData } from '@/lib/github'
 
