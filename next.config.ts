@@ -49,7 +49,12 @@ const nextConfig: NextConfig = {
   experimental: {
     inlineCss: true,
     optimizeCss: true,
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-icons',
+      'clsx',
+      'tailwind-merge',
+    ],
     turbopackFileSystemCacheForDev: true,
     typedEnv: true,
   },
