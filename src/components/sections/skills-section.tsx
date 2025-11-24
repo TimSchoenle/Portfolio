@@ -98,12 +98,12 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
           <SkillCard
             items={learning}
             title={translations('learning')}
-            variant="secondary"
+            variant="default"
           />
           <SkillCard
             items={tools}
             title={translations('tools')}
-            variant="outline"
+            variant="default"
           />
         </div>
       </div>
