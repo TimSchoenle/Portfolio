@@ -10,10 +10,10 @@ import { type Skill } from '@/lib/config'
 import { cn } from '@/lib/utilities'
 
 interface TechRadarProperties {
-  readonly expertise: readonly Skill[]
-  readonly learning: readonly Skill[]
-  readonly platforms: readonly Skill[]
-  readonly tools: readonly Skill[]
+  readonly languages: readonly Skill[]
+  readonly frameworks: readonly Skill[]
+  readonly buildTools: readonly Skill[]
+  readonly infrastructure: readonly Skill[]
 }
 
 interface Blip {
@@ -21,7 +21,7 @@ interface Blip {
   readonly icon: LucideIcon
   readonly id: string
   readonly name: string
-  readonly quadrant: 'expertise' | 'learning' | 'platforms' | 'tools'
+  readonly quadrant: 'languages' | 'frameworks' | 'buildTools' | 'infrastructure'
   readonly radius: number
   readonly x: number
   readonly y: number
@@ -64,20 +64,20 @@ const calculateBlipPosition = (
 }
 
 export const TechRadar: React.FC<TechRadarProperties> = ({
-  expertise,
-  learning,
-  platforms,
-  tools,
+  languages,
+  frameworks,
+  buildTools,
+  infrastructure,
 }): JSX.Element => {
   const [hoveredBlip, setHoveredBlip] = useState<string | null>(null)
 
   const blips = useMemo((): Blip[] => {
     const all: Blip[] = []
     const quadrants = {
-      expertise: { end: (3 * Math.PI) / 2, start: Math.PI }, // top-left
-      learning: { end: Math.PI, start: Math.PI / 2 }, // bottom-left
-      platforms: { end: Math.PI / 2, start: 0 }, // bottom-right
-      tools: { end: 2 * Math.PI, start: (3 * Math.PI) / 2 }, // top-right
+      languages: { end: (3 * Math.PI) / 2, start: Math.PI }, // top-left
+      frameworks: { end: 2 * Math.PI, start: (3 * Math.PI) / 2 }, // top-right
+      buildTools: { end: Math.PI, start: Math.PI / 2 }, // bottom-left
+      infrastructure: { end: Math.PI / 2, start: 0 }, // bottom-right
     }
 
     const pushCategory = (
@@ -109,27 +109,32 @@ export const TechRadar: React.FC<TechRadarProperties> = ({
     }
 
     pushCategory(
-      expertise,
-      'expertise',
-      quadrants.expertise.start,
-      quadrants.expertise.end
-    )
-    pushCategory(tools, 'tools', quadrants.tools.start, quadrants.tools.end)
-    pushCategory(
-      learning,
-      'learning',
-      quadrants.learning.start,
-      quadrants.learning.end
+      languages,
+      'languages',
+      quadrants.languages.start,
+      quadrants.languages.end
     )
     pushCategory(
-      platforms,
-      'platforms',
-      quadrants.platforms.start,
-      quadrants.platforms.end
+      frameworks,
+      'frameworks',
+      quadrants.frameworks.start,
+      quadrants.frameworks.end
+    )
+    pushCategory(
+      buildTools,
+      'buildTools',
+      quadrants.buildTools.start,
+      quadrants.buildTools.end
+    )
+    pushCategory(
+      infrastructure,
+      'infrastructure',
+      quadrants.infrastructure.start,
+      quadrants.infrastructure.end
     )
 
     return all
-  }, [expertise, tools, learning, platforms])
+  }, [languages, frameworks, buildTools, infrastructure])
 
   return (
     <div className="relative mx-auto aspect-square w-full max-w-2xl">
@@ -146,19 +151,19 @@ export const TechRadar: React.FC<TechRadarProperties> = ({
           <path
             d="M -105,0 A 105,105 0 0,1 0,-105"
             fill="none"
-            id="expertisePath"
+            id="languagesPath"
           />
-          <path d="M 0,-105 A 105,105 0 0,1 105,0" fill="none" id="toolsPath" />
+          <path d="M 0,-105 A 105,105 0 0,1 105,0" fill="none" id="frameworksPath" />
           {/* Bottom paths reversed to keep text upright - radius increased to 114 to match visual distance of top labels */}
           <path
             d="M -114,0 A 114,114 0 0,0 0,114"
             fill="none"
-            id="learningPath"
+            id="buildToolsPath"
           />
           <path
             d="M 0,114 A 114,114 0 0,0 114,0"
             fill="none"
-            id="platformsPath"
+            id="infrastructurePath"
           />
         </defs>
 
@@ -214,25 +219,25 @@ export const TechRadar: React.FC<TechRadarProperties> = ({
 
         {/* Curved Quadrant Labels - Top quadrants */}
         <text className="fill-primary text-[8px] font-bold tracking-wider uppercase">
-          <textPath href="#expertisePath" startOffset="50%" textAnchor="middle">
-            Expertise
+          <textPath href="#languagesPath" startOffset="50%" textAnchor="middle">
+            Languages
           </textPath>
         </text>
-        <text className="fill-secondary-foreground text-[8px] font-bold tracking-wider uppercase">
-          <textPath href="#toolsPath" startOffset="50%" textAnchor="middle">
-            Tools
+        <text className="fill-sky-500 text-[8px] font-bold tracking-wider uppercase">
+          <textPath href="#frameworksPath" startOffset="50%" textAnchor="middle">
+            Frameworks
           </textPath>
         </text>
 
         {/* Curved Quadrant Labels - Bottom quadrants with upright text */}
-        <text className="fill-muted-foreground text-[8px] font-bold tracking-wider uppercase">
-          <textPath href="#learningPath" startOffset="50%" textAnchor="middle">
-            Learning
+        <text className="fill-slate-500 text-[8px] font-bold tracking-wider uppercase">
+          <textPath href="#buildToolsPath" startOffset="50%" textAnchor="middle">
+            Build & Tools
           </textPath>
         </text>
-        <text className="fill-foreground text-[8px] font-bold tracking-wider uppercase">
-          <textPath href="#platformsPath" startOffset="50%" textAnchor="middle">
-            Platforms
+        <text className="fill-violet-500 text-[8px] font-bold tracking-wider uppercase">
+          <textPath href="#infrastructurePath" startOffset="50%" textAnchor="middle">
+            Infrastructure
           </textPath>
         </text>
         {/* Blips */}
@@ -240,20 +245,25 @@ export const TechRadar: React.FC<TechRadarProperties> = ({
           const isHovered = hoveredBlip === blip.id
           let blipColorClass = ''
           switch (blip.quadrant) {
-          case 'expertise': {
-          blipColorClass = 'fill-primary stroke-primary-foreground'
-          break;
-          }
-          case 'tools': {
-          blipColorClass = 'fill-secondary-foreground stroke-secondary'
-          break;
-          }
-          case 'learning': {
-          blipColorClass = 'fill-muted-foreground stroke-muted'
-          break;
-          }
-          default: { blipColorClass = 'fill-foreground stroke-background'
-          }
+            case 'languages': {
+              blipColorClass = 'fill-primary stroke-primary-foreground'
+              break;
+            }
+            case 'frameworks': {
+              blipColorClass = 'fill-sky-500 stroke-sky-100'
+              break;
+            }
+            case 'buildTools': {
+              blipColorClass = 'fill-slate-500 stroke-slate-100'
+              break;
+            }
+            case 'infrastructure': {
+              blipColorClass = 'fill-violet-500 stroke-violet-100'
+              break;
+            }
+            default: {
+              blipColorClass = 'fill-foreground stroke-background'
+            }
           }
 
           return (
@@ -293,7 +303,7 @@ export const TechRadar: React.FC<TechRadarProperties> = ({
         >
           {(() => {
             const blip = blips.find((b) => b.id === hoveredBlip)
-            if (!blip) {return null}
+            if (!blip) { return null }
             const Icon = blip.icon
             return (
               <>

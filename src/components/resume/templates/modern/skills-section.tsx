@@ -21,10 +21,10 @@ export const SkillsSection: FC<SkillsSectionProperties> = ({
     <View style={styles.sectionDivider} />
 
     <Text style={styles.contactLabel}>
-      {translations('resume.sectionTitles.skillsSubTypes.expertise')}
+      {translations('resume.sectionTitles.skillsSubTypes.languages')}
     </Text>
     <View style={styles.skillsContainer}>
-      {siteConfig.skills.expertise.map(
+      {siteConfig.skills.languages.map(
         (skill: Skill): ReactElement => (
           <Text key={skill.name} style={styles.skillTag}>
             {skill.name}
@@ -34,10 +34,10 @@ export const SkillsSection: FC<SkillsSectionProperties> = ({
     </View>
 
     <Text style={styles.contactLabel}>
-      {translations('resume.sectionTitles.skillsSubTypes.learning')}
+      {translations('resume.sectionTitles.skillsSubTypes.frameworks')}
     </Text>
     <View style={styles.skillsContainer}>
-      {siteConfig.skills.learning.map(
+      {siteConfig.skills.frameworks.map(
         (skill: Skill): ReactElement => (
           <Text key={skill.name} style={styles.skillTag}>
             {skill.name}
@@ -47,10 +47,10 @@ export const SkillsSection: FC<SkillsSectionProperties> = ({
     </View>
 
     <Text style={styles.contactLabel}>
-      {translations('resume.sectionTitles.skillsSubTypes.tools')}
+      {translations('resume.sectionTitles.skillsSubTypes.buildTools')}
     </Text>
     <View style={styles.skillsContainer}>
-      {siteConfig.skills.tools.map(
+      {siteConfig.skills.buildTools.map(
         (skill: Skill): ReactElement => (
           <Text key={skill.name} style={styles.skillTag}>
             {skill.name}
@@ -60,10 +60,10 @@ export const SkillsSection: FC<SkillsSectionProperties> = ({
     </View>
 
     <Text style={styles.contactLabel}>
-      {translations('resume.sectionTitles.skillsSubTypes.platforms')}
+      {translations('resume.sectionTitles.skillsSubTypes.infrastructure')}
     </Text>
     <View style={styles.skillsContainer}>
-      {siteConfig.skills.platforms.map(
+      {siteConfig.skills.infrastructure.map(
         (skill: Skill): ReactElement => (
           <Text key={skill.name} style={styles.skillTag}>
             {skill.name}

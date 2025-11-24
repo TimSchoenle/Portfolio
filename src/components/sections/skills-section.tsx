@@ -58,10 +58,10 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
     namespace: 'skills',
   })
 
-  const expertise: readonly Skill[] = siteConfig.skills.expertise
-  const learning: readonly Skill[] = siteConfig.skills.learning
-  const tools: readonly Skill[] = siteConfig.skills.tools
-  const platforms: readonly Skill[] = siteConfig.skills.platforms
+  const languages: readonly Skill[] = siteConfig.skills.languages
+  const frameworks: readonly Skill[] = siteConfig.skills.frameworks
+  const buildTools: readonly Skill[] = siteConfig.skills.buildTools
+  const infrastructure: readonly Skill[] = siteConfig.skills.infrastructure
 
   return (
     <section
@@ -87,10 +87,10 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
           {/* Tech Radar (Hidden on mobile, visible on large screens) */}
           <div className="hidden lg:block">
             <TechRadar
-              expertise={expertise}
-              learning={learning}
-              platforms={platforms}
-              tools={tools}
+              buildTools={buildTools}
+              frameworks={frameworks}
+              infrastructure={infrastructure}
+              languages={languages}
             />
           </div>
 
@@ -100,10 +100,10 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
               {/* Mobile only intro or alternative view could go here, but the lists below are fine */}
             </div>
 
-            <SkillList items={expertise} title={translations('expertise')} />
-            <SkillList items={tools} title={translations('tools')} />
-            <SkillList items={learning} title={translations('learning')} />
-            <SkillList items={platforms} title={translations('platforms')} />
+            <SkillList items={languages} title={translations('languages')} />
+            <SkillList items={frameworks} title={translations('frameworks')} />
+            <SkillList items={buildTools} title={translations('buildTools')} />
+            <SkillList items={infrastructure} title={translations('infrastructure')} />
           </div>
         </div>
       </div>

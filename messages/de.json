@@ -38,10 +38,10 @@
   },
   "skills": {
     "title": "Fähigkeiten & Technologien",
-    "expertise": "Expertise",
-    "learning": "Derzeit lerne ich",
-    "tools": "Tools & Plattformen",
-    "platforms": "Plattformen"
+    "languages": "Sprachen",
+    "frameworks": "Frameworks",
+    "buildTools": "Build & Tools",
+    "infrastructure": "Infrastruktur"
   },
   "experience": {
     "title": "Berufserfahrung",
@@ -97,10 +97,10 @@
       "experience": "Berufserfahrung",
       "skills": "Technische Fähigkeiten",
       "skillsSubTypes": {
-        "expertise": "Expertise",
-        "learning": "Derzeit lerne ich",
-        "tools": "Tools & Plattformen",
-        "platforms": "Plattformen"
+        "languages": "Sprachen",
+        "frameworks": "Frameworks",
+        "buildTools": "Build & Tools",
+        "infrastructure": "Infrastruktur"
       },
       "projects": "Projekte",
       "education": "Ausbildung",
@@ -169,13 +169,23 @@
       {
         "description": "Full-Stack-Online-Shop mit Zahlungsintegration und Echtzeit-Bestandsverwaltung",
         "name": "E-Commerce Platform",
-        "technologies": ["React", "Node.js", "MongoDB", "Stripe"],
+        "technologies": [
+          "React",
+          "Node.js",
+          "MongoDB",
+          "Stripe"
+        ],
         "url": "https://github.com/johndoe/ecommerce"
       },
       {
         "description": "Kollaboratives Projektmanagement-Tool mit Echtzeit-Updates und Teamfunktionen",
         "name": "Task Management App",
-        "technologies": ["Next.js", "TypeScript", "PostgreSQL", "Prisma"]
+        "technologies": [
+          "Next.js",
+          "TypeScript",
+          "PostgreSQL",
+          "Prisma"
+        ]
       }
     ]
   },
