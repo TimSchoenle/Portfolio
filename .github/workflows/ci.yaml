@@ -335,6 +335,8 @@ jobs:
           path: |
             .next/**/*
             !.next/cache
+            public/sw.js
+            public/sw.js.map
           retention-days: 1
 
   # E2E tests using shared build
