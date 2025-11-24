@@ -419,6 +419,7 @@ export default tseslint.config(
       ],
       // We handle that somewhere else
       'sonarjs/no-unused-vars': 'off',
+      'sonarjs/todo-tag': 'off',
 
       // Unicorn -- Disable rules which are causing issues
       'unicorn/no-null': 'off',

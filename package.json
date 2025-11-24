@@ -4,9 +4,10 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "pnpm build:resume && next build  --webpack",
+    "build": "pnpm build:prepare && next build --webpack",
+    "build:prepare": "pnpm build:resume",
     "build:resume": "pnpm dlx tsx scripts/generate-resumes.ts",
-    "dev": "pnpm build:resume && next dev  --webpack",
+    "dev": "pnpm build:prepare && next dev  --webpack",
     "docker:build": "docker build -t portfolio:latest .",
     "docker:prod": "docker-compose up app",
     "docker:run": "docker run -p 3000:3000 portfolio:latest",

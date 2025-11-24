@@ -19,6 +19,16 @@ const withBundleAnalyzer: ReturnType<typeof bundleAnalyzer> = bundleAnalyzer({
 })
 
 const withSerwist: ReturnType<typeof withSerwistInit> = withSerwistInit({
+  additionalPrecacheEntries: [
+    { revision: null, url: '/en' },
+    { revision: null, url: '/de' },
+    { revision: null, url: '/en/imprint' },
+    { revision: null, url: '/de/imprint' },
+    { revision: null, url: '/en/privacy' },
+    { revision: null, url: '/de/privacy' },
+    { revision: null, url: '/en/offline' },
+    { revision: null, url: '/de/offline' },
+  ],
   swDest: 'public/sw.js',
   swSrc: 'src/app/sw.ts',
 })
