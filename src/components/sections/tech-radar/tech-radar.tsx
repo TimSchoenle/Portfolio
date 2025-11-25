@@ -14,7 +14,10 @@ import {
   QUADRANT_STYLES,
   RADAR_CONFIG,
 } from '@/lib/radar-config'
-import { calculateBlipPosition } from '@/lib/tech-radar-utilities'
+import {
+  calculateBlipPosition,
+  resolveBlipCollisions,
+} from '@/lib/tech-radar-utilities'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { Translations } from '@/types/i18n'
 import type {
@@ -43,38 +46,61 @@ interface TechRadarProperties {
   readonly locale: Locale
 }
 
+interface GenerateBlipsForCategoryParameters {
+  readonly config: QuadrantAngleType
+  readonly items: readonly Skill[]
+  readonly quadrantKey: TechRadarQuadrant
+}
+
 const generateBlipsForCategory: (
-  items: readonly Skill[],
-  quadrantKey: TechRadarQuadrant,
-  config: QuadrantAngleType
-) => Blip[] = (
-  items: readonly Skill[],
-  quadrantKey: TechRadarQuadrant,
-  config: QuadrantAngleType
-): Blip[] => {
-  return items.map((skill: Skill, index: number): Blip => {
-    const {
-      angle,
-      radius,
-      xCoordinate,
-      yCoordinate,
-    }: CalculateBlipPositionResult = calculateBlipPosition({
-      confidence: skill.confidence,
-      endAngle: config.end,
-      index,
-      skillName: skill.name,
-      startAngle: config.start,
-      total: items.length,
-    })
+  parameter: GenerateBlipsForCategoryParameters
+) => Blip[] = ({
+  config,
+  items,
+  quadrantKey,
+}: GenerateBlipsForCategoryParameters): Blip[] => {
+  // 1. Calculate initial positions
+  const initialBlips: (Blip & CalculateBlipPositionResult)[] = items.map(
+    (skill: Skill, index: number): Blip & CalculateBlipPositionResult => {
+      const position: CalculateBlipPositionResult = calculateBlipPosition({
+        confidence: skill.confidence,
+        endAngle: config.end,
+        index,
+        skillName: skill.name,
+        startAngle: config.start,
+        total: items.length,
+      })
+      return {
+        ...position,
+        iconName: skill.name,
+        id: `${quadrantKey}-${skill.name}`,
+        name: skill.name,
+        quadrant: quadrantKey,
+      }
+    }
+  )
+
+  // 2. Resolve collisions
+  const resolvedPositions: CalculateBlipPositionResult[] =
+    resolveBlipCollisions(initialBlips, config.start, config.end)
+
+  // 3. Merge resolved positions back into blips
+  return initialBlips.map((blip: Blip, index: number): Blip => {
+    const resolved: CalculateBlipPositionResult | undefined =
+      resolvedPositions.at(index)
+
+    if (!resolved) {
+      // This should never happen since resolvedPositions has same length as initialBlips
+      // but we need to handle it for type safety
+      return blip
+    }
+
     return {
-      angle,
-      iconName: skill.name,
-      id: `${quadrantKey}-${skill.name}`,
-      name: skill.name,
-      quadrant: quadrantKey,
-      radius,
-      xCoordinate,
-      yCoordinate,
+      ...blip,
+      angle: resolved.angle,
+      radius: resolved.radius,
+      xCoordinate: resolved.xCoordinate,
+      yCoordinate: resolved.yCoordinate,
     }
   })
 }
@@ -276,14 +302,26 @@ export const TechRadar: AsyncPageFC<TechRadarProperties> = async ({
   }
 
   const allBlips: Blip[] = [
-    ...generateBlipsForCategory(languages, 'languages', quadrants.languages),
-    ...generateBlipsForCategory(frameworks, 'frameworks', quadrants.frameworks),
-    ...generateBlipsForCategory(buildTools, 'buildTools', quadrants.buildTools),
-    ...generateBlipsForCategory(
-      infrastructure,
-      'infrastructure',
-      quadrants.infrastructure
-    ),
+    ...generateBlipsForCategory({
+      config: quadrants.languages,
+      items: languages,
+      quadrantKey: 'languages',
+    }),
+    ...generateBlipsForCategory({
+      config: quadrants.frameworks,
+      items: frameworks,
+      quadrantKey: 'frameworks',
+    }),
+    ...generateBlipsForCategory({
+      config: quadrants.buildTools,
+      items: buildTools,
+      quadrantKey: 'buildTools',
+    }),
+    ...generateBlipsForCategory({
+      config: quadrants.infrastructure,
+      items: infrastructure,
+      quadrantKey: 'infrastructure',
+    }),
   ]
 
   const { animation, circles, labels, viewBox }: typeof RADAR_CONFIG =
