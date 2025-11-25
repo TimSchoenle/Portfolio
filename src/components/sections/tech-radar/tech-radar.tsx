@@ -179,14 +179,16 @@ const RadarLabels: FCStrict<RadarLabelsProperties> = ({
     <>
       {/* Curved Quadrant Labels - Top quadrants */}
       <text
-        className={`text-[${String(labels.fontSize)}px] font-bold tracking-wider uppercase ${QUADRANT_STYLES.languages.labelColor}`}
+        className={`font-bold tracking-wider uppercase ${QUADRANT_STYLES.languages.labelColor}`}
+        style={{ fontSize: `${String(labels.fontSize)}px` }}
       >
         <textPath href="#languagesPath" startOffset="50%" textAnchor="middle">
           {translations('languages')}
         </textPath>
       </text>
       <text
-        className={`text-[${String(labels.fontSize)}px] font-bold tracking-wider uppercase ${QUADRANT_STYLES.frameworks.labelColor}`}
+        className={`font-bold tracking-wider uppercase ${QUADRANT_STYLES.frameworks.labelColor}`}
+        style={{ fontSize: `${String(labels.fontSize)}px` }}
       >
         <textPath href="#frameworksPath" startOffset="50%" textAnchor="middle">
           {translations('frameworks')}
@@ -195,14 +197,16 @@ const RadarLabels: FCStrict<RadarLabelsProperties> = ({
 
       {/* Curved Quadrant Labels - Bottom quadrants */}
       <text
-        className={`text-[${String(labels.fontSize)}px] font-bold tracking-wider uppercase ${QUADRANT_STYLES.buildTools.labelColor}`}
+        className={`font-bold tracking-wider uppercase ${QUADRANT_STYLES.buildTools.labelColor}`}
+        style={{ fontSize: `${String(labels.fontSize)}px` }}
       >
         <textPath href="#buildToolsPath" startOffset="50%" textAnchor="middle">
           {translations('buildTools')}
         </textPath>
       </text>
       <text
-        className={`text-[${String(labels.fontSize)}px] font-bold tracking-wider uppercase ${QUADRANT_STYLES.infrastructure.labelColor}`}
+        className={`font-bold tracking-wider uppercase ${QUADRANT_STYLES.infrastructure.labelColor}`}
+        style={{ fontSize: `${String(labels.fontSize)}px` }}
       >
         <textPath
           href="#infrastructurePath"

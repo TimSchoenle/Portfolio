@@ -45,7 +45,7 @@ export const RADAR_CONFIG: RadarConfigType = {
   /** Quadrant label positioning */
   labels: {
     bottomRadius: 114,
-    fontSize: 12,
+    fontSize: 8,
     topRadius: 105,
   },
 
