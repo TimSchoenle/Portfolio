@@ -71,8 +71,19 @@ describe('tech-radar-utilities', () => {
 
       const resolved = resolveBlipCollisions(blips, startAngle, endAngle)
 
-      expect(resolved[0].angle).toBeCloseTo(blips[0].angle)
-      expect(resolved[1].angle).toBeCloseTo(blips[1].angle)
+      expect(resolved).toHaveLength(2)
+      const [first, second] = resolved
+      const [blipFirst, blipSecond] = blips
+
+      expect(first).toBeDefined()
+      expect(second).toBeDefined()
+      expect(blipFirst).toBeDefined()
+      expect(blipSecond).toBeDefined()
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(first!.angle).toBeCloseTo(blipFirst!.angle)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(second!.angle).toBeCloseTo(blipSecond!.angle)
     })
 
     it('should separate overlapping blips', () => {
@@ -88,14 +99,27 @@ describe('tech-radar-utilities', () => {
 
       const resolved = resolveBlipCollisions(blips, startAngle, endAngle)
 
-      const angleDiff = Math.abs(resolved[0].angle - resolved[1].angle)
-      const initialDiff = Math.abs(blips[0].angle - blips[1].angle)
+      expect(resolved).toHaveLength(2)
+      const [first, second] = resolved
+      const [blipFirst, blipSecond] = blips
+
+      expect(first).toBeDefined()
+      expect(second).toBeDefined()
+      expect(blipFirst).toBeDefined()
+      expect(blipSecond).toBeDefined()
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const angleDiff = Math.abs(first!.angle - second!.angle)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const initialDiff = Math.abs(blipFirst!.angle - blipSecond!.angle)
 
       expect(angleDiff).toBeGreaterThan(initialDiff)
 
       // Verify they are separated by at least the minimum distance (approx)
-      const dx = resolved[0].xCoordinate - resolved[1].xCoordinate
-      const dy = resolved[0].yCoordinate - resolved[1].yCoordinate
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const dx = first!.xCoordinate - second!.xCoordinate
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const dy = first!.yCoordinate - second!.yCoordinate
       const distance = Math.sqrt(dx * dx + dy * dy)
 
       expect(distance).toBeGreaterThan(RADAR_CONFIG.blips.size * 2)
@@ -114,15 +138,23 @@ describe('tech-radar-utilities', () => {
 
       const resolved = resolveBlipCollisions(blips, startAngle, endAngle)
 
+      expect(resolved).toHaveLength(2)
+      const [first, second] = resolved
+
+      expect(first).toBeDefined()
+      expect(second).toBeDefined()
+
       // Calculate buffer
       const bufferArc = RADAR_CONFIG.blips.size + 4
       const angleBuffer = bufferArc / 50
 
       // Should be clamped to startAngle + buffer
-      expect(resolved[0].angle).toBeGreaterThanOrEqual(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(first!.angle).toBeGreaterThanOrEqual(
         startAngle + angleBuffer - 0.0001
       )
-      expect(resolved[0].angle).toBeLessThan(resolved[1].angle)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(first!.angle).toBeLessThan(second!.angle)
     })
 
     it('should respect end boundary constraints', () => {
@@ -138,15 +170,21 @@ describe('tech-radar-utilities', () => {
 
       const resolved = resolveBlipCollisions(blips, startAngle, endAngle)
 
+      expect(resolved).toHaveLength(2)
+      const [first, second] = resolved
+
+      expect(first).toBeDefined()
+      expect(second).toBeDefined()
+
       // Calculate buffer
       const bufferArc = RADAR_CONFIG.blips.size + 4
       const angleBuffer = bufferArc / 50
 
       // Should be clamped to endAngle - buffer
-      expect(resolved[1].angle).toBeLessThanOrEqual(
-        endAngle - angleBuffer + 0.0001
-      )
-      expect(resolved[1].angle).toBeGreaterThan(resolved[0].angle)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(second!.angle).toBeLessThanOrEqual(endAngle - angleBuffer + 0.0001)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      expect(second!.angle).toBeGreaterThan(first!.angle)
     })
   })
 })
