@@ -77,10 +77,10 @@ const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
         </div>
 
         {/* Main Content Card */}
-        <Card className="group border-2 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl">
+        <Card className="border-border/50 bg-card/50 shadow-lg backdrop-blur-sm">
           <CardContent className="space-y-8 p-8 md:p-12">
             {/* Summary Text */}
-            <div className="text-center text-lg leading-relaxed text-foreground/90 md:text-xl">
+            <div className="text-center text-lg leading-relaxed md:text-xl">
               {summary}
             </div>
 
