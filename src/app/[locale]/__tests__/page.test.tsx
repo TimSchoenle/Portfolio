@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import Page from '../page'
 
 // Mock next/navigation
@@ -56,10 +56,34 @@ vi.mock(
     ScrollSnapPairController: () => null,
   })
 )
-vi.mock('@/components/sections/deferred-sections', () => ({
-  DeferredSections: () => (
-    <div data-testid="deferred-sections">Deferred Sections</div>
+
+// Mock all section components with correct export names
+vi.mock('@/components/sections/about-section', () => ({
+  default: () => <div data-testid="about-section">About</div>,
+}))
+
+vi.mock('@/components/sections/skills-section', () => ({
+  SkillsSection: () => <div data-testid="skills-section">Skills</div>,
+}))
+
+vi.mock('@/components/sections/projects-section', () => ({
+  ProjectsSection: () => <div data-testid="projects-section">Projects</div>,
+}))
+
+vi.mock('@/components/sections/experience-section', () => ({
+  ExperienceSection: () => (
+    <div data-testid="experience-section">Experience</div>
   ),
+}))
+
+vi.mock('@/components/sections/testimonials-section', () => ({
+  TestimonialsSection: () => (
+    <div data-testid="testimonials-section">Testimonials</div>
+  ),
+}))
+
+vi.mock('@/components/sections/contact-section', () => ({
+  ContactSection: () => <div data-testid="contact-section">Contact</div>,
 }))
 
 describe('Page', () => {
@@ -70,23 +94,18 @@ describe('Page', () => {
     render(Component)
 
     expect(screen.getByTestId('hero-section')).toBeDefined()
-
-    // The other sections are deferred/suspended, so we might need to wait or check if they are rendered
-    // In the actual code, they are inside <Suspense> and <DeferredSections>.
-    // Since we are rendering the async component directly, React's `use` hook inside `DeferredSections` will resolve.
-    // However, `render` from RTL might not handle async components fully without a wrapper or `await`.
-    // But `Page` itself is async.
-
-    // We can check if the main container is there
     expect(screen.getByRole('main')).toBeDefined()
 
-    // Verify mocks were called
-    const { getGithubUser } = await import('@/lib/github/client')
-    expect(getGithubUser).toHaveBeenCalled()
+    // Check that main-section wrapper exists
+    const mainSection = document.querySelector('#main-section')
+    expect(mainSection).toBeDefined()
 
-    // Wait for deferred sections
-    await waitFor(() => {
-      expect(screen.getByTestId('deferred-sections')).toBeDefined()
-    })
+    // All section mocks should be rendered
+    expect(screen.getByTestId('about-section')).toBeDefined()
+    expect(screen.getByTestId('skills-section')).toBeDefined()
+    expect(screen.getByTestId('projects-section')).toBeDefined()
+    expect(screen.getByTestId('experience-section')).toBeDefined()
+    expect(screen.getByTestId('testimonials-section')).toBeDefined()
+    expect(screen.getByTestId('contact-section')).toBeDefined()
   })
 })

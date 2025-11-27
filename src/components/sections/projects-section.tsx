@@ -17,12 +17,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Heading } from '@/components/ui/heading'
+import { siteConfig } from '@/lib/config'
+import { getGithubUser, type GitHubData } from '@/lib/github/client'
 import type { FCAsync, FCStrict } from '@/types/fc'
-import type {
-  ContributionPoint,
-  GitHubProject,
-  UserStats,
-} from '@/types/github'
+import type { GitHubProject } from '@/types/github'
 import type { Translations } from '@/types/i18n'
 
 /* --------------------------------- pieces --------------------------------- */
@@ -244,19 +242,15 @@ const SectionFooter: FCStrict<SectionFooterProperties> = ({
 /* ------------------------------- main export ------------------------------ */
 
 interface ProjectsSectionProperties {
-  readonly contributionData: readonly ContributionPoint[]
-  readonly githubUsername: string
   readonly locale: Locale
-  readonly projects: readonly GitHubProject[]
-  readonly stats: UserStats
 }
+
 export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
-  contributionData,
-  githubUsername,
   locale,
-  projects,
-  stats,
 }: ProjectsSectionProperties): Promise<JSX.Element> => {
+  const { contributionData, projects, stats }: GitHubData =
+    await getGithubUser()
+
   const translations: Translations<'projects'> = await getTranslations({
     locale,
     namespace: 'projects',
@@ -303,7 +297,7 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
         {/* View All Projects Button */}
         <SectionFooter
           cta={translations('viewAll')}
-          githubUsername={githubUsername}
+          githubUsername={siteConfig.githubUsername}
         />
       </div>
     </section>

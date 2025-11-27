@@ -13,8 +13,6 @@ import { ProjectsSection } from '@/components/sections/projects-section'
 import { SkillsSection } from '@/components/sections/skills-section'
 import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { ensureLocaleFromParameters } from '@/i18n/locale'
-import { siteConfig } from '@/lib/config'
-import { getGithubUser, type GitHubData } from '@/lib/github/client'
 import type { UnparsedLocalePageProperties } from '@/types/i18n'
 import type { PageParameters, RoutePageFC } from '@/types/page'
 
@@ -26,9 +24,6 @@ const Home: RoutePageFC<HomeProperties> = async ({
   const locale: Locale = await ensureLocaleFromParameters(params)
   setRequestLocale(locale)
 
-  const { contributionData, projects, stats }: GitHubData =
-    await getGithubUser()
-
   return (
     <main className="bg-background">
       <section className="min-h-screen" id="hero-section">
@@ -38,13 +33,7 @@ const Home: RoutePageFC<HomeProperties> = async ({
       <section id="main-section">
         <AboutSection locale={locale} />
         <SkillsSection locale={locale} />
-        <ProjectsSection
-          contributionData={contributionData}
-          githubUsername={siteConfig.githubUsername}
-          locale={locale}
-          projects={projects}
-          stats={stats}
-        />
+        <ProjectsSection locale={locale} />
         <ExperienceSection locale={locale} />
         <TestimonialsSection locale={locale} />
         <ContactSection locale={locale} />
