@@ -18,12 +18,6 @@ interface ContactSectionProperties extends NoChildren {
   readonly locale: Locale
 }
 
-interface InfoItemProperties {
-  readonly content: JSX.Element
-  readonly icon: JSX.Element
-  readonly label: string
-}
-
 interface InfoCardProperties {
   readonly country: string
   readonly translations: Translations<'contact'>
@@ -42,24 +36,7 @@ interface ResumeCardProperties {
 
 /* ───────────────────────────── subviews ───────────────────────────── */
 
-const InfoItem: FCStrict<InfoItemProperties> = ({
-  content,
-  icon,
-  label,
-}: InfoItemProperties): JSX.Element => {
-  return (
-    <div className="group flex items-center gap-4 rounded-lg p-3 transition-all hover:bg-muted/50">
-      <div className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        {content}
-      </div>
-    </div>
-  )
-}
-
+// eslint-disable-next-line max-lines-per-function
 const InfoCard: FCStrict<InfoCardProperties> = ({
   country,
   translations,
@@ -74,22 +51,38 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
           {translations('infoTitle')}
         </Heading>
 
-        <div className="space-y-4">
-          <InfoItem
-            content={
+        <address className="space-y-4 not-italic">
+          <div className="group flex items-center gap-4 rounded-lg p-3 transition-all hover:bg-muted/50">
+            <div
+              aria-hidden="true"
+              className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110"
+            >
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <p>
+              <span className="block text-sm text-muted-foreground">
+                {translations('email')}
+              </span>
               <a
                 className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                 href={`mailto:${siteConfig.email}`}
               >
                 {siteConfig.email}
               </a>
-            }
-            icon={<Mail className="h-6 w-6 text-primary" />}
-            label={translations('email')}
-          />
+            </p>
+          </div>
 
-          <InfoItem
-            content={
+          <div className="group flex items-center gap-4 rounded-lg p-3 transition-all hover:bg-muted/50">
+            <div
+              aria-hidden="true"
+              className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110"
+            >
+              <GitBranch className="h-6 w-6 text-primary" />
+            </div>
+            <p>
+              <span className="block text-sm text-muted-foreground">
+                {translations('github')}
+              </span>
               <a
                 className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                 href={siteConfig.github}
@@ -98,19 +91,26 @@ const InfoCard: FCStrict<InfoCardProperties> = ({
               >
                 {`@${siteConfig.githubUsername}`}
               </a>
-            }
-            icon={<GitBranch className="h-6 w-6 text-primary" />}
-            label={translations('github')}
-          />
+            </p>
+          </div>
 
-          <InfoItem
-            content={
-              <p className="text-lg font-medium text-foreground">{country}</p>
-            }
-            icon={<MapPin className="h-6 w-6 text-primary" />}
-            label={translations('location')}
-          />
-        </div>
+          <div className="group flex items-center gap-4 rounded-lg p-3 transition-all hover:bg-muted/50">
+            <div
+              aria-hidden="true"
+              className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-3 transition-transform duration-300 group-hover:scale-110"
+            >
+              <MapPin className="h-6 w-6 text-primary" />
+            </div>
+            <p>
+              <span className="block text-sm text-muted-foreground">
+                {translations('location')}
+              </span>
+              <span className="text-lg font-medium text-foreground">
+                {country}
+              </span>
+            </p>
+          </div>
+        </address>
       </CardContent>
     </Card>
   )
@@ -180,6 +180,21 @@ const ResumeCard: FCStrict<ResumeCardProperties> = ({
               {translations('downloadResume')}
             </a>
           </Button>
+          {/* Reader Mode / Screen Reader Fallback Link */}
+          <p
+            style={{
+              height: '1px',
+              left: '-10000px',
+              overflow: 'hidden',
+              position: 'absolute',
+              top: 'auto',
+              width: '1px',
+            }}
+          >
+            <a download={true} href={resumePath}>
+              {translations('downloadResume')}
+            </a>
+          </p>
         </div>
       </CardContent>
     </Card>

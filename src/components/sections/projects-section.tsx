@@ -62,10 +62,10 @@ const StatsCard: FCStrict<StatsCardProperties> = ({
     <Card className="border-2 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg">
       <div className="flex items-center gap-4">
         <div className="rounded-lg bg-primary/10 p-3">{icon}</div>
-        <div>
-          <p className="text-3xl font-bold">{value}</p>
-          <p className="text-sm text-muted-foreground">{label}</p>
-        </div>
+        <p className="flex flex-col">
+          <span className="text-3xl font-bold">{value}</span>
+          <span className="text-sm text-muted-foreground">{label}</span>
+        </p>
       </div>
     </Card>
   )
@@ -113,7 +113,10 @@ const ProjectCard: FCStrict<ProjectCardProperties> = ({
         </div>
 
         <div className="flex items-center justify-between border-t pt-4">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div
+            aria-hidden="true"
+            className="flex items-center gap-4 text-sm text-muted-foreground print:hidden"
+          >
             <span className="flex items-center gap-1">
               <Star className="h-4 w-4" />
               {project.stargazers_count}
@@ -159,6 +162,7 @@ interface ProjectsGridProperties {
   readonly translations: Translations<'projects'>
 }
 
+// eslint-disable-next-line max-lines-per-function
 const ProjectsGrid: FCStrict<ProjectsGridProperties> = ({
   projects,
   translations,
@@ -173,26 +177,30 @@ const ProjectsGrid: FCStrict<ProjectsGridProperties> = ({
     project: GitHubProject,
     wrapperClassName?: string
   ): JSX.Element => (
-    <div className={wrapperClassName} key={project.html_url}>
+    <li className={wrapperClassName} key={project.html_url}>
       <ProjectCard project={project} translations={translations} />
-    </div>
+    </li>
   )
 
   return (
     <div className="space-y-6">
       {/* Mobile: limit to the first 3 projects in a simple grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:hidden">
+      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:hidden">
         {mobileProjects.map(
-          (project: GitHubProject): JSX.Element => renderProject(project)
+          (project: GitHubProject): JSX.Element => (
+            <li key={project.html_url}>
+              <ProjectCard project={project} translations={translations} />
+            </li>
+          )
         )}
-      </div>
+      </ul>
 
       {/* Tablet / Desktop */}
       <div className="hidden md:block">
         {hasManyProjects ? (
           // Slider on md+ when we have more than 3 projects
           <div className="relative">
-            <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4">
+            <ul className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4">
               {projects.map(
                 (project: GitHubProject): JSX.Element =>
                   renderProject(
@@ -200,15 +208,19 @@ const ProjectsGrid: FCStrict<ProjectsGridProperties> = ({
                     'snap-start flex-none w-[18rem] md:w-[20rem] lg:w-[22rem]'
                   )
               )}
-            </div>
+            </ul>
           </div>
         ) : (
           // No slider needed: regular grid
-          <div className="grid grid-cols-2 gap-6 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-6 lg:grid-cols-3">
             {projects.map(
-              (project: GitHubProject): JSX.Element => renderProject(project)
+              (project: GitHubProject): JSX.Element => (
+                <li key={project.html_url}>
+                  <ProjectCard project={project} translations={translations} />
+                </li>
+              )
             )}
-          </div>
+          </ul>
         )}
       </div>
     </div>
@@ -289,10 +301,10 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
         {/* Featured Projects */}
         <ProjectsGrid projects={projects} translations={translations} />
 
-        {/* GitHub Contribution Graph */}
-        <div className="mt-16">
+        {/* GitHub Contribution Graph - Hidden in reader mode/print */}
+        <aside aria-hidden="true" className="mt-16 print:hidden">
           <ContributionGraph data={contributionData} locale={locale} />
-        </div>
+        </aside>
 
         {/* View All Projects Button */}
         <SectionFooter

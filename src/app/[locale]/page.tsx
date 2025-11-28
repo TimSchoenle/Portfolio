@@ -30,14 +30,18 @@ const Home: RoutePageFC<HomeProperties> = async ({
         <HeroSection locale={locale} />
       </section>
 
-      <section id="main-section">
+      <article
+        id="main-section"
+        itemScope={true}
+        itemType="https://schema.org/Person"
+      >
         <AboutSection locale={locale} />
         <SkillsSection locale={locale} />
         <ProjectsSection locale={locale} />
         <ExperienceSection locale={locale} />
         <TestimonialsSection locale={locale} />
         <ContactSection locale={locale} />
-      </section>
+      </article>
 
       <ScrollSnapPairController
         bottomSectionId="main-section"

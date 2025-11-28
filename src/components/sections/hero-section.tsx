@@ -44,7 +44,8 @@ const HeroTitle: FCStrict<HeroTitleProperties> = ({
     as="h1"
     className="mb-6 text-5xl font-bold tracking-tight text-balance text-foreground md:text-7xl"
   >
-    {greeting}{' '}
+    {greeting}
+    &nbsp;
     <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
       {name}
     </span>

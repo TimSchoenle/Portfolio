@@ -31,31 +31,50 @@ const SkillList: FCStrict<SkillListProperties> = ({
   items,
   title,
 }: SkillListProperties): JSX.Element => {
+  const filteredItems: Skill[] = items
+    .filter((skill: Skill): boolean =>
+      shouldShowSkill({ renderArea: SKILL_RENDER_AREAS.SECTION, skill })
+    )
+    .toSorted(
+      (skillOne: Skill, skillTwo: Skill): number =>
+        skillTwo.confidence - skillOne.confidence
+    )
+
   return (
     <div className="space-y-4 text-center lg:text-left">
       <h3 className="text-xl font-semibold text-foreground">{title}</h3>
-      <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
-        {items
-          .filter((skill: Skill): boolean =>
-            shouldShowSkill({ renderArea: SKILL_RENDER_AREAS.SECTION, skill })
+      {/* Visual List - Hidden from screen readers/reader mode to avoid duplication/issues */}
+      <ul
+        aria-hidden="true"
+        className="flex flex-wrap justify-center gap-2 lg:justify-start"
+      >
+        {filteredItems.map((skill: Skill): JSX.Element => {
+          const Icon: LucideIcon = getSkillIcon(skill.name)
+          return (
+            <li
+              className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:bg-accent/50"
+              key={skill.name}
+            >
+              <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{skill.name}</span>
+            </li>
           )
-          .toSorted(
-            (skillOne: Skill, skillTwo: Skill): number =>
-              skillTwo.confidence - skillOne.confidence
-          )
-          .map((skill: Skill): JSX.Element => {
-            const Icon: LucideIcon = getSkillIcon(skill.name)
-            return (
-              <div
-                className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:bg-accent/50"
-                key={skill.name}
-              >
-                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{skill.name}</span>
-              </div>
-            )
-          })}
-      </div>
+        })}
+      </ul>
+
+      {/* Screen Reader / Reader Mode Content - Visible to text parsers */}
+      <p
+        style={{
+          height: '1px',
+          left: '-10000px',
+          overflow: 'hidden',
+          position: 'absolute',
+          top: 'auto',
+          width: '1px',
+        }}
+      >
+        {filteredItems.map((skill: Skill): string => skill.name).join(', ')}
+      </p>
     </div>
   )
 }
@@ -98,7 +117,7 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
 
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-8">
           {/* Tech Radar (Hidden on mobile, visible on large screens) */}
-          <div className="hidden lg:block">
+          <div aria-hidden="true" className="hidden lg:block print:hidden">
             <TechRadar
               buildTools={buildTools}
               frameworks={frameworks}

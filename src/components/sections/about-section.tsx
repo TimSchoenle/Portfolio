@@ -24,7 +24,10 @@ interface AboutTranslations {
 const CompetencyBadge: FCStrict<CompetencyBadgeProperties> = ({
   label,
 }: CompetencyBadgeProperties): JSX.Element => (
-  <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/30 hover:bg-primary/10">
+  <div
+    className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/30 hover:bg-primary/10"
+    itemProp="knowsAbout"
+  >
     {label}
   </div>
 )
@@ -78,7 +81,10 @@ const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
         <Card className="border-border/50 bg-card/50 shadow-lg backdrop-blur-sm">
           <CardContent className="space-y-8 p-8 md:p-12">
             {/* Summary Text */}
-            <div className="text-center text-lg leading-relaxed text-foreground/85 md:text-xl">
+            <div
+              className="text-center text-lg leading-relaxed text-foreground/85 md:text-xl"
+              itemProp="description"
+            >
               {summary}
             </div>
 

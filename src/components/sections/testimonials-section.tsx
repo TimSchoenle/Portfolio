@@ -70,8 +70,12 @@ const TestimonialCard: FCStrict<TestimonialCardProperties> = ({
         <Quote className="h-16 w-16 text-primary" />
       </div>
 
-      <div className="relative z-10">
-        <div className="mb-6 flex items-center gap-4">
+      <figure className="relative z-10 flex h-full flex-col">
+        <blockquote className="mb-6 flex-1 leading-relaxed text-muted-foreground italic">
+          {`“${item.quote}”`}
+        </blockquote>
+
+        <figcaption className="flex items-center gap-4">
           <div className="relative h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary/20 transition-all group-hover:ring-primary/50">
             <Image
               alt={`${item.name} avatar`}
@@ -88,12 +92,8 @@ const TestimonialCard: FCStrict<TestimonialCardProperties> = ({
             <p className="text-sm text-foreground">{item.role}</p>
             <p className="text-sm text-foreground">{item.company}</p>
           </div>
-        </div>
-
-        <blockquote className="leading-relaxed text-muted-foreground italic">
-          {`“${item.quote}”`}
-        </blockquote>
-      </div>
+        </figcaption>
+      </figure>
     </Card>
   )
 }

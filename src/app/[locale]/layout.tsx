@@ -60,7 +60,33 @@ const buildAlternateLocales: (current: Locale) => string = (
     .join(', ')
 }
 
+function getJsonLdSchemas(): Record<string, string> {
+  // Person schema
+  const personSchema: Record<string, string> = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    email: siteConfig.email,
+    name: siteConfig.fullName,
+    url: siteConfig.url,
+  }
+
+  // WebSite schema
+  const websiteSchema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    description: siteConfig.description,
+    name: siteConfig.title,
+    url: siteConfig.url,
+  }
+
+  return {
+    'script:ld+json:person': JSON.stringify(personSchema),
+    'script:ld+json:website': JSON.stringify(websiteSchema),
+  }
+}
+
 /* ---------- generateMetadata ---------- */
+/* eslint-disable max-lines-per-function */
 export const generateMetadata: GenerateMetadataFC<
   UnparsedLocalePageProperties
 > = async ({
@@ -70,6 +96,8 @@ export const generateMetadata: GenerateMetadataFC<
   if (locale === null) {
     return {}
   }
+
+  const jsonLd: Record<string, string> = getJsonLdSchemas()
 
   return {
     alternates: {
@@ -97,6 +125,7 @@ export const generateMetadata: GenerateMetadataFC<
       type: 'website',
       url: `${siteConfig.url}/${locale}`,
     },
+    other: jsonLd,
     publisher: siteConfig.fullName,
     robots: {
       follow: true,

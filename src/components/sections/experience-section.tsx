@@ -118,17 +118,15 @@ export const ExperienceSection: (
           <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary to-primary/60" />
         </div>
 
-        <div className="space-y-6">
+        <ul className="space-y-6">
           {experiences.map(
             (exp: ResumeExperience, index: number): JSX.Element => (
-              <ExperienceCard
-                experience={exp}
-                index={index}
-                key={`${exp.company}-${index.toString()}`}
-              />
+              <li key={`${exp.company}-${index.toString()}`}>
+                <ExperienceCard experience={exp} index={index} />
+              </li>
             )
           )}
-        </div>
+        </ul>
       </div>
     </section>
   )
