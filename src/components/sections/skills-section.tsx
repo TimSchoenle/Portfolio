@@ -9,7 +9,10 @@ import { getTranslations } from 'next-intl/server'
 
 import { getSkillIcon } from '@/components/sections/skill-icons'
 import { TechRadar } from '@/components/sections/tech-radar/tech-radar'
-import { Heading } from '@/components/ui/heading'
+import { GridPattern } from '@/components/ui/grid-pattern'
+import { Section, SECTION_BACKGROUNDS } from '@/components/ui/section'
+import { SectionContainer } from '@/components/ui/section-container'
+import { SectionHeader } from '@/components/ui/section-header'
 import { siteConfig, type Skill, SKILL_RENDER_AREAS } from '@/lib/config'
 import { shouldShowSkill } from '@/lib/tech-radar-utilities'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
@@ -81,7 +84,6 @@ const SkillList: FCStrict<SkillListProperties> = ({
 
 /* ─────────────────────── main section ────────────────────── */
 
-// eslint-disable-next-line max-lines-per-function
 export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
   locale,
 }: SkillsSectionProperties): Promise<JSX.Element> => {
@@ -96,24 +98,17 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
   const infrastructure: readonly Skill[] = siteConfig.skills.infrastructure
 
   return (
-    <section
-      className="relative overflow-hidden bg-muted/30 px-4 py-24"
+    <Section
+      background={SECTION_BACKGROUNDS.MUTED}
+      className="py-24"
       id="skills"
     >
       {/* Background Pattern */}
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <GridPattern size={24} />
       <div className="absolute top-0 left-0 -z-10 h-full w-full bg-[radial-gradient(circle_800px_at_100%_200px,#8080800a,transparent)]" />
 
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="mb-12 text-center md:mb-16">
-          <Heading
-            as="h2"
-            className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-5xl"
-          >
-            {translations('title')}
-          </Heading>
-          <div className="mx-auto h-1.5 w-24 rounded-full bg-gradient-to-r from-primary to-primary/40" />
-        </div>
+      <SectionContainer size="lg">
+        <SectionHeader title={translations('title')} underline={true} />
 
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-8">
           {/* Tech Radar (Hidden on mobile, visible on large screens) */}
@@ -142,7 +137,7 @@ export const SkillsSection: AsyncPageFC<SkillsSectionProperties> = async ({
             />
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
+    </Section>
   )
 }
