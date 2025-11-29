@@ -4,8 +4,15 @@ import { type Locale } from 'next-intl'
 
 import { getTranslations } from 'next-intl/server'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Heading } from '@/components/ui/heading'
+import {
+  Card,
+  CARD_HOVERS,
+  CARD_VARIANTS,
+  CardContent,
+} from '@/components/ui/card'
+import { Section } from '@/components/ui/section'
+import { SectionContainer } from '@/components/ui/section-container'
+import { SectionHeader } from '@/components/ui/section-header'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { LocalePageProperties, Translations } from '@/types/i18n'
 
@@ -62,23 +69,20 @@ const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
     aboutTranslations
 
   return (
-    <section className="relative overflow-hidden px-4 py-24" id="about">
+    <Section className="py-24" id="about">
       {/* Background gradient */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-muted/30 via-background to-background" />
 
-      <div className="mx-auto w-full max-w-4xl">
+      <SectionContainer size="sm">
         {/* Section Title */}
-        <div className="mb-12 text-center">
-          <Heading
-            as="h2"
-            className="mb-4 inline-block bg-gradient-to-r from-primary to-primary/60 bg-clip-text py-1 text-4xl leading-tight font-bold text-transparent md:text-5xl"
-          >
-            {translations('title')}
-          </Heading>
-        </div>
+        <SectionHeader gradient={true} title={translations('title')} />
 
         {/* Main Content Card */}
-        <Card className="border-2 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg">
+        <Card
+          className="p-6"
+          hover={CARD_HOVERS.MODERATE}
+          variant={CARD_VARIANTS.INTERACTIVE}
+        >
           <CardContent className="space-y-8 p-8 md:p-12">
             {/* Summary Text */}
             <div
@@ -103,8 +107,8 @@ const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
             </div>
           </CardContent>
         </Card>
-      </div>
-    </section>
+      </SectionContainer>
+    </Section>
   )
 }
 

@@ -15,8 +15,18 @@ import { getTranslations } from 'next-intl/server'
 import { ContributionGraph } from '@/components/features/contribution-graph/contribution-graph'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import {
+  Card,
+  CARD_DECORATIONS,
+  CARD_HOVERS,
+  CARD_VARIANTS,
+} from '@/components/ui/card'
+import { GridPattern } from '@/components/ui/grid-pattern'
 import { Heading } from '@/components/ui/heading'
+import { RadialGradient } from '@/components/ui/radial-gradient'
+import { Section, SECTION_BACKGROUNDS } from '@/components/ui/section'
+import { SectionContainer } from '@/components/ui/section-container'
+import { SectionHeader } from '@/components/ui/section-header'
 import { siteConfig } from '@/lib/config'
 import { getGithubUser, type GitHubData } from '@/lib/github/client'
 import type { FCAsync, FCStrict } from '@/types/fc'
@@ -24,29 +34,6 @@ import type { GitHubProject } from '@/types/github'
 import type { Translations } from '@/types/i18n'
 
 /* --------------------------------- pieces --------------------------------- */
-
-interface SectionHeaderProperties {
-  readonly subtitle: string
-  readonly title: string
-}
-const SectionHeader: FCStrict<SectionHeaderProperties> = ({
-  subtitle,
-  title,
-}: SectionHeaderProperties): JSX.Element => {
-  return (
-    <div className="mb-16 text-center">
-      <Heading
-        as="h2"
-        className="mb-4 inline-block bg-gradient-to-r from-primary to-primary/60 bg-clip-text py-px text-4xl leading-[1.15] font-bold [text-wrap:balance] text-transparent md:text-5xl md:leading-[1.2]"
-      >
-        {title}
-      </Heading>
-      <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-        {subtitle}
-      </p>
-    </div>
-  )
-}
 
 interface StatsCardProperties {
   readonly icon: JSX.Element
@@ -59,11 +46,20 @@ const StatsCard: FCStrict<StatsCardProperties> = ({
   value,
 }: StatsCardProperties): JSX.Element => {
   return (
-    <Card className="border-2 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg">
-      <div className="flex items-center gap-4">
-        <div className="rounded-lg bg-primary/10 p-3">{icon}</div>
+    <Card
+      className="p-6"
+      decorative={CARD_DECORATIONS.OVERLAY}
+      hover={CARD_HOVERS.MODERATE}
+      variant={CARD_VARIANTS.INTERACTIVE}
+    >
+      <div className="relative flex items-center gap-4">
+        <div className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 p-3 shadow-lg ring-2 ring-primary/10 transition-all duration-300 group-hover:scale-110 group-hover:ring-primary/30">
+          {icon}
+        </div>
         <p className="flex flex-col">
-          <span className="text-3xl font-bold">{value}</span>
+          <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-3xl font-bold text-transparent">
+            {value}
+          </span>
           <span className="text-sm text-muted-foreground">{label}</span>
         </p>
       </div>
@@ -84,51 +80,74 @@ const ProjectCard: FCStrict<ProjectCardProperties> = ({
     typeof project.homepage === 'string' && project.homepage.length > 0
 
   return (
-    <Card className="group flex h-full flex-col overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+    <Card
+      className="flex h-full flex-col transition-all duration-500"
+      hover={CARD_HOVERS.MODERATE}
+      variant={CARD_VARIANTS.INTERACTIVE}
+    >
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10">
+        {/* Animated background pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:16px_16px] opacity-50" />
+
+        {/* Code icon with better animation */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <Code2 className="h-20 w-20 text-primary/40 transition-transform duration-300 group-hover:scale-110" />
+          <div className="relative">
+            {/* Main icon */}
+            <Code2 className="relative h-20 w-20 text-primary/60 transition-all duration-500 group-hover:scale-125 group-hover:rotate-6 group-hover:text-primary" />
+          </div>
         </div>
+
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
       </div>
 
-      <div className="flex flex-1 flex-col p-6">
+      <div className="relative flex flex-1 flex-col p-6">
         <Heading
           as="h3"
-          className="mb-2 text-xl font-bold transition-colors group-hover:text-primary"
+          className="mb-2 bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-xl font-bold text-transparent transition-all duration-300"
         >
           {project.name}
         </Heading>
-        <p className="mb-4 flex-1 text-muted-foreground">
+        <p className="mb-4 flex-1 leading-relaxed text-muted-foreground">
           {project.description}
         </p>
 
         <div className="mb-4 flex flex-wrap gap-2">
           {project.topics.map(
             (topic: string): JSX.Element => (
-              <Badge className="text-xs" key={topic} variant="secondary">
+              <Badge
+                className="border-primary/20 bg-primary/5 text-xs transition-all hover:border-primary/40 hover:bg-primary/10"
+                key={topic}
+                variant="secondary"
+              >
                 {topic}
               </Badge>
             )
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t pt-4">
+        <div className="flex items-center justify-between border-t border-border/50 pt-4">
           <div
             aria-hidden="true"
             className="flex items-center gap-4 text-sm text-muted-foreground print:hidden"
           >
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
               <Star className="h-4 w-4" />
               {project.stargazers_count}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
               <GitFork className="h-4 w-4" />
               {project.forks_count}
             </span>
           </div>
 
           <div className="flex gap-2">
-            <Button asChild={true} size="sm" variant="ghost">
+            <Button
+              asChild={true}
+              className="transition-all hover:scale-110 hover:bg-primary/10"
+              size="sm"
+              variant="ghost"
+            >
               <a
                 aria-label={translations('view')}
                 href={project.html_url}
@@ -139,7 +158,12 @@ const ProjectCard: FCStrict<ProjectCardProperties> = ({
               </a>
             </Button>
             {hasHomepage ? (
-              <Button asChild={true} size="sm" variant="ghost">
+              <Button
+                asChild={true}
+                className="transition-all hover:scale-110 hover:bg-primary/10"
+                size="sm"
+                variant="ghost"
+              >
                 <a
                   aria-label={translations('view')}
                   href={project.homepage}
@@ -237,19 +261,51 @@ const SectionFooter: FCStrict<SectionFooterProperties> = ({
 }: SectionFooterProperties): JSX.Element => {
   return (
     <div className="mt-12 text-center">
-      <Button asChild={true} className="group" size="lg">
+      <Button
+        asChild={true}
+        className="group shadow-lg transition-all hover:scale-105 hover:shadow-2xl"
+        size="lg"
+      >
         <a
           href={`https://github.com/${githubUsername}`}
           rel="noopener noreferrer"
           target="_blank"
         >
           {cta}
-          <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          <ExternalLink className="ml-2 h-4 w-4 transition-all duration-300 group-hover:translate-x-1 group-hover:scale-110" />
         </a>
       </Button>
     </div>
   )
 }
+
+interface StatsGridProperties {
+  readonly stats: GitHubData['stats']
+  readonly translations: Translations<'projects'>
+}
+
+const StatsGrid: FCStrict<StatsGridProperties> = ({
+  stats,
+  translations,
+}: StatsGridProperties): JSX.Element => (
+  <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+    <StatsCard
+      icon={<Code2 className="h-8 w-8 text-primary" />}
+      label={translations('stats.repositories')}
+      value={stats.repositories}
+    />
+    <StatsCard
+      icon={<Star className="h-8 w-8 text-primary" />}
+      label={translations('stats.stars')}
+      value={stats.stars}
+    />
+    <StatsCard
+      icon={<GitFork className="h-8 w-8 text-primary" />}
+      label={translations('stats.forks')}
+      value={stats.forks}
+    />
+  </div>
+)
 
 /* ------------------------------- main export ------------------------------ */
 
@@ -269,34 +325,25 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
   })
 
   return (
-    <section
-      className="min-h-screen bg-gradient-to-b from-background to-muted/20 px-4 py-20 md:px-8"
+    <Section
+      background={SECTION_BACKGROUNDS.GRADIENT}
+      className="min-h-screen"
       id="projects"
     >
-      <div className="mx-auto max-w-7xl">
+      {/* Background patterns */}
+      <GridPattern size={32} />
+      <RadialGradient position="top-right" size={600} />
+      <RadialGradient position="bottom-left" size={600} />
+
+      <SectionContainer className="relative" size="xl">
         <SectionHeader
+          gradient={true}
           subtitle={translations('subtitle')}
           title={translations('title')}
         />
 
         {/* GitHub Stats Cards */}
-        <div className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-3">
-          <StatsCard
-            icon={<Code2 className="h-8 w-8 text-primary" />}
-            label={translations('stats.repositories')}
-            value={stats.repositories}
-          />
-          <StatsCard
-            icon={<Star className="h-8 w-8 text-primary" />}
-            label={translations('stats.stars')}
-            value={stats.stars}
-          />
-          <StatsCard
-            icon={<GitFork className="h-8 w-8 text-primary" />}
-            label={translations('stats.forks')}
-            value={stats.forks}
-          />
-        </div>
+        <StatsGrid stats={stats} translations={translations} />
 
         {/* Featured Projects */}
         <ProjectsGrid projects={projects} translations={translations} />
@@ -306,12 +353,11 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
           <ContributionGraph data={contributionData} locale={locale} />
         </aside>
 
-        {/* View All Projects Button */}
         <SectionFooter
           cta={translations('viewAll')}
           githubUsername={siteConfig.githubUsername}
         />
-      </div>
-    </section>
+      </SectionContainer>
+    </Section>
   )
 }

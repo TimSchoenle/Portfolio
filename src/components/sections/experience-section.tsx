@@ -7,6 +7,9 @@ import { getTranslations } from 'next-intl/server'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Heading } from '@/components/ui/heading'
+import { Section } from '@/components/ui/section'
+import { SectionContainer } from '@/components/ui/section-container'
+import { SectionHeader } from '@/components/ui/section-header'
 import type { FCStrict } from '@/types/fc'
 import type { Translations } from '@/types/i18n'
 import type { ResumeExperience } from '@/types/resume'
@@ -109,14 +112,9 @@ export const ExperienceSection: (
   const sectionTitle: string = translations('sectionTitles.experience')
 
   return (
-    <section className="px-4 py-20">
-      <div className="mx-auto w-full max-w-4xl">
-        <div className="mb-12 text-center">
-          <Heading as="h2" className="mb-3 text-4xl font-bold text-foreground">
-            {sectionTitle}
-          </Heading>
-          <div className="mx-auto h-1 w-20 rounded-full bg-gradient-to-r from-primary to-primary/60" />
-        </div>
+    <Section>
+      <SectionContainer size="sm">
+        <SectionHeader title={sectionTitle} underline={true} />
 
         <ul className="space-y-6">
           {experiences.map(
@@ -127,7 +125,7 @@ export const ExperienceSection: (
             )
           )}
         </ul>
-      </div>
-    </section>
+      </SectionContainer>
+    </Section>
   )
 }

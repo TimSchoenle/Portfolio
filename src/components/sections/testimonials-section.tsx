@@ -6,8 +6,16 @@ import { Quote } from 'lucide-react'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 
-import { Card } from '@/components/ui/card'
+import {
+  Card,
+  CARD_DECORATIONS,
+  CARD_HOVERS,
+  CARD_VARIANTS,
+} from '@/components/ui/card'
 import { Heading } from '@/components/ui/heading'
+import { Section, SECTION_BACKGROUNDS } from '@/components/ui/section'
+import { SectionContainer } from '@/components/ui/section-container'
+import { SectionHeader } from '@/components/ui/section-header'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { Translations } from '@/types/i18n'
 
@@ -62,7 +70,12 @@ const TestimonialCard: FCStrict<TestimonialCardProperties> = ({
   item,
 }: TestimonialCardProperties): JSX.Element => {
   return (
-    <Card className="group relative overflow-hidden border-2 p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-2xl">
+    <Card
+      className="p-8"
+      decorative={CARD_DECORATIONS.OVERLAY}
+      hover={CARD_HOVERS.MODERATE}
+      variant={CARD_VARIANTS.INTERACTIVE}
+    >
       <div
         aria-hidden="true"
         className="absolute top-4 right-4 opacity-10 transition-opacity group-hover:opacity-20"
@@ -121,19 +134,13 @@ export const TestimonialsSection: AsyncPageFC<
   const subtitleText: string = translations('subtitle')
 
   return (
-    <section className="min-h-screen bg-gradient-to-b from-muted/20 to-background px-4 py-20 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <Heading
-            as="h2"
-            className="mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-4xl font-bold text-transparent md:text-5xl"
-          >
-            {titleText}
-          </Heading>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            {subtitleText}
-          </p>
-        </div>
+    <Section background={SECTION_BACKGROUNDS.GRADIENT} className="min-h-screen">
+      <SectionContainer size="xl">
+        <SectionHeader
+          gradient={true}
+          subtitle={subtitleText}
+          title={titleText}
+        />
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map(
@@ -142,7 +149,7 @@ export const TestimonialsSection: AsyncPageFC<
             )
           )}
         </div>
-      </div>
-    </section>
+      </SectionContainer>
+    </Section>
   )
 }
