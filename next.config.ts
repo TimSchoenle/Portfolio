@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process'
 
 import type { NextConfig } from 'next'
 
-import bundleAnalyzer from '@next/bundle-analyzer'
 import withSerwistInit from '@serwist/next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
@@ -15,10 +14,6 @@ const withNextIntl: ReturnType<typeof createNextIntlPlugin> =
       createMessagesDeclaration: './messages/en.json',
     },
   })
-
-const withBundleAnalyzer: ReturnType<typeof bundleAnalyzer> = bundleAnalyzer({
-  enabled: process.env['ANALYZE'] === 'true',
-})
 
 // Use git commit hash as cache version
 const revision: string = (
@@ -165,4 +160,23 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
 }
 
-export default withSerwist(withBundleAnalyzer(withNextIntl(nextConfig)))
+let config: NextConfig = withNextIntl(nextConfig)
+
+if (process.env['ANALYZE'] === 'true') {
+  const bundleAnalyzer: (options: {
+    enabled: boolean
+  }) => (config: NextConfig) => NextConfig =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, unicorn/prefer-module
+    require('@next/bundle-analyzer') as (options: {
+      enabled: boolean
+    }) => (config: NextConfig) => NextConfig
+
+  const withBundleAnalyzer: (config: NextConfig) => NextConfig = bundleAnalyzer(
+    {
+      enabled: true,
+    }
+  )
+  config = withBundleAnalyzer(config)
+}
+
+export default withSerwist(config)
