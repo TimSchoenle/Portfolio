@@ -20,8 +20,9 @@ const sectionHeaderVariants = cva('flex flex-col gap-4 mb-12 md:mb-16', {
   },
 })
 
-interface SectionHeaderProperties
-  extends VariantProps<typeof sectionHeaderVariants> {
+interface SectionHeaderProperties extends VariantProps<
+  typeof sectionHeaderVariants
+> {
   readonly className?: string
   readonly gradient?: boolean
   readonly subtitle?: string

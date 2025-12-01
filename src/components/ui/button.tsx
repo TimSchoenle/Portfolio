@@ -26,8 +26,7 @@ interface ButtonVariantProperties {
 type ButtonClassGenerator = (options?: ButtonVariantProperties) => string
 
 export interface ButtonProperties
-  extends React.ComponentProps<'button'>,
-    ButtonVariantProperties {
+  extends React.ComponentProps<'button'>, ButtonVariantProperties {
   readonly asChild?: boolean
 }
 

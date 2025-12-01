@@ -60,8 +60,8 @@ const generateBlipsForCategory: (
   quadrantKey,
 }: GenerateBlipsForCategoryParameters): Blip[] => {
   // 1. Calculate initial positions
-  const initialBlips: (Blip & CalculateBlipPositionResult)[] = items.map(
-    (skill: Skill, index: number): Blip & CalculateBlipPositionResult => {
+  const initialBlips: Blip[] = items.map(
+    (skill: Skill, index: number): Blip => {
       const position: CalculateBlipPositionResult = calculateBlipPosition({
         confidence: skill.confidence,
         endAngle: config.end,

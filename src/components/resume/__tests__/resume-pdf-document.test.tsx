@@ -32,9 +32,8 @@ describe('ResumePDFDocument', () => {
   })
 
   it('is a function', async () => {
-    const { ResumePDFDocument } = await import(
-      '@/components/resume/resume-pdf-document'
-    )
+    const { ResumePDFDocument } =
+      await import('@/components/resume/resume-pdf-document')
     expect(typeof ResumePDFDocument).toBe('function')
   })
 
@@ -52,9 +51,8 @@ describe('ResumePDFDocument', () => {
   } as unknown as Messages['resume']['sectionTitles']
 
   it('accepts resume data as a prop', async () => {
-    const { ResumePDFDocument } = await import(
-      '@/components/resume/resume-pdf-document'
-    )
+    const { ResumePDFDocument } =
+      await import('@/components/resume/resume-pdf-document')
     expect(() => {
       ResumePDFDocument({
         translations: mockTranslations,

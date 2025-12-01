@@ -44,9 +44,8 @@ describe('SkillsSection', () => {
   }) as unknown as ResumeTranslations
 
   it('can be imported', async () => {
-    const module = await import(
-      '@/components/resume/templates/modern/skills-section'
-    )
+    const module =
+      await import('@/components/resume/templates/modern/skills-section')
     expect(module.SkillsSection).toBeDefined()
   })
 

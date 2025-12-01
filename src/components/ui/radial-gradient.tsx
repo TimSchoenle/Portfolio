@@ -20,8 +20,9 @@ const radialGradientVariants = cva('absolute -z-10', {
   },
 })
 
-interface RadialGradientProperties
-  extends VariantProps<typeof radialGradientVariants> {
+interface RadialGradientProperties extends VariantProps<
+  typeof radialGradientVariants
+> {
   readonly className?: string
   readonly size?: number
 }

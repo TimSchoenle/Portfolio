@@ -15,8 +15,9 @@ type DialogTriggerProperties = ComponentProps<typeof DialogPrimitive.Trigger>
 type DialogPortalProperties = ComponentProps<typeof DialogPrimitive.Portal>
 type DialogCloseProperties = ComponentProps<typeof DialogPrimitive.Close>
 type DialogOverlayProperties = ComponentProps<typeof DialogPrimitive.Overlay>
-interface DialogContentBaseProperties
-  extends ComponentProps<typeof DialogPrimitive.Content> {
+interface DialogContentBaseProperties extends ComponentProps<
+  typeof DialogPrimitive.Content
+> {
   readonly showCloseButton?: boolean
 }
 

@@ -7,8 +7,7 @@ export interface PageParameters<P extends object> {
 }
 
 export interface PageParametersWithChildren<P extends object>
-  extends PageParameters<P>,
-    WithChildren {}
+  extends PageParameters<P>, WithChildren {}
 
 export type RoutePageFC<P extends object> = FCAsync<PageParameters<P>>
 

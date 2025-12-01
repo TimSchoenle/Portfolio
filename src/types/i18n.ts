@@ -11,7 +11,7 @@ type NormalizeAll<N> = [N] extends [''] ? never : N
 
 /** Translator type. Requires a generic. `''` means “all messages”. */
 export type Translations<N extends Ns> = ReturnType<
-  typeof createTranslator<Messages, NormalizeAll<N> & Ns>
+  typeof createTranslator<Messages, NormalizeAll<N>>
 >
 
 export interface UnparsedLocalePageProperties {

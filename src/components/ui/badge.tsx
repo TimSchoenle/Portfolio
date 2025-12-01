@@ -17,8 +17,7 @@ interface BadgeVariantProperties {
 type BadgeClassGenerator = (options?: BadgeVariantProperties) => string
 
 export interface BadgeProperties
-  extends React.ComponentProps<'span'>,
-    BadgeVariantProperties {
+  extends React.ComponentProps<'span'>, BadgeVariantProperties {
   readonly asChild?: boolean
 }
 

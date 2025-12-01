@@ -27,9 +27,8 @@ describe('ContactSection', () => {
   }) as unknown as ResumeTranslations
 
   it('can be imported', async () => {
-    const module = await import(
-      '@/components/resume/templates/modern/contact-section'
-    )
+    const module =
+      await import('@/components/resume/templates/modern/contact-section')
     expect(module.ContactSection).toBeDefined()
   })
 
