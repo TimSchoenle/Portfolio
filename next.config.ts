@@ -21,8 +21,8 @@ const revision: string = (
   .trim()
   .slice(0, 7)
 
-function createStandaloneOutputExclusions(dependency: string[]): string[] {
-  return dependency.map((element: string): string =>
+function createStandaloneOutputExclusions(dependencies: string[]): string[] {
+  return dependencies.map((element: string): string =>
     createStandaloneOutputExclusion(element)
   )
 }
