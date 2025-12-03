@@ -197,6 +197,10 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family:
@@ -242,5 +246,10 @@
     100% {
       filter: hue-rotate(360deg);
     }
+  }
+
+  .content-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 800px;
   }
 }

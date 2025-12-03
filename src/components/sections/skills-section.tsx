@@ -22,6 +22,7 @@ import type { Translations } from '@/types/i18n'
 
 interface SkillsSectionProperties {
   readonly locale: Locale
+  readonly performance?: boolean
 }
 
 interface SkillListProperties {

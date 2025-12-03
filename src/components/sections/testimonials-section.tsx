@@ -23,6 +23,7 @@ import type { Translations } from '@/types/i18n'
 
 interface TestimonialsSectionProperties {
   readonly locale: Locale
+  readonly performance?: boolean
 }
 
 interface TestimonialItem {
@@ -115,7 +116,10 @@ const TestimonialCard: FCStrict<TestimonialCardProperties> = ({
 
 export const TestimonialsSection: AsyncPageFC<
   TestimonialsSectionProperties
-> = async ({ locale }: TestimonialsSectionProperties): Promise<JSX.Element> => {
+> = async ({
+  locale,
+  performance,
+}: TestimonialsSectionProperties): Promise<JSX.Element> => {
   const translations: Translations<'testimonials'> = await getTranslations({
     locale,
     namespace: 'testimonials',
@@ -134,7 +138,11 @@ export const TestimonialsSection: AsyncPageFC<
   const subtitleText: string = translations('subtitle')
 
   return (
-    <Section background={SECTION_BACKGROUNDS.GRADIENT} className="min-h-screen">
+    <Section
+      background={SECTION_BACKGROUNDS.GRADIENT}
+      className="min-h-screen"
+      performance={performance ?? false}
+    >
       <SectionContainer size="xl">
         <SectionHeader
           gradient={true}

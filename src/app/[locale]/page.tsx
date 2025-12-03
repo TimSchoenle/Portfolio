@@ -37,10 +37,10 @@ const Home: RoutePageFC<HomeProperties> = async ({
       >
         <AboutSection locale={locale} />
         <SkillsSection locale={locale} />
-        <ProjectsSection locale={locale} />
-        <ExperienceSection locale={locale} />
-        <TestimonialsSection locale={locale} />
-        <ContactSection locale={locale} />
+        <ProjectsSection locale={locale} performance={true} />
+        <ExperienceSection locale={locale} performance={true} />
+        <TestimonialsSection locale={locale} performance={true} />
+        <ContactSection locale={locale} performance={true} />
       </article>
 
       <ScrollSnapPairController

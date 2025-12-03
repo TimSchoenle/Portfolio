@@ -15,12 +15,14 @@ export const SECTION_BACKGROUNDS: {
 
 type SectionProperties = ComponentProps<'section'> & {
   readonly background?: (typeof SECTION_BACKGROUNDS)[keyof typeof SECTION_BACKGROUNDS]
+  readonly performance?: boolean
 }
 
 export const Section: FCWithChildren<SectionProperties> = ({
   background = SECTION_BACKGROUNDS.DEFAULT,
   children,
   className,
+  performance = false,
   ...properties
 }: SectionProperties): JSX.Element => {
   return (
@@ -32,6 +34,7 @@ export const Section: FCWithChildren<SectionProperties> = ({
           'bg-gradient-to-b from-background via-muted/20 to-background':
             background === 'gradient',
           'bg-muted/30': background === 'muted',
+          'content-auto': performance,
         },
         className
       )}

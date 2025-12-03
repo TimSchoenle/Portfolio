@@ -18,6 +18,7 @@ import type { ResumeExperience } from '@/types/resume'
 
 interface ExperienceSectionProperties {
   readonly locale: Locale
+  readonly performance?: boolean
 }
 
 interface ExperienceCardProperties {
@@ -99,6 +100,7 @@ export const ExperienceSection: (
   properties: ExperienceSectionProperties
 ) => Promise<JSX.Element> = async ({
   locale,
+  performance,
 }: ExperienceSectionProperties): Promise<JSX.Element> => {
   const translations: Translations<'resume'> = await getTranslations({
     locale,
@@ -112,7 +114,7 @@ export const ExperienceSection: (
   const sectionTitle: string = translations('sectionTitles.experience')
 
   return (
-    <Section>
+    <Section performance={performance ?? false}>
       <SectionContainer size="sm">
         <SectionHeader title={sectionTitle} underline={true} />
 

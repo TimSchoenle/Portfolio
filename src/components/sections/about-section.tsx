@@ -16,7 +16,9 @@ import { SectionHeader } from '@/components/ui/section-header'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { LocalePageProperties, Translations } from '@/types/i18n'
 
-type AboutSectionProperties = LocalePageProperties
+type AboutSectionProperties = LocalePageProperties & {
+  readonly performance?: boolean
+}
 
 interface CompetencyBadgeProperties {
   readonly label: string
@@ -62,6 +64,7 @@ async function getAboutTranslations(
 
 const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
   locale,
+  performance,
 }: AboutSectionProperties): Promise<JSX.Element> => {
   const aboutTranslations: AboutTranslations =
     await getAboutTranslations(locale)
@@ -69,7 +72,7 @@ const AboutSection: AsyncPageFC<AboutSectionProperties> = async ({
     aboutTranslations
 
   return (
-    <Section className="py-24" id="about">
+    <Section className="py-24" id="about" performance={performance ?? false}>
       {/* Background gradient */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-muted/30 via-background to-background" />
 

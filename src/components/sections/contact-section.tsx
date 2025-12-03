@@ -25,6 +25,7 @@ import type { Translations } from '@/types/i18n'
 
 interface ContactSectionProperties extends NoChildren {
   readonly locale: Locale
+  readonly performance?: boolean
 }
 
 interface InfoCardProperties {
@@ -214,6 +215,7 @@ const ResumeCard: FCStrict<ResumeCardProperties> = ({
 
 export const ContactSection: FCAsync<ContactSectionProperties> = async ({
   locale,
+  performance,
 }: ContactSectionProperties): Promise<JSX.Element> => {
   const translation: Translations<''> = await getTranslations({ locale })
 
@@ -228,7 +230,11 @@ export const ContactSection: FCAsync<ContactSectionProperties> = async ({
   )
 
   return (
-    <Section background={SECTION_BACKGROUNDS.MUTED} id="contact">
+    <Section
+      background={SECTION_BACKGROUNDS.MUTED}
+      id="contact"
+      performance={performance ?? false}
+    >
       <GridPattern size={24} />
 
       <SectionContainer size="sm">

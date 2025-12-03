@@ -311,10 +311,12 @@ const StatsGrid: FCStrict<StatsGridProperties> = ({
 
 interface ProjectsSectionProperties {
   readonly locale: Locale
+  readonly performance?: boolean
 }
 
 export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
   locale,
+  performance,
 }: ProjectsSectionProperties): Promise<JSX.Element> => {
   const { contributionData, projects, stats }: GitHubData =
     await getGithubUser()
@@ -329,6 +331,7 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
       background={SECTION_BACKGROUNDS.GRADIENT}
       className="min-h-screen"
       id="projects"
+      performance={performance ?? false}
     >
       {/* Background patterns */}
       <GridPattern size={32} />
