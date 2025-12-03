@@ -9,7 +9,9 @@ import { Inter } from 'next/font/google'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 
 import DeferredClientUi from '@/app/[locale]/deferred-client-ui'
+import { LanguageSwitcher } from '@/components/common/language-switcher'
 import { ThemeProvider } from '@/components/common/theme-provider'
+import { ThemeToggle } from '@/components/common/theme-toggle'
 import { DevelopmentServiceWorkerGuard } from '@/components/features/development-service-worker-cleanup'
 import { LegalFooter } from '@/components/layout/legal-footer'
 import {
@@ -32,7 +34,8 @@ import type { DeepPartial } from 'react-hook-form'
 /* ---------- fonts (auto-fetched via next/font/google) ---------- */
 const inter: NextFontWithVariable = Inter({
   adjustFontFallback: true,
-  display: 'optional',
+  display: 'swap',
+  preload: true,
   subsets: ['latin'],
   variable: '--font-inter',
 })
@@ -198,6 +201,8 @@ const RootLayout: RoutePageWithChildrenFC<RootLayoutProperties> = async ({
 
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider defaultTheme="dark">
+            <ThemeToggle />
+            <LanguageSwitcher />
             {/* Non-critical client UI mounts after idle inside this wrapper */}
             <DeferredClientUi />
 
