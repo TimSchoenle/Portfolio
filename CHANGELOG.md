@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/Timmi6790/Portfolio/compare/v1.3.0...v1.3.1) (2025-12-06)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#184](https://github.com/Timmi6790/Portfolio/issues/184)) ([aee95fb](https://github.com/Timmi6790/Portfolio/commit/aee95fb9de29973c584556118e705fa103ff4b96))
+* **deps:** update dependency lucide-react to ^0.556.0 ([#188](https://github.com/Timmi6790/Portfolio/issues/188)) ([6c85eec](https://github.com/Timmi6790/Portfolio/commit/6c85eec306cf0c542bab825afa6c25a84ac2e3aa))
+
 ## [1.3.0](https://github.com/Timmi6790/Portfolio/compare/v1.2.0...v1.3.0) (2025-12-03)
 
 
