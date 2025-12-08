@@ -71,6 +71,9 @@ const nextConfig: NextConfig = {
       'clsx',
       'tailwind-merge',
     ],
+    sri: {
+      algorithm: 'sha512',
+    },
     webVitalsAttribution: ['CLS', 'LCP'],
   },
 
