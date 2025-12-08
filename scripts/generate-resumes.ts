@@ -34,7 +34,7 @@ void (async (): Promise<void> => {
 
     // Load messages for the locale
     const messages: Messages =
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,unicorn/no-await-expression-member
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, unicorn/no-await-expression-member, no-unsanitized/method
       (await import(`../messages/${locale}.json`)).default as Messages
 
     const translations: Translations<''> = createTranslator({

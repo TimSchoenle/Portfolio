@@ -27,7 +27,7 @@ export default getRequestConfig(
       ? requested
       : routing.defaultLocale
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, no-unsanitized/method
     const module_: { readonly default: Messages } = await import(
       `../../messages/${locale}.json`
     )
