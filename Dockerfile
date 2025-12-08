@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:1.20
+# syntax=docker/dockerfile:1.20@sha256:26147acbda4f14c5add9946e2fd2ed543fc402884fd75146bd342a7f6271dc1d
 
-FROM node:24-bookworm-slim AS build_base
+FROM node:24-bookworm-slim@sha256:0afb7822fac7bf9d7c1bf3b6e6c496dee6b2b64d8dfa365501a3c68e8eba94b2 AS build_base
 WORKDIR /app
 ENV PNPM_HOME=/root/.local/share/pnpm
 ENV PATH="${PNPM_HOME}:${PATH}"
@@ -26,7 +26,7 @@ RUN corepack enable
 RUN --mount=type=cache,target=/app/.next/cache pnpm run build
 RUN find .next/static -type f -name '*.map' -delete
 
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS runner
+FROM gcr.io/distroless/nodejs24-debian12:nonroot@sha256:b5bad30c810389860685e58663b073b89e547ca8d0805cbd881abbacaab6dcfe AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
