@@ -6,19 +6,31 @@ const icons: MetadataRoute.Manifest['icons'] = [
   {
     purpose: 'any',
     sizes: '32x32',
-    src: '/icon',
-    type: 'image/png',
-  },
-  {
-    purpose: 'maskable',
-    sizes: '32x32',
-    src: '/icon',
+    src: '/icon/favicon',
     type: 'image/png',
   },
   {
     purpose: 'any',
-    sizes: '180x180',
-    src: '/apple-icon',
+    sizes: '192x192',
+    src: '/icon/icon-192',
+    type: 'image/png',
+  },
+  {
+    purpose: 'maskable',
+    sizes: '192x192',
+    src: '/icon/icon-192',
+    type: 'image/png',
+  },
+  {
+    purpose: 'any',
+    sizes: '512x512',
+    src: '/icon/icon-512',
+    type: 'image/png',
+  },
+  {
+    purpose: 'maskable',
+    sizes: '512x512',
+    src: '/icon/icon-512',
     type: 'image/png',
   },
 ]
