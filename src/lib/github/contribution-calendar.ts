@@ -1,7 +1,7 @@
 import { type Locale } from 'next-intl'
 
 import { panic } from '@/lib/utilities'
-import type { ContributionPoint } from '@/types/github'
+import type { ContributionPoint } from '@/models/github'
 
 /* =============================== Types =============================== */
 

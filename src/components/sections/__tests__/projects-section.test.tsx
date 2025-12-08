@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ProjectsSection } from '../projects-section'
-import type { GitHubProject } from '@/types/github'
+import type { GitHubProject } from '@/models/github'
 
 // Mock next-intl
 vi.mock('next-intl/server', () => ({

@@ -2,13 +2,17 @@ import 'server-only'
 import { Octokit } from '@octokit/rest'
 import { unstable_cache } from 'next/cache'
 
+import { environment } from '@/environment'
 import { siteConfig } from '@/lib/config'
-import type {
-  ContributionLevel,
-  ContributionPoint,
-  GitHubProject,
-  UserStats,
-} from '@/types/github'
+import {
+  type ContributionLevel,
+  type ContributionPoint,
+  contributionPointSchema,
+  type GitHubProject,
+  gitHubProjectSchema,
+  type UserStats,
+  userStatsSchema,
+} from '@/models/github'
 
 /* ----------------------------- shared interfaces ---------------------------- */
 interface GraphQLCalendarDay {
@@ -46,7 +50,7 @@ interface GraphQLResponse {
 /* --------------------------------- octokit --------------------------------- */
 
 const octokit: Octokit = new Octokit({
-  auth: process.env['GITHUB_TOKEN'],
+  auth: environment.GITHUB_TOKEN,
 })
 
 /* ---------------------------- featured repositories --------------------------- */
@@ -64,7 +68,7 @@ const getFeaturedProjectsUncached: () => Promise<
                 repo,
               })
 
-            return {
+            return gitHubProjectSchema.parse({
               description: resp.data.description ?? '',
               forks_count: resp.data.forks_count,
               homepage: resp.data.homepage ?? undefined,
@@ -73,7 +77,7 @@ const getFeaturedProjectsUncached: () => Promise<
               name: resp.data.name,
               stargazers_count: resp.data.stargazers_count,
               topics: Array.isArray(resp.data.topics) ? resp.data.topics : [],
-            }
+            })
           }
         )
       )
@@ -130,11 +134,11 @@ const getUserStatsUncached: () => Promise<UserStats> =
         0
       )
 
-      return {
+      return userStatsSchema.parse({
         forks: totalForks,
         repositories: repos.length,
         stars: totalStars,
-      }
+      })
     } catch {
       return { forks: 0, repositories: 0, stars: 0 }
     }
@@ -172,7 +176,7 @@ const buildHeaders: () => Record<string, string> = (): Record<
   string
 > => {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token: string | undefined = process.env['GITHUB_TOKEN']
+  const token: string | undefined = environment.GITHUB_TOKEN
   if (token !== undefined && token !== '') {
     headers['Authorization'] = `Bearer ${token}`
   }
@@ -224,11 +228,13 @@ const flattenWeeks: (
   const out: ContributionPoint[] = []
   for (const week of weeks) {
     for (const day of week.contributionDays) {
-      out.push({
-        count: day.contributionCount,
-        date: day.date,
-        level: levelToInt(day.contributionLevel),
-      })
+      out.push(
+        contributionPointSchema.parse({
+          count: day.contributionCount,
+          date: day.date,
+          level: levelToInt(day.contributionLevel),
+        })
+      )
     }
   }
   return out

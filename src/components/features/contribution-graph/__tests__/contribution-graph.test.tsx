@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ContributionGraph } from '../contribution-graph'
-import type { ContributionPoint } from '@/types/github'
+import type { ContributionPoint } from '@/models/github'
 
 // Mock next-intl
 vi.mock('next-intl/server', () => ({

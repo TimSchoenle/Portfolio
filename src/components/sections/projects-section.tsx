@@ -28,8 +28,8 @@ import { SectionContainer } from '@/components/ui/section-container'
 import { SectionHeader } from '@/components/ui/section-header'
 import { siteConfig } from '@/lib/config'
 import { getGithubUser, type GitHubData } from '@/lib/github/client'
+import type { GitHubProject } from '@/models/github'
 import type { FCAsync, FCStrict } from '@/types/fc'
-import type { GitHubProject } from '@/types/github'
 import type { Translations } from '@/types/i18n'
 
 /* --------------------------------- Constants -------------------------------- */

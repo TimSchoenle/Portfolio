@@ -17,12 +17,12 @@ import {
   sumCount,
   type WeekModel,
 } from '@/lib/github/contribution-calendar'
-import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import {
   CONTRIBUTION_LEVELS,
   type ContributionLevel,
   type ContributionPoint,
-} from '@/types/github'
+} from '@/models/github'
+import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { LocalePageProperties, Translations } from '@/types/i18n'
 
 import styles from './contribution-graph.module.css'

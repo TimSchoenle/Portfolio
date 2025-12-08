@@ -7,7 +7,7 @@ import {
   sumCount,
   sundayOfWeekUTC,
 } from '../contribution-calendar'
-import type { ContributionPoint } from '@/types/github'
+import type { ContributionPoint } from '@/models/github'
 
 describe('contribution-calendar', () => {
   describe('isoDate', () => {
