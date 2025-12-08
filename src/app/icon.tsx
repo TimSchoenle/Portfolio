@@ -12,10 +12,12 @@ const IconIds: {
   readonly FAV_ICONS: 'favicon'
   readonly ICON_192: 'icon-192'
   readonly ICON_512: 'icon-512'
+  readonly SCREENSHOT_WIDE: 'screenshot-wide'
 } = {
   FAV_ICONS: 'favicon',
   ICON_192: 'icon-192',
   ICON_512: 'icon-512',
+  SCREENSHOT_WIDE: 'screenshot-wide',
 } as const
 
 type IconType = (typeof IconIds)[keyof typeof IconIds]
@@ -28,6 +30,9 @@ interface IconProperties {
 
 function getImageDimension(iconId: IconType): IconDimension {
   switch (iconId) {
+    case IconIds.SCREENSHOT_WIDE: {
+      return { height: 720, width: 1280 }
+    }
     case IconIds.ICON_512: {
       return { height: 512, width: 512 }
     }
@@ -50,6 +55,7 @@ export function generateImageMetadata(): IconProperties[] {
     createIcon(IconIds.FAV_ICONS),
     createIcon(IconIds.ICON_192),
     createIcon(IconIds.ICON_512),
+    createIcon(IconIds.SCREENSHOT_WIDE),
   ]
 }
 
