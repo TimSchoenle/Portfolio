@@ -101,7 +101,7 @@ describe('icon-creator', () => {
     })
   })
 
-  describe('generateDefaultIconResponser', () => {
+  describe('generateDefaultIconResponse', () => {
     it('should generate response using loaded SVG and correct dimension', async () => {
       const mockSvgContent = '<svg>test</svg>'
       const mockBuffer = Buffer.from(mockSvgContent)

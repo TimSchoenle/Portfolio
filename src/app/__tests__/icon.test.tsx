@@ -8,7 +8,7 @@ vi.mock('@/lib/icon-creator', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/icon-creator')>()
   return {
     ...actual,
-    generateDefaultIconResponser: vi
+    generateDefaultIconResponse: vi
       .fn()
       .mockImplementation(() => 'mock-response'),
   }
