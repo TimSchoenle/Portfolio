@@ -308,6 +308,9 @@ jobs:
   build:
     name: Production Build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
     needs:
       [
         changes,
@@ -348,9 +351,6 @@ jobs:
 
       - name: Attest SBOM
         uses: actions/attest-build-provenance@v1
-        permissions:
-          id-token: write
-          attestations: write
         with:
           subject-path: sbom.xml
 
