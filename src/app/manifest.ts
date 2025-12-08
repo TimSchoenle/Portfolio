@@ -6,19 +6,32 @@ const icons: MetadataRoute.Manifest['icons'] = [
   {
     purpose: 'any',
     sizes: '32x32',
-    src: '/icon',
-    type: 'image/png',
-  },
-  {
-    purpose: 'maskable',
-    sizes: '32x32',
-    src: '/icon',
+    src: '/icon/favicon',
     type: 'image/png',
   },
   {
     purpose: 'any',
-    sizes: '180x180',
-    src: '/apple-icon',
+    sizes: '192x192',
+    src: '/icon/icon-192',
+    type: 'image/png',
+  },
+  {
+    purpose: 'maskable',
+    sizes: '192x192',
+    src: '/icon/icon-192',
+    type: 'image/png',
+  },
+  {
+    purpose: 'any',
+    sizes: '512x512',
+    // eslint-disable-next-line sonarjs/no-duplicate-string
+    src: '/icon/icon-512',
+    type: 'image/png',
+  },
+  {
+    purpose: 'maskable',
+    sizes: '512x512',
+    src: '/icon/icon-512',
     type: 'image/png',
   },
 ]
@@ -33,6 +46,19 @@ export default function manifest(): MetadataRoute.Manifest {
     id: 'portfolio',
     name: siteConfig.title,
     orientation: 'portrait',
+    screenshots: [
+      {
+        form_factor: 'wide',
+        sizes: '1280x720',
+        src: '/icon/screenshot-wide',
+        type: 'image/png',
+      },
+      {
+        sizes: '512x512',
+        src: '/icon/icon-512',
+        type: 'image/png',
+      },
+    ],
     short_name: siteConfig.title,
     start_url: '/',
     theme_color: '#FFFFFF',

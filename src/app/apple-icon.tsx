@@ -1,37 +1,18 @@
-import { ImageResponse } from 'next/og'
+import { type ImageResponse } from 'next/og'
 
-import type { ImageResponseOptions } from 'next/dist/compiled/@vercel/og/types'
+import {
+  createIcon,
+  generateDefaultIconResponse,
+  IconIds,
+  type IconProperties,
+} from '@/lib/icon-creator'
 
-// Image metadata
-export const size: { height: number; width: number } = {
-  height: 180,
-  width: 180,
+export const runtime: string = 'nodejs'
+
+export function generateImageMetadata(): IconProperties[] {
+  return [createIcon(IconIds.APPLE)]
 }
-export const contentType: string = 'image/png'
 
-// Image generation
-export default function Icon(): Response {
-  return new ImageResponse(
-    // ImageResponse JSX element
-    <div
-      style={{
-        alignItems: 'center',
-        background: 'black',
-        borderRadius: '20%',
-        color: 'white',
-        display: 'flex',
-        fontSize: 120,
-        height: '100%',
-        justifyContent: 'center',
-        width: '100%',
-      }}
-    >
-      {/* eslint-disable-next-line react/jsx-curly-brace-presence */}
-      {'P'}
-    </div>,
-    // ImageResponse options
-    {
-      ...size,
-    } as ImageResponseOptions
-  )
+export default async function AppleIcon(): Promise<ImageResponse> {
+  return generateDefaultIconResponse(IconIds.APPLE)
 }
