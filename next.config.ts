@@ -74,7 +74,6 @@ const nextConfig: NextConfig = {
     sri: {
       algorithm: 'sha512',
     },
-    turbopackFileSystemCacheForDev: true,
     webVitalsAttribution: ['CLS', 'LCP'],
   },
 
