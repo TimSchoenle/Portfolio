@@ -25,6 +25,7 @@ vi.mock('@/lib/config', () => ({
   siteConfig: {
     email: 'test@example.com',
     fullName: 'John Doe',
+    name: 'John',
     github: 'https://github.com/test',
   },
 }))
@@ -36,7 +37,7 @@ describe('HeroSection', () => {
 
     // Check for actual rendered content
     expect(screen.getByText('Hi, I am')).toBeDefined()
-    expect(screen.getByText('John Doe')).toBeDefined()
+    expect(screen.getByText('John')).toBeDefined()
     expect(screen.getByText('Software Developer')).toBeDefined()
 
     // Check for links
