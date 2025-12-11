@@ -129,7 +129,7 @@ export const HeroSection: AsyncPageFC<HeroSectionProperties> = async ({
       <div className="max-w-4xl text-center">
         <HeroTitle
           greeting={heroTranslation('greeting')}
-          name={siteConfig.fullName}
+          name={siteConfig.name}
         />
         <HeroSubtitle title={translation('personalInfo.jobTitle')} />
         <HeroLocationTagline
