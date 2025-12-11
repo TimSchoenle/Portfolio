@@ -1,7 +1,7 @@
 # Portfolio
 
-[![Codecov](https://codecov.io/gh/Timmi6790/Portfolio/branch/main/graph/badge.svg)](https://codecov.io/gh/Timmi6790/Portfolio)
-[![CI](https://github.com/Timmi6790/Portfolio/actions/workflows/ci.yaml/badge.svg)](https://github.com/Timmi6790/Portfolio/actions)
+[![Codecov](https://codecov.io/gh/timschoenle/Portfolio/branch/main/graph/badge.svg)](https://codecov.io/gh/timschoenle/Portfolio)
+[![CI](https://github.com/timschoenle/Portfolio/actions/workflows/ci.yaml/badge.svg)](https://github.com/timschoenle/Portfolio/actions)
 
 This repository is my personal portfolio website, designed to showcase my projects, skills, and experience through an automated pipeline.
 
@@ -49,7 +49,7 @@ This repository is my personal portfolio website, designed to showcase my projec
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/Timmi6790/Portfolio.git
+    git clone https://github.com/timschoenle/Portfolio.git
     cd Portfolio
     ```
 

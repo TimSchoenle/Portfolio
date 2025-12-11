@@ -63,16 +63,16 @@ export interface SiteConfig {
 export const siteConfig: SiteConfig = {
   description:
     'Portfolio of Tim - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
-  email: 'contact@timmi6790.de',
+  email: 'contact@tim-schoenle.de',
   featuredRepos: [
     'cloudflare-access-webhook-redirect',
     's3-bucket-perma-link',
     'Portfolio',
     'helm-charts',
   ],
-  fullName: 'Tim',
-  github: 'https://github.com/Timmi6790',
-  githubUsername: 'Timmi6790',
+  fullName: 'Tim Schönle',
+  github: 'https://github.com/timschoenle',
+  githubUsername: 'timschoenle',
   jobTitle: 'Software Developer',
   legals: {
     address: '#TODO IMPLEMENT ME',
@@ -94,7 +94,6 @@ export const siteConfig: SiteConfig = {
   seo: {
     keywords: [
       'Tim',
-      'Timmi6790',
       'Software Developer',
       'Java',
       'Rust',
@@ -509,10 +508,10 @@ export const siteConfig: SiteConfig = {
     resumeMinimumConfidence: 0.6,
     sectionSideMinimumConfidence: 0.6,
   },
-  title: 'Tim - Software Developer',
+  title: 'Tim Schönle - Software Developer',
 
   twitter: '@Timmi6790',
 
-  url: 'https://timmi6790.de',
-  username: 'Timmi6790',
+  url: 'https://tim-schoenle.de',
+  username: 'timschoenle',
 }
