@@ -69,6 +69,7 @@ const ImprintPage: RoutePageFC<ImprintPageProperties> = async ({
     country: siteConfig.legals.serverLocationCountry,
     email: siteConfig.email,
     name: siteConfig.fullName,
+    secondContact: siteConfig.legals.secondContact,
     vatId: siteConfig.legals.vatId,
 
     // Use shared component mappings

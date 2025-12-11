@@ -34,6 +34,7 @@ export interface SiteConfig {
     readonly serverLocationCountry: string
     readonly imprintLastChange: Date
     readonly privacyPolicyLastChange: Date
+    readonly secondContact: string
     readonly cloudflare: {
       readonly address: string
       readonly policyUrl: string
@@ -75,17 +76,23 @@ export const siteConfig: SiteConfig = {
   githubUsername: 'timschoenle',
   jobTitle: 'Software Developer',
   legals: {
-    address: '#TODO IMPLEMENT ME',
+    address:
+      'tim-schoenle.de – Tim Schönle\n' +
+      'c/o Online-Impressum.de #5279\n' +
+      'Europaring 90\n' +
+      '53757 Sankt Augustin',
     cloudflare: {
       address:
         'Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA',
       policyUrl: 'https://www.cloudflare.com/privacypolicy/',
     },
-    imprintLastChange: new Date('2025-11-30'),
+    imprintLastChange: new Date('2025-12-11'),
     logRetentionDays: 30,
-    privacyPolicyLastChange: new Date('2025-11-30'),
+    privacyPolicyLastChange: new Date('2025-12-11'),
+    secondContact:
+      'https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg',
     serverLocationCountry: 'Germany',
-    vatId: '#TODO ADD ME',
+    vatId: 'DE347101415',
   },
   linkedin: '',
   location: 'Germany',

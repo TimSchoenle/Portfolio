@@ -71,6 +71,7 @@ const PrivacyPolicyPage: RoutePageFC<PrivacyPageProperties> = async ({
     controllerEmail: siteConfig.email,
     controllerName: siteConfig.fullName,
     logRetentionDays: siteConfig.legals.logRetentionDays,
+    secondContact: siteConfig.legals.secondContact,
     serverLocation: siteConfig.legals.serverLocationCountry,
 
     // Use shared component mappings
