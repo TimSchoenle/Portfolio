@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.20@sha256:26147acbda4f14c5add9946e2fd2ed543fc402884fd75146bd342a7f6271dc1d
 
-FROM node:24-bookworm-slim@sha256:48abc13a19400ca3985071e287bd405a1d99306770eb81d61202fb6b65cf0b57 AS build_base
+FROM node:24-bookworm-slim@sha256:04d9cbb7297edb843581b9bb9bbed6d7efb459447d5b6ade8d8ef988e6737804 AS build_base
 WORKDIR /app
 ENV PNPM_HOME=/root/.local/share/pnpm
 ENV PATH="${PNPM_HOME}:${PATH}"
