@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 env:
-  DOCKER_REPO: timmi6790/portfolio
+  DOCKER_REPO: timschoenle/portfolio
 
 jobs:
   release-please:
