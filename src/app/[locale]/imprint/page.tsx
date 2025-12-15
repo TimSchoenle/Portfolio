@@ -48,6 +48,7 @@ export const generateMetadata: GenerateMetadataFC<
 
 type ImprintPageProperties = UnparsedLocalePageProperties
 
+// eslint-disable-next-line max-lines-per-function
 const ImprintPage: RoutePageFC<ImprintPageProperties> = async ({
   params,
 }: PageParameters<ImprintPageProperties>): Promise<JSX.Element> => {
@@ -68,6 +69,7 @@ const ImprintPage: RoutePageFC<ImprintPageProperties> = async ({
     'vat',
     'mstv',
     'dispute',
+    'socialMedia',
     'liabilityContent',
     'liabilityLinks',
     'copyright',
@@ -80,9 +82,18 @@ const ImprintPage: RoutePageFC<ImprintPageProperties> = async ({
         {translations.rich(key, {
           // Variables for placeholder replacement
           address: siteConfig.legals.address,
-          country: siteConfig.legals.serverLocationCountry,
+          country: translations('serverLocation'),
           email: siteConfig.email,
           name: siteConfig.fullName,
+          profiles: [
+            siteConfig.github ? `GitHub: ${siteConfig.github}` : null,
+            typeof siteConfig.linkedin === 'string'
+              ? `LinkedIn: ${siteConfig.linkedin}`
+              : null,
+            siteConfig.twitter ? `Twitter: ${siteConfig.twitter}` : null,
+          ]
+            .filter(Boolean)
+            .join('\n'),
           secondContact: siteConfig.legals.secondContact,
           vatId: siteConfig.legals.vatId,
 

@@ -97,7 +97,6 @@ vi.mock('@/lib/config', () => ({
     legals: {
       imprintLastChange: '2025-11-29',
       address: '123 Main St',
-      serverLocationCountry: 'Germany',
       vatId: 'DE123456789',
     },
   },

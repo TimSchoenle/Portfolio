@@ -88,7 +88,6 @@ vi.mock('@/lib/config', () => ({
       },
       address: '123 Main St',
       logRetentionDays: 30,
-      serverLocationCountry: 'Germany',
     },
     email: 'contact@example.com',
     fullName: 'John Doe',

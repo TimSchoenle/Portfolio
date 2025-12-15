@@ -31,7 +31,6 @@ export interface SiteConfig {
     readonly vatId: string
     readonly address: string
     readonly logRetentionDays: number
-    readonly serverLocationCountry: string
     readonly imprintLastChange: Date
     readonly privacyPolicyLastChange: Date
     readonly secondContact: string
@@ -91,7 +90,6 @@ export const siteConfig: SiteConfig = {
     privacyPolicyLastChange: new Date('2025-12-11'),
     secondContact:
       'https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg',
-    serverLocationCountry: 'Germany',
     vatId: 'DE347101415',
   },
   linkedin: 'https://www.linkedin.com/in/tim-schoenle',
