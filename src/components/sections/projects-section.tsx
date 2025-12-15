@@ -377,7 +377,7 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
 
         <SectionFooter
           cta={translations('viewAll')}
-          githubUsername={siteConfig.githubUsername}
+          githubUsername={siteConfig.socials.githubUsername}
         />
       </SectionContainer>
     </Section>

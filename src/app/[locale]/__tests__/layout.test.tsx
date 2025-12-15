@@ -37,9 +37,10 @@ vi.mock('@/lib/config', () => ({
     description: 'Test Description',
     url: 'https://test.com',
     fullName: 'Test User',
-    twitter: '@test',
     email: 'test@test.com',
-    githubUsername: 'testuser',
+    socials: {
+      githubUsername: 'testuser',
+    },
     seo: { keywords: ['test', 'keywords'] },
   },
 }))

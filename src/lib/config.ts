@@ -24,14 +24,11 @@ export interface SiteConfig {
   readonly email: string
   readonly featuredRepos: readonly string[]
   readonly fullName: string
-  readonly github: string
-  readonly githubUsername: string
   readonly jobTitle: string
   readonly legals: {
     readonly vatId: string
     readonly address: string
     readonly logRetentionDays: number
-    readonly serverLocationCountry: string
     readonly imprintLastChange: Date
     readonly privacyPolicyLastChange: Date
     readonly secondContact: string
@@ -39,8 +36,12 @@ export interface SiteConfig {
       readonly address: string
       readonly policyUrl: string
     }
+    readonly hosting: {
+      readonly name: string
+      readonly address: string
+      readonly policyUrl: string
+    }
   }
-  readonly linkedin?: string
   readonly location: string
   readonly name: string
   readonly resumeDirectory: string
@@ -55,8 +56,12 @@ export interface SiteConfig {
     readonly buildTools: readonly Skill[]
     readonly infrastructure: readonly Skill[]
   }
+  readonly socials: {
+    readonly github: string
+    readonly githubUsername: string
+    readonly linkedin?: string
+  }
   readonly title: string
-  readonly twitter: string
   readonly url: string
   readonly username: string
 }
@@ -72,8 +77,6 @@ export const siteConfig: SiteConfig = {
     'helm-charts',
   ],
   fullName: 'Tim Schönle',
-  github: 'https://github.com/timschoenle',
-  githubUsername: 'timschoenle',
   jobTitle: 'Software Developer',
   legals: {
     address:
@@ -86,15 +89,18 @@ export const siteConfig: SiteConfig = {
         'Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA',
       policyUrl: 'https://www.cloudflare.com/privacypolicy/',
     },
-    imprintLastChange: new Date('2025-12-11'),
-    logRetentionDays: 30,
-    privacyPolicyLastChange: new Date('2025-12-11'),
+    hosting: {
+      address: 'Daimlerstraße 25, 76185 Karlsruhe, Germany',
+      name: 'netcup GmbH',
+      policyUrl: 'https://www.netcup.de/kontakt/datenschutzerklaerung.php',
+    },
+    imprintLastChange: new Date('2025-12-15'),
+    logRetentionDays: 7,
+    privacyPolicyLastChange: new Date('2025-12-15'),
     secondContact:
       'https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg',
-    serverLocationCountry: 'Germany',
     vatId: 'DE347101415',
   },
-  linkedin: 'https://www.linkedin.com/in/tim-schoenle',
   location: 'Germany',
   name: 'Tim',
   resumeDirectory: 'resume',
@@ -515,9 +521,12 @@ export const siteConfig: SiteConfig = {
     resumeMinimumConfidence: 0.6,
     sectionSideMinimumConfidence: 0.6,
   },
+  socials: {
+    github: 'https://github.com/timschoenle',
+    githubUsername: 'timschoenle',
+    linkedin: 'https://www.linkedin.com/in/tim-schoenle',
+  },
   title: 'Tim Schönle - Software Developer',
-
-  twitter: '@Timmi6790',
 
   url: 'https://tim-schoenle.de',
   username: 'timschoenle',

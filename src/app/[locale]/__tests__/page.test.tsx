@@ -40,8 +40,10 @@ vi.mock('@/lib/github/client', () => ({
 vi.mock('@/lib/config', () => ({
   siteConfig: {
     email: 'test@example.com',
-    github: 'https://github.com/test',
-    githubUsername: 'testuser',
+    socials: {
+      github: 'https://github.com/test',
+      githubUsername: 'testuser',
+    },
   },
 }))
 

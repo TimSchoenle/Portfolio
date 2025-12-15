@@ -94,10 +94,13 @@ vi.mock('@/lib/config', () => ({
   siteConfig: {
     fullName: 'Test User',
     email: 'test@example.com',
+    socials: {
+      github: 'https://github.com/test',
+      linkedin: 'https://linkedin.com/test',
+    },
     legals: {
       imprintLastChange: '2025-11-29',
       address: '123 Main St',
-      serverLocationCountry: 'Germany',
       vatId: 'DE123456789',
     },
   },

@@ -3,7 +3,7 @@
 import type { JSX } from 'react'
 
 import type { Metadata } from 'next'
-import { type Locale } from 'next-intl'
+import { type Locale, type RichTagsFunction } from 'next-intl'
 
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
@@ -14,7 +14,10 @@ import {
   maybeLocaleFromParameters,
 } from '@/i18n/locale'
 import { siteConfig } from '@/lib/config'
-import { legalPageComponentMappings } from '@/lib/i18n-legal-components'
+import {
+  legalPageComponentMappings,
+  type LegalRichTagsFunctionMappers,
+} from '@/lib/i18n-legal-components'
 import type { Translations, UnparsedLocalePageProperties } from '@/types/i18n'
 import type {
   GenerateMetadataFC,
@@ -48,6 +51,7 @@ export const generateMetadata: GenerateMetadataFC<
 
 type ImprintPageProperties = UnparsedLocalePageProperties
 
+// eslint-disable-next-line max-lines-per-function
 const ImprintPage: RoutePageFC<ImprintPageProperties> = async ({
   params,
 }: PageParameters<ImprintPageProperties>): Promise<JSX.Element> => {
@@ -62,41 +66,52 @@ const ImprintPage: RoutePageFC<ImprintPageProperties> = async ({
 
   const lastUpdated: Date = new Date(siteConfig.legals.imprintLastChange)
 
-  const imprintKeys: string[] = [
-    'tmg',
-    'contact',
-    'vat',
-    'mstv',
-    'dispute',
-    'liabilityContent',
-    'liabilityLinks',
-    'copyright',
-  ] as const
+  // Prepare variables for rich text rendering
+  const variables: Record<string, Date | RichTagsFunction | number | string> = {
+    // Variables for placeholder replacement
+    address: siteConfig.legals.address,
+    country: translations('serverLocation'),
+    email: siteConfig.email,
+    name: siteConfig.fullName,
+    profiles: (): JSX.Element => {
+      const { link }: LegalRichTagsFunctionMappers = legalPageComponentMappings
 
-  // Render the content using rich text with component mappings
-  const content: JSX.Element[] = imprintKeys.map(
-    (key: string): JSX.Element => (
-      <div key={key}>
-        {translations.rich(key, {
-          // Variables for placeholder replacement
-          address: siteConfig.legals.address,
-          country: siteConfig.legals.serverLocationCountry,
-          email: siteConfig.email,
-          name: siteConfig.fullName,
-          secondContact: siteConfig.legals.secondContact,
-          vatId: siteConfig.legals.vatId,
+      return (
+        <>
+          {siteConfig.socials.github ? (
+            <div>
+              {'GitHub: '}
+              {link(siteConfig.socials.github)}
+            </div>
+          ) : null}
+          {typeof siteConfig.socials.linkedin === 'string' ? (
+            <div>
+              {'LinkedIn: '}
+              {link(siteConfig.socials.linkedin)}
+            </div>
+          ) : null}
+        </>
+      )
+    },
+    secondContact: siteConfig.legals.secondContact,
+    vatId: siteConfig.legals.vatId,
 
-          // Use shared component mappings
-          ...legalPageComponentMappings,
-        })}
-      </div>
-    )
-  )
+    // Use shared component mappings
+    ...legalPageComponentMappings,
+  }
 
   return (
     <LegalPageLayout locale={locale} title={translations('title')}>
       <div className="space-y-6">
-        {content}
+        <div>{translations.rich('tmg', variables)}</div>
+        <div>{translations.rich('contact', variables)}</div>
+        <div>{translations.rich('vat', variables)}</div>
+        <div>{translations.rich('mstv', variables)}</div>
+        <div>{translations.rich('dispute', variables)}</div>
+        <div>{translations.rich('socialMedia', variables)}</div>
+        <div>{translations.rich('liabilityContent', variables)}</div>
+        <div>{translations.rich('liabilityLinks', variables)}</div>
+        <div>{translations.rich('copyright', variables)}</div>
         <LastUpdateNotice lastUpdate={lastUpdated} locale={locale} />
       </div>
     </LegalPageLayout>

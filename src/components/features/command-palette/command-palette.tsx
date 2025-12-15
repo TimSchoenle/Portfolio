@@ -253,13 +253,13 @@ const ActionsGroup: FCStrict<ActionsGroupProperties> = ({
 }: ActionsGroupProperties): JSX.Element => {
   const goGitHub: (_value: string) => void = (_value: string): void => {
     run((): void => {
-      openNewTab(siteConfig.github)
+      openNewTab(siteConfig.socials.github)
     })
   }
   const goLinkedIn: (_value: string) => void = (_value: string): void => {
     run((): void => {
-      if (typeof siteConfig.linkedin === 'string') {
-        openNewTab(siteConfig.linkedin)
+      if (typeof siteConfig.socials.linkedin === 'string') {
+        openNewTab(siteConfig.socials.linkedin)
       }
     })
   }
@@ -275,7 +275,7 @@ const ActionsGroup: FCStrict<ActionsGroupProperties> = ({
         <GitBranch className="mr-2 h-4 w-4" />
         <span>{tPalette('github')}</span>
       </CommandItem>
-      {typeof siteConfig.linkedin === 'string' ? (
+      {typeof siteConfig.socials.linkedin === 'string' ? (
         <CommandItem onSelect={goLinkedIn}>
           {/* eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation */}
           <Linkedin className="mr-2 h-4 w-4" />

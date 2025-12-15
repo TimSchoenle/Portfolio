@@ -103,16 +103,16 @@ export const InfoCard: FCStrict<InfoCardProperties> = ({
               </span>
               <a
                 className="text-lg font-medium text-foreground transition-colors hover:text-primary"
-                href={siteConfig.github}
+                href={siteConfig.socials.github}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                {`@${siteConfig.githubUsername}`}
+                {`@${siteConfig.socials.githubUsername}`}
               </a>
             </p>
           </div>
 
-          {typeof siteConfig.linkedin === 'string' ? (
+          {typeof siteConfig.socials.linkedin === 'string' ? (
             <div className="group flex items-center gap-4 rounded-lg p-3 transition-all hover:bg-muted/50">
               <div
                 aria-hidden="true"
@@ -127,7 +127,7 @@ export const InfoCard: FCStrict<InfoCardProperties> = ({
                 </span>
                 <a
                   className="text-lg font-medium text-foreground transition-colors hover:text-primary"
-                  href={siteConfig.linkedin}
+                  href={siteConfig.socials.linkedin}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

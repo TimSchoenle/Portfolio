@@ -64,7 +64,7 @@ const getFeaturedProjectsUncached: () => Promise<
           async (repo: string): Promise<GitHubProject> => {
             const resp: Awaited<ReturnType<typeof octokit.repos.get>> =
               await octokit.repos.get({
-                owner: siteConfig.githubUsername,
+                owner: siteConfig.socials.githubUsername,
                 repo,
               })
 
@@ -115,7 +115,7 @@ const getUserStatsUncached: () => Promise<UserStats> =
       }[] = await octokit.paginate(octokit.repos.listForUser, {
         per_page: 100,
         type: 'owner',
-        username: siteConfig.githubUsername,
+        username: siteConfig.socials.githubUsername,
       })
 
       const totalStars: number = repos.reduce(
@@ -257,7 +257,7 @@ const getContributionDataUncached: () => Promise<
         variables: {
           from: fromDate,
           to: toDate,
-          username: siteConfig.githubUsername,
+          username: siteConfig.socials.githubUsername,
         },
       }),
       headers,

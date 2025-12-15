@@ -147,7 +147,6 @@ export const generateMetadata: GenerateMetadataFC<
     },
     twitter: {
       card: 'summary_large_image',
-      creator: siteConfig.twitter,
       description: siteConfig.description,
       images: ['/og-image.jpg'],
       title: siteConfig.title,

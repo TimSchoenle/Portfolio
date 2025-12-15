@@ -8,8 +8,10 @@ import type { ResumeTranslations } from '@/types/resume'
 vi.mock('@/lib/config', () => ({
   siteConfig: {
     email: 'test@example.com',
-    github: 'https://github.com/testuser',
-    linkedin: 'https://linkedin.com/in/testuser',
+    socials: {
+      github: 'https://github.com/testuser',
+      linkedin: 'https://linkedin.com/in/testuser',
+    },
   },
 }))
 
@@ -71,7 +73,7 @@ describe('ContactSection', () => {
     })
 
     const resultString = JSON.stringify(result)
-    expect(resultString.includes(siteConfig.github ?? '')).toBe(true)
+    expect(resultString.includes(siteConfig.socials.github)).toBe(true)
   })
 
   it('displays LinkedIn link when available', () => {
@@ -80,7 +82,7 @@ describe('ContactSection', () => {
     })
 
     const resultString = JSON.stringify(result)
-    expect(resultString.includes(siteConfig.linkedin ?? '')).toBe(true)
+    expect(resultString.includes(siteConfig.socials.linkedin ?? '')).toBe(true)
   })
 
   it('renders section divider', () => {

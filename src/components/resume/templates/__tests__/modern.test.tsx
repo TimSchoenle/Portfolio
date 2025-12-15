@@ -9,8 +9,10 @@ vi.mock('@/lib/config', () => ({
   siteConfig: {
     email: 'test@example.com',
     fullName: 'John Doe',
-    github: 'https://github.com/johndoe',
-    linkedin: 'https://linkedin.com/in/johndoe',
+    socials: {
+      github: 'https://github.com/johndoe',
+      linkedin: 'https://linkedin.com/in/johndoe',
+    },
     name: 'John Doe',
     skills: {
       expertise: ['JavaScript', 'TypeScript'],

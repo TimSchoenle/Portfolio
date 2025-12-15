@@ -24,9 +24,11 @@ vi.mock('lucide-react', () => ({
 vi.mock('@/lib/config', () => ({
   siteConfig: {
     email: 'test@example.com',
-    github: 'https://github.com/testuser',
-    linkedin: 'https://linkedin.com/in/testuser',
     location: 'Test Location',
+    socials: {
+      github: 'https://github.com/testuser',
+      linkedin: 'https://linkedin.com/in/testuser',
+    },
   },
 }))
 

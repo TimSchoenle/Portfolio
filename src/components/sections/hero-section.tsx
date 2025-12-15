@@ -142,7 +142,7 @@ export const HeroSection: AsyncPageFC<HeroSectionProperties> = async ({
           contactLabel={heroTranslation('contact')}
           email={siteConfig.email}
           githubLabel={translation('common.socials.github')}
-          githubUrl={siteConfig.github}
+          githubUrl={siteConfig.socials.github}
         />
         <HeroScrollHint />
       </div>

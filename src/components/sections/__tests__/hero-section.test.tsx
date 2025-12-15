@@ -26,7 +26,9 @@ vi.mock('@/lib/config', () => ({
     email: 'test@example.com',
     fullName: 'John Doe',
     name: 'John',
-    github: 'https://github.com/test',
+    socials: {
+      github: 'https://github.com/test',
+    },
   },
 }))
 

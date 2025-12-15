@@ -30,9 +30,11 @@ vi.mock('@/i18n/routing', () => ({
 // Mock config
 vi.mock('@/lib/config', () => ({
   siteConfig: {
-    github: 'https://github.com/test',
-    linkedin: 'https://linkedin.com/test',
     email: 'test@test.com',
+    socials: {
+      github: 'https://github.com/test',
+      linkedin: 'https://linkedin.com/test',
+    },
   },
 }))
 

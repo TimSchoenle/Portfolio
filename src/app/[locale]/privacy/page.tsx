@@ -3,7 +3,7 @@
 import type { JSX } from 'react'
 
 import type { Metadata } from 'next'
-import { type Locale } from 'next-intl'
+import { type Locale, type RichTagsFunction } from 'next-intl'
 
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
@@ -62,45 +62,39 @@ const PrivacyPolicyPage: RoutePageFC<PrivacyPageProperties> = async ({
 
   const lastUpdated: Date = new Date(siteConfig.legals.privacyPolicyLastChange)
 
-  const privacyKeys: string[] = [
-    'controller',
-    'general',
-    'encryption',
-    'logs',
-    'cloudflare',
-    'contact',
-    'rights',
-    'cookies',
-    'noTracking',
-    'changes',
-  ] as const
+  // Prepare variables for rich text rendering
+  const variables: Record<string, Date | RichTagsFunction | number | string> = {
+    // Variables for placeholder replacement
+    cloudflarePolicyUrl: siteConfig.legals.cloudflare.policyUrl,
+    cloudflareProvider: siteConfig.legals.cloudflare.address,
+    controllerAddress: siteConfig.legals.address,
+    controllerEmail: siteConfig.email,
+    controllerName: siteConfig.fullName,
+    hostingAddress: siteConfig.legals.hosting.address,
+    hostingName: siteConfig.legals.hosting.name,
+    hostingPolicyUrl: siteConfig.legals.hosting.policyUrl,
+    logRetentionDays: siteConfig.legals.logRetentionDays,
+    secondContact: siteConfig.legals.secondContact,
+    serverLocation: translations('serverLocation'),
 
-  // Render the content using rich text with component mappings
-  const content: JSX.Element[] = privacyKeys.map(
-    (key: string): JSX.Element => (
-      <div key={key}>
-        {translations.rich(key, {
-          // Variables for placeholder replacement
-          cloudflarePolicyUrl: siteConfig.legals.cloudflare.policyUrl,
-          cloudflareProvider: siteConfig.legals.cloudflare.address,
-          controllerAddress: siteConfig.legals.address,
-          controllerEmail: siteConfig.email,
-          controllerName: siteConfig.fullName,
-          logRetentionDays: siteConfig.legals.logRetentionDays,
-          secondContact: siteConfig.legals.secondContact,
-          serverLocation: siteConfig.legals.serverLocationCountry,
-
-          // Use shared component mappings
-          ...legalPageComponentMappings,
-        })}
-      </div>
-    )
-  )
+    // Use shared component mappings
+    ...legalPageComponentMappings,
+  }
 
   return (
     <LegalPageLayout locale={locale} title={translations('title')}>
       <div className="space-y-6">
-        {content}
+        <div>{translations.rich('controller', variables)}</div>
+        <div>{translations.rich('general', variables)}</div>
+        <div>{translations.rich('hosting', variables)}</div>
+        <div>{translations.rich('encryption', variables)}</div>
+        <div>{translations.rich('logs', variables)}</div>
+        <div>{translations.rich('cloudflare', variables)}</div>
+        <div>{translations.rich('contact', variables)}</div>
+        <div>{translations.rich('rights', variables)}</div>
+        <div>{translations.rich('cookies', variables)}</div>
+        <div>{translations.rich('noTracking', variables)}</div>
+        <div>{translations.rich('changes', variables)}</div>
         <LastUpdateNotice lastUpdate={lastUpdated} locale={locale} />
       </div>
     </LegalPageLayout>

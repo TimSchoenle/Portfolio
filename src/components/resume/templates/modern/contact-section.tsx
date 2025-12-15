@@ -34,17 +34,17 @@ export const ContactSection: FC<ContactSectionProperties> = ({
       <Text style={styles.contactLabel}>
         {translations('common.socials.github')}
       </Text>
-      <Link src={siteConfig.github} style={styles.contactItem}>
-        {siteConfig.github.replace('https://', '')}
+      <Link src={siteConfig.socials.github} style={styles.contactItem}>
+        {siteConfig.socials.github.replace('https://', '')}
       </Link>
 
-      {siteConfig.linkedin === undefined ? null : (
+      {siteConfig.socials.linkedin === undefined ? null : (
         <>
           <Text style={styles.contactLabel}>
             {translations('common.socials.linkedin')}
           </Text>
-          <Link src={siteConfig.linkedin} style={styles.contactItem}>
-            {siteConfig.linkedin.replace('https://', '')}
+          <Link src={siteConfig.socials.linkedin} style={styles.contactItem}>
+            {siteConfig.socials.linkedin.replace('https://', '')}
           </Link>
         </>
       )}
