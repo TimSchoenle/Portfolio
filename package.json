@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -79,7 +79,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "cross-env": "10.1.0",
     "dependency-cruiser": "17.3.2",
-    "eslint": "9.39.1",
+    "eslint": "9.39.2",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
@@ -95,7 +95,7 @@
     "globals": "16.5.0",
     "husky": "9.1.7",
     "jsdom": "27.3.0",
-    "knip": "5.73.3",
+    "knip": "5.73.4",
     "license-checker-rseidelsohn": "4.4.2",
     "lint-staged": "16.2.7",
     "postcss": "8.5.6",

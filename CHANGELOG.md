@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.5.0](https://github.com/TimSchoenle/Portfolio/compare/v1.4.0...v1.5.0) (2025-12-14)
+
+
+### Features
+
+* add propper linkedin data ([#218](https://github.com/TimSchoenle/Portfolio/issues/218)) ([c9d875b](https://github.com/TimSchoenle/Portfolio/commit/c9d875b8a0c63f0ed7ebb0a46aa3e997b51e4370))
+* replace personal data ([#215](https://github.com/TimSchoenle/Portfolio/issues/215)) ([d96499b](https://github.com/TimSchoenle/Portfolio/commit/d96499b64d281d1b25575c113c282b28799de41d))
+* **Resume:** update resume ([#235](https://github.com/TimSchoenle/Portfolio/issues/235)) ([4b4fa8b](https://github.com/TimSchoenle/Portfolio/commit/4b4fa8b4bf5dda7ff53ab143b00f14c3efeac403))
+* use first name in hero section instead of full name ([#219](https://github.com/TimSchoenle/Portfolio/issues/219)) ([83e58f8](https://github.com/TimSchoenle/Portfolio/commit/83e58f8e4d53c0ced4be534814bc460d904e5abc))
+
+
+### Bug Fixes
+
+* add missing legal pages requirements ([#217](https://github.com/TimSchoenle/Portfolio/issues/217)) ([abfff72](https://github.com/TimSchoenle/Portfolio/commit/abfff726e1b02bf3f88d3d487e92811f002cfde4))
+* **deps:** lock file maintenance ([#228](https://github.com/TimSchoenle/Portfolio/issues/228)) ([6b25ab3](https://github.com/TimSchoenle/Portfolio/commit/6b25ab3aad1209fc7c4a087a9455c1635b6042f3))
+* **deps:** update dependency lucide-react to v0.561.0 ([#231](https://github.com/TimSchoenle/Portfolio/issues/231)) ([cd436c1](https://github.com/TimSchoenle/Portfolio/commit/cd436c1b05ea1ed2ced8423c7cd14cd28a665979))
+* **deps:** update nextjs monorepo to v16.0.10 ([#233](https://github.com/TimSchoenle/Portfolio/issues/233)) ([d460c4e](https://github.com/TimSchoenle/Portfolio/commit/d460c4e5dbad74005bafef949c5db4cce1a78812))
+* **deps:** update nextjs monorepo to v16.0.8 ([#223](https://github.com/TimSchoenle/Portfolio/issues/223)) ([82601b2](https://github.com/TimSchoenle/Portfolio/commit/82601b2c33c42dbc5f7351be0b055f7ea92507b8))
+* **deps:** update react monorepo to v19.2.3 ([#230](https://github.com/TimSchoenle/Portfolio/issues/230)) ([6321f27](https://github.com/TimSchoenle/Portfolio/commit/6321f275e3df7b2621a5bbeb827bf6014f63b4ad))
+
 ## [1.4.0](https://github.com/timschoenle/Portfolio/compare/v1.3.1...v1.4.0) (2025-12-08)
 
 

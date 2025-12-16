@@ -125,7 +125,7 @@ jobs:
 
       - name: Check for existing node_modules cache
         id: cache-check
-        uses: actions/cache/restore@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: node_modules
           key: &cache_key node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -134,7 +134,7 @@ jobs:
       - name: Restore pnpm store cache
         if: steps.cache-check.outputs.cache-hit != 'true'
         id: store-restore
-        uses: actions/cache/restore@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: ${{ env.STORE_PATH }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -147,14 +147,14 @@ jobs:
 
       - name: Save node_modules cache
         if: steps.cache-check.outputs.cache-hit != 'true'
-        uses: actions/cache/save@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: node_modules
           key: *cache_key
 
       - name: Save pnpm store cache
         if: steps.cache-check.outputs.cache-hit != 'true' && steps.store-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: ${{ env.STORE_PATH }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -336,7 +336,7 @@ jobs:
           cache-key: *cache_key
 
       - name: Restore Next.js cache
-        uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: .next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
@@ -348,7 +348,7 @@ jobs:
 
       - name: Upload build artifact
         if: success()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: nextjs-build
           include-hidden-files: true
@@ -387,7 +387,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@a7833574556fa59680c1b7cb190c1735db73ebf0 # v5
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
@@ -405,7 +405,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: playwright-report-${{ github.run_id }}
           path: playwright-report
