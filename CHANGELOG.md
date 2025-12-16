@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/TimSchoenle/Portfolio/compare/v1.5.0...v1.6.0) (2025-12-16)
+
+
+### Features
+
+* **Projects:** add multi year contribution support ([#243](https://github.com/TimSchoenle/Portfolio/issues/243)) ([e338098](https://github.com/TimSchoenle/Portfolio/commit/e338098e75ea62cf5a7ae954a7f7e21a640b1ce0))
+
+
+### Bug Fixes
+
+* **deps:** lock file maintenance ([#238](https://github.com/TimSchoenle/Portfolio/issues/238)) ([f0e8ad3](https://github.com/TimSchoenle/Portfolio/commit/f0e8ad32c2c6fdc43133274c692bfa7a5a7338f5))
+
 ## [1.5.0](https://github.com/TimSchoenle/Portfolio/compare/v1.4.0...v1.5.0) (2025-12-14)
 
 
