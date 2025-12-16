@@ -136,9 +136,19 @@ describe('github', () => {
       })
 
       const data = await getContributionData()
-      expect(data).toHaveLength(1)
-      expect(data[0]!.count).toBe(5)
-      expect(data[0]!.level).toBe(1)
+      // We expect data for multiple years (5 default).
+      // Since our mock returns the same data for every call, we'll check one year.
+      const currentYear = new Date().getFullYear()
+      const yearData = data[currentYear]
+
+      // It might be undefined if the mock date '2023-01-01' doesn't align with the queried year?
+      // Actually fetchYearlyData logic doesn't filter by date, it just parses what's returned.
+      // So every key in the result will have this data.
+
+      expect(Object.keys(data).length).toBeGreaterThan(0)
+      expect(yearData).toHaveLength(1)
+      expect(yearData![0]!.count).toBe(5)
+      expect(yearData![0]!.level).toBe(1)
     })
 
     it('handles all contribution levels', async () => {
@@ -193,8 +203,9 @@ describe('github', () => {
       })
 
       const data = await getContributionData()
-      expect(data).toHaveLength(6)
-      expect(data.map((d) => d.level)).toEqual([0, 1, 2, 3, 4, 0])
+      const yearData = data[new Date().getFullYear()]
+      expect(yearData).toHaveLength(6)
+      expect(yearData!.map((d) => d.level)).toEqual([0, 1, 2, 3, 4, 0])
     })
 
     it('handles invalid GraphQL response', async () => {
@@ -203,7 +214,7 @@ describe('github', () => {
         json: async () => ({ invalid: 'data' }),
       })
       const data = await getContributionData()
-      expect(data).toEqual([])
+      expect(data).toEqual({})
     })
 
     it('handles GraphQL errors', async () => {
@@ -215,7 +226,7 @@ describe('github', () => {
         }),
       })
       const data = await getContributionData()
-      expect(data).toEqual([])
+      expect(data).toEqual({})
     })
 
     it('handles fetch errors', async () => {
@@ -225,7 +236,7 @@ describe('github', () => {
       })
 
       const data = await getContributionData()
-      expect(data).toEqual([])
+      expect(data).toEqual({})
     })
   })
   describe('getGithubUser', () => {

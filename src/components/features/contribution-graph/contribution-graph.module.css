@@ -4,85 +4,9 @@
 
 .cell:hover,
 .cell:focus-visible {
-  transform: scale(1.06); /* no outlines */
-  z-index: 1000;
-}
-
-/* Flip tooltip DOWN for the top rows to avoid being under labels */
-.cell[data-row='0']::after,
-.cell[data-row='1']::after {
-  top: auto;
-  bottom: -6px;
-  transform: translate(-50%, calc(100% + 4px)) scale(0.98);
-}
-.cell[data-row='0']::before,
-.cell[data-row='1']::before {
-  top: auto;
-  bottom: -2px;
-  transform: translate(-50%, 50%) rotate(225deg); /* arrow flips */
-}
-
-/* animate to final position on hover/focus */
-.cell[data-row='0']:hover::after,
-.cell[data-row='0']:focus-visible::after,
-.cell[data-row='1']:hover::after,
-.cell[data-row='1']:focus-visible::after {
-  opacity: 1;
-  transform: translate(-50%, calc(100% + 8px)) scale(1);
-}
-
-/* Two-line tooltip: line 1 = commits, line 2 = date */
-.cell::after {
-  content: attr(data-commits) '\A' attr(data-date);
-  position: absolute;
-  left: 50%;
-  top: -6px;
-  transform: translate(-50%, calc(-100% - 4px)) scale(0.98);
-  background: var(--popover);
-  color: var(--popover-foreground);
-  border: 2px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  line-height: 1.2;
-  text-align: center;
-  white-space: pre;
-  box-shadow: var(--shadow);
-  pointer-events: none;
-  opacity: 0;
-  transition:
-    opacity 150ms,
-    transform 150ms;
-  will-change: opacity, transform;
-  z-index: 50;
-}
-
-/* Arrow */
-.cell::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -2px;
-  width: 8px;
-  height: 8px;
-  background: var(--popover);
-  border-left: 2px solid var(--border);
-  border-top: 2px solid var(--border);
-  transform: translate(-50%, -50%) rotate(45deg);
-  opacity: 0;
-  transition: opacity 150ms;
-  z-index: 49;
-  pointer-events: none;
-}
-
-.cell:hover::after,
-.cell:focus-visible::after {
-  opacity: 1;
-  transform: translate(-50%, calc(-100% - 8px)) scale(1);
-}
-.cell:hover::before,
-.cell:focus-visible::before {
-  opacity: 1;
+  transform: scale(1.06);
+  /* no outlines */
+  z-index: 40;
 }
 
 /* Keep Lighthouse happy on touch */
@@ -94,9 +18,7 @@
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .cell,
-  .cell::after,
-  .cell::before {
+  .cell {
     transition: none;
   }
 }

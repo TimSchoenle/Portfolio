@@ -4,7 +4,9 @@ import { unstable_cache } from 'next/cache'
 
 import { environment } from '@/environment'
 import { siteConfig } from '@/lib/config'
+import { logger } from '@/lib/logger'
 import {
+  type ContributionCollection,
   type ContributionLevel,
   type ContributionPoint,
   contributionPointSchema,
@@ -240,58 +242,95 @@ const flattenWeeks: (
   return out
 }
 
-const getContributionDataUncached: () => Promise<
-  ContributionPoint[]
-> = async (): Promise<ContributionPoint[]> => {
-  try {
-    const toDate: string = new Date().toISOString()
-    const fromDate: string = new Date(
-      Date.now() - 365 * 24 * 60 * 60 * 1000
-    ).toISOString()
-    const query: string = buildContributionQuery()
-    const headers: Record<string, string> = buildHeaders()
+const fetchYearlyData: (year: number) => Promise<ContributionPoint[]> = async (
+  year: number
+): Promise<ContributionPoint[]> => {
+  const yearString: string = String(year)
+  const fromDate: string = `${yearString}-01-01T00:00:00Z`
+  const toDate: string = `${yearString}-12-31T23:59:59Z`
 
+  try {
     const response: Response = await fetch('https://api.github.com/graphql', {
       body: JSON.stringify({
-        query,
+        query: buildContributionQuery(),
         variables: {
           from: fromDate,
           to: toDate,
           username: siteConfig.socials.githubUsername,
         },
       }),
-      headers,
+      headers: buildHeaders(),
       method: 'POST',
     })
 
     if (!response.ok) {
-      // avoid template-literal on number (restrict-template-expressions)
-      throw new Error('GitHub API error: ' + String(response.status))
+      logger.error(
+        { status: response.status, year: yearString },
+        `GitHub API error`
+      )
+      return []
     }
 
     const json: unknown = await response.json()
-
-    // Validate & extract weeks
     if (!isGraphQLResponse(json)) {
       return []
     }
-    const hasErrors: boolean =
-      Array.isArray(json.errors) && json.errors.length > 0
-    if (hasErrors) {
-      // silently drop per no-console policy
+
+    if (Array.isArray(json.errors) && json.errors.length > 0) {
+      logger.error(
+        { errors: json.errors, year: yearString },
+        `GitHub GraphQL errors`
+      )
       return []
     }
 
-    const weeks: readonly GraphQLCalendarWeek[] =
+    return flattenWeeks(
       json.data.user?.contributionsCollection.contributionCalendar.weeks ?? []
-
-    return flattenWeeks(weeks)
-  } catch {
+    )
+  } catch (error) {
+    logger.error(
+      { err: error, year: yearString },
+      `Failed to fetch contribution data`
+    )
     return []
   }
 }
 
-export const getContributionData: () => Promise<ContributionPoint[]> =
+const getContributionDataUncached: () => Promise<ContributionCollection> =
+  async (): Promise<ContributionCollection> => {
+    const currentYear: number = new Date().getFullYear()
+    const years: number[] = Array.from(
+      { length: siteConfig.contribution.yearsToShow },
+      (_unused: unknown, index: number): number => currentYear - index
+    )
+
+    const results: { data: ContributionPoint[]; year: number }[] =
+      await Promise.all(
+        years.map(
+          async (
+            year: number
+          ): Promise<{
+            data: ContributionPoint[]
+            year: number
+          }> => {
+            const data: ContributionPoint[] = await fetchYearlyData(year)
+            return { data, year }
+          }
+        )
+      )
+
+    const collection: ContributionCollection = {}
+
+    for (const { data, year } of results) {
+      if (data.length > 0) {
+        Object.assign(collection, { [year]: data })
+      }
+    }
+
+    return collection
+  }
+
+export const getContributionData: () => Promise<ContributionCollection> =
   unstable_cache(getContributionDataUncached, ['contribution-data'], {
     revalidate: 3600,
   })
@@ -299,7 +338,7 @@ export const getContributionData: () => Promise<ContributionPoint[]> =
 /* -------------------------------- aggregate -------------------------------- */
 
 export interface GitHubData {
-  contributionData: ContributionPoint[]
+  contributionData: ContributionCollection
   projects: GitHubProject[]
   stats: UserStats
 }
@@ -309,6 +348,6 @@ export const getGithubUser: () => Promise<
 > = async (): Promise<GitHubData> => {
   const projects: GitHubProject[] = await getFeaturedProjects()
   const stats: UserStats = await getUserStats()
-  const contributionData: ContributionPoint[] = await getContributionData()
+  const contributionData: ContributionCollection = await getContributionData()
   return { contributionData, projects, stats }
 }

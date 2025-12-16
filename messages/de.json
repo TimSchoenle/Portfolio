@@ -62,9 +62,10 @@
     },
     "contributions": {
       "title": "GitHub-Beiträge",
-      "totalAmount": "{count} beiträge im letzten Jahr",
+      "totalAmount": "{count} Beiträge im Jahr {year}",
       "more": "Mehr",
-      "less": "Weniger"
+      "less": "Weniger",
+      "tooltip": "{count, plural, =0 {Keine Beiträge} one {# Beitrag} other {# Beiträge}}"
     },
     "viewAll": "Alle Projekte auf GitHub ansehen",
     "view": "Open project"

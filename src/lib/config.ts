@@ -20,6 +20,9 @@ export interface Skill {
 }
 
 export interface SiteConfig {
+  readonly contribution: {
+    readonly yearsToShow: number
+  }
   readonly description: string
   readonly email: string
   readonly featuredRepos: readonly string[]
@@ -67,6 +70,7 @@ export interface SiteConfig {
 }
 
 export const siteConfig: SiteConfig = {
+  contribution: { yearsToShow: 5 },
   description:
     'Portfolio of Tim - Software Developer specializing in Java, learning Rust and Next.js. Open-source contributor and passionate about building great software.',
   email: 'contact@tim-schoenle.de',

@@ -342,7 +342,7 @@ export const ProjectsSection: FCAsync<ProjectsSectionProperties> = async ({
   })
 
   // Contribution graph logic
-  const hasContributions: boolean = contributionData.length > 0
+  const hasContributions: boolean = Object.keys(contributionData).length > 0
 
   return (
     <Section

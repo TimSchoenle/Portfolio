@@ -8,12 +8,18 @@ vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(() => (key: string) => key),
 }))
 
+vi.mock('next-intl', () => ({
+  useTranslations: vi.fn(() => (key: string) => key),
+}))
+
 describe('ContributionGraph', () => {
   it('renders correctly with data', async () => {
-    const data: ContributionPoint[] = [
-      { date: '2023-01-01', count: 5, level: 1 },
-      { date: '2023-01-02', count: 10, level: 2 },
-    ]
+    const data = {
+      2023: [
+        { date: '2023-01-01', count: 5, level: 1 },
+        { date: '2023-01-02', count: 10, level: 2 },
+      ] as ContributionPoint[],
+    }
 
     const Component = await ContributionGraph({ data, locale: 'en-US' })
     render(Component)
@@ -23,11 +29,14 @@ describe('ContributionGraph', () => {
 
     // Check for total count (mocked translation returns key, but we can check if it was called)
     // Since the mock returns the key, we might see 'totalAmount'
+    // Check for year selector
+    expect(screen.getByRole('combobox', { name: 'Select Year' })).toBeDefined()
+
     expect(screen.getByText('totalAmount')).toBeDefined()
   })
 
   it('renders empty state correctly', async () => {
-    const Component = await ContributionGraph({ data: [], locale: 'en-US' })
+    const Component = await ContributionGraph({ data: {}, locale: 'en-US' })
     render(Component)
     expect(screen.getByText('title')).toBeDefined()
   })
