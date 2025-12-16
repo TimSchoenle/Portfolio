@@ -57,8 +57,6 @@
     "zod": "4.1.13"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "20.2.0",
-    "@commitlint/types": "latest",
     "@cyclonedx/cdxgen": "12.0.0",
     "@lingual/i18n-check": "latest",
     "@next/bundle-analyzer": "16.0.10",
