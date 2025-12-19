@@ -75,7 +75,7 @@
     "@types/react-dom": "19.2.3",
     "@types/webpack": "5.28.5",
     "@vitejs/plugin-react": "5.1.2",
-    "@vitest/coverage-v8": "4.0.15",
+    "@vitest/coverage-v8": "4.0.16",
     "babel-plugin-react-compiler": "1.0.0",
     "cross-env": "10.1.0",
     "dependency-cruiser": "17.3.4",
@@ -107,7 +107,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.50.0",
     "vite-tsconfig-paths": "6.0.1",
-    "vitest": "4.0.15"
+    "vitest": "4.0.16"
   },
   "browserslist": {
     "production": [
