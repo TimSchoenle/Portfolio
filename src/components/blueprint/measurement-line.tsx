@@ -55,6 +55,7 @@ const MeasurementLine: FCStrict<MeasurementLineProperties> = ({
 
   return (
     <div
+      aria-hidden="true"
       className={`absolute flex items-center justify-center opacity-60 ${className ?? ''} ${currentStyle.container}`}
       style={style}
     >

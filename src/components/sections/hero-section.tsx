@@ -34,7 +34,9 @@ const BlueprintStatus: FCStrict<{
   <div className="mt-16 grid w-full max-w-5xl grid-cols-1 items-center gap-6 font-mono text-xs tracking-widest text-brand/80 uppercase sm:grid-cols-[1fr_auto_1fr] sm:gap-8">
     {/* Detail Block A - Aligned to End (Right) of Left Column */}
     <div className="shadow-[0_0_10px_color-mix(in srgb, var(--brand), transparent 90%)] flex w-full flex-col gap-2 justify-self-center border-l-2 border-brand bg-brand/5 py-2 pl-4 text-left sm:max-w-[280px] sm:justify-self-end">
-      <span className="text-[10px] font-bold text-brand">{LOCATION_LABEL}</span>
+      <span aria-hidden="true" className="text-[10px] font-bold text-brand">
+        {LOCATION_LABEL}
+      </span>
       <span className="text-sm font-bold text-blueprint-text">{location}</span>
     </div>
 
@@ -45,7 +47,9 @@ const BlueprintStatus: FCStrict<{
 
     {/* Detail Block B - Aligned to Start (Left) of Right Column */}
     <div className="shadow-[0_0_10px_color-mix(in srgb, var(--brand), transparent 90%)] flex w-full flex-col gap-2 justify-self-center border-r-2 border-brand bg-brand/5 py-2 pr-4 text-right sm:max-w-[280px] sm:justify-self-start">
-      <span className="text-[10px] font-bold text-brand">{MISSION_LABEL}</span>
+      <span aria-hidden="true" className="text-[10px] font-bold text-brand">
+        {MISSION_LABEL}
+      </span>
       <span className="flex items-center justify-end gap-3 text-sm font-bold text-blueprint-text">
         {tagline}
       </span>
@@ -121,7 +125,10 @@ export const HeroSection: AsyncPageFC<HeroSectionProperties> = async ({
     >
       <div className="relative z-10 container flex min-h-[60vh] flex-col items-center justify-center">
         {/* Floating tech markings */}
-        <div className="writing-vertical-rl absolute top-20 left-20 font-mono text-[10px] text-brand/40 select-none">
+        <div
+          aria-hidden="true"
+          className="writing-vertical-rl absolute top-20 left-20 font-mono text-[10px] text-brand/40 select-none"
+        >
           {GRID_REF}
         </div>
 
