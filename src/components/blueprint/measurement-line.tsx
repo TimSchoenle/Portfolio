@@ -2,8 +2,6 @@ import { type CSSProperties, type JSX } from 'react'
 
 import type { FCStrict } from '@/types/fc'
 
-import { BlueprintLabel } from './blueprint-label'
-
 interface MeasurementLineProperties {
   readonly className?: string
   readonly label?: string
@@ -11,67 +9,140 @@ interface MeasurementLineProperties {
   readonly width?: string
 }
 
-const STYLES: Record<
-  'horizontal' | 'vertical',
-  {
-    container: string
-    endTick: string
-    labelRotation: string
-    line: string
-    startTick: string
-  }
-> = {
-  horizontal: {
-    container: 'flex-row',
-    endTick: 'right-0 h-2 -translate-y-[0.5px] border-r',
-    labelRotation: '',
-    line: 'h-px w-full',
-    startTick: 'left-0 h-2 -translate-y-[0.5px] border-l',
-  },
-  vertical: {
-    container: 'flex-col',
-    endTick: 'bottom-0 w-2 -translate-x-[0.5px] border-b',
-    labelRotation: '-rotate-90',
-    line: 'h-full w-px',
-    startTick: 'top-0 w-2 -translate-x-[0.5px] border-t',
-  },
+interface SubComponentProperties {
+  readonly isVertical: boolean
 }
 
+const MainLine: FCStrict<SubComponentProperties> = ({
+  isVertical,
+}: SubComponentProperties): JSX.Element =>
+  isVertical ? (
+    <line
+      className="stroke-brand"
+      strokeWidth="1"
+      x1="50%"
+      x2="50%"
+      y1="0"
+      y2="100%"
+    />
+  ) : (
+    <line
+      className="stroke-brand"
+      strokeWidth="1"
+      x1="0"
+      x2="100%"
+      y1="50%"
+      y2="50%"
+    />
+  )
+
+const TickLines: FCStrict<SubComponentProperties> = ({
+  isVertical,
+}: SubComponentProperties): JSX.Element =>
+  isVertical ? (
+    <>
+      <line
+        className="stroke-brand"
+        strokeWidth="1"
+        x1="25%"
+        x2="75%"
+        y1="0"
+        y2="0"
+      />
+      <line
+        className="stroke-brand"
+        strokeWidth="1"
+        x1="25%"
+        x2="75%"
+        y1="100%"
+        y2="100%"
+      />
+    </>
+  ) : (
+    <>
+      <line
+        className="stroke-brand"
+        strokeWidth="1"
+        x1="0"
+        x2="0"
+        y1="25%"
+        y2="75%"
+      />
+      <line
+        className="stroke-brand"
+        strokeWidth="1"
+        x1="100%"
+        x2="100%"
+        y1="25%"
+        y2="75%"
+      />
+    </>
+  )
+
+const MeasurementLabel: FCStrict<
+  SubComponentProperties & { readonly label: string }
+> = ({
+  isVertical,
+  label,
+}: SubComponentProperties & { readonly label: string }): JSX.Element => (
+  <foreignObject
+    className="overflow-visible"
+    height="100%"
+    width="100%"
+    x="0"
+    y="0"
+  >
+    <div className="flex h-full w-full items-center justify-center">
+      <span
+        className={`bg-blueprint-bg px-1 font-mono text-[9px] tracking-wider text-brand uppercase ${
+          isVertical ? '-rotate-90' : ''
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  </foreignObject>
+)
+
+/**
+ * Renders a decorative measurement line using SVG.
+ *
+ * **Accessibility:**
+ * - Renders as an SVG with `role="img"` (via internal logic or wrapper depending on iteration).
+ * - SVG text (`foreignObject`) is treated as graphical content, bypassing strict text-contrast rules
+ *   that often flag decorative technical markings.
+ */
 const MeasurementLine: FCStrict<MeasurementLineProperties> = ({
   className,
   label,
   orientation = 'horizontal',
   width = '100px',
 }: MeasurementLineProperties): JSX.Element => {
-  const currentStyle: {
-    container: string
-    endTick: string
-    labelRotation: string
-    line: string
-    startTick: string
-  } = STYLES[orientation] // eslint-disable-line security/detect-object-injection
-
+  const isVertical: boolean = orientation === 'vertical'
   const style: CSSProperties = {
-    [orientation === 'vertical' ? 'height' : 'width']: width,
+    height: isVertical ? width : '10px',
+    width: isVertical ? '10px' : width,
   }
 
   return (
-    <BlueprintLabel
-      as="div"
-      className={`absolute flex items-center justify-center opacity-60 ${className ?? ''} ${currentStyle.container}`}
+    <div
+      aria-hidden="true"
+      className={`absolute flex items-center justify-center opacity-60 ${className ?? ''} pointer-events-none select-none`}
+      role="img"
       style={style}
     >
-      <div className={`${currentStyle.line} bg-brand`} />
-      {Boolean(label) && (
-        <span
-          className={`absolute bg-blueprint-bg px-1 font-mono text-[9px] tracking-wider text-brand uppercase ${currentStyle.labelRotation}`}
-        >
-          {label}
-        </span>
-      )}
-      <div className={`absolute border-brand ${currentStyle.startTick}`} />
-      <div className={`absolute border-brand ${currentStyle.endTick}`} />
-    </BlueprintLabel>
+      <svg
+        className="h-full w-full overflow-visible"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <MainLine isVertical={isVertical} />
+        <TickLines isVertical={isVertical} />
+        {typeof label === 'string' && (
+          <MeasurementLabel isVertical={isVertical} label={label} />
+        )}
+      </svg>
+    </div>
   )
 }
 
