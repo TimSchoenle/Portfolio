@@ -101,20 +101,12 @@ export const ContributionGraphClient: FCStrict<
   variant = 'default',
 }: ContributionGraphClientProperties): JSX.Element => {
   // eslint-disable-next-line @typescript-eslint/typedef
-  const {
-    calendar,
-    currentYearData,
-    labels,
-    selectedYear,
-    setSelectedYear,
-    total,
-    years,
-  } = useContributionGraphData({ data, locale })
+  const { calendar, labels, selectedYear, setSelectedYear, total, years } =
+    useContributionGraphData({ data, locale })
 
   return (
     <ContributionGraphView
       calendar={calendar}
-      currentYearData={currentYearData}
       labels={labels}
       locale={locale}
       selectedYear={selectedYear}

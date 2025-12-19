@@ -8,8 +8,7 @@ import { BlueprintCard } from '@/components/blueprint/blueprint-card'
 import { BlueprintContainer } from '@/components/blueprint/blueprint-container'
 import { BlueprintSectionDivider } from '@/components/blueprint/blueprint-section-divider'
 import { BlueprintSectionTitle } from '@/components/blueprint/blueprint-section-title'
-import { LazyLoad } from '@/components/common/lazy-load'
-import type * as ContributionGraphModule from '@/components/features/contribution-graph/contribution-graph'
+import type * as ContributionGraphModule from '@/components/features/contribution-graph/contribution-graph-client'
 import { Card } from '@/components/ui/card'
 import { siteConfig } from '@/lib/config'
 import { getGithubUser, type GitHubData } from '@/lib/github/client'
@@ -33,16 +32,16 @@ interface ProjectCardProperties {
   readonly viewProject: string
 }
 
-const ContributionGraph: ComponentType<ContributionGraphModule.ContributionGraphProperties> =
+const ContributionGraph: ComponentType<ContributionGraphModule.ContributionGraphClientProperties> =
   dynamic(
     async (): Promise<
-      FCStrict<ContributionGraphModule.ContributionGraphProperties>
+      FCStrict<ContributionGraphModule.ContributionGraphClientProperties>
     > =>
-      import('@/components/features/contribution-graph/contribution-graph').then(
+      import('@/components/features/contribution-graph/contribution-graph-client').then(
         (
           module_: typeof ContributionGraphModule
-        ): FCStrict<ContributionGraphModule.ContributionGraphProperties> =>
-          module_.ContributionGraph
+        ): FCStrict<ContributionGraphModule.ContributionGraphClientProperties> =>
+          module_.ContributionGraphClient
       ),
     {
       loading: (): JSX.Element => (
@@ -251,25 +250,12 @@ export const ProjectsSection: AsyncPageFC<ProjectsSectionProperties> = async ({
 
         {/* Contribution Graph - Scaled to fit container without scroll */}
         <div className="mt-16 w-full rounded-lg border border-brand/30 bg-blueprint-card-bg/90 p-2 shadow-sm backdrop-blur-md md:p-6">
-          <div className="w-full overflow-hidden">
-            {/* 
-              Scale container to fit 1100px content width into smaller viewports:
-              - Mobile (<640px): 0.32x scale (fits ~350px)
-              - Default/XS: 0.38x scale
-              - SM (640px+): 0.55x scale (fits ~600px)
-              - MD (768px+): 0.65x scale (fits ~715px)
-              - LG (1024px+): 0.8x scale (fits ~880px)
-              - XL (1280px+): Full scale
-             */}
-            <div className="xs:scale-[0.38] mx-auto w-[1100px] origin-top-left scale-[0.32] sm:scale-[0.55] md:scale-[0.65] lg:scale-[0.8] xl:scale-100">
-              <LazyLoad className="min-h-[200px] w-full">
-                <ContributionGraph
-                  data={contributionData}
-                  locale={locale}
-                  variant="blueprint"
-                />
-              </LazyLoad>
-            </div>
+          <div className="w-full">
+            <ContributionGraph
+              data={contributionData}
+              locale={locale}
+              variant="blueprint"
+            />
           </div>
         </div>
 

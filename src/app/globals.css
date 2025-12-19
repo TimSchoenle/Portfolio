@@ -64,6 +64,13 @@
   --color-blueprint-text: var(--blueprint-text);
   --color-blueprint-muted: var(--blueprint-muted);
 
+  /* Contribution Graph Levels */
+  --color-level-0: rgba(255, 255, 255, 0.05);
+  --color-level-1: rgba(96, 165, 250, 0.2);
+  --color-level-2: rgba(96, 165, 250, 0.4);
+  --color-level-3: rgba(96, 165, 250, 0.6);
+  --color-level-4: rgba(96, 165, 250, 0.8);
+
   --color-pattern-grid: var(--pattern-grid);
 
   /* computed shadow variables */

@@ -6,11 +6,7 @@ import {
   type useTranslations,
 } from 'next-intl'
 
-import {
-  LegendBar,
-  MonthLabelsRow,
-  WeeksGrid,
-} from '@/components/features/contribution-graph/contribution-graph-components'
+import { ContributionGraphSvg } from '@/components/features/contribution-graph/contribution-graph-svg'
 import { Heading } from '@/components/ui/heading'
 import type {
   CalendarModel,
@@ -18,7 +14,31 @@ import type {
 } from '@/lib/github/contribution-calendar'
 import type { FCStrict } from '@/types/fc'
 
-import { InteractiveArea } from './interactive-area'
+interface LegendBarProperties {
+  readonly less: string
+  readonly more: string
+}
+
+const LegendBar: FCStrict<LegendBarProperties> = ({
+  less,
+  more,
+}: LegendBarProperties): JSX.Element => (
+  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <span>{less}</span>
+    <div aria-hidden="true" className="flex gap-1">
+      {[0, 1, 2, 3, 4].map(
+        (level: number): JSX.Element => (
+          <div
+            className="h-4 w-4 rounded-[2px]"
+            key={level}
+            style={{ backgroundColor: `var(--color-level-${String(level)})` }}
+          />
+        )
+      )}
+    </div>
+    <span>{more}</span>
+  </div>
+)
 
 interface HeaderSectionProperties {
   readonly onYearChange: (year: number) => void
@@ -84,30 +104,34 @@ export const HeaderSection: FCStrict<HeaderSectionProperties> = ({
 }
 
 interface GraphSectionProperties {
-  readonly calendar: CalendarModel
-  readonly labels: DayLabelTripleResult
+  readonly dayFive: DayLabelTripleResult['dayFive']
+  readonly dayOne: DayLabelTripleResult['dayOne']
+  readonly dayThree: DayLabelTripleResult['dayThree']
   readonly locale: Locale
+  readonly variant?: 'blueprint' | 'default'
+  readonly weeks: CalendarModel['weeks']
 }
 
 export const GraphSection: FCStrict<GraphSectionProperties> = ({
-  calendar,
-  labels,
+  dayFive,
+  dayOne,
+  dayThree,
   locale,
+  variant = 'default',
+  weeks,
 }: GraphSectionProperties): JSX.Element => {
+  // We removed overflow-x-auto because SVG scales fit-to-width
   return (
-    <div className="relative w-full overflow-x-auto pb-2">
-      <div className="inline-block min-w-full">
-        <MonthLabelsRow labels={calendar.monthLabels} />
-        <InteractiveArea>
-          <WeeksGrid
-            dayFive={labels.dayFive}
-            dayOne={labels.dayOne}
-            dayThree={labels.dayThree}
-            locale={locale}
-            weeks={calendar.weeks}
-          />
-        </InteractiveArea>
-      </div>
+    <div
+      className={`mt-4 w-full ${variant === 'blueprint' ? 'overflow-hidden' : ''}`}
+    >
+      <ContributionGraphSvg
+        dayFive={dayFive}
+        dayOne={dayOne}
+        dayThree={dayThree}
+        locale={locale}
+        weeks={weeks}
+      />
     </div>
   )
 }

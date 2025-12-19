@@ -2,14 +2,11 @@ import { type JSX } from 'react'
 
 import { type Locale, useTranslations } from 'next-intl'
 
-import { ContributionHoverProvider } from '@/components/features/contribution-graph/contribution-hover-context'
-import { ContributionTooltip } from '@/components/features/contribution-graph/contribution-tooltip'
 import { Card } from '@/components/ui/card'
 import type {
   CalendarModel,
   DayLabelTripleResult,
 } from '@/lib/github/contribution-calendar'
-import type { ContributionPoint } from '@/models/github'
 import type { FCStrict } from '@/types/fc'
 
 import {
@@ -19,7 +16,6 @@ import {
 
 interface ContributionGraphViewProperties {
   readonly calendar: CalendarModel
-  readonly currentYearData: ContributionPoint[]
   readonly labels: DayLabelTripleResult
   readonly locale: Locale
   readonly onYearChange: (year: number) => void
@@ -33,7 +29,6 @@ export const ContributionGraphView: FCStrict<
   ContributionGraphViewProperties
 > = ({
   calendar,
-  currentYearData,
   labels,
   locale,
   onYearChange,
@@ -54,18 +49,22 @@ export const ContributionGraphView: FCStrict<
 
   return (
     <Wrapper className={wrapperClassName}>
-      <ContributionHoverProvider>
-        <HeaderSection
-          selectedYear={selectedYear}
-          total={total}
-          translate={translate}
-          variant={variant}
-          years={years}
-          onYearChange={onYearChange}
-        />
-        <GraphSection calendar={calendar} labels={labels} locale={locale} />
-        <ContributionTooltip data={currentYearData} locale={locale} />
-      </ContributionHoverProvider>
+      <HeaderSection
+        selectedYear={selectedYear}
+        total={total}
+        translate={translate}
+        variant={variant}
+        years={years}
+        onYearChange={onYearChange}
+      />
+      <GraphSection
+        dayFive={labels.dayFive}
+        dayOne={labels.dayOne}
+        dayThree={labels.dayThree}
+        locale={locale}
+        variant={variant}
+        weeks={calendar.weeks}
+      />
     </Wrapper>
   )
 }

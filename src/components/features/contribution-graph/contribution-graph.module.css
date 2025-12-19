@@ -1,24 +1,103 @@
-.cell {
-  position: relative;
+.graphWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
-.cell:hover,
-.cell:focus-visible {
-  transform: scale(1.06);
-  /* no outlines */
-  z-index: 40;
+.graphContainer {
+  margin-inline: auto;
+  overflow-x: auto;
+  /* Allow scrolling */
+  width: 100%;
 }
 
-/* Keep Lighthouse happy on touch */
-@media (pointer: coarse) {
-  .cell {
-    pointer-events: none;
-  }
+.graphContainer svg {
+  min-width: 700px;
+  /* Force minimum width to keep cells readable */
+  display: block;
+  /* Remove inline spacing */
 }
 
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .cell {
-    transition: none;
-  }
+.rect {
+  outline: none;
+  stroke: transparent;
+  stroke-width: 2px;
+  transition: all 0.1s ease;
+}
+
+.rect:hover {
+  stroke: rgba(255, 255, 255, 0.6);
+  z-index: 10;
+}
+
+.level0 {
+  fill: var(--color-level-0);
+}
+
+.level1 {
+  fill: var(--color-level-1);
+}
+
+.level2 {
+  fill: var(--color-level-2);
+}
+
+.level3 {
+  fill: var(--color-level-3);
+}
+
+.level4 {
+  fill: var(--color-level-4);
+}
+
+/* Tooltip Styles */
+.tooltipContainer {
+  background-color: var(--color-blueprint-card-bg);
+  /* Use theme card bg */
+  border: 1px solid var(--border);
+  /* Subtle border */
+  border-radius: 6px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* shadow-md */
+  padding: 8px 12px;
+  pointer-events: none;
+  transition:
+    transform 0.1s ease-out,
+    top 0.1s ease-out,
+    left 0.1s ease-out;
+  white-space: nowrap;
+}
+
+.tooltipContent {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tooltipCount {
+  color: var(--foreground);
+  font-size: 0.8rem;
+  font-weight: 600;
+  /* Bold count */
+}
+
+.tooltipDate {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  /* Smaller date */
+}
+
+.tooltipArrow {
+  background-color: var(--color-blueprint-card-bg);
+  /* Match background */
+  border-bottom: 1px solid var(--border);
+  /* Match border */
+  border-right: 1px solid var(--border);
+  height: 8px;
+  width: 8px;
+  z-index: -1;
+  /* Behind container content but part of shape */
 }
