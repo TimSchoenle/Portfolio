@@ -8,6 +8,7 @@ import { BlueprintCard } from '@/components/blueprint/blueprint-card'
 import { BlueprintContainer } from '@/components/blueprint/blueprint-container'
 import { BlueprintSectionDivider } from '@/components/blueprint/blueprint-section-divider'
 import { BlueprintSectionTitle } from '@/components/blueprint/blueprint-section-title'
+import { LazyLoad } from '@/components/common/lazy-load'
 import type * as ContributionGraphModule from '@/components/features/contribution-graph/contribution-graph'
 import { Card } from '@/components/ui/card'
 import { siteConfig } from '@/lib/config'
@@ -261,11 +262,13 @@ export const ProjectsSection: AsyncPageFC<ProjectsSectionProperties> = async ({
               - XL (1280px+): Full scale
              */}
             <div className="xs:scale-[0.38] mx-auto w-[1100px] origin-top-left scale-[0.32] sm:scale-[0.55] md:scale-[0.65] lg:scale-[0.8] xl:scale-100">
-              <ContributionGraph
-                data={contributionData}
-                locale={locale}
-                variant="blueprint"
-              />
+              <LazyLoad className="min-h-[200px] w-full">
+                <ContributionGraph
+                  data={contributionData}
+                  locale={locale}
+                  variant="blueprint"
+                />
+              </LazyLoad>
             </div>
           </div>
         </div>

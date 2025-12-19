@@ -7,6 +7,7 @@ import { BlueprintCard } from '@/components/blueprint/blueprint-card'
 import { BlueprintContainer } from '@/components/blueprint/blueprint-container'
 import { BlueprintSectionDivider } from '@/components/blueprint/blueprint-section-divider'
 import { BlueprintSectionTitle } from '@/components/blueprint/blueprint-section-title'
+import { LazyLoad } from '@/components/common/lazy-load'
 import { getSkillIcon } from '@/components/sections/skill-icons'
 import { TechRadar } from '@/components/sections/tech-radar/tech-radar'
 import { siteConfig, type Skill, SKILL_RENDER_AREAS } from '@/lib/config'
@@ -93,13 +94,15 @@ const TechRadarContainer: FCStrict<{
   >
     {/* Tech Radar (Hidden on small mobile if needed, but keeping logic similar) */}
     <div className="h-full w-full">
-      <TechRadar
-        buildTools={buildTools}
-        frameworks={frameworks}
-        infrastructure={infrastructure}
-        languages={languages}
-        locale={locale}
-      />
+      <LazyLoad className="h-full w-full">
+        <TechRadar
+          buildTools={buildTools}
+          frameworks={frameworks}
+          infrastructure={infrastructure}
+          languages={languages}
+          locale={locale}
+        />
+      </LazyLoad>
     </div>
   </BlueprintCard>
 )
