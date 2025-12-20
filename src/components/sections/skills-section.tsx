@@ -1,4 +1,4 @@
-import { type JSX } from 'react'
+import { type JSX, Suspense } from 'react'
 
 import { type LucideIcon } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
@@ -92,13 +92,21 @@ const TechRadarContainer: FCStrict<{
     {/* Tech Radar (Hidden on small mobile if needed, but keeping logic similar) */}
     <div className="h-full w-full">
       <LazyLoad className="h-full w-full">
-        <TechRadar
-          buildTools={buildTools}
-          frameworks={frameworks}
-          infrastructure={infrastructure}
-          languages={languages}
-          locale={locale}
-        />
+        <Suspense
+          fallback={
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="h-32 w-32 animate-pulse rounded-full bg-brand/10" />
+            </div>
+          }
+        >
+          <TechRadar
+            buildTools={buildTools}
+            frameworks={frameworks}
+            infrastructure={infrastructure}
+            languages={languages}
+            locale={locale}
+          />
+        </Suspense>
       </LazyLoad>
     </div>
   </BlueprintCard>
