@@ -1,7 +1,7 @@
 schemaVersion: 2.0.0
 
 metadataTest:
-  entrypoint: ['/usr/bin/node']
+  entrypoint: ['node']
   cmd: ['server.js']
   workdir: '/app'
   exposedPorts: ['3000']
@@ -24,7 +24,7 @@ fileExistenceTests:
     path: /app/.next/static
     shouldExist: true
   - name: node binary present
-    path: /usr/bin/node
+    path: node
     shouldExist: true
   - name: /bin/sh absent
     path: /bin/sh
@@ -53,37 +53,37 @@ fileExistenceTests:
 
 commandTests:
   - name: uid is non-root
-    command: '/usr/bin/node'
+    command: 'node'
     args: ['-p', 'process.getuid()']
     exitCode: 0
     expectedOutput: ['1000']
 
   - name: gid is non-root
-    command: '/usr/bin/node'
+    command: 'node'
     args: ['-p', 'process.getgid()']
     exitCode: 0
     expectedOutput: ['1000']
 
   - name: NODE_ENV is production
-    command: '/usr/bin/node'
+    command: 'node'
     args: ['-p', 'process.env.NODE_ENV']
     exitCode: 0
     expectedOutput: ['production']
 
   - name: telemetry disabled
-    command: '/usr/bin/node'
+    command: 'node'
     args: ['-p', 'process.env.NEXT_TELEMETRY_DISABLED']
     exitCode: 0
     expectedOutput: ['1']
 
   - name: rootfs not writable by app user
-    command: '/usr/bin/node'
+    command: 'node'
     args:
       ['-e', "require('fs').writeFile('/.cst_wr','x',e=>process.exit(e?0:1))"]
     exitCode: 0
 
   - name: CAP_SYS_ADMIN absent
-    command: '/usr/bin/node'
+    command: 'node'
     args:
       - '-e'
       - |
@@ -96,7 +96,7 @@ commandTests:
     exitCode: 0
 
   - name: server.js readable
-    command: '/usr/bin/node'
+    command: 'node'
     args:
       [
         '-e',
