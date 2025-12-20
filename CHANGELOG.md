@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.0](https://github.com/TimSchoenle/Portfolio/compare/v1.6.0...v1.7.0) (2025-12-20)
+
+
+### Features
+
+* redesign in blueprint style theme ([#252](https://github.com/TimSchoenle/Portfolio/issues/252)) ([235f92a](https://github.com/TimSchoenle/Portfolio/commit/235f92aa6fdfe4e2189d6a66a976c7e097c520f1))
+* use hardened docker images ([#260](https://github.com/TimSchoenle/Portfolio/issues/260)) ([116ea0f](https://github.com/TimSchoenle/Portfolio/commit/116ea0f05a3fe88ce2f98fad8233504c27b402e8))
+
+
+### Bug Fixes
+
+* **deps:** lock file maintenance ([#261](https://github.com/TimSchoenle/Portfolio/issues/261)) ([613451c](https://github.com/TimSchoenle/Portfolio/commit/613451c113a2f7123ee2fd86779cd9dae4af7f37))
+* **deps:** update dependency zod to v4.2.1 ([#248](https://github.com/TimSchoenle/Portfolio/issues/248)) ([8567f77](https://github.com/TimSchoenle/Portfolio/commit/8567f77d03f22e42f8a491e3f7dfaf7a101edc50))
+
 ## [1.6.0](https://github.com/TimSchoenle/Portfolio/compare/v1.5.0...v1.6.0) (2025-12-16)
 
 
