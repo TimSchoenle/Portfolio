@@ -100,3 +100,82 @@ commandTests:
         "require('fs').access('/app/server.js',require('fs').constants.R_OK,e=>process.exit(e?1:0))",
       ]
     exitCode: 0
+
+  # File Permission Tests
+  - name: server.js is executable
+    command: 'node'
+    args:
+      [
+        '-e',
+        "require('fs').access('/app/server.js',require('fs').constants.X_OK,e=>process.exit(e?1:0))",
+      ]
+    exitCode: 0
+
+  - name: server.js has correct permissions (500)
+    command: 'node'
+    args:
+      - '-e'
+      - |
+        const fs=require('fs');
+        const stat=fs.statSync('/app/server.js');
+        const mode=(stat.mode&parseInt('777',8)).toString(8);
+        process.exit(mode==='500'?0:1);
+    exitCode: 0
+
+  - name: public directory has correct permissions (555)
+    command: 'node'
+    args:
+      - '-e'
+      - |
+        const fs=require('fs');
+        const stat=fs.statSync('/app/public');
+        const mode=(stat.mode&parseInt('777',8)).toString(8);
+        process.exit(mode==='555'?0:1);
+    exitCode: 0
+
+  - name: public directory is not writable
+    command: 'node'
+    args:
+      [
+        '-e',
+        "require('fs').access('/app/public',require('fs').constants.W_OK,e=>process.exit(e?0:1))",
+      ]
+    exitCode: 0
+
+  - name: .next directory is writable for ISR
+    command: 'node'
+    args:
+      [
+        '-e',
+        "require('fs').access('/app/.next',require('fs').constants.W_OK,e=>process.exit(e?1:0))",
+      ]
+    exitCode: 0
+
+  - name: app files owned by node user (uid 1000)
+    command: 'node'
+    args:
+      - '-e'
+      - |
+        const fs=require('fs');
+        const stat=fs.statSync('/app/server.js');
+        process.exit(stat.uid===1000?0:1);
+    exitCode: 0
+
+  - name: app files owned by node group (gid 1000)
+    command: 'node'
+    args:
+      - '-e'
+      - |
+        const fs=require('fs');
+        const stat=fs.statSync('/app/server.js');
+        process.exit(stat.gid===1000?0:1);
+    exitCode: 0
+
+  - name: .next/static directory exists and is readable
+    command: 'node'
+    args:
+      [
+        '-e',
+        "require('fs').access('/app/.next/static',require('fs').constants.R_OK,e=>process.exit(e?1:0))",
+      ]
+    exitCode: 0

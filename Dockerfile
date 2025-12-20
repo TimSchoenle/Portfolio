@@ -36,9 +36,13 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000
 
-COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node --chmod=555 /app/public ./public
+# Those directories need to be readble for ISR to work
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+
+# server.js executable only
+COPY --from=builder --chown=node:node --chmod=500 /app/.next/standalone/server.js ./server.js
 
 EXPOSE 3000
 
