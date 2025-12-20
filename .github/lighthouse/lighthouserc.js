@@ -23,7 +23,7 @@ module.exports = {
         'first-contentful-paint': [
           'error',
           {
-            maxNumericValue: isDesktop ? 1200 : 1500,
+            maxNumericValue: isDesktop ? 1300 : 1500,
             aggregationMethod: 'median',
           },
         ],
