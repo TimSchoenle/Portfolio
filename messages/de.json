@@ -110,6 +110,7 @@
       "title": "Signatur überprüfen",
       "description": "Der Lebenslauf ist digital signiert. Überprüfen Sie die Integrität mit dem SHA-256 Fingerprint unten.",
       "fingerprintLabel": "SHA-256 Fingerprint",
+      "copyFingerprint": "Fingerabdruck kopieren",
       "downloadCertificate": "Zertifikat herunterladen",
       "selfSignedWarning": "Hinweis: Dies ist ein selbstsigniertes Zertifikat. Adobe Reader zeigt möglicherweise eine Warnung an, bis Sie diesem Zertifikat manuell vertrauen."
     }
