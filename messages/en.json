@@ -14,6 +14,7 @@
     "jobTitle": "Senior Software Developer"
   },
   "common": {
+    "languageName": "English",
     "backToHome": "Back to Home",
     "lastUpdated": "Last updated: {date}",
     "socials": {
@@ -102,7 +103,16 @@
     "location": "Location",
     "linkedin": "LinkedIn",
     "downloadResume": "View Resume",
-    "pdfVersion": "{language} version"
+    "pdfVersion": "{language} version",
+    "sourceControl": "Source Control",
+    "professionalNetwork": "Professional Network",
+    "verification": {
+      "title": "Verify Signature",
+      "description": "The resume is digitally signed. Verify the integrity using the SHA-256 fingerprint below.",
+      "fingerprintLabel": "SHA-256 Fingerprint",
+      "downloadCertificate": "Download Certificate",
+      "selfSignedWarning": "Note: This is a self-signed certificate. Adobe Reader may show a warning unless you manually trust this certificate."
+    }
   },
   "resume": {
     "sectionTitles": {
