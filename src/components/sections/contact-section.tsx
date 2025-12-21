@@ -1,13 +1,16 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable sonarjs/deprecation */
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+
 import { type JSX } from 'react'
 
-import { Eye, Github, Linkedin, Mail } from 'lucide-react'
+// eslint-disable-next-line sonarjs/deprecation
+import { Eye, Github, Linkedin, Mail, ShieldCheck } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { BlueprintCard } from '@/components/blueprint/blueprint-card'
 import { BlueprintContainer } from '@/components/blueprint/blueprint-container'
 import { BlueprintSectionTitle } from '@/components/blueprint/blueprint-section-title'
+import { ResumeVerificationDialog } from '@/components/resume/resume-verification-dialog'
 import { siteConfig } from '@/lib/config'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { LocalePageProperties, Translations } from '@/types/i18n'
@@ -57,55 +60,129 @@ const ContactItem: FCStrict<ContactItemProperties> = ({
   </a>
 )
 
-interface ContactColumnsProperties {
+/* ── sub-components: cards ─────────────────────────────────────────────── */
+
+interface CardProperties {
+  readonly fingerprint?: string | undefined
+  readonly languageName: string
   readonly locale: string
   readonly translations: Translations<'contact'>
 }
 
-const ContactColumns: FCStrict<ContactColumnsProperties> = ({
+const DirectUplinkCard: FCStrict<CardProperties> = ({
+  fingerprint,
+  languageName,
   locale,
   translations,
-}: ContactColumnsProperties): JSX.Element => (
-  <div className="mt-12 grid w-full grid-cols-1 gap-8 md:grid-cols-2">
-    {/* Direct Comms Column */}
-    <BlueprintCard label="DIRECT_UPLINK" noPadding={true}>
-      <div className="flex flex-col gap-4 p-6">
-        <ContactItem
-          href={`mailto:${siteConfig.email}`}
-          icon={<Mail className="h-5 w-5" />}
-          label={translations('email')}
-          subLabel={siteConfig.email}
-        />
+}: CardProperties): JSX.Element => (
+  <BlueprintCard label="DIRECT_UPLINK" noPadding={true}>
+    <div className="flex flex-col gap-4 p-6">
+      <ContactItem
+        href={`mailto:${siteConfig.email}`}
+        icon={<Mail className="h-5 w-5" />}
+        label={translations('email')}
+        subLabel={siteConfig.email}
+      />
+      <div className="relative">
         <ContactItem
           href={`/resume/${locale}.pdf`}
           icon={<Eye className="h-5 w-5" />}
           label={translations('downloadResume')}
           subLabel={translations('pdfVersion', {
-            language: locale === 'en' ? 'ENGLISH' : 'GERMAN',
+            language: languageName.toUpperCase(),
           })}
         />
-      </div>
-    </BlueprintCard>
-
-    {/* Network Column */}
-    <BlueprintCard label="NETWORK_NODES" noPadding={true}>
-      <div className="flex flex-col gap-4 p-6">
-        <ContactItem
-          href={siteConfig.socials.github}
-          icon={<Github className="h-5 w-5" />}
-          label={translations('github')}
-          subLabel="SOURCE_CONTROL"
-        />
-        {Boolean(siteConfig.socials.linkedin) && (
-          <ContactItem
-            href={siteConfig.socials.linkedin ?? ''}
-            icon={<Linkedin className="h-5 w-5" />}
-            label={translations('linkedin')}
-            subLabel="PROFESSIONAL_NET"
-          />
+        {Boolean(fingerprint) && (
+          <ResumeVerificationDialog fingerprint={fingerprint ?? ''}>
+            <button
+              className="absolute top-2 right-2 p-2 text-blueprint-muted transition-colors hover:text-brand"
+              title={translations('verification.title')}
+              type="button"
+            >
+              <ShieldCheck className="h-5 w-5" />
+              <span className="sr-only">
+                {translations('verification.title')}
+              </span>
+            </button>
+          </ResumeVerificationDialog>
         )}
       </div>
-    </BlueprintCard>
+    </div>
+  </BlueprintCard>
+)
+
+const NetworkNodesCard: FCStrict<CardProperties> = ({
+  translations,
+}: CardProperties): JSX.Element => (
+  <BlueprintCard label="NETWORK_NODES" noPadding={true}>
+    <div className="flex flex-col gap-4 p-6">
+      <ContactItem
+        href={siteConfig.socials.github}
+        // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation
+        icon={<Github className="h-5 w-5" />}
+        label={translations('github')}
+        subLabel={translations('sourceControl')}
+      />
+      {Boolean(siteConfig.socials.linkedin) && (
+        <ContactItem
+          href={siteConfig.socials.linkedin ?? ''}
+          // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation
+          icon={<Linkedin className="h-5 w-5" />}
+          label={translations('linkedin')}
+          subLabel={translations('professionalNetwork')}
+        />
+      )}
+    </div>
+  </BlueprintCard>
+)
+
+const ContactColumns: FCStrict<CardProperties> = ({
+  fingerprint,
+  languageName,
+  locale,
+  translations,
+}: CardProperties): JSX.Element => (
+  <div className="mt-12 grid w-full grid-cols-1 gap-8 md:grid-cols-2">
+    <DirectUplinkCard
+      fingerprint={fingerprint}
+      languageName={languageName}
+      locale={locale}
+      translations={translations}
+    />
+    <NetworkNodesCard
+      languageName={languageName}
+      locale={locale}
+      translations={translations}
+    />
+  </div>
+)
+
+const TransmissionEnd: FCStrict = (): JSX.Element => (
+  <div className="mt-16 text-center opacity-60 select-none">
+    <svg
+      aria-hidden="true"
+      className="inline-block h-10 w-64 overflow-visible"
+      role="img"
+    >
+      <rect
+        className="fill-blueprint-bg stroke-brand/30"
+        height="100%"
+        rx="2"
+        strokeWidth="1"
+        width="100%"
+        x="0"
+        y="0"
+      />
+      <text
+        className="fill-brand font-mono text-[10px] tracking-[0.2em] uppercase"
+        dominantBaseline="middle"
+        textAnchor="middle"
+        x="50%"
+        y="50%"
+      >
+        {TRANSMISSION_END}
+      </text>
+    </svg>
   </div>
 )
 
@@ -120,6 +197,24 @@ export const ContactSection: AsyncPageFC<ContactSectionProperties> = async ({
     locale,
     namespace: 'contact',
   })
+  const commonTranslations: Translations<'common'> = await getTranslations({
+    locale,
+    namespace: 'common',
+  })
+
+  let fingerprint: string | undefined
+  try {
+    const fingerprintPath: string = path.join(
+      process.cwd(),
+      'public/resume-fingerprint.json'
+    )
+    const fileContent: string = await readFile(fingerprintPath, 'utf8')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const data: { fingerprint: string } = JSON.parse(fileContent)
+    fingerprint = data.fingerprint
+  } catch {
+    // Fingerprint file missing or invalid - verification disabled
+  }
 
   return (
     <BlueprintContainer id="contact" isLazy={true}>
@@ -129,34 +224,14 @@ export const ContactSection: AsyncPageFC<ContactSectionProperties> = async ({
           title={translations('title')}
         />
 
-        <ContactColumns locale={locale} translations={translations} />
+        <ContactColumns
+          fingerprint={fingerprint}
+          languageName={commonTranslations('languageName')}
+          locale={locale}
+          translations={translations}
+        />
 
-        <div className="mt-16 text-center opacity-60 select-none">
-          <svg
-            aria-hidden="true"
-            className="inline-block h-10 w-64 overflow-visible"
-            role="img"
-          >
-            <rect
-              className="fill-blueprint-bg stroke-brand/30"
-              height="100%"
-              rx="2"
-              strokeWidth="1"
-              width="100%"
-              x="0"
-              y="0"
-            />
-            <text
-              className="fill-brand font-mono text-[10px] tracking-[0.2em] uppercase"
-              dominantBaseline="middle"
-              textAnchor="middle"
-              x="50%"
-              y="50%"
-            >
-              {TRANSMISSION_END}
-            </text>
-          </svg>
-        </div>
+        <TransmissionEnd />
       </div>
     </BlueprintContainer>
   )

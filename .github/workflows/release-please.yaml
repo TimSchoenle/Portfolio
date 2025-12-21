@@ -88,6 +88,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_SHA=${{ github.sha }}
+          secrets: |
+            resume_signing_cert_base64=${{ secrets.RESUME_SIGNING_CERT_BASE64 }}
+            resume_signing_cert_password=${{ secrets.RESUME_SIGNING_CERT_PASSWORD }}
 
       - name: Sign the published Docker image
         env:

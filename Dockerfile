@@ -23,9 +23,18 @@ ENV NODE_ENV=production \
 COPY --from=dev_deps /app/node_modules ./node_modules
 COPY . .
 
+# Build the Next.js app
+# Use secret mounts for sensitive data during the build
+# Remove source maps after build to reduce image size
 RUN --mount=type=cache,target=/app/.next/cache \
+    --mount=type=secret,id=resume_signing_cert_base64 \
+    --mount=type=secret,id=resume_signing_cert_password \
     pnpm run build && \
     find .next/static -type f -name '*.map' -delete
+
+# Compile the permission fix script
+COPY scripts/docker/fix-public-permissions.ts ./scripts/docker/
+RUN pnpm exec tsc scripts/docker/fix-public-permissions.ts --target esnext --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck
 
 FROM dhi.io/node:25 AS runner
 WORKDIR /app
@@ -36,13 +45,17 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000
 
-COPY --from=builder --chown=node:node --chmod=555 /app/public ./public
+COPY --from=builder --chown=node:node /app/public ./public
+
 # Those directories need to be readble for ISR to work
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-
 # server.js executable only
 COPY --from=builder --chown=node:node --chmod=500 /app/.next/standalone/server.js ./server.js
+
+# Fix permissions using compiled dedicated script
+COPY --from=builder --chown=node:node /app/scripts/docker/fix-public-permissions.js /tmp/fix-public-permissions.js
+RUN ["node", "/tmp/fix-public-permissions.js"]
 
 EXPOSE 3000
 

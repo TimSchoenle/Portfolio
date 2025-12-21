@@ -560,6 +560,9 @@ jobs:
           cache-to: type=gha,mode=min
           build-args: |
             GIT_SHA=${{ github.sha }}
+          secrets: |
+            resume_signing_cert_base64=${{ secrets.RESUME_SIGNING_CERT_BASE64 }}
+            resume_signing_cert_password=${{ secrets.RESUME_SIGNING_CERT_PASSWORD }}
 
       - name: Run structure tests
         run: |

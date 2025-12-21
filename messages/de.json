@@ -14,6 +14,7 @@
     "jobTitle": "Softwareentwickler"
   },
   "common": {
+    "languageName": "Deutsch",
     "backToHome": "Zur Startseite",
     "lastUpdated": "Zuletzt aktualisiert: {date}",
     "socials": {
@@ -102,7 +103,17 @@
     "location": "Standort",
     "linkedin": "LinkedIn",
     "downloadResume": "Lebenslauf ansehen",
-    "pdfVersion": "{language} Version"
+    "pdfVersion": "{language} Version",
+    "sourceControl": "Source Control",
+    "professionalNetwork": "Professionelles Netzwerk",
+    "verification": {
+      "title": "Signatur überprüfen",
+      "description": "Der Lebenslauf ist digital signiert. Überprüfen Sie die Integrität mit dem SHA-256 Fingerprint unten.",
+      "fingerprintLabel": "SHA-256 Fingerprint",
+      "copyFingerprint": "Fingerabdruck kopieren",
+      "downloadCertificate": "Zertifikat herunterladen",
+      "selfSignedWarning": "Hinweis: Dies ist ein selbstsigniertes Zertifikat. Adobe Reader zeigt möglicherweise eine Warnung an, bis Sie diesem Zertifikat manuell vertrauen."
+    }
   },
   "resume": {
     "sectionTitles": {

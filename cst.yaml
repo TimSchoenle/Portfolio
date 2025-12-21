@@ -47,6 +47,9 @@ fileExistenceTests:
   - name: pnpm absent
     path: /usr/bin/pnpm
     shouldExist: false
+  - name: scripts directory absent
+    path: /app/scripts
+    shouldExist: false
 
 commandTests:
   - name: uid is non-root
@@ -122,15 +125,41 @@ commandTests:
         process.exit(mode==='500'?0:1);
     exitCode: 0
 
-  - name: public directory has correct permissions (555)
+  - name: public directory folder permissions (555)
     command: 'node'
     args:
       - '-e'
       - |
         const fs=require('fs');
-        const stat=fs.statSync('/app/public');
-        const mode=(stat.mode&parseInt('777',8)).toString(8);
-        process.exit(mode==='555'?0:1);
+        const path=require('path');
+        function check(dir) {
+          const items = fs.readdirSync(dir, { withFileTypes: true });
+          // Check current directory
+          const mode = (fs.statSync(dir).mode & parseInt('777', 8)).toString(8);
+          if (mode !== '555') {
+            console.error('ERROR: Directory ' + dir + ' has mode ' + mode + ', expected 555');
+            process.exit(1);
+          }
+
+          for (const item of items) {
+            const res = path.resolve(dir, item.name);
+            if (item.isDirectory()) {
+              check(res);
+            } else {
+              const fileMode = (fs.statSync(res).mode & parseInt('777', 8)).toString(8);
+              if (fileMode !== '444') {
+                console.error('ERROR: File ' + res + ' has mode ' + fileMode + ', expected 444');
+                process.exit(1);
+              }
+            }
+          }
+        }
+        try {
+          check('/app/public');
+        } catch (e) {
+          console.error(e);
+          process.exit(1);
+        }
     exitCode: 0
 
   - name: public directory is not writable
