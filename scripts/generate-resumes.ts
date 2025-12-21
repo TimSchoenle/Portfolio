@@ -6,7 +6,7 @@ import path from 'node:path'
 
 import React from 'react'
 
-import { createTranslator, type Messages } from 'next-intl'
+import { createFormatter, createTranslator, type Messages } from 'next-intl'
 
 import { renderToBuffer } from '@react-pdf/renderer'
 import forge from 'node-forge'
@@ -169,7 +169,14 @@ void (async (): Promise<void> => {
       messages,
     })
 
+    // Explicitly set timezone to UTC (or any valid IANA zone) to prevent system-dependent fail
+    const formatter: ReturnType<typeof createFormatter> = createFormatter({
+      locale,
+      timeZone: 'UTC',
+    })
+
     const element: React.ReactElement = React.createElement(ResumePDFDocument, {
+      formatDate: formatter,
       translations,
     })
 

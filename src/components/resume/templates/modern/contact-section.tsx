@@ -22,7 +22,9 @@ export const ContactSection: FC<ContactSectionProperties> = ({
       <View style={styles.sectionDivider} />
 
       <Text style={styles.contactLabel}>{translations('contact.email')}</Text>
-      <Text style={styles.contactItem}>{siteConfig.email}</Text>
+      <Link src={`mailto:${siteConfig.email}`} style={styles.contactItem}>
+        {siteConfig.email}
+      </Link>
 
       <Text style={styles.contactLabel}>
         {translations('contact.location')}

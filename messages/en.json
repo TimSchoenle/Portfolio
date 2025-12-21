@@ -131,8 +131,32 @@
       "contact": "Contact",
       "viewProject": "View Project"
     },
-    "summary": "Experienced software developer with 5+ years of expertise in building scalable web applications. Passionate about clean code, modern technologies, and solving complex problems.",
-    "education": [],
+    "education": [
+      {
+        "degree": "Computer Science (no degree)",
+        "end": {
+          "month": 9,
+          "year": 2021
+        },
+        "institution": "University of Konstanz",
+        "start": {
+          "month": 10,
+          "year": 2019
+        }
+      },
+      {
+        "degree": "Abitur (Business High School)",
+        "end": {
+          "month": 7,
+          "year": 2019
+        },
+        "institution": "Rudolf-Eberle-Schule, Bad Säckingen",
+        "start": {
+          "month": 9,
+          "year": 2016
+        }
+      }
+    ],
     "experience": [
       {
         "achievements": [
@@ -141,9 +165,15 @@
           "Collaborated closely with developers and community staff to reproduce, triage and verify fixes for critical production issues."
         ],
         "company": "Mineplex LLC",
-        "endDate": "2023-01",
+        "end": {
+          "month": 1,
+          "year": 2023
+        },
         "location": "Remote",
-        "startDate": "2018-11",
+        "start": {
+          "month": 11,
+          "year": 2018
+        },
         "title": "Quality Assurance"
       },
       {
@@ -153,9 +183,12 @@
           "Provisioned and operated backend infrastructure (databases, message brokers, caches and reverse proxies), using infrastructure-as-code and monitoring to keep systems reliable, observable and easy to debug."
         ],
         "company": "Self-employed",
-        "endDate": "present",
+        "end": null,
         "location": "Remote",
-        "startDate": "2021-10",
+        "start": {
+          "month": 10,
+          "year": 2021
+        },
         "title": "Independent Software Developer"
       },
       {
@@ -165,9 +198,15 @@
           "Worked closely with product, community and operations teams to plan and deliver gameplay features, incorporating player feedback into the development roadmap."
         ],
         "company": "Mineplex LLC",
-        "endDate": "2023-01",
+        "end": {
+          "month": 1,
+          "year": 2023
+        },
         "location": "Remote",
-        "startDate": "2021-10",
+        "start": {
+          "month": 10,
+          "year": 2021
+        },
         "title": "Software Developer"
       },
       {
@@ -177,13 +216,16 @@
           "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
         ],
         "company": "Mineplex Studios LLC",
-        "endDate": "present",
+        "end": null,
         "location": "Remote",
-        "startDate": "2023-08",
+        "start": {
+          "month": 8,
+          "year": 2023
+        },
         "title": "Senior Software Developer"
       }
     ],
-    "projects": []
+    "present": "Present"
   },
   "imprint": {
     "title": "Imprint",

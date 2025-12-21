@@ -7,13 +7,15 @@ describe('EducationSection', () => {
   const mockEducation: ResumeEducation[] = [
     {
       degree: 'B.S. Computer Science',
+      end: { month: 5, year: 2019 },
       institution: 'University of California',
-      year: '2019',
+      start: { month: 9, year: 2015 },
     },
     {
       degree: 'M.S. Software Developering',
+      end: null,
       institution: 'Stanford University',
-      year: '2021',
+      start: { month: 9, year: 2020 },
     },
   ]
 
@@ -21,6 +23,7 @@ describe('EducationSection', () => {
     vi.fn((key: string) => {
       const translations: Record<string, string> = {
         'resume.sectionTitles.education': 'Education',
+        'resume.present': 'Present',
       }
       return translations[key] ?? key
     }),
@@ -34,6 +37,15 @@ describe('EducationSection', () => {
     }
   ) as unknown as ResumeTranslations
 
+  const mockFormatter = {
+    dateTime: vi.fn((date, _options) => {
+      if (date instanceof Date) {
+        return date.getUTCFullYear().toString()
+      }
+      return 'Date'
+    }),
+  } as any
+
   it('can be imported', async () => {
     const module =
       await import('@/components/resume/templates/modern/education-section')
@@ -42,12 +54,16 @@ describe('EducationSection', () => {
 
   it('renders without errors', () => {
     expect(() => {
-      EducationSection({ translations: mockTranslations })
+      EducationSection({
+        formatDate: mockFormatter,
+        translations: mockTranslations,
+      })
     }).not.toThrow()
   })
 
   it('displays section title', () => {
     const result = EducationSection({
+      formatDate: mockFormatter,
       translations: mockTranslations,
     })
 
@@ -57,6 +73,7 @@ describe('EducationSection', () => {
 
   it('renders all education entries', () => {
     const result = EducationSection({
+      formatDate: mockFormatter,
       translations: mockTranslations,
     })
 
@@ -74,10 +91,14 @@ describe('EducationSection', () => {
     ) as unknown as ResumeTranslations
 
     expect(() => {
-      EducationSection({ translations: emptyTranslations })
+      EducationSection({
+        formatDate: mockFormatter,
+        translations: emptyTranslations,
+      })
     }).not.toThrow()
 
     const result = EducationSection({
+      formatDate: mockFormatter,
       translations: emptyTranslations,
     })
     expect(result).toBeTruthy()
@@ -85,6 +106,7 @@ describe('EducationSection', () => {
 
   it('renders section divider', () => {
     const result = EducationSection({
+      formatDate: mockFormatter,
       translations: mockTranslations,
     })
 
@@ -93,8 +115,9 @@ describe('EducationSection', () => {
     expect(resultString.includes('"style":')).toBe(true)
   })
 
-  it('displays degree, institution, and year for each entry', () => {
+  it('displays degree, institution, and dates for each entry', () => {
     const result = EducationSection({
+      formatDate: mockFormatter,
       translations: mockTranslations,
     })
 
@@ -104,6 +127,7 @@ describe('EducationSection', () => {
     // Check that education data is present
     expect(resultString.includes('B.S. Computer Science')).toBe(true)
     expect(resultString.includes('University of California')).toBe(true)
+    // 2019 is the graduation year in mock data
     expect(resultString.includes('2019')).toBe(true)
   })
 })

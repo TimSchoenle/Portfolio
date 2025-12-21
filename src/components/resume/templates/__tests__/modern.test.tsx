@@ -28,7 +28,7 @@ describe('ModernTemplate', () => {
       const translations: Record<string, string> = {
         'personalInfo.jobTitle': 'Senior Software Developer',
         'personalInfo.country': 'Germany',
-        'resume.summary': 'Experienced developer with 5+ years',
+        'about.summary': 'Experienced developer with 5+ years',
         'resume.sectionTitles.experience': 'Experience',
         'resume.sectionTitles.projects': 'Projects',
         'resume.sectionTitles.education': 'Education',
@@ -41,6 +41,7 @@ describe('ModernTemplate', () => {
         'contact.location': 'Location',
         'common.socials.github': 'GitHub',
         'common.socials.linkedin': 'LinkedIn',
+        'resume.present': 'Present',
       }
       return translations[key] ?? key
     }),
@@ -50,8 +51,9 @@ describe('ModernTemplate', () => {
           'resume.education': [
             {
               degree: 'B.S. Computer Science',
+              end: { month: 5, year: 2019 },
               institution: 'University',
-              year: '2019',
+              start: { month: 9, year: 2015 },
             },
           ],
           'resume.experience': [
@@ -74,6 +76,12 @@ describe('ModernTemplate', () => {
         }
         return data[key] ?? null
       }),
+      rich: vi.fn((_key, values) => {
+        if (typeof values?.highlight === 'function') {
+          return values.highlight('Expected Summary Content')
+        }
+        return 'Experienced developer with 5+ years'
+      }),
     }
   ) as unknown as ResumeTranslations
 
@@ -84,12 +92,20 @@ describe('ModernTemplate', () => {
 
   it('renders without errors', () => {
     expect(() => {
-      ModernTemplate({ translations: mockTranslations })
+      ModernTemplate({
+        formatDate: {
+          dateTime: (date: Date | number) => date.toString(),
+        } as any,
+        translations: mockTranslations,
+      })
     }).not.toThrow()
   })
 
   it('returns a Page component', () => {
     const result = ModernTemplate({
+      formatDate: {
+        dateTime: (date: Date | number) => date.toString(),
+      } as any,
       translations: mockTranslations,
     })
 
@@ -99,6 +115,9 @@ describe('ModernTemplate', () => {
 
   it('displays name from siteConfig', () => {
     const result = ModernTemplate({
+      formatDate: {
+        dateTime: (date: Date | number) => date.toString(),
+      } as any,
       translations: mockTranslations,
     })
 
@@ -108,6 +127,9 @@ describe('ModernTemplate', () => {
 
   it('displays job title from translations', () => {
     const result = ModernTemplate({
+      formatDate: {
+        dateTime: (date: Date | number) => date.toString(),
+      } as any,
       translations: mockTranslations,
     })
 
@@ -117,12 +139,13 @@ describe('ModernTemplate', () => {
 
   it('displays summary from translations', () => {
     const result = ModernTemplate({
+      formatDate: {
+        dateTime: (date: Date | number) => date.toString(),
+      } as any,
       translations: mockTranslations,
     })
 
     const resultString = JSON.stringify(result)
-    expect(resultString.includes('Experienced developer with 5+ years')).toBe(
-      true
-    )
+    expect(resultString.includes('Expected Summary Content')).toBe(true)
   })
 })

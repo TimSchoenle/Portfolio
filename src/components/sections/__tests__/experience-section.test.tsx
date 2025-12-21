@@ -5,13 +5,18 @@ import { render, screen } from '@testing-library/react'
 import { ExperienceSection } from '../experience-section'
 
 import { siteConfig } from '@/lib/config'
-import { getTranslations } from 'next-intl/server'
+import { getFormatter, getTranslations } from 'next-intl/server'
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
   Briefcase: () => <div data-testid="briefcase-icon">Briefcase</div>,
   Calendar: () => <div data-testid="calendar-icon">Calendar</div>,
   MapPin: () => <div data-testid="map-pin-icon">MapPin</div>,
+}))
+
+vi.mock('next-intl/server', () => ({
+  getFormatter: vi.fn(),
+  getTranslations: vi.fn(),
 }))
 
 describe('Experience_section', () => {
@@ -28,6 +33,22 @@ describe('Experience_section', () => {
       },
     ] as any
 
+    // Mock getFormatter
+    vi.mocked(getFormatter).mockImplementation(async () => {
+      return {
+        dateTime: (date: Date | number) => {
+          // Return simple strings that match the expectations
+          if (date instanceof Date) {
+            if (date.getFullYear() === 2020) return '2020'
+          }
+          return 'Date'
+        },
+        number: (val: number) => val.toString(),
+        relativeTime: (val: number) => val.toString(),
+        list: (val: any[]) => val.join(', '),
+      } as any
+    })
+
     // Override getTranslations
     vi.mocked(getTranslations).mockImplementation(async () => {
       const t: any = (key: string) => {
@@ -37,6 +58,8 @@ describe('Experience_section', () => {
         if (key === '0.startDate') return '2020'
         if (key === '0.endDate') return 'Present'
         if (key === '0.location') return 'Remote'
+        // Mock present label
+        if (key === 'present') return 'Present'
         return key
       }
       t.raw = (key: string) => {
@@ -45,9 +68,12 @@ describe('Experience_section', () => {
             {
               achievements: ['Working on cool stuff'],
               company: 'Test Company',
-              endDate: 'Present',
+              end: null,
               location: 'Remote',
-              startDate: '2020',
+              start: {
+                month: 1,
+                year: 2020,
+              },
               title: 'Senior Developer',
             },
           ]

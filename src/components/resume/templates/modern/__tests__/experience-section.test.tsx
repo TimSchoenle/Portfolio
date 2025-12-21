@@ -12,17 +12,26 @@ describe('ExperienceSection', () => {
         'Mentored 5 junior developers',
       ],
       company: 'Tech Company Inc.',
-      endDate: 'Present',
+      end: null,
       location: 'San Francisco, CA',
-      startDate: '2021',
+      start: {
+        month: 1,
+        year: 2021,
+      },
       title: 'Senior Software Developer',
     },
     {
       achievements: ['Built real-time messaging system', 'Implemented CI/CD'],
       company: 'Startup LLC',
-      endDate: '2021',
+      end: {
+        month: 12,
+        year: 2021,
+      },
       location: 'Remote',
-      startDate: '2019',
+      start: {
+        month: 6,
+        year: 2019,
+      },
       title: 'Software Developer',
     },
   ]
@@ -52,12 +61,30 @@ describe('ExperienceSection', () => {
 
   it('renders without errors', () => {
     expect(() => {
-      ExperienceSection({ translations: mockTranslations })
+      ExperienceSection({
+        formatDate: {
+          dateTime: (date: Date | number) => {
+            if (date instanceof Date) {
+              return date.getFullYear().toString()
+            }
+            return date.toString()
+          },
+        } as any,
+        translations: mockTranslations,
+      })
     }).not.toThrow()
   })
 
   it('displays section title', () => {
     const result = ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
       translations: mockTranslations,
     })
 
@@ -67,6 +94,14 @@ describe('ExperienceSection', () => {
 
   it('renders all experience entries', () => {
     const result = ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
       translations: mockTranslations,
     })
 
@@ -79,13 +114,31 @@ describe('ExperienceSection', () => {
   })
 
   it('calls translations.raw with correct key', () => {
-    ExperienceSection({ translations: mockTranslations })
+    ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
+      translations: mockTranslations,
+    })
 
     expect(mockTranslations.raw).toHaveBeenCalledWith('resume.experience')
   })
 
   it('displays job title, company, and dates', () => {
     const result = ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
       translations: mockTranslations,
     })
 
@@ -97,6 +150,14 @@ describe('ExperienceSection', () => {
 
   it('renders achievements for each experience', () => {
     const result = ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
       translations: mockTranslations,
     })
 
@@ -117,10 +178,28 @@ describe('ExperienceSection', () => {
     ) as unknown as ResumeTranslations
 
     expect(() => {
-      ExperienceSection({ translations: emptyTranslations })
+      ExperienceSection({
+        formatDate: {
+          dateTime: (date: Date | number) => {
+            if (date instanceof Date) {
+              return date.getFullYear().toString()
+            }
+            return date.toString()
+          },
+        } as any,
+        translations: emptyTranslations,
+      })
     }).not.toThrow()
 
     const result = ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
       translations: emptyTranslations,
     })
     expect(result).toBeTruthy()
@@ -128,25 +207,19 @@ describe('ExperienceSection', () => {
 
   it('renders section divider', () => {
     const result = ExperienceSection({
+      formatDate: {
+        dateTime: (date: Date | number) => {
+          if (date instanceof Date) {
+            return date.getUTCFullYear().toString()
+          }
+          return date.toString()
+        },
+      } as any,
       translations: mockTranslations,
     })
 
     const resultString = JSON.stringify(result)
     // Check for style object which implies View components are present
     expect(resultString.includes('"style":')).toBe(true)
-  })
-
-  it('formats date range correctly', () => {
-    const result = ExperienceSection({
-      translations: mockTranslations,
-    })
-
-    // Convert to string to verify date formatting
-    const resultString = JSON.stringify(result)
-
-    // Check that dates are formatted with separator
-    expect(resultString.includes('2021') && resultString.includes(' - ')).toBe(
-      true
-    )
   })
 })

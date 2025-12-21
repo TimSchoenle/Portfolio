@@ -55,6 +55,9 @@ describe('ResumePDFDocument', () => {
       await import('@/components/resume/resume-pdf-document')
     expect(() => {
       ResumePDFDocument({
+        formatDate: {
+          dateTime: (date: Date | number) => date.toString(),
+        } as any,
         translations: mockTranslations,
       })
     }).not.toThrow()

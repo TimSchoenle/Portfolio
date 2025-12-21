@@ -4,16 +4,22 @@ import type en from '../../messages/en.json'
 
 export interface ResumeEducation {
   readonly degree: string
+  readonly end: ResumeDate | null
   readonly institution: string
-  readonly year: string
+  readonly start: ResumeDate
+}
+
+export interface ResumeDate {
+  readonly month: number
+  readonly year: number
 }
 
 export interface ResumeExperience {
   readonly achievements: readonly string[]
   readonly company: string
-  readonly endDate: string
+  readonly end: ResumeDate | null
   readonly location: string
-  readonly startDate: string
+  readonly start: ResumeDate
   readonly title: string
 }
 

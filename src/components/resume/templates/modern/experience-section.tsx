@@ -1,13 +1,39 @@
 import { type FC, type ReactElement } from 'react'
 
+import { type createFormatter } from 'next-intl'
+
 import { Text, View } from '@react-pdf/renderer'
 
+import type { FCStrict } from '@/types/fc'
 import type { ResumeExperience, ResumeTranslations } from '@/types/resume'
 
 import { styles } from './modern.styles'
 
 interface ExperienceSectionProperties {
+  readonly formatDate: ReturnType<typeof createFormatter>
   readonly translations: ResumeTranslations
+}
+
+interface ExperienceItemHeaderProperties {
+  readonly end: string
+  readonly isCompact: boolean
+  readonly start: string
+  readonly title: string
+}
+
+interface CompanyRowProperties {
+  readonly company: string
+  readonly isCompact: boolean
+  readonly location: string
+}
+
+interface ExperienceItemProperties {
+  readonly exp: ResumeExperience
+  readonly formatDate: ReturnType<typeof createFormatter>
+  readonly index: number
+  readonly isCompact: boolean
+  readonly maxAchievementsPerEntry: number
+  readonly presentLabel: string
 }
 
 /**
@@ -37,8 +63,96 @@ function calculateMaxAchievementsPerEntry(
   return Number.POSITIVE_INFINITY
 }
 
-// eslint-disable-next-line max-lines-per-function
+const ExperienceItemHeader: FCStrict<ExperienceItemHeaderProperties> = ({
+  end,
+  isCompact,
+  start,
+  title,
+}: ExperienceItemHeaderProperties): ReactElement => (
+  <View style={isCompact ? styles.jobHeaderCompact : styles.jobHeader}>
+    <Text style={isCompact ? styles.jobTitleCompact : styles.jobTitle}>
+      {title}
+    </Text>
+    <Text style={isCompact ? styles.dateTextCompact : styles.dateText}>
+      {start}
+      {' - '}
+      {end}
+    </Text>
+  </View>
+)
+
+const CompanyRow: FCStrict<CompanyRowProperties> = ({
+  company,
+  isCompact,
+  location,
+}: CompanyRowProperties): ReactElement => (
+  <View style={styles.companyRow}>
+    <Text style={isCompact ? styles.companyTextCompact : styles.companyText}>
+      {company}
+      {' • '}
+      {location}
+    </Text>
+  </View>
+)
+
+const ExperienceItem: FCStrict<ExperienceItemProperties> = ({
+  exp,
+  formatDate,
+  index,
+  isCompact,
+  maxAchievementsPerEntry,
+  presentLabel,
+}: ExperienceItemProperties): ReactElement => {
+  const startDate: Date = new Date(
+    Date.UTC(exp.start.year, exp.start.month - 1, 1)
+  )
+  const start: string = formatDate.dateTime(startDate, {
+    month: 'short',
+    year: 'numeric',
+  })
+
+  let end: string = presentLabel
+  if (exp.end !== null) {
+    const endDate: Date = new Date(Date.UTC(exp.end.year, exp.end.month - 1, 1))
+    end = formatDate.dateTime(endDate, {
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  return (
+    <View
+      key={`${exp.company}-${index.toString()}`}
+      style={isCompact ? styles.experienceItemCompact : styles.experienceItem}
+    >
+      <ExperienceItemHeader
+        end={end}
+        isCompact={isCompact}
+        start={start}
+        title={exp.title}
+      />
+      <CompanyRow
+        company={exp.company}
+        isCompact={isCompact}
+        location={exp.location}
+      />
+      {exp.achievements.slice(0, maxAchievementsPerEntry).map(
+        (achievement: string, achievementIndex: number): ReactElement => (
+          <Text
+            key={`achievement_${achievementIndex.toString()}`}
+            style={isCompact ? styles.achievementCompact : styles.achievement}
+          >
+            {'• '}
+            {achievement}
+          </Text>
+        )
+      )}
+    </View>
+  )
+}
+
 export const ExperienceSection: FC<ExperienceSectionProperties> = ({
+  formatDate,
   translations,
 }: ExperienceSectionProperties): ReactElement => {
   const experiences: ResumeExperience[] = translations.raw(
@@ -60,53 +174,15 @@ export const ExperienceSection: FC<ExperienceSectionProperties> = ({
       <View style={styles.sectionDivider} />
       {experiences.map(
         (exp: ResumeExperience, index: number): ReactElement => (
-          <View
+          <ExperienceItem
+            exp={exp}
+            formatDate={formatDate}
+            index={index}
+            isCompact={isCompact}
             key={`${exp.company}-${index.toString()}`}
-            style={
-              isCompact ? styles.experienceItemCompact : styles.experienceItem
-            }
-          >
-            <View
-              style={isCompact ? styles.jobHeaderCompact : styles.jobHeader}
-            >
-              <Text
-                style={isCompact ? styles.jobTitleCompact : styles.jobTitle}
-              >
-                {exp.title}
-              </Text>
-              <Text
-                style={isCompact ? styles.dateTextCompact : styles.dateText}
-              >
-                {exp.startDate}
-                {' - '}
-                {exp.endDate}
-              </Text>
-            </View>
-            <View style={styles.companyRow}>
-              <Text
-                style={
-                  isCompact ? styles.companyTextCompact : styles.companyText
-                }
-              >
-                {exp.company}
-                {' • '}
-                {exp.location}
-              </Text>
-            </View>
-            {exp.achievements.slice(0, maxAchievementsPerEntry).map(
-              (achievement: string, achievementIndex: number): ReactElement => (
-                <Text
-                  key={`achievement_${achievementIndex.toString()}`}
-                  style={
-                    isCompact ? styles.achievementCompact : styles.achievement
-                  }
-                >
-                  {'• '}
-                  {achievement}
-                </Text>
-              )
-            )}
-          </View>
+            maxAchievementsPerEntry={maxAchievementsPerEntry}
+            presentLabel={translations('resume.present')}
+          />
         )
       )}
     </>

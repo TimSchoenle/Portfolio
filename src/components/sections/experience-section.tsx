@@ -1,7 +1,9 @@
 import { type JSX } from 'react'
 
+import { type createFormatter } from 'next-intl'
+
 import { Calendar, MapPin } from 'lucide-react'
-import { getTranslations } from 'next-intl/server'
+import { getFormatter, getTranslations } from 'next-intl/server'
 
 import { BlueprintCard } from '@/components/blueprint/blueprint-card'
 import { BlueprintContainer } from '@/components/blueprint/blueprint-container'
@@ -9,6 +11,7 @@ import { BlueprintSectionDivider } from '@/components/blueprint/blueprint-sectio
 import { BlueprintSectionTitle } from '@/components/blueprint/blueprint-section-title'
 import type { AsyncPageFC, FCStrict } from '@/types/fc'
 import type { LocalePageProperties, Translations } from '@/types/i18n'
+import type { ResumeExperience } from '@/types/resume'
 
 /* ── types ─────────────────────────────────────────────────────────────── */
 
@@ -66,7 +69,7 @@ const ExperienceCard: FCStrict<ExperienceItemProperties> = ({
   return (
     <div className="relative pl-8 md:pl-16">
       {/* Horizontal Connector Trace (Sleek) */}
-      <div className="absolute top-[3.5rem] left-0 hidden h-px w-8 bg-gradient-to-r from-brand/60 to-brand/20 md:block md:w-16">
+      <div className="absolute top-[3.5rem] left-0 hidden h-px w-8 bg-linear-to-r from-brand/60 to-brand/20 md:block md:w-16">
         {/* Subtle glow */}
         <div className="absolute inset-0 bg-brand/20 blur-[1px]" />
       </div>
@@ -143,48 +146,50 @@ const ExperienceList: FCStrict<ExperienceListProperties> = ({
 
 /* ── main ──────────────────────────────────────────────────── */
 
+interface MapExperienceDataProperties {
+  readonly format: ReturnType<typeof createFormatter>
+  readonly presentLabel: string
+  readonly raw: readonly ResumeExperience[]
+}
+
 const mapExperienceData: (
-  raw: readonly {
-    readonly achievements: string[]
-    readonly company: string
-    readonly endDate: string
-    readonly location: string
-    readonly startDate: string
-    readonly title: string
-  }[]
-) => ExperienceItemProperties[] = (
-  raw: readonly {
-    readonly achievements: string[]
-    readonly company: string
-    readonly endDate: string
-    readonly location: string
-    readonly startDate: string
-    readonly title: string
-  }[]
-): ExperienceItemProperties[] => {
+  properties: MapExperienceDataProperties
+) => ExperienceItemProperties[] = ({
+  format,
+  presentLabel,
+  raw,
+}: MapExperienceDataProperties): ExperienceItemProperties[] => {
   if (!Array.isArray(raw)) {
     return []
   }
 
   return raw.map(
-    (
-      item: {
-        readonly achievements: string[]
-        readonly company: string
-        readonly endDate: string
-        readonly location: string
-        readonly startDate: string
-        readonly title: string
-      },
-      index: number
-    ): ExperienceItemProperties => ({
-      achievements: item.achievements,
-      company: item.company,
-      duration: `${item.startDate} - ${item.endDate}`,
-      index,
-      location: item.location,
-      role: item.title,
-    })
+    (item: ResumeExperience, index: number): ExperienceItemProperties => {
+      const startDate: Date = new Date(
+        Date.UTC(item.start.year, item.start.month - 1, 1)
+      )
+      const start: string = format.dateTime(startDate, {
+        month: 'short',
+        year: 'numeric',
+      })
+
+      let end: string = presentLabel
+      if (item.end !== null) {
+        const endDate: Date = new Date(
+          Date.UTC(item.end.year, item.end.month - 1, 1)
+        )
+        end = format.dateTime(endDate, { month: 'short', year: 'numeric' })
+      }
+
+      return {
+        achievements: item.achievements,
+        company: item.company,
+        duration: `${start} - ${end}`,
+        index,
+        location: item.location,
+        role: item.title,
+      }
+    }
   )
 }
 
@@ -197,24 +202,20 @@ export const ExperienceSection: AsyncPageFC<
   })
 
   // Fetch experience array directly from translations
-  const rawExperience: {
-    readonly achievements: string[]
-    readonly company: string
-    readonly endDate: string
-    readonly location: string
-    readonly startDate: string
-    readonly title: string
-  }[] = resumeTranslations.raw('experience') as {
-    readonly achievements: string[]
-    readonly company: string
-    readonly endDate: string
-    readonly location: string
-    readonly startDate: string
-    readonly title: string
-  }[]
+  const rawExperience: ResumeExperience[] = resumeTranslations.raw(
+    'experience'
+  ) as ResumeExperience[]
 
-  const experienceData: ExperienceItemProperties[] =
-    mapExperienceData(rawExperience)
+  // Cast to unknown first to avoid overlap issues if strict
+  const format: ReturnType<typeof createFormatter> = await getFormatter({
+    locale,
+  })
+
+  const experienceData: ExperienceItemProperties[] = mapExperienceData({
+    format: format,
+    presentLabel: resumeTranslations('present'),
+    raw: rawExperience,
+  })
 
   const sectionTranslations: Translations<'experience'> = await getTranslations(
     {

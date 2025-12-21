@@ -1,4 +1,6 @@
-import { type FC, type ReactElement } from 'react'
+import { type FC, type JSX, type ReactElement, type ReactNode } from 'react'
+
+import { type createFormatter } from 'next-intl'
 
 import { Page, Text, View } from '@react-pdf/renderer'
 
@@ -12,10 +14,12 @@ import { ExperienceSection } from './modern/experience-section'
 import { styles } from './modern/modern.styles'
 
 interface ModernTemplateProperties {
+  readonly formatDate: ReturnType<typeof createFormatter>
   readonly translations: ResumeTranslations
 }
 
 export const ModernTemplate: FC<ModernTemplateProperties> = ({
+  formatDate,
   translations,
 }: ModernTemplateProperties): ReactElement => {
   return (
@@ -25,7 +29,12 @@ export const ModernTemplate: FC<ModernTemplateProperties> = ({
         <Text style={styles.title}>
           {translations('personalInfo.jobTitle')}
         </Text>
-        <Text style={styles.summary}>{translations('resume.summary')}</Text>
+        <Text style={styles.summary}>
+          {translations.rich('about.summary', {
+            highlight: (chunks: ReactNode): JSX.Element =>
+              chunks as JSX.Element,
+          })}
+        </Text>
       </View>
 
       <View style={styles.mainContainer}>
@@ -33,12 +42,18 @@ export const ModernTemplate: FC<ModernTemplateProperties> = ({
         <View style={styles.leftColumn}>
           <ContactSection translations={translations} />
           <SkillsSection translations={translations} />
-          <EducationSection translations={translations} />
+          <EducationSection
+            formatDate={formatDate}
+            translations={translations}
+          />
         </View>
 
         {/* Main content */}
         <View style={styles.rightColumn}>
-          <ExperienceSection translations={translations} />
+          <ExperienceSection
+            formatDate={formatDate}
+            translations={translations}
+          />
         </View>
       </View>
     </Page>
