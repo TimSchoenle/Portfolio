@@ -182,17 +182,6 @@
     @apply bg-primary/30;
   }
 
-  /* Added rainbow animation for Konami code easter egg */
-  @keyframes rainbow {
-    0% {
-      filter: hue-rotate(0deg);
-    }
-
-    100% {
-      filter: hue-rotate(360deg);
-    }
-  }
-
   .cv-section {
     content-visibility: auto;
     contain-intrinsic-size: auto 900px;

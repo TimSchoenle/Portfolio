@@ -14,16 +14,9 @@ import type { FCNullable } from '@/types/fc'
 
 /* ---------- local types ---------- */
 type NoProperties = Record<string, never>
-type UnknownProperties = Record<string, unknown>
 
 interface CommandPaletteModule {
   CommandPalette: ComponentType<NoProperties>
-}
-interface EasterEggsModule {
-  EasterEggs: ComponentType<NoProperties>
-}
-interface SonnerModule {
-  Toaster: ComponentType<UnknownProperties>
 }
 
 /* ---------- typed selectors (no bracket indexing) ---------- */
@@ -33,44 +26,16 @@ const pickCommandPalette: (
   moduleNamespace: CommandPaletteModule
 ): ComponentType<NoProperties> => moduleNamespace.CommandPalette
 
-const pickEasterEggs: (
-  moduleNamespace: EasterEggsModule
-) => ComponentType<NoProperties> = (
-  moduleNamespace: EasterEggsModule
-): ComponentType<NoProperties> => moduleNamespace.EasterEggs
-
-const pickToaster: (
-  moduleNamespace: SonnerModule
-) => ComponentType<UnknownProperties> = (
-  moduleNamespace: SonnerModule
-): ComponentType<UnknownProperties> => moduleNamespace.Toaster
-
 /* ---------- typed importers (explicit return types) ---------- */
 const importCommandPalette: () => Promise<CommandPaletteModule> =
   (): Promise<CommandPaletteModule> =>
     import('@/components/features/command-palette/command-palette')
-
-const importEasterEggs: () => Promise<EasterEggsModule> =
-  (): Promise<EasterEggsModule> => import('@/components/features/easter-eggs')
-
-const importSonner: () => Promise<SonnerModule> = (): Promise<SonnerModule> =>
-  import('sonner')
 
 /* ---------- lazy client widgets ---------- */
 const CommandPalette: ComponentType<NoProperties> = lazyClient<
   NoProperties,
   CommandPaletteModule
 >(importCommandPalette, pickCommandPalette)
-
-const EasterEggs: ComponentType<NoProperties> = lazyClient<
-  NoProperties,
-  EasterEggsModule
->(importEasterEggs, pickEasterEggs)
-
-const Toaster: ComponentType<UnknownProperties> = lazyClient<
-  UnknownProperties,
-  SonnerModule
->(importSonner, pickToaster)
 
 const useIdleFlag: () => boolean = (): boolean => {
   const [ready, setReady]: [boolean, Dispatch<SetStateAction<boolean>>] =
@@ -121,13 +86,7 @@ const DeferredClientUi: FCNullable = (): JSX.Element | null => {
     return null
   }
 
-  return (
-    <>
-      <CommandPalette />
-      <EasterEggs />
-      <Toaster position="bottom-right" />
-    </>
-  )
+  return <CommandPalette />
 }
 
 export default DeferredClientUi
