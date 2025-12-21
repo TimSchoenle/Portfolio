@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable security/detect-non-literal-fs-filename */
 /* eslint-disable unicorn/prefer-module */
-import fs from 'node:fs'
+import fs, { type Stats } from 'node:fs'
 import path from 'node:path'
 
 // Use explicit octal literals for permissions
@@ -52,11 +52,30 @@ try {
   const targetDirection: string = path.resolve('/app/public')
 
   if (fs.existsSync(targetDirection)) {
+    const startStat: Stats = fs.statSync(targetDirection)
+    console.log(
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      `DEBUG: Target ${targetDirection} - UID: ${startStat.uid}, GID: ${startStat.gid}, Mode: 0o${(startStat.mode & 0o777).toString(8)}`
+    )
+
     setPermissionsRecursive(
       targetDirection,
       DIRECTORY_PERMISSION_MODE,
       FILE_PERMISSION_MODE
     )
+
+    const endStat: Stats = fs.statSync(targetDirection)
+    console.log(
+      `DEBUG: Post-fix ${targetDirection} - Mode: 0o${(endStat.mode & 0o777).toString(8)}`
+    )
+
+    // Explicit verify
+    if ((endStat.mode & 0o777) !== DIRECTORY_PERMISSION_MODE) {
+      throw new Error(
+        `Failed to set directory mode. Got 0o${(endStat.mode & 0o777).toString(8)}`
+      )
+    }
+
     console.log(
       `✓ Public directory permissions set (Files: ${FILE_PERMISSION_MODE.toString(8)}, Dirs: ${DIRECTORY_PERMISSION_MODE.toString(8)})`
     )
