@@ -9,11 +9,14 @@ import React from 'react'
 import { createFormatter, createTranslator, type Messages } from 'next-intl'
 
 import { renderToBuffer } from '@react-pdf/renderer'
+import { plainAddPlaceholder } from '@signpdf/placeholder-plain'
+import { P12Signer } from '@signpdf/signer-p12'
+import signpdf from '@signpdf/signpdf'
 import forge from 'node-forge'
-import signpdf, { plainAddPlaceholder } from 'node-signpdf'
 
 import { ResumePDFDocument } from '@/components/resume/resume-pdf-document'
 import { routing } from '@/i18n/routing'
+import { siteConfig } from '@/lib/config'
 import type { Translations } from '@/types/i18n'
 
 async function getSecret(name: string): Promise<string | undefined> {
@@ -97,23 +100,28 @@ async function exportCertificateAssets(
   }
 }
 
-function signResume(
+async function signResume(
   buffer: Buffer,
   signingKeys: Buffer,
   signingCertPassword: string | undefined
-): Buffer {
+): Promise<Buffer> {
   try {
     const pdfWithPlaceholder: Buffer = plainAddPlaceholder({
+      contactInfo: siteConfig.email,
+      location: siteConfig.location,
+      name: siteConfig.fullName,
       pdfBuffer: buffer,
       reason: 'Digital Resume Verification',
       signatureLength: 16_192,
     })
 
-    return signingCertPassword === undefined
-      ? signpdf.sign(pdfWithPlaceholder, signingKeys)
-      : signpdf.sign(pdfWithPlaceholder, signingKeys, {
-          passphrase: signingCertPassword,
-        })
+    // Create P12Signer instance with certificate and passphrase
+    const signer: P12Signer = new P12Signer(signingKeys, {
+      passphrase: signingCertPassword ?? '',
+    })
+
+    // Sign the PDF using the signer instance
+    return await signpdf.sign(pdfWithPlaceholder, signer)
   } catch (error) {
     console.error('⚠ Failed to sign PDF:', error)
     return buffer
@@ -186,7 +194,7 @@ void (async (): Promise<void> => {
     let finalBuffer: Buffer = buffer
 
     if (signingKeys !== undefined) {
-      finalBuffer = signResume(buffer, signingKeys, signingCertPassword)
+      finalBuffer = await signResume(buffer, signingKeys, signingCertPassword)
       console.log(`  ✓ Signed ${locale}.pdf`)
     }
 
