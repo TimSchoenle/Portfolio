@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.0](https://github.com/TimSchoenle/Portfolio/compare/v1.7.0...v1.8.0) (2025-12-23)
+
+
+### Features
+
+* **Contract:** sign resume PDF ([#265](https://github.com/TimSchoenle/Portfolio/issues/265)) ([d813f77](https://github.com/TimSchoenle/Portfolio/commit/d813f77ce22c11aabc7407a448ac8a967fa3b3a7))
+* remove most easter eggs & improve command palette ([#273](https://github.com/TimSchoenle/Portfolio/issues/273)) ([01c8d11](https://github.com/TimSchoenle/Portfolio/commit/01c8d1133a595310bc11d18ccd87d30a78444dfd))
+* **Resume:** update the resume data & Improve data formation ([#269](https://github.com/TimSchoenle/Portfolio/issues/269)) ([4813e4b](https://github.com/TimSchoenle/Portfolio/commit/4813e4bf73487e8d334b67ee66ae00fdfd631e22))
+
+
+### Bug Fixes
+
+* **Contact:** resume path and title ([#263](https://github.com/TimSchoenle/Portfolio/issues/263)) ([de0f86d](https://github.com/TimSchoenle/Portfolio/commit/de0f86d9bac81652f842ebb4a338aa5becaffb55))
+* **deps:** lock file maintenance ([#271](https://github.com/TimSchoenle/Portfolio/issues/271)) ([dd0f8d7](https://github.com/TimSchoenle/Portfolio/commit/dd0f8d7b38eff183a48c86d1693f502ca8fd8c00))
+* **deps:** lock file maintenance ([#274](https://github.com/TimSchoenle/Portfolio/issues/274)) ([d580a69](https://github.com/TimSchoenle/Portfolio/commit/d580a695db295ff7aad0302b62192d10651d96e6))
+* **deps:** update dependency lucide-react to v0.562.0 ([#266](https://github.com/TimSchoenle/Portfolio/issues/266)) ([f0a9af6](https://github.com/TimSchoenle/Portfolio/commit/f0a9af6100e3c99383fa22cd6e7181445d460bc5))
+* **deps:** update dependency react-hook-form to v7.69.0 ([#277](https://github.com/TimSchoenle/Portfolio/issues/277)) ([5658d10](https://github.com/TimSchoenle/Portfolio/commit/5658d105288ed38a1d6ffb724b667f56a3c92634))
+* **deps:** update nextjs monorepo to v16.1.0 ([#270](https://github.com/TimSchoenle/Portfolio/issues/270)) ([fa828c4](https://github.com/TimSchoenle/Portfolio/commit/fa828c44c59b8b8e3b926c51fae22342d90ae0e2))
+* **Project:** hide contribution graph if data is empty ([#262](https://github.com/TimSchoenle/Portfolio/issues/262)) ([0ea156f](https://github.com/TimSchoenle/Portfolio/commit/0ea156fe3381cf8a30f3414d4f35a4375dd9e7e2))
+* replace outdated PDF signing dependency ([#275](https://github.com/TimSchoenle/Portfolio/issues/275)) ([31ab54b](https://github.com/TimSchoenle/Portfolio/commit/31ab54b5a7c9104d405b2688974a91b19a3c5fc8))
+
 ## [1.7.0](https://github.com/TimSchoenle/Portfolio/compare/v1.6.0...v1.7.0) (2025-12-20)
 
 
