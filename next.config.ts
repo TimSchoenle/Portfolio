@@ -71,9 +71,10 @@ const nextConfig: NextConfig = {
       'clsx',
       'tailwind-merge',
     ],
-    sri: {
-      algorithm: 'sha512',
-    },
+    // TODO: RE-ENABLE AFTER IT SUPPORTS TURBOPACK
+    // sri: {
+    //   algorithm: 'sha512',
+    // },
     webVitalsAttribution: ['CLS', 'LCP'],
   },
 
@@ -129,7 +130,6 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
-
   output: 'standalone',
 
   // Exclude build-time dependencies from the output bundle (.next/standalone/.node_modules/.pnpm)
@@ -206,33 +206,10 @@ const nextConfig: NextConfig = {
   // Enable strict mode for better development experience
   reactStrictMode: true,
 
-  serverExternalPackages: ['@tailwindcss/oxide'],
+  serverExternalPackages: ['@tailwindcss/oxide', 'esbuild-wasm'],
 
   // Enable typed routes for better TypeScript support
   typedRoutes: true,
-}
-
-async function applySerwist(config: NextConfig): Promise<NextConfig> {
-  // eslint-disable-next-line @typescript-eslint/typedef
-  const serwistModule = await import('@serwist/next')
-  const withSerwist: (config: NextConfig) => NextConfig = serwistModule.default(
-    {
-      additionalPrecacheEntries: [
-        { revision: revision, url: '/en' },
-        { revision: revision, url: '/de' },
-        { revision: revision, url: '/en/imprint' },
-        { revision: revision, url: '/de/imprint' },
-        { revision: revision, url: '/en/privacy' },
-        { revision: revision, url: '/de/privacy' },
-      ],
-      cacheOnNavigation: true,
-      disable: process.env.NODE_ENV === 'development',
-      reloadOnOnline: true,
-      swDest: 'public/sw.js',
-      swSrc: 'src/app/sw.ts',
-    }
-  )
-  return withSerwist(config)
 }
 
 async function applyNextIntl(config: NextConfig): Promise<NextConfig> {
@@ -275,7 +252,6 @@ async function buildConfig(phase: string): Promise<NextConfig> {
 
   let config: NextConfig = nextConfig
 
-  config = await applySerwist(config)
   config = await applyNextIntl(config)
   config = applyBundleAnalyzer(config)
 

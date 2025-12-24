@@ -7,7 +7,6 @@
     "target": "ES2022", // Modern JS target
     "module": "ESNext", // Keep ESNext modules for tree-shaking
     "lib": ["DOM", "DOM.Iterable", "ESNext", "webworker"],
-    "types": ["@serwist/next/typings"],
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "isolatedModules": true,
@@ -61,7 +60,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@/public/*": ["./public/*"]
+      "@/public/*": ["./public/*"],
+      "$lib/*": ["./$lib/*"]
     },
 
     // ======================================================================
