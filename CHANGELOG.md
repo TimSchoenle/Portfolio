@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/TimSchoenle/Portfolio/compare/v1.8.0...v1.9.0) (2025-12-24)
+
+
+### Features
+
+* **Legal:** improve privacy policy ([#284](https://github.com/TimSchoenle/Portfolio/issues/284)) ([2f36eb4](https://github.com/TimSchoenle/Portfolio/commit/2f36eb415612bf73a0516acddab6c36540ff80a5))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @serwist/next to v9.3.0 ([#283](https://github.com/TimSchoenle/Portfolio/issues/283)) ([f1086cd](https://github.com/TimSchoenle/Portfolio/commit/f1086cd80f36b54d5ca839064fb637c4b5c3ed0f))
+
 ## [1.8.0](https://github.com/TimSchoenle/Portfolio/compare/v1.7.0...v1.8.0) (2025-12-23)
 
 
