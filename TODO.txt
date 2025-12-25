@@ -1,7 +1,1 @@
-* I might need to put the permanent cookies for language and theme behind a cookie consent
 * Improve dark reader support for the hero title
-* Reset github token
-* Replace resume test data with real data
-* Ensure resume stays on one page
-* DPA's
-* Verify imprint and privacy policy
