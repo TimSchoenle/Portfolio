@@ -46,15 +46,42 @@ describe('TechRadarTooltip', () => {
   })
 
   it('renders tooltip when blip is hovered', () => {
+    // Mock getBoundingClientRect
+    const originalGetBoundingClientRect =
+      Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = vi.fn(() => ({
+      width: 500,
+      height: 500,
+      top: 0,
+      left: 0,
+      bottom: 500,
+      right: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    }))
+
     vi.spyOn(HoverContextModule, 'useHover').mockReturnValue({
       hoveredBlip: '1',
       setHoveredBlip: vi.fn(),
     })
-    render(<TechRadarTooltip blips={mockBlips} />)
+
+    // Wrap in a structure that satisfies the component's DOM requirements
+    render(
+      <div style={{ width: '500px', height: '500px' }}>
+        <svg
+          style={{ width: '100%', height: '100%' }}
+          viewBox="-220 -220 440 440"
+        />
+        <TechRadarTooltip blips={mockBlips} />
+      </div>
+    )
 
     expect(screen.getByText('TypeScript')).toBeDefined()
     expect(screen.getByText('languages')).toBeDefined()
     expect(screen.getByTestId('mock-icon')).toBeDefined()
+
+    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
   })
 })
 
