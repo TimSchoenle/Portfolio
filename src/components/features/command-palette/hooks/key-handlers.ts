@@ -18,7 +18,7 @@ interface KeyHandlerDependencies {
   run: (function_: () => void) => void
 }
 
-const handleNavigationKey: (
+export const handleNavigationKey: (
   key: string,
   deps: KeyHandlerDependencies,
   handleRequest: (action: (value: string) => void) => void
@@ -49,7 +49,7 @@ const handleNavigationKey: (
   return false
 }
 
-const handleSectionKey: (
+export const handleSectionKey: (
   key: string,
   deps: KeyHandlerDependencies,
   handleRequest: (action: (value: string) => void) => void
@@ -84,7 +84,7 @@ const handleSectionKey: (
   return false
 }
 
-const handleActionKey: (
+export const handleActionKey: (
   key: string,
   deps: KeyHandlerDependencies,
   handleRequest: (action: (value: string) => void) => void

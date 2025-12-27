@@ -1,67 +1,64 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { ThemeProvider, useTheme } from '../theme-provider'
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+const TestComponent = () => {
+  const { theme, setTheme } = useTheme()
+  return (
+    <div>
+      <span data-testid="theme-value">{theme}</span>
+      <button onClick={() => setTheme('dark')}>Set Dark</button>
+      <button onClick={() => setTheme('light')}>Set Light</button>
+    </div>
+  )
 }
-global.localStorage = localStorageMock as any
 
 describe('ThemeProvider', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    localStorage.clear()
     document.documentElement.className = ''
   })
 
-  it('renders children', () => {
+  it('should use default theme if no storage', () => {
     render(
-      <ThemeProvider>
-        <div>Test Child</div>
+      <ThemeProvider defaultTheme="light">
+        <TestComponent />
+      </ThemeProvider>
+    )
+    expect(screen.getByTestId('theme-value').textContent).toBe('light')
+  })
+
+  it('should load theme from local storage', () => {
+    localStorage.setItem('theme', 'light')
+    render(
+      <ThemeProvider defaultTheme="dark">
+        <TestComponent />
+      </ThemeProvider>
+    )
+    expect(screen.getByTestId('theme-value').textContent).toBe('light')
+    expect(document.documentElement.classList.contains('light')).toBe(true)
+  })
+
+  it('should change theme', () => {
+    render(
+      <ThemeProvider defaultTheme="light">
+        <TestComponent />
       </ThemeProvider>
     )
 
-    expect(screen.getByText('Test Child')).toBeDefined()
+    const button = screen.getByText('Set Dark')
+    fireEvent.click(button)
+
+    expect(screen.getByTestId('theme-value').textContent).toBe('dark')
+    expect(localStorage.getItem('theme')).toBe('dark')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 
-  it('applies default dark theme', () => {
-    localStorageMock.getItem.mockReturnValue(null)
-
-    render(
-      <ThemeProvider>
-        <div>Test</div>
-      </ThemeProvider>
-    )
-
-    // Note: useEffect runs after render, so we can't directly test classList immediately
-    expect(localStorageMock.getItem).toHaveBeenCalledWith('theme')
+  it('should throw error if useTheme is used outside provider', () => {
+    expect(() => {
+      render(<TestComponent />)
+    }).toThrow('useTheme must be used within a ThemeProvider')
   })
 
-  it('uses saved theme from localStorage', () => {
-    localStorageMock.getItem.mockReturnValue('light')
-
-    render(
-      <ThemeProvider>
-        <div>Test</div>
-      </ThemeProvider>
-    )
-
-    expect(localStorageMock.getItem).toHaveBeenCalledWith('theme')
-  })
-})
-
-describe('useTheme', () => {
-  it('throws error when used outside provider', () => {
-    const TestComponent = () => {
-      useTheme()
-      return <div>Test</div>
-    }
-
-    expect(() => render(<TestComponent />)).toThrow(
-      'useTheme must be used within a ThemeProvider'
-    )
-  })
+  // Add missing check for other branches if any
 })
