@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/TimSchoenle/Portfolio/compare/v1.9.1...v1.10.0) (2025-12-27)
+
+
+### Features
+
+* add Cloudflare Analytics integration ([#300](https://github.com/TimSchoenle/Portfolio/issues/300)) ([6397002](https://github.com/TimSchoenle/Portfolio/commit/6397002068cc0a1b71035f30ec4a0226a62e0bc5))
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v16.1.1 ([#293](https://github.com/TimSchoenle/Portfolio/issues/293)) ([4816079](https://github.com/TimSchoenle/Portfolio/commit/481607913c2c3cd0e6f33bdd2f67fc7443580634))
+
 ## [1.9.1](https://github.com/TimSchoenle/Portfolio/compare/v1.9.0...v1.9.1) (2025-12-25)
 
 
