@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.15.2](https://github.com/TimSchoenle/Portfolio/compare/v1.15.1...v1.15.2) (2026-02-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @serwist/next to v9.5.5 ([#500](https://github.com/TimSchoenle/Portfolio/issues/500)) ([78bde94](https://github.com/TimSchoenle/Portfolio/commit/78bde94ee9ab12cb04dc43d54e540b5e6ef9b15d))
+
+
+### Build System
+
+* always run CI tests ([#513](https://github.com/TimSchoenle/Portfolio/issues/513)) ([0a4331f](https://github.com/TimSchoenle/Portfolio/commit/0a4331fb17beba6a0a81ee63c517c6e44a3ac246))
+* remove ligthhouse CI test ([#503](https://github.com/TimSchoenle/Portfolio/issues/503)) ([0326a42](https://github.com/TimSchoenle/Portfolio/commit/0326a4205e2b1406b479628caf0c19824f7dde68))
+* standardize branch cache cleanup ([#523](https://github.com/TimSchoenle/Portfolio/issues/523)) ([71298b8](https://github.com/TimSchoenle/Portfolio/commit/71298b803dea2b1c42f9df5109a3ed7f38732c5b))
+
+
+### Miscellaneous
+
+* **deps:** update all non-major action updates ([#509](https://github.com/TimSchoenle/Portfolio/issues/509)) ([95781fc](https://github.com/TimSchoenle/Portfolio/commit/95781fc2aa7420ba00610009a0795172df12e38e))
+* **deps:** update all non-major action updates ([#518](https://github.com/TimSchoenle/Portfolio/issues/518)) ([10a1386](https://github.com/TimSchoenle/Portfolio/commit/10a1386f8480b99da36d66da82f956fbce75e30e))
+* **deps:** update dependency @playwright/test to v1.58.2 ([#495](https://github.com/TimSchoenle/Portfolio/issues/495)) ([c6c6a7f](https://github.com/TimSchoenle/Portfolio/commit/c6c6a7f213cd8fcfecd1f439e0eb411a953f596f))
+* **deps:** update dependency @types/node to v25.2.2 ([#502](https://github.com/TimSchoenle/Portfolio/issues/502)) ([ce82d5f](https://github.com/TimSchoenle/Portfolio/commit/ce82d5f6fe5660bec32c9ab2425fbc05572bfeb9))
+* **deps:** update dependency @types/node to v25.2.3 ([#514](https://github.com/TimSchoenle/Portfolio/issues/514)) ([7e13cc8](https://github.com/TimSchoenle/Portfolio/commit/7e13cc8b64d80fce44567ce452d56b3b3a995f2c))
+* **deps:** update dependency @types/react to v19.2.14 ([#520](https://github.com/TimSchoenle/Portfolio/issues/520)) ([4f3d75e](https://github.com/TimSchoenle/Portfolio/commit/4f3d75ec232ec9033dcc9b55158449d3f864aed2))
+* **deps:** update dependency @vitejs/plugin-react to v5.1.4 ([#511](https://github.com/TimSchoenle/Portfolio/issues/511)) ([ef59738](https://github.com/TimSchoenle/Portfolio/commit/ef597381a675b5efea87d7fba3673fb85e96cccb))
+* **deps:** update dependency dependency-cruiser to v17.3.8 ([#506](https://github.com/TimSchoenle/Portfolio/issues/506)) ([873d1c2](https://github.com/TimSchoenle/Portfolio/commit/873d1c2ce090f903f77b6b18ea21804c06e18390))
+* **deps:** update dependency eslint-plugin-no-secrets to v2.2.2 ([#512](https://github.com/TimSchoenle/Portfolio/issues/512)) ([2c1368a](https://github.com/TimSchoenle/Portfolio/commit/2c1368a0f43c9cd439bfaec8e73a0a3037393598))
+* **deps:** update dependency eslint-plugin-sonarjs to v3.0.7 ([#521](https://github.com/TimSchoenle/Portfolio/issues/521)) ([fbf80fa](https://github.com/TimSchoenle/Portfolio/commit/fbf80fadc4a70e37976e2273fc286c4540060be5))
+* **deps:** update dependency eslint-plugin-unicorn to v63 ([#516](https://github.com/TimSchoenle/Portfolio/issues/516)) ([f3dd46c](https://github.com/TimSchoenle/Portfolio/commit/f3dd46ce80868a76c721213c5b44378347b76b3f))
+* **deps:** update dependency happy-dom to v20.5.3 ([#507](https://github.com/TimSchoenle/Portfolio/issues/507)) ([6a788c9](https://github.com/TimSchoenle/Portfolio/commit/6a788c9f1d8313874d8fb06f7bc2cc103d9838e2))
+* **deps:** update dependency happy-dom to v20.6.0 ([#508](https://github.com/TimSchoenle/Portfolio/issues/508)) ([50a355f](https://github.com/TimSchoenle/Portfolio/commit/50a355fa35b64cbdaa8f5dc6a5098cc4ceb660f8))
+* **deps:** update dependency happy-dom to v20.6.1 ([#517](https://github.com/TimSchoenle/Portfolio/issues/517)) ([35b6342](https://github.com/TimSchoenle/Portfolio/commit/35b6342dd984f584efb81de7665a609a36b777bb))
+* **deps:** update dependency knip to v5.83.1 ([#496](https://github.com/TimSchoenle/Portfolio/issues/496)) ([bb18c9d](https://github.com/TimSchoenle/Portfolio/commit/bb18c9d4693f0873fdaa9c608a41c5b3a94935e2))
+* **deps:** update dependency serwist to v9.5.5 ([#499](https://github.com/TimSchoenle/Portfolio/issues/499)) ([df4ea50](https://github.com/TimSchoenle/Portfolio/commit/df4ea505c5f23a5df4c5dba27da62275072f3e44))
+* **deps:** update dependency typescript-eslint to v8.55.0 ([#510](https://github.com/TimSchoenle/Portfolio/issues/510)) ([a3aded4](https://github.com/TimSchoenle/Portfolio/commit/a3aded42390dc3b1fd35a6f3539089d7b1488e23))
+* **deps:** update dependency vite-tsconfig-paths to v6.1.0 ([#501](https://github.com/TimSchoenle/Portfolio/issues/501)) ([a501487](https://github.com/TimSchoenle/Portfolio/commit/a5014872f473d8ce5747af188abb506cd5598ace))
+* **deps:** update dependency vite-tsconfig-paths to v6.1.1 ([#522](https://github.com/TimSchoenle/Portfolio/issues/522)) ([dbf63e2](https://github.com/TimSchoenle/Portfolio/commit/dbf63e2ef16b55bbfc4f953d752f7ff807b6b0e5))
+* **deps:** update docker/build-push-action digest to 10e90e3 ([#505](https://github.com/TimSchoenle/Portfolio/issues/505)) ([13a3786](https://github.com/TimSchoenle/Portfolio/commit/13a37861f5dc76ae0e10386f2c9d5174601a9ed1))
+* **deps:** update docker/build-push-action digest to ee4ca42 ([#504](https://github.com/TimSchoenle/Portfolio/issues/504)) ([51de68b](https://github.com/TimSchoenle/Portfolio/commit/51de68bc30356fd4a2a96bb4bf24057c5b50d94b))
+* **deps:** update to vworkflows-maintenance-auto-approve-renovate-v1.3.0 ([#497](https://github.com/TimSchoenle/Portfolio/issues/497)) ([7673819](https://github.com/TimSchoenle/Portfolio/commit/767381921574ad4455e152a63ff4658a25ec85b0))
+* **deps:** update to vworkflows-maintenance-timed-auto-pr-approve-v1.2.8 ([#515](https://github.com/TimSchoenle/Portfolio/issues/515)) ([8380b05](https://github.com/TimSchoenle/Portfolio/commit/8380b058a927f45189ca0c95541f3480ad085b64))
+* **deps:** update to vworkflows-maintenance-timed-auto-pr-approve-v1.2.9 ([#519](https://github.com/TimSchoenle/Portfolio/issues/519)) ([bc58edf](https://github.com/TimSchoenle/Portfolio/commit/bc58edf71c818925546a2d1a6f49bcf9116294a9))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#493](https://github.com/TimSchoenle/Portfolio/issues/493)) ([ed6539f](https://github.com/TimSchoenle/Portfolio/commit/ed6539f9c6d2c926088244063ba3c34938313788))
+
 ## [1.15.1](https://github.com/TimSchoenle/Portfolio/compare/v1.15.0...v1.15.1) (2026-02-08)
 
 
