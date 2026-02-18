@@ -100,7 +100,7 @@
     "globals": "17.3.0",
     "happy-dom": "20.6.1",
     "husky": "9.1.7",
-    "jsdom": "28.0.0",
+    "jsdom": "28.1.0",
     "knip": "5.83.1",
     "license-checker-rseidelsohn": "4.4.2",
     "lint-staged": "16.2.7",
