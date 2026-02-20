@@ -45,7 +45,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "latest",
-    "lucide-react": "0.570.0",
+    "lucide-react": "0.574.0",
     "next": "16.1.6",
     "next-intl": "latest",
     "pino": "^10.1.0",
