@@ -57,8 +57,8 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@commitlint/cli": "20.4.1",
-    "@commitlint/config-conventional": "20.4.1",
+    "@commitlint/cli": "20.4.2",
+    "@commitlint/config-conventional": "20.4.2",
     "@commitlint/types": "latest",
     "@cyclonedx/cdxgen": "12.1.0",
     "@fast-check/vitest": "0.2.4",
