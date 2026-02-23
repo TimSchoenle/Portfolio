@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.15.3](https://github.com/TimSchoenle/Portfolio/compare/v1.15.2...v1.15.3) (2026-02-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @serwist/next to v9.5.6 ([#529](https://github.com/TimSchoenle/Portfolio/issues/529)) ([d8030fc](https://github.com/TimSchoenle/Portfolio/commit/d8030fc07b4f23f008a6cecbad813f034c255f7a))
+* **deps:** update dependency lucide-react to v0.564.0 ([#525](https://github.com/TimSchoenle/Portfolio/issues/525)) ([56f90f9](https://github.com/TimSchoenle/Portfolio/commit/56f90f9986144e5b2564bbc5478821220ef0f8e4))
+* **deps:** update dependency lucide-react to v0.570.0 ([#533](https://github.com/TimSchoenle/Portfolio/issues/533)) ([7f0cf41](https://github.com/TimSchoenle/Portfolio/commit/7f0cf41ad072981952a548f885d3cacab229b8ce))
+* **deps:** update dependency lucide-react to v0.574.0 ([#534](https://github.com/TimSchoenle/Portfolio/issues/534)) ([23dfffe](https://github.com/TimSchoenle/Portfolio/commit/23dfffefdcf0d7351d9b8105b15e95348018f539))
+* **deps:** update dependency lucide-react to v0.575.0 ([#547](https://github.com/TimSchoenle/Portfolio/issues/547)) ([8c15a1e](https://github.com/TimSchoenle/Portfolio/commit/8c15a1e957b89fa5c7fb18a51e11bf74d34ac820))
+* **deps:** update dependency tailwind-merge to v3.4.1 ([#531](https://github.com/TimSchoenle/Portfolio/issues/531)) ([2a4ef0c](https://github.com/TimSchoenle/Portfolio/commit/2a4ef0c2c354dafb9f4fd535bd928f404394e427))
+* **deps:** update dependency tailwind-merge to v3.5.0 ([#544](https://github.com/TimSchoenle/Portfolio/issues/544)) ([cd8dc37](https://github.com/TimSchoenle/Portfolio/commit/cd8dc3738f1dbb8a3b7185c4abfd4dfc8cd2c56c))
+
+
+### Miscellaneous
+
+* **deps:** update aquasecurity/trivy-action action to v0.34.1 ([#535](https://github.com/TimSchoenle/Portfolio/issues/535)) ([0f8a6a1](https://github.com/TimSchoenle/Portfolio/commit/0f8a6a103fbe004145ec7cc37bef2cb6d8f1cd7f))
+* **deps:** update commitlint monorepo to v20.4.2 ([#545](https://github.com/TimSchoenle/Portfolio/issues/545)) ([0c62f6e](https://github.com/TimSchoenle/Portfolio/commit/0c62f6eed01d64ab0c6277f5831156dc914020d0))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.1.0 ([#526](https://github.com/TimSchoenle/Portfolio/issues/526)) ([2c2b53b](https://github.com/TimSchoenle/Portfolio/commit/2c2b53b65500ae71e68a4f5ec8178dbb39433a7f))
+* **deps:** update dependency @types/node to v25.3.0 ([#543](https://github.com/TimSchoenle/Portfolio/issues/543)) ([9227655](https://github.com/TimSchoenle/Portfolio/commit/9227655ab2205d78b9ac4a9975aafd0a5b625303))
+* **deps:** update dependency eslint to v9.39.3 ([#551](https://github.com/TimSchoenle/Portfolio/issues/551)) ([3a70314](https://github.com/TimSchoenle/Portfolio/commit/3a70314b7ad73ffe3197c0a79fb5add7cab3ec2b))
+* **deps:** update dependency eslint-plugin-no-unsanitized to v4.1.5 ([#546](https://github.com/TimSchoenle/Portfolio/issues/546)) ([d9034a4](https://github.com/TimSchoenle/Portfolio/commit/d9034a4c4e2c894abdf1976f7c513d1f50e1d39f))
+* **deps:** update dependency eslint-plugin-perfectionist to v5.6.0 ([#537](https://github.com/TimSchoenle/Portfolio/issues/537)) ([042afc0](https://github.com/TimSchoenle/Portfolio/commit/042afc02ef805b160aca93a9c6b21faeaa202d78))
+* **deps:** update dependency eslint-plugin-security to v4 ([#548](https://github.com/TimSchoenle/Portfolio/issues/548)) ([958fa6b](https://github.com/TimSchoenle/Portfolio/commit/958fa6bfbbff41f5d38574b2e21c7c233ce0bbfc))
+* **deps:** update dependency eslint-plugin-sonarjs to v4 ([#541](https://github.com/TimSchoenle/Portfolio/issues/541)) ([e8a4af1](https://github.com/TimSchoenle/Portfolio/commit/e8a4af18c8194394e452d83cc5bbe7fde40e529a))
+* **deps:** update dependency happy-dom to v20.6.2 ([#536](https://github.com/TimSchoenle/Portfolio/issues/536)) ([4c972a9](https://github.com/TimSchoenle/Portfolio/commit/4c972a9db9964c825407b21d0dc0c18f1ab884d0))
+* **deps:** update dependency happy-dom to v20.6.3 ([#542](https://github.com/TimSchoenle/Portfolio/issues/542)) ([6ae9a7b](https://github.com/TimSchoenle/Portfolio/commit/6ae9a7b5bfe8dbb09fa79c4c7d25e74cfa479747))
+* **deps:** update dependency jsdom to v28.1.0 ([#530](https://github.com/TimSchoenle/Portfolio/issues/530)) ([82881e0](https://github.com/TimSchoenle/Portfolio/commit/82881e0a639e3989d2ebbd72e527ea49a0795ca0))
+* **deps:** update dependency knip to v5.84.0 ([#538](https://github.com/TimSchoenle/Portfolio/issues/538)) ([75d8551](https://github.com/TimSchoenle/Portfolio/commit/75d8551683797cc6b64e29a4153f206c0a4e11cb))
+* **deps:** update dependency knip to v5.84.1 ([#539](https://github.com/TimSchoenle/Portfolio/issues/539)) ([7f2e078](https://github.com/TimSchoenle/Portfolio/commit/7f2e078ace9804460075d65a69665665540f512c))
+* **deps:** update dependency serwist to v9.5.6 ([#528](https://github.com/TimSchoenle/Portfolio/issues/528)) ([67ce153](https://github.com/TimSchoenle/Portfolio/commit/67ce1531272b567114553ceb07005f5bfcbb59b3))
+* **deps:** update dependency typescript-eslint to v8.56.0 ([#532](https://github.com/TimSchoenle/Portfolio/issues/532)) ([b117ee3](https://github.com/TimSchoenle/Portfolio/commit/b117ee3e9a7e4a899198e7a9a1919f15438bd98a))
+* **deps:** update tailwindcss monorepo to v4.2.0 ([#540](https://github.com/TimSchoenle/Portfolio/issues/540)) ([5ee5028](https://github.com/TimSchoenle/Portfolio/commit/5ee50287e4ecb88d9d448629e639b7d5aedcf584))
+* **deps:** update to vactions-helm-update-chart-version-v1.5.2 ([#550](https://github.com/TimSchoenle/Portfolio/issues/550)) ([761b39f](https://github.com/TimSchoenle/Portfolio/commit/761b39f5c0aef8376148c27511ab1c376fe50c64))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#524](https://github.com/TimSchoenle/Portfolio/issues/524)) ([cec49a2](https://github.com/TimSchoenle/Portfolio/commit/cec49a2607ee41fa5b692062a7ecf6dc5641af8f))
+
 ## [1.15.2](https://github.com/TimSchoenle/Portfolio/compare/v1.15.1...v1.15.2) (2026-02-15)
 
 
