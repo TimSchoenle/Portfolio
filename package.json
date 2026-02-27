@@ -60,7 +60,7 @@
     "@commitlint/cli": "20.4.2",
     "@commitlint/config-conventional": "20.4.2",
     "@commitlint/types": "latest",
-    "@cyclonedx/cdxgen": "12.1.0",
+    "@cyclonedx/cdxgen": "12.1.1",
     "@fast-check/vitest": "0.2.4",
     "@lhci/cli": "0.15.1",
     "@lingual/i18n-check": "latest",
