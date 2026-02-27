@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.15.4](https://github.com/TimSchoenle/Portfolio/compare/v1.15.3...v1.15.4) (2026-02-27)
+
+
+### Miscellaneous
+
+* **deps:** update dependency happy-dom to v20.7.0 ([#552](https://github.com/TimSchoenle/Portfolio/issues/552)) ([9105a8e](https://github.com/TimSchoenle/Portfolio/commit/9105a8ed5fe1f54ccc14e1ae09fbd2f5fa1eb718))
+* **deps:** update dependency knip to v5.85.0 ([#554](https://github.com/TimSchoenle/Portfolio/issues/554)) ([2ca7e50](https://github.com/TimSchoenle/Portfolio/commit/2ca7e50f1784cec47706dd3fb0fe302b22d8c1bc))
+* **deps:** update dependency typescript-eslint to v8.56.1 ([#557](https://github.com/TimSchoenle/Portfolio/issues/557)) ([650c715](https://github.com/TimSchoenle/Portfolio/commit/650c715c126bab11068309ce121b7b73f3da3574))
+* **deps:** update dhi.io/bun:1-alpine3.22 docker digest to 94a32ad ([#558](https://github.com/TimSchoenle/Portfolio/issues/558)) ([48a7f37](https://github.com/TimSchoenle/Portfolio/commit/48a7f3759ccb6a5c4a688520a390df5be2946b26))
+* **deps:** update dhi.io/bun:1-alpine3.22-dev docker digest to 98d923c ([#559](https://github.com/TimSchoenle/Portfolio/issues/559)) ([b12b8ad](https://github.com/TimSchoenle/Portfolio/commit/b12b8ad6db910f115c0a764f6aa0b663ea22a3a6))
+* **deps:** update github artifact actions (major) ([#560](https://github.com/TimSchoenle/Portfolio/issues/560)) ([3f6136a](https://github.com/TimSchoenle/Portfolio/commit/3f6136adaffcdf256a5d4f0a56d6288cae6b493d))
+* **deps:** update step-security/harden-runner action to v2.15.0 ([#555](https://github.com/TimSchoenle/Portfolio/issues/555)) ([314aecc](https://github.com/TimSchoenle/Portfolio/commit/314aecc66e26796f8ac146b1a274f264773c62b6))
+* **deps:** update tailwindcss monorepo to v4.2.1 ([#556](https://github.com/TimSchoenle/Portfolio/issues/556)) ([1bac52f](https://github.com/TimSchoenle/Portfolio/commit/1bac52feaaba116fe44228a86c7de25391e4e0c2))
+
 ## [1.15.3](https://github.com/TimSchoenle/Portfolio/compare/v1.15.2...v1.15.3) (2026-02-23)
 
 
