@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.15.5](https://github.com/TimSchoenle/Portfolio/compare/v1.15.4...v1.15.5) (2026-03-01)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @cyclonedx/cdxgen to v12.1.1 ([#562](https://github.com/TimSchoenle/Portfolio/issues/562)) ([3330f2a](https://github.com/TimSchoenle/Portfolio/commit/3330f2a7dbcb65d2fe82c936fe537ddaf6b769d6))
+* **deps:** update dependency @types/node to v25.3.1 ([#563](https://github.com/TimSchoenle/Portfolio/issues/563)) ([2c82530](https://github.com/TimSchoenle/Portfolio/commit/2c82530b73bd7a757be232026e21937758537acb))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#549](https://github.com/TimSchoenle/Portfolio/issues/549)) ([9dddd57](https://github.com/TimSchoenle/Portfolio/commit/9dddd570855e57be52b4de80cf7c3f290daab591))
+
 ## [1.15.4](https://github.com/TimSchoenle/Portfolio/compare/v1.15.3...v1.15.4) (2026-02-27)
 
 
