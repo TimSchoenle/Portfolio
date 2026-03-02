@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.0](https://github.com/TimSchoenle/Portfolio/compare/v1.15.5...v1.16.0) (2026-03-02)
+
+
+### Features
+
+* **Skills:** add new skills & update render areas  ([#567](https://github.com/TimSchoenle/Portfolio/issues/567)) ([92a0e74](https://github.com/TimSchoenle/Portfolio/commit/92a0e74199aaefa969d19245c2316ae2709cbfaf))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @types/node to v25.3.2 ([#564](https://github.com/TimSchoenle/Portfolio/issues/564)) ([47f442b](https://github.com/TimSchoenle/Portfolio/commit/47f442bfb76bd2cdff8927bd259586faf7038483))
+
 ## [1.15.5](https://github.com/TimSchoenle/Portfolio/compare/v1.15.4...v1.15.5) (2026-03-01)
 
 
