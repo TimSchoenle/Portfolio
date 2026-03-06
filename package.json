@@ -58,8 +58,8 @@
   },
   "devDependencies": {
     "@eslint/compat": "2.0.2",
-    "@commitlint/cli": "20.4.2",
-    "@commitlint/config-conventional": "20.4.2",
+    "@commitlint/cli": "20.4.3",
+    "@commitlint/config-conventional": "20.4.3",
     "@commitlint/types": "latest",
     "@cyclonedx/cdxgen": "12.1.1",
     "@fast-check/vitest": "0.2.4",
