@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.16.1](https://github.com/TimSchoenle/Portfolio/compare/v1.16.0...v1.16.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v0.576.0 ([#579](https://github.com/TimSchoenle/Portfolio/issues/579)) ([0fb2d41](https://github.com/TimSchoenle/Portfolio/commit/0fb2d41b2fb2b1de677aebf6eb3610717d948d64))
+* **deps:** update dependency lucide-react to v0.577.0 ([#591](https://github.com/TimSchoenle/Portfolio/issues/591)) ([beb060b](https://github.com/TimSchoenle/Portfolio/commit/beb060b7d4550c473228693860c7bc9af5c1a00f))
+
+
+### Miscellaneous
+
+* **deps:** update all non-major action updates ([#568](https://github.com/TimSchoenle/Portfolio/issues/568)) ([15869d1](https://github.com/TimSchoenle/Portfolio/commit/15869d1ca1bfb70917cd97c871e6a0ef241dca66))
+* **deps:** update aquasecurity/trivy-action action to v0.34.2 ([#571](https://github.com/TimSchoenle/Portfolio/issues/571)) ([382da59](https://github.com/TimSchoenle/Portfolio/commit/382da5960e307e0bf683101288f64eb00a5fb711))
+* **deps:** update aquasecurity/trivy-action action to v0.35.0 ([#590](https://github.com/TimSchoenle/Portfolio/issues/590)) ([b94604a](https://github.com/TimSchoenle/Portfolio/commit/b94604aeea323f8a37047cc1e7179f5733840eda))
+* **deps:** update commitlint monorepo to v20.4.3 ([#588](https://github.com/TimSchoenle/Portfolio/issues/588)) ([56d4a18](https://github.com/TimSchoenle/Portfolio/commit/56d4a18545f9623ba6e4fb089bf2e6fc1fa99661))
+* **deps:** update dependency @types/node to v25.3.3 ([#573](https://github.com/TimSchoenle/Portfolio/issues/573)) ([52ff9f0](https://github.com/TimSchoenle/Portfolio/commit/52ff9f058ae2bd74519ded5fdf8a65942561d8fd))
+* **deps:** update dependency @types/node to v25.3.5 ([#587](https://github.com/TimSchoenle/Portfolio/issues/587)) ([c6ed8b9](https://github.com/TimSchoenle/Portfolio/commit/c6ed8b97aca7da91c2352134d2181b545eb244de))
+* **deps:** update dependency eslint-plugin-no-secrets to v2.3.3 ([#586](https://github.com/TimSchoenle/Portfolio/issues/586)) ([5c8afc9](https://github.com/TimSchoenle/Portfolio/commit/5c8afc9a9e1bc34641010974e304e59a66e37895))
+* **deps:** update dependency eslint-plugin-sonarjs to v4.0.1 ([#595](https://github.com/TimSchoenle/Portfolio/issues/595)) ([86bf34f](https://github.com/TimSchoenle/Portfolio/commit/86bf34f900c007d390b2444dd675e96d3cdeba47))
+* **deps:** update dependency globals to v17.4.0 ([#576](https://github.com/TimSchoenle/Portfolio/issues/576)) ([7f4d2f5](https://github.com/TimSchoenle/Portfolio/commit/7f4d2f52a0c2c077019f847bfe83d9db181b4ae3))
+* **deps:** update dependency happy-dom to v20.8.3 ([#581](https://github.com/TimSchoenle/Portfolio/issues/581)) ([88f3d3d](https://github.com/TimSchoenle/Portfolio/commit/88f3d3dc314cfbfdd97071e5f455707f4cbba163))
+* **deps:** update dependency lint-staged to v16.3.0 ([#572](https://github.com/TimSchoenle/Portfolio/issues/572)) ([cfe8b56](https://github.com/TimSchoenle/Portfolio/commit/cfe8b56710e1bff7f88d70df539b369ac5a59c67))
+* **deps:** update dependency lint-staged to v16.3.1 ([#575](https://github.com/TimSchoenle/Portfolio/issues/575)) ([297f62e](https://github.com/TimSchoenle/Portfolio/commit/297f62ec88440a8532ca41b2fe1fe166a5b9b85b))
+* **deps:** update dependency lint-staged to v16.3.2 ([#589](https://github.com/TimSchoenle/Portfolio/issues/589)) ([0542d12](https://github.com/TimSchoenle/Portfolio/commit/0542d12f9fdff4180af95dd07c94c29d6e17b7db))
+* **deps:** update dependency postcss to v8.5.8 ([#582](https://github.com/TimSchoenle/Portfolio/issues/582)) ([7cd54d9](https://github.com/TimSchoenle/Portfolio/commit/7cd54d932af42b872d43125b6f8add4dcdda2293))
+* **deps:** update docker/build-push-action action to v7 ([#584](https://github.com/TimSchoenle/Portfolio/issues/584)) ([339ebe0](https://github.com/TimSchoenle/Portfolio/commit/339ebe08fdb38aa752bdc2b7c05cdf4c39bed56d))
+* **deps:** update docker/dockerfile docker tag to v1.22 ([#574](https://github.com/TimSchoenle/Portfolio/issues/574)) ([371644a](https://github.com/TimSchoenle/Portfolio/commit/371644af059d8fc3f3b64199abe36f0d48d4e662))
+* **deps:** update docker/login-action action to v4 ([#577](https://github.com/TimSchoenle/Portfolio/issues/577)) ([6500e2f](https://github.com/TimSchoenle/Portfolio/commit/6500e2fecbfdc8f9398ed874b179208d56400aca))
+* **deps:** update docker/metadata-action action to v6 ([#585](https://github.com/TimSchoenle/Portfolio/issues/585)) ([8d61cbd](https://github.com/TimSchoenle/Portfolio/commit/8d61cbd46e88317dd6a42c36343381dc310af0c2))
+* **deps:** update docker/setup-buildx-action action to v4 ([#580](https://github.com/TimSchoenle/Portfolio/issues/580)) ([3a82f60](https://github.com/TimSchoenle/Portfolio/commit/3a82f60561bafde7d6d1ed6b528b1f0d343fe234))
+* **deps:** update docker/setup-qemu-action action to v4 ([#578](https://github.com/TimSchoenle/Portfolio/issues/578)) ([5f50017](https://github.com/TimSchoenle/Portfolio/commit/5f500178b33dacc87bc8e2c8bc67e2586ed638d9))
+* **deps:** update step-security/harden-runner action to v2.15.1 ([#583](https://github.com/TimSchoenle/Portfolio/issues/583)) ([7c8b691](https://github.com/TimSchoenle/Portfolio/commit/7c8b69182c43865443364ed92e567d6d7db7f02a))
+* **deps:** update to vworkflows-maintenance-timed-auto-pr-approve-v1.2.10 ([#570](https://github.com/TimSchoenle/Portfolio/issues/570)) ([ba79814](https://github.com/TimSchoenle/Portfolio/commit/ba79814d39258b4757e33659f1b1b5f4001161c7))
+* **deps:** update zizmorcore/zizmor-action action to v0.5.1 ([#592](https://github.com/TimSchoenle/Portfolio/issues/592)) ([730e3a3](https://github.com/TimSchoenle/Portfolio/commit/730e3a349c65e8ddcd95c9c17d33a42e58eebc6d))
+* **deps:** update zizmorcore/zizmor-action action to v0.5.2 ([#594](https://github.com/TimSchoenle/Portfolio/issues/594)) ([b22f709](https://github.com/TimSchoenle/Portfolio/commit/b22f709f1fc7c241c13190b4cf939c059ae06019))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#566](https://github.com/TimSchoenle/Portfolio/issues/566)) ([909864a](https://github.com/TimSchoenle/Portfolio/commit/909864a93cb3f842a5b062e6dc83c2ea315fbed5))
+
 ## [1.16.0](https://github.com/TimSchoenle/Portfolio/compare/v1.15.5...v1.16.0) (2026-03-02)
 
 
