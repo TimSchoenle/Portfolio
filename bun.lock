@@ -31,7 +31,7 @@
         "@commitlint/types": "latest",
         "@cyclonedx/cdxgen": "12.1.2",
         "@eslint/compat": "2.0.3",
-        "@fast-check/vitest": "0.2.4",
+        "@fast-check/vitest": "0.3.0",
         "@lhci/cli": "0.15.1",
         "@lingual/i18n-check": "latest",
         "@next/bundle-analyzer": "16.1.6",
@@ -323,7 +323,7 @@
 
     "@exodus/bytes": ["@exodus/bytes@1.14.1", "", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-OhkBFWI6GcRMUroChZiopRiSp2iAMvEBK47NhJooDqz1RERO4QuZIZnjP63TXX8GAiLABkYmX+fuQsdJ1dd2QQ=="],
 
-    "@fast-check/vitest": ["@fast-check/vitest@0.2.4", "", { "dependencies": { "fast-check": "^3.0.0 || ^4.0.0" }, "peerDependencies": { "vitest": "^1 || ^2 || ^3 || ^4" } }, "sha512-Ilcr+JAIPhb1s6FRm4qoglQYSGXXrS+zAupZeNuWAA3qHVGDA1d1Gb84Hb/+otL3GzVZjFJESg5/1SfIvrgssA=="],
+    "@fast-check/vitest": ["@fast-check/vitest@0.3.0", "", { "dependencies": { "fast-check": "^3.0.0 || ^4.0.0" }, "peerDependencies": { "vitest": "^1 || ^2 || ^3 || ^4" } }, "sha512-mXxAu7DJtzwSUeOMecZibq/403b8uX1/dWWXXCBgb+j9ERWuN9Hvr6usId+9ivdQ+tJl8H6o+CMv71BmjaENRQ=="],
 
     "@fastify/otel": ["@fastify/otel@0.16.0", "", { "dependencies": { "@opentelemetry/core": "^2.0.0", "@opentelemetry/instrumentation": "^0.208.0", "@opentelemetry/semantic-conventions": "^1.28.0", "minimatch": "^10.0.3" }, "peerDependencies": { "@opentelemetry/api": "^1.9.0" } }, "sha512-2304BdM5Q/kUvQC9qJO1KZq3Zn1WWsw+WWkVmFEaj1UE2hEIiuFqrPeglQOwEtw/ftngisqfQ3v70TWMmwhhHA=="],
 
