@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.16.2](https://github.com/TimSchoenle/Portfolio/compare/v1.16.1...v1.16.2) (2026-03-16)
+
+
+### Miscellaneous
+
+* **deps:** update actions/create-github-app-token action to v2.2.2 ([#612](https://github.com/TimSchoenle/Portfolio/issues/612)) ([455cd2a](https://github.com/TimSchoenle/Portfolio/commit/455cd2a0e02ec45c5d0f5437d3a41b2a401749ce))
+* **deps:** update actions/create-github-app-token action to v3 ([#613](https://github.com/TimSchoenle/Portfolio/issues/613)) ([ef4547c](https://github.com/TimSchoenle/Portfolio/commit/ef4547c689f9eec22667e59f05fa557f95a67573))
+* **deps:** update actions/download-artifact digest to 3e5f45b ([#601](https://github.com/TimSchoenle/Portfolio/issues/601)) ([08bc0a5](https://github.com/TimSchoenle/Portfolio/commit/08bc0a50c65e7993da010d810e8effc860370647))
+* **deps:** update all non-major action updates ([#609](https://github.com/TimSchoenle/Portfolio/issues/609)) ([b5fda01](https://github.com/TimSchoenle/Portfolio/commit/b5fda01ab530febb45e18fbdd5afafbdc56ad4e8))
+* **deps:** update all non-major action updates ([#611](https://github.com/TimSchoenle/Portfolio/issues/611)) ([b7a04c9](https://github.com/TimSchoenle/Portfolio/commit/b7a04c96fc9e36703f636e3f481bc7b178e990cb))
+* **deps:** update commitlint monorepo to v20.4.4 ([#614](https://github.com/TimSchoenle/Portfolio/issues/614)) ([bbf074f](https://github.com/TimSchoenle/Portfolio/commit/bbf074fda4dc284c61b82a46fdc4ff4fb8700d0f))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.1.2 ([#602](https://github.com/TimSchoenle/Portfolio/issues/602)) ([be74a29](https://github.com/TimSchoenle/Portfolio/commit/be74a2970d1b1d1a044a5c1b9e221eaef3f5982d))
+* **deps:** update dependency @eslint/compat to v2.0.3 ([#598](https://github.com/TimSchoenle/Portfolio/issues/598)) ([8a3e906](https://github.com/TimSchoenle/Portfolio/commit/8a3e906157531384413fe435b4282f484696008c))
+* **deps:** update dependency @fast-check/vitest to v0.3.0 ([#604](https://github.com/TimSchoenle/Portfolio/issues/604)) ([095de52](https://github.com/TimSchoenle/Portfolio/commit/095de520fe7850f4affa8176616806ca3dd3ff39))
+* **deps:** update dependency @types/node to v25.4.0 ([#606](https://github.com/TimSchoenle/Portfolio/issues/606)) ([2367845](https://github.com/TimSchoenle/Portfolio/commit/2367845fbb74f404829480f97879f514c7cfe7e0))
+* **deps:** update dependency @types/node to v25.5.0 ([#615](https://github.com/TimSchoenle/Portfolio/issues/615)) ([3d30992](https://github.com/TimSchoenle/Portfolio/commit/3d309924b4d8dfbe3db35ae45f54ddab35ec43af))
+* **deps:** update dependency @vitejs/plugin-react to v5.2.0 ([#616](https://github.com/TimSchoenle/Portfolio/issues/616)) ([756a984](https://github.com/TimSchoenle/Portfolio/commit/756a9846b2a7648fbdb7b30b9bb490e3b092db26))
+* **deps:** update dependency dependency-cruiser to v17.3.9 ([#618](https://github.com/TimSchoenle/Portfolio/issues/618)) ([c90e830](https://github.com/TimSchoenle/Portfolio/commit/c90e8302709b07c1d5051d0cda5b050b9c52f5f7))
+* **deps:** update dependency eslint to v9.39.4 ([#599](https://github.com/TimSchoenle/Portfolio/issues/599)) ([d19f8a9](https://github.com/TimSchoenle/Portfolio/commit/d19f8a9548d1a104c1335c806873fdddb6683afa))
+* **deps:** update dependency eslint-plugin-sonarjs to v4.0.2 ([#610](https://github.com/TimSchoenle/Portfolio/issues/610)) ([5b7b1c3](https://github.com/TimSchoenle/Portfolio/commit/5b7b1c3e53e2b7309590228a6a5e8efee95daf40))
+* **deps:** update dependency happy-dom to v20.8.4 ([#620](https://github.com/TimSchoenle/Portfolio/issues/620)) ([c384b2f](https://github.com/TimSchoenle/Portfolio/commit/c384b2fc6372c0202f7d647e564e9e993b627f9d))
+* **deps:** update dependency knip to v5.86.0 ([#600](https://github.com/TimSchoenle/Portfolio/issues/600)) ([3b650e6](https://github.com/TimSchoenle/Portfolio/commit/3b650e6c197a0c456481b344223bffa45db2bd21))
+* **deps:** update dependency lint-staged to v16.3.3 ([#608](https://github.com/TimSchoenle/Portfolio/issues/608)) ([4458251](https://github.com/TimSchoenle/Portfolio/commit/4458251eca8ba656912c533dea7166342678f3ae))
+* **deps:** update dependency typescript-eslint to v8.57.0 ([#605](https://github.com/TimSchoenle/Portfolio/issues/605)) ([d9b6da5](https://github.com/TimSchoenle/Portfolio/commit/d9b6da50665e37c5fd4dc041993f27f16045e789))
+* **deps:** update sigstore/cosign-installer action to v4.1.0 ([#596](https://github.com/TimSchoenle/Portfolio/issues/596)) ([07dbd21](https://github.com/TimSchoenle/Portfolio/commit/07dbd213f3a06d54bccc1149825790e715c70557))
+* **deps:** update to vactions-bun-setup-cached-v1.1.5 ([#603](https://github.com/TimSchoenle/Portfolio/issues/603)) ([306818b](https://github.com/TimSchoenle/Portfolio/commit/306818b477759b35548baa51e792ca66311fcca8))
+* **deps:** update to vworkflows-maintenance-wipe-cache-v1.1.3 ([#607](https://github.com/TimSchoenle/Portfolio/issues/607)) ([1f53fc4](https://github.com/TimSchoenle/Portfolio/commit/1f53fc4f0d038f6987b873fcc40c915b74670e93))
+* **deps:** update vitest monorepo to v4.1.0 ([#617](https://github.com/TimSchoenle/Portfolio/issues/617)) ([5d7733d](https://github.com/TimSchoenle/Portfolio/commit/5d7733d6c85b3e71195acb67b4876c810f2b2884))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#593](https://github.com/TimSchoenle/Portfolio/issues/593)) ([7750a48](https://github.com/TimSchoenle/Portfolio/commit/7750a488d2d4a3017885af4170a6340b719baec7))
+
 ## [1.16.1](https://github.com/TimSchoenle/Portfolio/compare/v1.16.0...v1.16.1) (2026-03-09)
 
 
