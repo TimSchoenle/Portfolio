@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.16.3](https://github.com/TimSchoenle/Portfolio/compare/v1.16.2...v1.16.3) (2026-03-24)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @serwist/next to v9.5.7 ([#627](https://github.com/TimSchoenle/Portfolio/issues/627)) ([66eb159](https://github.com/TimSchoenle/Portfolio/commit/66eb1597424a7ab55e8cc7c6562941c8ba5b31a8))
+* **deps:** update nextjs monorepo to v16.1.7 ([#638](https://github.com/TimSchoenle/Portfolio/issues/638)) ([c50a229](https://github.com/TimSchoenle/Portfolio/commit/c50a229d8f4939f865f515755d405444c53faaab))
+* **deps:** update nextjs monorepo to v16.2.0 ([#643](https://github.com/TimSchoenle/Portfolio/issues/643)) ([b16844b](https://github.com/TimSchoenle/Portfolio/commit/b16844b721f05819bc8f970feb79fd8473c5377c))
+* **deps:** update nextjs monorepo to v16.2.1 ([#649](https://github.com/TimSchoenle/Portfolio/issues/649)) ([3d5c66c](https://github.com/TimSchoenle/Portfolio/commit/3d5c66cafee75cdaf52b1d223f75ca30e69c891f))
+
+
+### Miscellaneous
+
+* **deps:** update actions/cache digest to 6682284 ([#634](https://github.com/TimSchoenle/Portfolio/issues/634)) ([167b08e](https://github.com/TimSchoenle/Portfolio/commit/167b08e356d4003b361b3e0a295c9ef15ba7e70f))
+* **deps:** update all non-major action updates ([#630](https://github.com/TimSchoenle/Portfolio/issues/630)) ([d4001ab](https://github.com/TimSchoenle/Portfolio/commit/d4001ab649cd2e8ba25d089c9ad37833b4b96fa7))
+* **deps:** update all non-major action updates ([#639](https://github.com/TimSchoenle/Portfolio/issues/639)) ([d467bc5](https://github.com/TimSchoenle/Portfolio/commit/d467bc5454453c6e1c7f75bbe96fbb264ac5c54f))
+* **deps:** update codecov/codecov-action digest to 1af5884 ([#635](https://github.com/TimSchoenle/Portfolio/issues/635)) ([7a8120f](https://github.com/TimSchoenle/Portfolio/commit/7a8120f0dba2658bedc6875a3bd44594d1cfd02f))
+* **deps:** update commitlint monorepo to v20.5.0 ([#633](https://github.com/TimSchoenle/Portfolio/issues/633)) ([b82a5c6](https://github.com/TimSchoenle/Portfolio/commit/b82a5c6ae5099cadb357737ff9e0d14bb8378454))
+* **deps:** update dependency eslint-plugin-perfectionist to v5.7.0 ([#640](https://github.com/TimSchoenle/Portfolio/issues/640)) ([4b747f7](https://github.com/TimSchoenle/Portfolio/commit/4b747f745b86bfeb0eb5c677e0ccd131f624ee72))
+* **deps:** update dependency jsdom to v29 ([#631](https://github.com/TimSchoenle/Portfolio/issues/631)) ([67926b5](https://github.com/TimSchoenle/Portfolio/commit/67926b5b072c0880a27f0c6115d041a9d753864a))
+* **deps:** update dependency jsdom to v29.0.1 ([#645](https://github.com/TimSchoenle/Portfolio/issues/645)) ([3769692](https://github.com/TimSchoenle/Portfolio/commit/3769692a5e9bb85e218d4e355024a105c5bf66db))
+* **deps:** update dependency knip to v5.87.0 ([#636](https://github.com/TimSchoenle/Portfolio/issues/636)) ([afc4807](https://github.com/TimSchoenle/Portfolio/commit/afc48073c81e07971906040bb6207ace89e8686e))
+* **deps:** update dependency knip to v5.88.0 ([#641](https://github.com/TimSchoenle/Portfolio/issues/641)) ([0ab5a2f](https://github.com/TimSchoenle/Portfolio/commit/0ab5a2f25df48d629f97bac676790a6fdd1839fe))
+* **deps:** update dependency knip to v5.88.1 ([#644](https://github.com/TimSchoenle/Portfolio/issues/644)) ([0c003a5](https://github.com/TimSchoenle/Portfolio/commit/0c003a5883cc3907d220ef18e46f2432a22dee31))
+* **deps:** update dependency knip to v6 ([#646](https://github.com/TimSchoenle/Portfolio/issues/646)) ([d846410](https://github.com/TimSchoenle/Portfolio/commit/d84641093e42f0c22cf084a2a5ee384a95e87a42))
+* **deps:** update dependency knip to v6.0.1 ([#648](https://github.com/TimSchoenle/Portfolio/issues/648)) ([7d3a089](https://github.com/TimSchoenle/Portfolio/commit/7d3a08976ca0b84e4557b73f454e4d34a106bc97))
+* **deps:** update dependency lint-staged to v16.3.4 ([#624](https://github.com/TimSchoenle/Portfolio/issues/624)) ([bb0b537](https://github.com/TimSchoenle/Portfolio/commit/bb0b537244c94cb5ed569477d031a1d303a03053))
+* **deps:** update dependency lint-staged to v16.4.0 ([#625](https://github.com/TimSchoenle/Portfolio/issues/625)) ([5abf383](https://github.com/TimSchoenle/Portfolio/commit/5abf3834fdd0ca5988687d06206d8ae01c3fb511))
+* **deps:** update dependency serwist to v9.5.7 ([#626](https://github.com/TimSchoenle/Portfolio/issues/626)) ([59a457c](https://github.com/TimSchoenle/Portfolio/commit/59a457cb8aab3713c132fe0d2efa3c9ac48a33b9))
+* **deps:** update dependency typescript-eslint to v8.57.1 ([#637](https://github.com/TimSchoenle/Portfolio/issues/637)) ([7af2da2](https://github.com/TimSchoenle/Portfolio/commit/7af2da28b9051b933a310ea37eda3a4815e25a78))
+* **deps:** update dhi.io/bun:1-alpine3.22 docker digest to 888082a ([#628](https://github.com/TimSchoenle/Portfolio/issues/628)) ([f88250a](https://github.com/TimSchoenle/Portfolio/commit/f88250aed29e4ec819b69c5e3efb94a3efea51a1))
+* **deps:** update dhi.io/bun:1-alpine3.22-dev docker digest to 6662aa7 ([#629](https://github.com/TimSchoenle/Portfolio/issues/629)) ([87fc847](https://github.com/TimSchoenle/Portfolio/commit/87fc847a697b3b54223263268c3d653f3a2e7bd8))
+* **deps:** update step-security/harden-runner action to v2.16.0 ([#622](https://github.com/TimSchoenle/Portfolio/issues/622)) ([1811b64](https://github.com/TimSchoenle/Portfolio/commit/1811b64d117dc47643da814e817d4824e650895a))
+* **deps:** update tailwindcss monorepo to v4.2.2 ([#642](https://github.com/TimSchoenle/Portfolio/issues/642)) ([aab4bcf](https://github.com/TimSchoenle/Portfolio/commit/aab4bcf61b87e20c04786210c4b0e2bfc6a7006a))
+* **deps:** update to vactions-helm-update-chart-version-v1.5.6 ([#632](https://github.com/TimSchoenle/Portfolio/issues/632)) ([229c650](https://github.com/TimSchoenle/Portfolio/commit/229c650c4f61cfc4def179bb69c1570a0217746c))
+* **deps:** update to vworkflows-maintenance-wipe-cache-v1.1.4 ([#647](https://github.com/TimSchoenle/Portfolio/issues/647)) ([19fbd0e](https://github.com/TimSchoenle/Portfolio/commit/19fbd0e2ff7ee8f62daca18c9b8fd835d32108a3))
+
 ## [1.16.2](https://github.com/TimSchoenle/Portfolio/compare/v1.16.1...v1.16.2) (2026-03-16)
 
 
