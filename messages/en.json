@@ -225,12 +225,29 @@
           "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
         ],
         "company": "Mineplex Studios LLC",
-        "end": null,
         "location": "Remote",
         "start": {
           "month": 8,
           "year": 2023
         },
+        "end": {
+          "month": 3,
+          "year": 2026
+        },
+        "title": "Senior Software Developer"
+      },
+      {
+        "achievements": [
+          "Built and maintained CI/CD and GitOps workflows on Kubernetes-based infrastructure, standardizing deployments, release strategies and configuration across multiple services and environments.",
+          "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
+        ],
+        "company": "SixTwenty Cloud LLC",
+        "location": "Remote",
+        "start": {
+          "month": 3,
+          "year": 2026
+        },
+        "end": null,
         "title": "Senior Software Developer"
       }
     ],
