@@ -17,11 +17,11 @@ vi.mock('lucide-react', () => ({
   FileText: () => <div data-testid="file-icon">File</div>,
   CookieIcon: () => <div data-testid="cookie-icon">Cookie</div>,
   GitBranch: () => <div data-testid="git-icon">Git</div>,
-  Linkedin: () => <div data-testid="linkedin-icon">LinkedIn</div>,
+  Network: () => <div data-testid="linkedin-icon">LinkedIn</div>,
   Mail: () => <div data-testid="mail-icon">Mail</div>,
   Scale: () => <div data-testid="scale-icon">Scale</div>,
   Zap: () => <div data-testid="zap-icon">Zap</div>,
-  Github: () => <div data-testid="github-icon">Github</div>,
+  Code2: () => <div data-testid="github-icon">Github</div>,
 }))
 
 // Mock i18n routing
