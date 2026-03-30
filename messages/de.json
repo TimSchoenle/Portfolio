@@ -225,12 +225,29 @@
           "Partnerspezifische Funktionen und Integrationen als White-Label-Lösungen auf Basis der Plattform implementiert, sodass Partner individuelle Produkte bereitstellen konnten, während sie auf die gemeinsame Kerninfrastruktur und das gemeinsame Tooling zurückgreifen."
         ],
         "company": "Mineplex Studios LLC",
-        "end": null,
         "location": "Remote",
         "start": {
           "month": 8,
           "year": 2023
         },
+        "end": {
+          "month": 3,
+          "year": 2026
+        },
+        "title": "Senior Softwareentwickler"
+      },
+      {
+        "achievements": [
+          "CI/CD- und GitOps-Workflows auf einer Kubernetes-basierten Infrastruktur aufgebaut und gepflegt, um Deployments, Release-Strategien und Konfiguration über mehrere Services und Umgebungen hinweg zu standardisieren.",
+          "Partnerspezifische Funktionen und Integrationen als White-Label-Lösungen auf Basis der Plattform implementiert, sodass Partner individuelle Produkte bereitstellen konnten, während sie auf die gemeinsame Kerninfrastruktur und das gemeinsame Tooling zurückgreifen."
+        ],
+        "company": "SixTwenty Cloud LLC",
+        "location": "Remote",
+        "start": {
+          "month": 3,
+          "year": 2026
+        },
+        "end": null,
         "title": "Senior Softwareentwickler"
       }
     ],
