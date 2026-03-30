@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable sonarjs/deprecation */
 import React, { type JSX } from 'react'
 
-import { Github, Linkedin, Mail } from 'lucide-react'
+import { Code2, Mail, Network } from 'lucide-react'
 
 import {
   CommandGroup,
@@ -65,7 +63,7 @@ export const ActionsGroup: React.FC<ActionsGroupProperties> = ({
           value="linkedin"
           onSelect={goLinkedIn}
         >
-          <Linkedin className="mr-2 h-4 w-4" />
+          <Network className="mr-2 h-4 w-4" />
           <span>{tPalette('actions.linkedin')}</span>
           <CommandShortcut>{SHORTCUT_L}</CommandShortcut>
         </CommandItem>
@@ -75,7 +73,7 @@ export const ActionsGroup: React.FC<ActionsGroupProperties> = ({
         value="github"
         onSelect={goGitHub}
       >
-        <Github className="mr-2 h-4 w-4" />
+        <Code2 className="mr-2 h-4 w-4" />
         <span>{tPalette('actions.github')}</span>
         <CommandShortcut>{SHORTCUT_G}</CommandShortcut>
       </CommandItem>

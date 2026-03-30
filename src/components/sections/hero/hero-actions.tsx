@@ -1,7 +1,6 @@
-/* eslint-disable sonarjs/deprecation, @typescript-eslint/no-deprecated */
 import { type JSX } from 'react'
 
-import { Github, Mail } from 'lucide-react'
+import { Code2, Mail } from 'lucide-react'
 
 import { BlueprintButton } from '@/components/blueprint/blueprint-button'
 import { siteConfig } from '@/data/config'
@@ -19,7 +18,7 @@ export const HeroActions: FCStrict<HeroActionsProperties> = ({
   <div className="mt-16 flex flex-wrap gap-8">
     <BlueprintButton
       href={siteConfig.socials.github}
-      icon={Github}
+      icon={Code2}
       target="_blank"
       variant="outline"
     >
