@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.17.0](https://github.com/TimSchoenle/Portfolio/compare/v1.16.3...v1.17.0) (2026-03-30)
+
+
+### Features
+
+* **Experience:** update experience history ([#660](https://github.com/TimSchoenle/Portfolio/issues/660)) ([6eeb103](https://github.com/TimSchoenle/Portfolio/commit/6eeb103262fe6599e02d54caae80badbecc7a20f))
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1 ([#668](https://github.com/TimSchoenle/Portfolio/issues/668)) ([6d81235](https://github.com/TimSchoenle/Portfolio/commit/6d812352c7254433e3550a3931ab6b6215379daf))
+
+
+### Miscellaneous
+
+* **deps:** update codecov/codecov-action action to v6 ([#656](https://github.com/TimSchoenle/Portfolio/issues/656)) ([0197861](https://github.com/TimSchoenle/Portfolio/commit/01978612cdc0b8f7bf9c5f67ecae52558c10a321))
+* **deps:** update codecov/codecov-action digest to 75cd116 ([#654](https://github.com/TimSchoenle/Portfolio/issues/654)) ([fbbc089](https://github.com/TimSchoenle/Portfolio/commit/fbbc089b1a1ff18e98142361886fb16d938720e4))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.1.3 ([#661](https://github.com/TimSchoenle/Portfolio/issues/661)) ([1ec6b09](https://github.com/TimSchoenle/Portfolio/commit/1ec6b098b9ef806f940d8622eb62bb2d11840944))
+* **deps:** update dependency dependency-cruiser to v17.3.10 ([#662](https://github.com/TimSchoenle/Portfolio/issues/662)) ([fe9a238](https://github.com/TimSchoenle/Portfolio/commit/fe9a23890cb8ccddcb058970839fe10259436b54))
+* **deps:** update dependency happy-dom to v20.8.9 ([#663](https://github.com/TimSchoenle/Portfolio/issues/663)) ([3792f8a](https://github.com/TimSchoenle/Portfolio/commit/3792f8a7e619ded1e8ed51f18bc64bbbf7d2c5b3))
+* **deps:** update dependency knip to v6.0.2 ([#650](https://github.com/TimSchoenle/Portfolio/issues/650)) ([48da1b0](https://github.com/TimSchoenle/Portfolio/commit/48da1b055b59b9bf93724ca5bffb80b09024cccb))
+* **deps:** update dependency knip to v6.0.3 ([#655](https://github.com/TimSchoenle/Portfolio/issues/655)) ([f480a70](https://github.com/TimSchoenle/Portfolio/commit/f480a7047dbf4581ee992506ad09d2ec9b66f60d))
+* **deps:** update dependency knip to v6.0.6 ([#664](https://github.com/TimSchoenle/Portfolio/issues/664)) ([35f19a3](https://github.com/TimSchoenle/Portfolio/commit/35f19a3a3812ad652f4f095babcaf97a51994c8b))
+* **deps:** update dependency node-forge to v1.4.0 ([#666](https://github.com/TimSchoenle/Portfolio/issues/666)) ([9f4d461](https://github.com/TimSchoenle/Portfolio/commit/9f4d4616577f49848df9f2eeb7feee75ba612e1c))
+* **deps:** update dependency web-vitals to v5.2.0 ([#667](https://github.com/TimSchoenle/Portfolio/issues/667)) ([b7c9f4b](https://github.com/TimSchoenle/Portfolio/commit/b7c9f4bf1ca19814fe4410d180b6df810e4244a2))
+* **deps:** update sigstore/cosign-installer action to v4.1.1 ([#652](https://github.com/TimSchoenle/Portfolio/issues/652)) ([4965ebb](https://github.com/TimSchoenle/Portfolio/commit/4965ebb547948c0cdbb371fa7c089548d490b591))
+* **deps:** update to vactions-bun-setup-cached-v1.1.7 ([#653](https://github.com/TimSchoenle/Portfolio/issues/653)) ([4e34abc](https://github.com/TimSchoenle/Portfolio/commit/4e34abc45c1779b9f00c58a3fd6e9977f1a8ed72))
+* **deps:** update vitest monorepo to v4.1.1 ([#658](https://github.com/TimSchoenle/Portfolio/issues/658)) ([eb0d5c5](https://github.com/TimSchoenle/Portfolio/commit/eb0d5c5787f48cfabf6bc07a5fb6df6f8e0848a5))
+* **deps:** update vitest monorepo to v4.1.2 ([#665](https://github.com/TimSchoenle/Portfolio/issues/665)) ([a683839](https://github.com/TimSchoenle/Portfolio/commit/a683839f92ed44754e674b76a1739bd39cc31a09))
+
 ## [1.16.3](https://github.com/TimSchoenle/Portfolio/compare/v1.16.2...v1.16.3) (2026-03-24)
 
 
