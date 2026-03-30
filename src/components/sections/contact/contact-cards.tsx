@@ -1,8 +1,6 @@
 import { type JSX } from 'react'
 
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable sonarjs/deprecation */
-import { Eye, Github, Linkedin, Mail, ShieldCheck } from 'lucide-react'
+import { Code2, Eye, Mail, Network, ShieldCheck } from 'lucide-react'
 
 import { BlueprintCard } from '@/components/blueprint/blueprint-card'
 import { BlueprintItem } from '@/components/blueprint/blueprint-item'
@@ -67,7 +65,7 @@ const NetworkNodesCard: FCStrict<CardProperties> = ({
     <div className="flex flex-col gap-4 p-6">
       <BlueprintItem
         href={siteConfig.socials.github}
-        icon={<Github className="h-5 w-5" />}
+        icon={<Code2 className="h-5 w-5" />}
         label={translations('github')}
         subLabel={translations('sourceControl')}
       />
@@ -75,7 +73,7 @@ const NetworkNodesCard: FCStrict<CardProperties> = ({
       {Boolean(siteConfig.socials.linkedin) && (
         <BlueprintItem
           href={siteConfig.socials.linkedin ?? ''}
-          icon={<Linkedin className="h-5 w-5" />}
+          icon={<Network className="h-5 w-5" />}
           label={translations('linkedin')}
           subLabel={translations('professionalNetwork')}
         />
