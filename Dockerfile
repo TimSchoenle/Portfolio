@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.22@sha256:4a43a54dd1fedceb30ba47e76cfcf2b47304f4161c0caeac2db1c61804ea3c91
+# syntax=docker/dockerfile:1.23@sha256:2780b5c3bab67f1f76c781860de469442999ed1a0d7992a5efdf2cffc0e3d769
 
 FROM dhi.io/bun:1-alpine3.22-dev@sha256:6662aa7d7b9e133e0e0c6a85f7eff1749977f29f0b670ce95bfdede1afa97e49 AS build_base
 WORKDIR /app
