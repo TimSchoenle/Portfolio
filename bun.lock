@@ -29,7 +29,7 @@
         "@commitlint/cli": "20.5.0",
         "@commitlint/config-conventional": "20.5.0",
         "@commitlint/types": "latest",
-        "@cyclonedx/cdxgen": "12.1.3",
+        "@cyclonedx/cdxgen": "12.1.4",
         "@eslint/compat": "2.0.3",
         "@fast-check/vitest": "0.3.0",
         "@lhci/cli": "0.15.1",
@@ -239,7 +239,7 @@
 
     "@csstools/css-tokenizer": ["@csstools/css-tokenizer@4.0.0", "", {}, "sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA=="],
 
-    "@cyclonedx/cdxgen": ["@cyclonedx/cdxgen@12.1.3", "", { "dependencies": { "@babel/parser": "7.29.2", "@babel/traverse": "7.29.0", "@iarna/toml": "2.2.5", "@isaacs/string-locale-compare": "1.1.0", "@npmcli/fs": "5.0.0", "@npmcli/map-workspaces": "5.0.3", "@npmcli/name-from-folder": "4.0.0", "@npmcli/package-json": "7.0.5", "ajv": "8.18.0", "ajv-formats": "3.0.1", "bin-links": "6.0.0", "cheerio": "1.2.0", "common-ancestor-path": "1.0.1", "edn-data": "1.1.2", "glob": "13.0.6", "got": "14.6.6", "iconv-lite": "0.7.2", "json-stringify-nice": "1.1.4", "jws": "4.0.1", "keyv": "5.6.0", "node-stream-zip": "1.15.0", "npm-package-arg": "13.0.2", "packageurl-js": "1.0.2", "parse-conflict-json": "5.0.1", "proc-log": "6.1.0", "properties-reader": "3.0.1", "read-package-json-fast": "5.0.0", "semver": "7.7.4", "ssri": "13.0.1", "table": "6.9.0", "tar": "7.5.11", "treeverse": "3.0.0", "uuid": "13.0.0", "walk-up-path": "4.0.0", "xml-js": "1.6.11", "yaml": "2.8.2", "yargs": "18.0.0", "yoctocolors": "2.1.2" }, "optionalDependencies": { "@appthreat/atom": "2.5.2", "@appthreat/atom-parsetools": "1.1.3", "@appthreat/cdx-proto": "1.2.1", "@appthreat/sqlite3": "8.0.1", "@bufbuild/protobuf": "2.11.0", "@cdxgen/cdxgen-plugins-bin": "2.0.3", "@cdxgen/cdxgen-plugins-bin-darwin-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-darwin-arm64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-arm": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-arm64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-ppc64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linuxmusl-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linuxmusl-arm64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-windows-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-windows-arm64": "2.0.3", "body-parser": "2.2.2", "compression": "1.8.1", "connect": "3.7.0", "jsonata": "2.1.0" }, "bin": { "cbom": "bin/cdxgen.js", "cdx-verify": "bin/verify.js", "cdxgen": "bin/cdxgen.js", "cdxgen-secure": "bin/cdxgen.js", "cdxi": "bin/repl.js", "evinse": "bin/evinse.js", "obom": "bin/cdxgen.js", "saasbom": "bin/cdxgen.js" } }, "sha512-nGZieKO8AxbIV9J2XwJdLPJC0DqBviUX8u6p8vHhT8LZyySmHx55TtCorWnAM0mFKDYyD0MJicUj5WIRqZMXQg=="],
+    "@cyclonedx/cdxgen": ["@cyclonedx/cdxgen@12.1.4", "", { "dependencies": { "@babel/parser": "7.29.2", "@babel/traverse": "7.29.0", "@iarna/toml": "2.2.5", "@isaacs/string-locale-compare": "1.1.0", "@npmcli/fs": "5.0.0", "@npmcli/map-workspaces": "5.0.3", "@npmcli/name-from-folder": "4.0.0", "@npmcli/package-json": "7.0.5", "ajv": "8.18.0", "ajv-formats": "3.0.1", "bin-links": "6.0.0", "cheerio": "1.2.0", "common-ancestor-path": "1.0.1", "edn-data": "1.1.2", "glob": "13.0.6", "got": "14.6.6", "iconv-lite": "0.7.2", "json-stringify-nice": "1.1.4", "jws": "4.0.1", "keyv": "5.6.0", "node-stream-zip": "1.15.0", "npm-package-arg": "13.0.2", "packageurl-js": "1.0.2", "parse-conflict-json": "5.0.1", "proc-log": "6.1.0", "properties-reader": "3.0.1", "read-package-json-fast": "5.0.0", "semver": "7.7.4", "ssri": "13.0.1", "table": "6.9.0", "tar": "7.5.13", "treeverse": "3.0.0", "uuid": "13.0.0", "walk-up-path": "4.0.0", "xml-js": "1.6.11", "yaml": "2.8.3", "yargs": "18.0.0", "yoctocolors": "2.1.2" }, "optionalDependencies": { "@appthreat/atom": "2.5.2", "@appthreat/atom-parsetools": "1.1.3", "@appthreat/cdx-proto": "1.2.1", "@appthreat/sqlite3": "8.0.1", "@bufbuild/protobuf": "2.11.0", "@cdxgen/cdxgen-plugins-bin": "2.0.3", "@cdxgen/cdxgen-plugins-bin-darwin-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-darwin-arm64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-arm": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-arm64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linux-ppc64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linuxmusl-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-linuxmusl-arm64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-windows-amd64": "2.0.3", "@cdxgen/cdxgen-plugins-bin-windows-arm64": "2.0.3", "body-parser": "2.2.2", "compression": "1.8.1", "connect": "3.7.0", "jsonata": "2.1.0" }, "bin": { "cbom": "bin/cdxgen.js", "cdx-verify": "bin/verify.js", "cdxgen": "bin/cdxgen.js", "cdxgen-secure": "bin/cdxgen.js", "cdxi": "bin/repl.js", "evinse": "bin/evinse.js", "obom": "bin/cdxgen.js", "saasbom": "bin/cdxgen.js" } }, "sha512-FwxkzGx+V8HUslHVWciI0mZEe1H97ksK0txURdX4Ecl2swUawjL42WKe+2nlUoD9hhOKoZrOAUpNc6hiOyp1Jw=="],
 
     "@discoveryjs/json-ext": ["@discoveryjs/json-ext@0.5.7", "", {}, "sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw=="],
 
@@ -2669,7 +2669,7 @@
 
     "tapable": ["tapable@2.3.0", "", {}, "sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg=="],
 
-    "tar": ["tar@7.5.11", "", { "dependencies": { "@isaacs/fs-minipass": "^4.0.0", "chownr": "^3.0.0", "minipass": "^7.1.2", "minizlib": "^3.1.0", "yallist": "^5.0.0" } }, "sha512-ChjMH33/KetonMTAtpYdgUFr0tbz69Fp2v7zWxQfYZX4g5ZN2nOBXm1R2xyA+lMIKrLKIoKAwFj93jE/avX9cQ=="],
+    "tar": ["tar@7.5.13", "", { "dependencies": { "@isaacs/fs-minipass": "^4.0.0", "chownr": "^3.0.0", "minipass": "^7.1.2", "minizlib": "^3.1.0", "yallist": "^5.0.0" } }, "sha512-tOG/7GyXpFevhXVh8jOPJrmtRpOTsYqUIkVdVooZYJS/z8WhfQUX8RJILmeuJNinGAMSu1veBr4asSHFt5/hng=="],
 
     "tar-fs": ["tar-fs@3.1.2", "", { "dependencies": { "pump": "^3.0.0", "tar-stream": "^3.1.5" }, "optionalDependencies": { "bare-fs": "^4.0.1", "bare-path": "^3.0.0" } }, "sha512-QGxxTxxyleAdyM3kpFs14ymbYmNFrfY+pHj7Z8FgtbZ7w2//VAgLMac7sT6nRpIHjppXO2AwwEOg0bPFVRcmXw=="],
 
@@ -2885,7 +2885,7 @@
 
     "yallist": ["yallist@5.0.0", "", {}, "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="],
 
-    "yaml": ["yaml@2.8.2", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A=="],
+    "yaml": ["yaml@2.8.3", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-AvbaCLOO2Otw/lW5bmh9d/WEdcDFdQp2Z2ZUH3pX9U2ihyUY0nvLv7J6TrWowklRGPYbB/IuIMfYgxaCPg5Bpg=="],
 
     "yargs": ["yargs@17.7.2", "", { "dependencies": { "cliui": "^8.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "require-directory": "^2.1.1", "string-width": "^4.2.3", "y18n": "^5.0.5", "yargs-parser": "^21.1.1" } }, "sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w=="],
 
@@ -3245,6 +3245,8 @@
 
     "knip/get-tsconfig": ["get-tsconfig@4.13.7", "", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-7tN6rFgBlMgpBML5j8typ92BKFi2sFQvIdpAqLA2beia5avZDrMs0FLZiM5etShWq5irVyGcGMEA1jcDaK7A/Q=="],
 
+    "knip/yaml": ["yaml@2.8.2", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A=="],
+
     "lighthouse/@sentry/node": ["@sentry/node@7.120.4", "", { "dependencies": { "@sentry-internal/tracing": "7.120.4", "@sentry/core": "7.120.4", "@sentry/integrations": "7.120.4", "@sentry/types": "7.120.4", "@sentry/utils": "7.120.4" } }, "sha512-qq3wZAXXj2SRWhqErnGCSJKUhPSlZ+RGnCZjhfjHpP49KNpcd9YdPTIUsFMgeyjdh6Ew6aVCv23g1hTP0CHpYw=="],
 
     "lighthouse/chrome-launcher": ["chrome-launcher@1.2.1", "", { "dependencies": { "@types/node": "*", "escape-string-regexp": "^4.0.0", "is-wsl": "^2.2.0", "lighthouse-logger": "^2.0.1" }, "bin": { "print-chrome-path": "bin/print-chrome-path.cjs" } }, "sha512-qmFR5PLMzHyuNJHwOloHPAHhbaNglkfeV/xDtt5b7xiFFyU1I+AZZX0PYseMuhenJSSirgxELYIbswcoc+5H4A=="],
@@ -3264,6 +3266,8 @@
     "lint-staged/commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
     "lint-staged/picomatch": ["picomatch@4.0.3", "", {}, "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q=="],
+
+    "lint-staged/yaml": ["yaml@2.8.2", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A=="],
 
     "log-update/ansi-escapes": ["ansi-escapes@7.3.0", "", { "dependencies": { "environment": "^1.0.0" } }, "sha512-BvU8nYgGQBxcmMuEeUEmNTvrMVjJNSH7RgW24vXexN4Ven6qCvy4TntnvlnwnMLTVlcRQQdbRY8NKnaIoeWDNg=="],
 
