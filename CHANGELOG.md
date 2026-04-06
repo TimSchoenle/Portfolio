@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.17.1](https://github.com/TimSchoenle/Portfolio/compare/v1.17.0...v1.17.1) (2026-04-06)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v16.2.2 ([#678](https://github.com/TimSchoenle/Portfolio/issues/678)) ([27b0664](https://github.com/TimSchoenle/Portfolio/commit/27b06648b4346da6c214f17bfb684410ca53bcf6))
+
+
+### Miscellaneous
+
+* **deps:** update all non-major action updates ([#683](https://github.com/TimSchoenle/Portfolio/issues/683)) ([30c0306](https://github.com/TimSchoenle/Portfolio/commit/30c03068d55191f01ec289d510e1282d7a09b100))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.1.4 ([#677](https://github.com/TimSchoenle/Portfolio/issues/677)) ([5ba39ad](https://github.com/TimSchoenle/Portfolio/commit/5ba39ad84075012905ba0cc5bac376825f722877))
+* **deps:** update dependency @eslint/compat to v2.0.4 ([#686](https://github.com/TimSchoenle/Portfolio/issues/686)) ([08b3a1e](https://github.com/TimSchoenle/Portfolio/commit/08b3a1e2a901965e89b667e48ff84aad858f1a59))
+* **deps:** update dependency @playwright/test to v1.59.0 ([#679](https://github.com/TimSchoenle/Portfolio/issues/679)) ([dfcd127](https://github.com/TimSchoenle/Portfolio/commit/dfcd12723c1cb034fe9ee15cf2a1b1d60bd856d4))
+* **deps:** update dependency @playwright/test to v1.59.1 ([#681](https://github.com/TimSchoenle/Portfolio/issues/681)) ([57fd832](https://github.com/TimSchoenle/Portfolio/commit/57fd832adadee40952ccd9ae84faf6e604eb2ede))
+* **deps:** update dependency @types/node to v25.5.2 ([#684](https://github.com/TimSchoenle/Portfolio/issues/684)) ([fe62591](https://github.com/TimSchoenle/Portfolio/commit/fe62591f50bf1a5354d2cea317af763e7afcbf33))
+* **deps:** update dependency eslint-plugin-perfectionist to v5.8.0 ([#682](https://github.com/TimSchoenle/Portfolio/issues/682)) ([f8fa85b](https://github.com/TimSchoenle/Portfolio/commit/f8fa85bcfcf311bb9a34a3ff3244c3ba6c15b1be))
+* **deps:** update dependency eslint-plugin-unicorn to v64 ([#669](https://github.com/TimSchoenle/Portfolio/issues/669)) ([cc87170](https://github.com/TimSchoenle/Portfolio/commit/cc87170592a25e2eeaf11a11c78d5bed20e09ca0))
+* **deps:** update dependency knip to v6.1.0 ([#672](https://github.com/TimSchoenle/Portfolio/issues/672)) ([93077ca](https://github.com/TimSchoenle/Portfolio/commit/93077ca24b30a01888184b018648778d8e89d18e))
+* **deps:** update dependency knip to v6.1.1 ([#676](https://github.com/TimSchoenle/Portfolio/issues/676)) ([5d51447](https://github.com/TimSchoenle/Portfolio/commit/5d51447ba7b65ed13fe1ddd18216c01c99644d57))
+* **deps:** update dependency knip to v6.2.0 ([#680](https://github.com/TimSchoenle/Portfolio/issues/680)) ([3e54a29](https://github.com/TimSchoenle/Portfolio/commit/3e54a29ad1bcc98c16843bdee6c867d034d6864a))
+* **deps:** update dependency knip to v6.3.0 ([#685](https://github.com/TimSchoenle/Portfolio/issues/685)) ([972d9ef](https://github.com/TimSchoenle/Portfolio/commit/972d9ef16478e6c80f5829678143b82443cc084e))
+* **deps:** update docker/dockerfile docker tag to v1.23 ([#674](https://github.com/TimSchoenle/Portfolio/issues/674)) ([2b683ea](https://github.com/TimSchoenle/Portfolio/commit/2b683ea847fb6d5c63efcf1c5fbc42388779269d))
+* **deps:** update docker/login-action digest to 4907a6d ([#675](https://github.com/TimSchoenle/Portfolio/issues/675)) ([cdbef2b](https://github.com/TimSchoenle/Portfolio/commit/cdbef2b2cf290bb32b36eda09f13b0f2e86ab22b))
+* **deps:** update getsentry/action-release digest to 5657c9e ([#671](https://github.com/TimSchoenle/Portfolio/issues/671)) ([a7d5933](https://github.com/TimSchoenle/Portfolio/commit/a7d59334ac30e58334bca0f2dd6cbcdb0f76037a))
+* **deps:** update step-security/harden-runner action to v2.16.1 ([#673](https://github.com/TimSchoenle/Portfolio/issues/673)) ([a52c3a0](https://github.com/TimSchoenle/Portfolio/commit/a52c3a09d6e3d61a8d7088fd334273683cd02b9a))
+
 ## [1.17.0](https://github.com/TimSchoenle/Portfolio/compare/v1.16.3...v1.17.0) (2026-03-30)
 
 
