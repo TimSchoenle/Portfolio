@@ -62,7 +62,7 @@
     "@commitlint/config-conventional": "20.5.0",
     "@commitlint/types": "latest",
     "@cyclonedx/cdxgen": "12.1.4",
-    "@fast-check/vitest": "0.3.0",
+    "@fast-check/vitest": "0.4.0",
     "@lhci/cli": "0.15.1",
     "@lingual/i18n-check": "latest",
     "@next/bundle-analyzer": "16.2.2",
