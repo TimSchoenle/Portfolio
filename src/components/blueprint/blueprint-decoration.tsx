@@ -1,10 +1,8 @@
-/* eslint-disable complexity, max-lines-per-function */
+/* eslint-disable complexity */
 import { type JSX, memo, type MemoExoticComponent } from 'react'
 
 import { cn } from '@/lib/utilities'
 import type { FCStrict } from '@/types/fc'
-
-/* ─── Interfaces ───────────────────────────────────────────────────────────── */
 
 interface BlueprintCornersProperties {
   readonly className?: string
@@ -24,135 +22,189 @@ interface BlueprintSideDecorationProperties {
   readonly orientation?: 'horizontal' | 'vertical'
 }
 
-/* ─── Components ───────────────────────────────────────────────────────────── */
+interface CornerSegmentProperties {
+  readonly cornerLength: number
+  readonly strokeWidth: number
+  readonly variant: 'all' | 'bracket' | 'lines'
+}
 
-/**
- * Standardized 4-corner decoration using SVG for better scaling/performance
- * compared to 4 separate divs.
- */
+const TopLeftCorner: FCStrict<CornerSegmentProperties> = ({
+  cornerLength,
+  strokeWidth,
+  variant,
+}: CornerSegmentProperties): JSX.Element => (
+  <>
+    {variant === 'all' || variant === 'bracket' ? (
+      <path
+        className="fill-none stroke-brand"
+        d={`M0 ${String(cornerLength)} V0 H${String(cornerLength)}`}
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+      />
+    ) : null}
+    {variant === 'lines' ? (
+      <line
+        className="stroke-brand"
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+        x1="6"
+        x2="6"
+        y1="-4"
+        y2="4"
+      />
+    ) : null}
+  </>
+)
+
+const TopRightCorner: FCStrict<CornerSegmentProperties> = ({
+  cornerLength,
+  strokeWidth,
+  variant,
+}: CornerSegmentProperties): JSX.Element => (
+  <>
+    {variant === 'all' ? (
+      <path
+        className="fill-none stroke-brand"
+        d={`M-${String(cornerLength)} 0 H0 V${String(cornerLength)}`}
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+      />
+    ) : null}
+    {variant === 'lines' ? (
+      <line
+        className="stroke-brand"
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+        x1="-6"
+        x2="-6"
+        y1="-4"
+        y2="4"
+      />
+    ) : null}
+  </>
+)
+
+const BottomLeftCorner: FCStrict<CornerSegmentProperties> = ({
+  cornerLength,
+  strokeWidth,
+  variant,
+}: CornerSegmentProperties): JSX.Element => (
+  <>
+    {variant === 'all' ? (
+      <path
+        className="fill-none stroke-brand"
+        d={`M0 -${String(cornerLength)} V0 H${String(cornerLength)}`}
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+      />
+    ) : null}
+    {variant === 'lines' ? (
+      <line
+        className="stroke-brand"
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+        x1="6"
+        x2="6"
+        y1="-4"
+        y2="4"
+      />
+    ) : null}
+  </>
+)
+
+const BottomRightCorner: FCStrict<CornerSegmentProperties> = ({
+  cornerLength,
+  strokeWidth,
+  variant,
+}: CornerSegmentProperties): JSX.Element => (
+  <>
+    {variant === 'all' || variant === 'bracket' ? (
+      <path
+        className="fill-none stroke-brand"
+        d={`M-${String(cornerLength)} 0 H0 V-${String(cornerLength)}`}
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+      />
+    ) : null}
+    {variant === 'lines' ? (
+      <line
+        className="stroke-brand"
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+        x1="-6"
+        x2="-6"
+        y1="-4"
+        y2="4"
+      />
+    ) : null}
+  </>
+)
+
 const BlueprintCornersComponent: FCStrict<BlueprintCornersProperties> = ({
   className,
   cornerLength = 8,
   corners = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'],
   strokeWidth = 2,
   variant = 'all',
-}: BlueprintCornersProperties): JSX.Element => (
-  <svg
-    aria-hidden="true"
-    className={cn(
-      'pointer-events-none absolute inset-0 h-full w-full overflow-visible',
-      className
-    )}
-  >
-    {/* Top-left */}
-    {corners.includes('topLeft') && (
-      <>
-        {(variant === 'all' || variant === 'bracket') && (
-          <path
-            className="fill-none stroke-brand"
-            d={`M0 ${String(cornerLength)} V0 H${String(cornerLength)}`}
-            strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
-          />
-        )}
-        {variant === 'lines' && (
-          <line
-            className="stroke-brand"
-            strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
-            x1="6"
-            x2="6"
-            y1="-4"
-            y2="4"
-          />
-        )}
-      </>
-    )}
+}: BlueprintCornersProperties): JSX.Element => {
+  const showTopLeft: boolean = corners.includes('topLeft')
+  const showTopRight: boolean = corners.includes('topRight')
+  const showBottomLeft: boolean = corners.includes('bottomLeft')
+  const showBottomRight: boolean = corners.includes('bottomRight')
 
-    {/* Top-right */}
-    {corners.includes('topRight') && (
-      <svg overflow="visible" x="100%" y="0">
-        {variant === 'all' && (
-          <path
-            className="fill-none stroke-brand"
-            d={`M-${String(cornerLength)} 0 H0 V${String(cornerLength)}`}
-            strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
-          />
-        )}
-        {variant === 'lines' && (
-          <line
-            className="stroke-brand"
-            strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
-            x1="-6"
-            x2="-6"
-            y1="-4"
-            y2="4"
-          />
-        )}
-      </svg>
-    )}
+  return (
+    <svg
+      aria-hidden="true"
+      className={cn(
+        'pointer-events-none absolute inset-0 h-full w-full overflow-visible',
+        className
+      )}
+    >
+      {showTopLeft ? (
+        <TopLeftCorner
+          cornerLength={cornerLength}
+          strokeWidth={strokeWidth}
+          variant={variant}
+        />
+      ) : null}
 
-    {/* Bottom-left */}
-    {corners.includes('bottomLeft') && (
-      <svg overflow="visible" x="0" y="100%">
-        {variant === 'all' && (
-          <path
-            className="fill-none stroke-brand"
-            d={`M0 -${String(cornerLength)} V0 H${String(cornerLength)}`}
+      {showTopRight ? (
+        <svg overflow="visible" x="100%" y="0">
+          <TopRightCorner
+            cornerLength={cornerLength}
             strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
+            variant={variant}
           />
-        )}
-        {variant === 'lines' && (
-          <line
-            className="stroke-brand"
-            strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
-            x1="6"
-            x2="6"
-            y1="-4"
-            y2="4"
-          />
-        )}
-      </svg>
-    )}
+        </svg>
+      ) : null}
 
-    {/* Bottom-right */}
-    {corners.includes('bottomRight') && (
-      <svg overflow="visible" x="100%" y="100%">
-        {(variant === 'all' || variant === 'bracket') && (
-          <path
-            className="fill-none stroke-brand"
-            d={`M-${String(cornerLength)} 0 H0 V-${String(cornerLength)}`}
+      {showBottomLeft ? (
+        <svg overflow="visible" x="0" y="100%">
+          <BottomLeftCorner
+            cornerLength={cornerLength}
             strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
+            variant={variant}
           />
-        )}
-        {variant === 'lines' && (
-          <line
-            className="stroke-brand"
+        </svg>
+      ) : null}
+
+      {showBottomRight ? (
+        <svg overflow="visible" x="100%" y="100%">
+          <BottomRightCorner
+            cornerLength={cornerLength}
             strokeWidth={strokeWidth}
-            vectorEffect="non-scaling-stroke"
-            x1="-6"
-            x2="-6"
-            y1="-4"
-            y2="4"
+            variant={variant}
           />
-        )}
-      </svg>
-    )}
-  </svg>
-)
+        </svg>
+      ) : null}
+    </svg>
+  )
+}
 
 export const BlueprintCorners: MemoExoticComponent<
   FCStrict<BlueprintCornersProperties>
 > = memo(BlueprintCornersComponent)
 
-/**
- * Vertical or horizontal decorative bars used in Blueprint designs
- */
 export const BlueprintSideDecoration: MemoExoticComponent<
   FCStrict<BlueprintSideDecorationProperties>
 > = memo(

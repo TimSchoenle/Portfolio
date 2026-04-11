@@ -118,9 +118,9 @@ const Card: FCWithChildren<CardProperties> = ({
       data-slot="card"
       {...properties}
     >
-      {decorative === 'pattern' && (
+      {decorative === 'pattern' ? (
         <GridPattern className="opacity-50" size={16} />
-      )}
+      ) : null}
       {children}
     </div>
   )

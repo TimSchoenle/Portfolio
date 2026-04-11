@@ -11,8 +11,15 @@ export const DynamicCommandPaletteHint: ComponentType = dynamic(
   async (): Promise<ComponentType> =>
     // Delay loading by 500ms to prioritize LCP
     new Promise((resolve: (value: ComponentType) => void): void => {
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        requestIdleCallback((): void => {
+      const requestIdleCallbackUnknown: unknown =
+        typeof window === 'object'
+          ? (window as { requestIdleCallback?: unknown }).requestIdleCallback
+          : undefined
+
+      if (typeof requestIdleCallbackUnknown === 'function') {
+        const requestIdleCallbackFunction: (callback: () => void) => number =
+          requestIdleCallbackUnknown as (callback: () => void) => number
+        requestIdleCallbackFunction((): void => {
           void import('@/components/features/command-palette/command-palette-hint').then(
             (module_: typeof CommandPaletteModule): void => {
               resolve(module_.CommandPaletteHint)

@@ -92,14 +92,12 @@ export const CommandPaletteHint: FCNullable = (): JSX.Element | null => {
     void getKeyboardShortcut()
   }, [])
 
-  // Hide component if keyboard layout detection is not supported
-  if (shortcutLabel === null || shortcutLabel === '') {
-    return null
-  }
+  const shouldRenderHint: boolean =
+    shortcutLabel !== null && shortcutLabel !== ''
 
-  return (
+  return shouldRenderHint ? (
     <BlueprintLabel className="writing-vertical-rl absolute right-20 bottom-20 font-mono text-[10px] text-brand/40 select-none">
       {shortcutLabel}
     </BlueprintLabel>
-  )
+  ) : null
 }

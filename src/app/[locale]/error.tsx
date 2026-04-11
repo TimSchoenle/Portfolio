@@ -104,11 +104,11 @@ const ErrorPage: FCStrict<ErrorPageProperties> = ({
               </p>
             </div>
 
-            {Boolean(error.digest) && (
+            {Boolean(error.digest) ? (
               <div className="w-full rounded border border-red-500/20 bg-red-950/20 p-3 font-mono text-[10px] tracking-wider text-red-300/70 uppercase">
                 {translations('errorIdLabel')} {ERROR_SEPARATOR} {error.digest}
               </div>
-            )}
+            ) : null}
 
             <ErrorActions
               labels={{

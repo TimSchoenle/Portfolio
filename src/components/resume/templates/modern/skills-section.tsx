@@ -33,11 +33,7 @@ const SkillSection: FCNullable<SkillSectionProperties> = ({
     )
     .slice(0, limit)
 
-  if (visibleSkills.length === 0) {
-    return null
-  }
-
-  return (
+  return visibleSkills.length > 0 ? (
     <>
       <Text style={styles.contactLabel}>{title}</Text>
       <View
@@ -57,7 +53,7 @@ const SkillSection: FCNullable<SkillSectionProperties> = ({
         )}
       </View>
     </>
-  )
+  ) : null
 }
 
 interface SkillsSectionProperties {

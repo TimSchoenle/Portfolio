@@ -83,11 +83,7 @@ const useIdleFlag: () => boolean = (): boolean => {
 const DeferredClientUi: FCNullable = (): JSX.Element | null => {
   const show: boolean = useIdleFlag()
 
-  if (!show) {
-    return null
-  }
-
-  return <CommandPalette />
+  return show ? <CommandPalette /> : null
 }
 
 export default DeferredClientUi

@@ -35,30 +35,33 @@ export const LazyLoad: FCWithRequiredChildren<LazyLoadProperties> = ({
   const containerReference: React.RefObject<HTMLDivElement | null> =
     useRef<HTMLDivElement>(null)
 
-  useEffect((): (() => void) | undefined => {
-    // If IntersectionObserver is not supported (e.g. server or old browser), load immediately
-    if (typeof IntersectionObserver === 'undefined') {
-      setIsVisible(true)
-      return undefined
+  useEffect((): (() => void) => {
+    let observer: IntersectionObserver | null = null
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries: IntersectionObserverEntry[]): void => {
+          const entry: IntersectionObserverEntry | undefined = entries[0]
+          if (entry?.isIntersecting === true) {
+            setIsVisible(true)
+            observer?.disconnect()
+          }
+        },
+        { rootMargin }
+      )
     }
 
-    const observer: IntersectionObserver = new IntersectionObserver(
-      (entries: IntersectionObserverEntry[]): void => {
-        const entry: IntersectionObserverEntry | undefined = entries[0]
-        if (entry?.isIntersecting === true) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { rootMargin }
-    )
-
-    if (containerReference.current) {
+    if (observer === null) {
+      // If IntersectionObserver is not supported (e.g. server or old browser), load immediately.
+      setIsVisible(true)
+    } else if (containerReference.current) {
       observer.observe(containerReference.current)
     }
 
     return (): void => {
-      observer.disconnect()
+      if (observer !== null) {
+        observer.disconnect()
+      }
     }
   }, [rootMargin])
 

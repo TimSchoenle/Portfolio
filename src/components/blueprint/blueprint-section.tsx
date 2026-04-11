@@ -50,9 +50,9 @@ export const BlueprintSection: FCWithRequiredChildren<
 
         {children}
 
-        {Boolean(dividerLabel) && (
+        {Boolean(dividerLabel) ? (
           <BlueprintSectionDivider label={dividerLabel ?? ''} />
-        )}
+        ) : null}
       </div>
     </BlueprintContainer>
   )

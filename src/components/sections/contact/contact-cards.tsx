@@ -39,7 +39,7 @@ const DirectUplinkCard: FCStrict<CardProperties> = ({
             language: languageName.toUpperCase(),
           })}
         />
-        {Boolean(fingerprint) && (
+        {Boolean(fingerprint) ? (
           <ResumeVerificationDialog fingerprint={fingerprint ?? ''}>
             <button
               className="absolute top-2 right-2 p-2 text-blueprint-muted transition-colors hover:text-brand"
@@ -52,7 +52,7 @@ const DirectUplinkCard: FCStrict<CardProperties> = ({
               </span>
             </button>
           </ResumeVerificationDialog>
-        )}
+        ) : null}
       </div>
     </div>
   </BlueprintCard>
@@ -70,14 +70,14 @@ const NetworkNodesCard: FCStrict<CardProperties> = ({
         subLabel={translations('sourceControl')}
       />
 
-      {Boolean(siteConfig.socials.linkedin) && (
+      {Boolean(siteConfig.socials.linkedin) ? (
         <BlueprintItem
           href={siteConfig.socials.linkedin ?? ''}
           icon={<Network className="h-5 w-5" />}
           label={translations('linkedin')}
           subLabel={translations('professionalNetwork')}
         />
-      )}
+      ) : null}
     </div>
   </BlueprintCard>
 )

@@ -45,7 +45,7 @@ export const ProjectsSection: AsyncPageFC<ProjectsSectionProperties> = async ({
         <ViewAllButton label={translations('viewAll')} />
 
         {/* Contribution Graph - Scaled to fit container without scroll */}
-        {Object.keys(contributionData).length > 0 && (
+        {Object.keys(contributionData).length > 0 ? (
           <div className="mt-16 w-full rounded-lg border border-brand/30 bg-blueprint-card-bg/90 p-2 shadow-sm backdrop-blur-md md:p-6">
             <div className="w-full">
               <ContributionGraphClient
@@ -55,7 +55,7 @@ export const ProjectsSection: AsyncPageFC<ProjectsSectionProperties> = async ({
               />
             </div>
           </div>
-        )}
+        ) : null}
 
         <BlueprintSectionDivider label="MODULES_LOADED" />
       </div>

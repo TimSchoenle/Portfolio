@@ -140,9 +140,9 @@ const MeasurementLine: FCStrict<MeasurementLineProperties> = ({
       >
         <MainLine isVertical={isVertical} />
         <TickLines isVertical={isVertical} />
-        {typeof label === 'string' && (
+        {typeof label === 'string' ? (
           <MeasurementLabel isVertical={isVertical} label={label} />
-        )}
+        ) : null}
       </svg>
     </div>
   )
