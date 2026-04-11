@@ -78,31 +78,26 @@ const DialogContentHeader: React.FC<DialogContentHeaderProperties> = ({
   disableDefaultTitle,
   title,
 }: DialogContentHeaderProperties): JSX.Element | null => {
-  if (title === undefined && description === undefined) {
-    if (disableDefaultTitle === true) {
-      return null
-    }
-    return (
-      <DialogPrimitive.Title className="sr-only">
-        {/* eslint-disable-next-line react/jsx-curly-brace-presence */}
-        {'Dialog'}
-      </DialogPrimitive.Title>
-    )
-  }
+  const shouldHideHeader: boolean =
+    title === undefined &&
+    description === undefined &&
+    disableDefaultTitle === true
+  const shouldShowDefaultTitle: boolean =
+    title === undefined && disableDefaultTitle !== true
 
-  return (
+  return shouldHideHeader ? null : (
     <div
       className="flex flex-col gap-2 text-center sm:text-left"
       data-slot="dialog-header"
     >
-      {title === undefined && disableDefaultTitle !== true && (
+      {shouldShowDefaultTitle ? (
         <DialogPrimitive.Title className="sr-only">
           {/* eslint-disable-next-line react/jsx-curly-brace-presence */}
           {'Dialog'}
         </DialogPrimitive.Title>
-      )}
+      ) : null}
 
-      {title !== undefined && (
+      {title === undefined ? null : (
         <DialogPrimitive.Title
           /** Force a single, semantic heading; avoid asChild & nested headings */
           asChild={false}

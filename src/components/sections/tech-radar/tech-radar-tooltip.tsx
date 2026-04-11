@@ -138,7 +138,7 @@ export interface TechRadarTooltipProperties {
 
 const TechRadarTooltip: React.FC<TechRadarTooltipProperties> = ({
   blips,
-}: TechRadarTooltipProperties): JSX.Element | null => {
+}: TechRadarTooltipProperties): JSX.Element => {
   const { hoveredBlip }: HoverContextValue = useHover()
   const tooltipReference: RefObject<HTMLDivElement | null> =
     React.useRef<HTMLDivElement>(null)
@@ -154,20 +154,11 @@ const TechRadarTooltip: React.FC<TechRadarTooltipProperties> = ({
     ref: tooltipReference,
   })
 
-  if (hoveredBlip === null) {
-    return null
-  }
-
-  if (!hoveredBlipData) {
-    return null
+  if (hoveredBlip === null || !hoveredBlipData || !position) {
+    return <div className="invisible absolute" ref={tooltipReference} />
   }
 
   const Icon: LucideIcon = getSkillIcon(hoveredBlipData.iconName)
-
-  if (!position) {
-    // Render hidden to allow ref attachment
-    return <div className="invisible absolute" ref={tooltipReference} />
-  }
 
   return (
     <div

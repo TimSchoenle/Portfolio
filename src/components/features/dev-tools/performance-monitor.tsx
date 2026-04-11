@@ -99,16 +99,12 @@ export const PerformanceMonitor: FCNullable = (): JSX.Element | null => {
     setMounted(true)
   }, [])
 
-  if (!mounted) {
-    return null
-  }
-
   const sortedMetrics: DisplayMetric[] = metrics.toSorted(
     (metricA: DisplayMetric, metricB: DisplayMetric): number =>
       metricA.name.localeCompare(metricB.name)
   )
 
-  return (
+  return mounted ? (
     <div className="flex flex-col gap-1 font-mono text-[10px] tracking-wider text-brand/40 uppercase tabular-nums transition-opacity hover:opacity-100 md:text-right">
       <div className="mb-1 font-bold text-brand-readable">{HEADER_TEXT}</div>
 
@@ -125,10 +121,10 @@ export const PerformanceMonitor: FCNullable = (): JSX.Element | null => {
             </div>
           )
         )}
-        {metrics.length === 0 && (
+        {metrics.length === 0 ? (
           <div className="animate-pulse">{LOADING_TEXT}</div>
-        )}
+        ) : null}
       </div>
     </div>
-  )
+  ) : null
 }

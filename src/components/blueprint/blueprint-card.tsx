@@ -35,11 +35,11 @@ export const BlueprintCard: FCWithRequiredChildren<BlueprintCardProperties> = ({
     <BlueprintSideDecoration className="top-12 left-0" />
     <BlueprintSideDecoration className="right-0 bottom-12" />
 
-    {Boolean(label) && (
+    {Boolean(label) ? (
       <BlueprintLabel className="absolute -top-3 left-[var(--app-padding)] border border-brand/30 bg-blueprint-bg px-2 font-mono text-xs tracking-widest text-brand uppercase">
         {label}
       </BlueprintLabel>
-    )}
+    ) : null}
 
     <div className="relative z-10 flex h-full flex-col gap-8">{children}</div>
 

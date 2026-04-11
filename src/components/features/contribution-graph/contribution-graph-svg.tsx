@@ -299,42 +299,42 @@ const ContributionBoardComponent: FCStrict<ContributionBoardProperties> = ({
                 wIndex * (CONSTANTS.CELL_SIZE + CONSTANTS.CELL_GAP)
               )}, 0)`}
             >
-              {week.days.map(
+              {week.days.flatMap(
                 (
                   day: ContributionPoint | null,
                   dIndex: number
-                ): JSX.Element | null => {
-                  if (day) {
-                    const yPos: number =
-                      dIndex * (CONSTANTS.CELL_SIZE + CONSTANTS.CELL_GAP)
-                    const levelClass: string | undefined =
-                      styles[`level${String(day.level)}`]
-
-                    return (
-                      <rect
-                        className={`${styles['rect'] ?? ''} ${levelClass ?? ''}`}
-                        height={CONSTANTS.CELL_SIZE}
-                        key={day.date}
-                        rx={CONSTANTS.CELL_BORDER_RADIUS}
-                        ry={CONSTANTS.CELL_BORDER_RADIUS}
-                        width={CONSTANTS.CELL_SIZE}
-                        x={0}
-                        y={yPos}
-                        onMouseEnter={(event: React.MouseEvent): void => {
-                          onHover(
-                            {
-                              count: day.count,
-                              date: day.date,
-                              xCoord: 0,
-                              yCoord: 0,
-                            },
-                            event
-                          )
-                        }}
-                      />
-                    )
+                ): JSX.Element[] => {
+                  if (day === null) {
+                    return []
                   }
-                  return null
+                  const yPos: number =
+                    dIndex * (CONSTANTS.CELL_SIZE + CONSTANTS.CELL_GAP)
+                  const levelClass: string | undefined =
+                    styles[`level${String(day.level)}`]
+
+                  return [
+                    <rect
+                      className={`${styles['rect'] ?? ''} ${levelClass ?? ''}`}
+                      height={CONSTANTS.CELL_SIZE}
+                      key={day.date}
+                      rx={CONSTANTS.CELL_BORDER_RADIUS}
+                      ry={CONSTANTS.CELL_BORDER_RADIUS}
+                      width={CONSTANTS.CELL_SIZE}
+                      x={0}
+                      y={yPos}
+                      onMouseEnter={(event: React.MouseEvent): void => {
+                        onHover(
+                          {
+                            count: day.count,
+                            date: day.date,
+                            xCoord: 0,
+                            yCoord: 0,
+                          },
+                          event
+                        )
+                      }}
+                    />,
+                  ]
                 }
               )}
             </g>
@@ -400,9 +400,9 @@ export const ContributionGraphSvg: FCStrict<ContributionGraphSvgProperties> = (
         />
 
         {/* Portal Tooltip Overlay - delegated to sub-component */}
-        {hoveredData &&
-          portalContainer &&
-          createPortal(<Tooltip data={hoveredData} />, portalContainer)}
+        {hoveredData !== null && portalContainer !== null
+          ? createPortal(<Tooltip data={hoveredData} />, portalContainer)
+          : null}
       </div>
     </div>
   )

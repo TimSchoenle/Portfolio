@@ -57,7 +57,7 @@ export const ActionsGroup: React.FC<ActionsGroupProperties> = ({
         <span>{tPalette('actions.email')}</span>
         <CommandShortcut>{SHORTCUT_E}</CommandShortcut>
       </CommandItem>
-      {Boolean(siteConfig.socials.linkedin) && (
+      {Boolean(siteConfig.socials.linkedin) ? (
         <CommandItem
           keywords={['linkedin', 'social', 'profile']}
           value="linkedin"
@@ -67,7 +67,7 @@ export const ActionsGroup: React.FC<ActionsGroupProperties> = ({
           <span>{tPalette('actions.linkedin')}</span>
           <CommandShortcut>{SHORTCUT_L}</CommandShortcut>
         </CommandItem>
-      )}
+      ) : null}
       <CommandItem
         keywords={['github', 'code', 'source']}
         value="github"

@@ -31,11 +31,11 @@ export const BlueprintItem: FCStrict<BlueprintItemProperties> = ({
       <span className="font-mono text-sm font-bold tracking-wide text-blueprint-text transition-colors group-hover:text-brand">
         {label}
       </span>
-      {Boolean(subLabel) && (
+      {Boolean(subLabel) ? (
         <span className="font-mono text-xs tracking-wider text-blueprint-muted uppercase">
           {subLabel}
         </span>
-      )}
+      ) : null}
     </div>
 
     {/* Corner Accents */}

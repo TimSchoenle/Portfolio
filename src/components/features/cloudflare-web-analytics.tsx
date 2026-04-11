@@ -13,20 +13,14 @@ import { environment } from '@/environment'
  * @see https://www.cloudflare.com/web-analytics/
  */
 export const CloudflareWebAnalytics: FC = (): JSX.Element | null => {
-  // Only load in production
-  if (environment.NODE_ENV !== 'production') {
-    return null
-  }
-
   const token: string | undefined =
     environment.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN
+  const shouldRenderAnalytics: boolean =
+    environment.NODE_ENV === 'production' &&
+    token !== undefined &&
+    token.length > 0
 
-  // Don't load if token is not configured
-  if (token === undefined || token.length === 0) {
-    return null
-  }
-
-  return (
+  return shouldRenderAnalytics ? (
     <Script
       data-cf-beacon={JSON.stringify({ send: '/cf/rum/beacon', token })}
       defer={true}
@@ -34,5 +28,5 @@ export const CloudflareWebAnalytics: FC = (): JSX.Element | null => {
       // Use afterInteractive to avoid blocking the page load
       strategy="afterInteractive"
     />
-  )
+  ) : null
 }

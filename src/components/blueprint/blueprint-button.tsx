@@ -42,7 +42,7 @@ const BlueprintButtonContent: FCWithRequiredChildren<
           : 'group-hover:shadow-[0_0_15px_color-mix(in srgb, var(--brand), transparent 70%)] bg-brand/5 group-hover:bg-brand/20'
       }`}
     />
-    {!isPrimary && (
+    {isPrimary ? null : (
       <>
         <div className="absolute right-0 bottom-0 h-1 w-1 bg-brand" />
         <div className="absolute top-0 left-0 h-1 w-1 bg-brand" />
