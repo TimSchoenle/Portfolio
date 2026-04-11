@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.17.2](https://github.com/TimSchoenle/Portfolio/compare/v1.17.1...v1.17.2) (2026-04-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.8.0 ([#710](https://github.com/TimSchoenle/Portfolio/issues/710)) ([d42b805](https://github.com/TimSchoenle/Portfolio/commit/d42b805ee85e775dfac38f495ec47733ee97d0b7))
+* **deps:** update nextjs monorepo to v16.2.3 ([#699](https://github.com/TimSchoenle/Portfolio/issues/699)) ([94ff88f](https://github.com/TimSchoenle/Portfolio/commit/94ff88f5cede9bda1d311e88c1fa54ae29c3dd6d))
+* **deps:** update react monorepo to v19.2.5 ([#703](https://github.com/TimSchoenle/Portfolio/issues/703)) ([9de414a](https://github.com/TimSchoenle/Portfolio/commit/9de414ae5f558dbe0e061b798cd771ee393bc3bb))
+
+
+### Miscellaneous
+
+* **deps:** update actions/create-github-app-token action to v3.1.0 ([#700](https://github.com/TimSchoenle/Portfolio/issues/700)) ([9e5fb33](https://github.com/TimSchoenle/Portfolio/commit/9e5fb336fc613adb9200c894df641f1ab6e25f95))
+* **deps:** update actions/github-script action to v9 ([#690](https://github.com/TimSchoenle/Portfolio/issues/690)) ([72be85a](https://github.com/TimSchoenle/Portfolio/commit/72be85ab939660c8125763a4cc820aa4ba195c47))
+* **deps:** update actions/upload-artifact digest to 043fb46 ([#695](https://github.com/TimSchoenle/Portfolio/issues/695)) ([08897a4](https://github.com/TimSchoenle/Portfolio/commit/08897a4f69d67cc44779f0e3920a4260122e34d4))
+* **deps:** update all non-major action updates ([#688](https://github.com/TimSchoenle/Portfolio/issues/688)) ([4b0b7e9](https://github.com/TimSchoenle/Portfolio/commit/4b0b7e9c15a1284779c72c75b9ef347b8ebff86f))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.1.5 ([#704](https://github.com/TimSchoenle/Portfolio/issues/704)) ([a160a99](https://github.com/TimSchoenle/Portfolio/commit/a160a99da2dbab2fb5e19cc1ea08b71e7ae8f316))
+* **deps:** update dependency @eslint/compat to v2.0.5 ([#705](https://github.com/TimSchoenle/Portfolio/issues/705)) ([0541c3a](https://github.com/TimSchoenle/Portfolio/commit/0541c3a41dc4f7fed8eab38fea9b08537cb0776b))
+* **deps:** update dependency @fast-check/vitest to v0.4.0 ([#687](https://github.com/TimSchoenle/Portfolio/issues/687)) ([a9c0e50](https://github.com/TimSchoenle/Portfolio/commit/a9c0e50712c65b70d9b085200876211791ed8a49))
+* **deps:** update dependency @react-pdf/renderer to v4.4.0 ([#689](https://github.com/TimSchoenle/Portfolio/issues/689)) ([5374479](https://github.com/TimSchoenle/Portfolio/commit/5374479eac581d519a426cf6b099be4dd5ebf475))
+* **deps:** update dependency @react-pdf/renderer to v4.4.1 ([#706](https://github.com/TimSchoenle/Portfolio/issues/706)) ([ff5b82b](https://github.com/TimSchoenle/Portfolio/commit/ff5b82b049c8a11ffe883db142e0d10ac9f0d412))
+* **deps:** update dependency @types/node to v25.6.0 ([#709](https://github.com/TimSchoenle/Portfolio/issues/709)) ([e1b077c](https://github.com/TimSchoenle/Portfolio/commit/e1b077c330ab6d454dc448beb70cc3830d76f92c))
+* **deps:** update dependency @vitejs/plugin-react to v6 ([#619](https://github.com/TimSchoenle/Portfolio/issues/619)) ([081d9a7](https://github.com/TimSchoenle/Portfolio/commit/081d9a79773240acf9ba36dc5e67a155830dcaf9))
+* **deps:** update dependency jsdom to v29.0.2 ([#692](https://github.com/TimSchoenle/Portfolio/issues/692)) ([816968b](https://github.com/TimSchoenle/Portfolio/commit/816968bce33e1411e571f421a3c485c0d21a9066))
+* **deps:** update dependency knip to v6.3.1 ([#707](https://github.com/TimSchoenle/Portfolio/issues/707)) ([a4bef98](https://github.com/TimSchoenle/Portfolio/commit/a4bef98c6e2050fd2d101eb41637cb07191b8fca))
+* **deps:** update dependency postcss to v8.5.9 ([#698](https://github.com/TimSchoenle/Portfolio/issues/698)) ([ece2c76](https://github.com/TimSchoenle/Portfolio/commit/ece2c7651df93d85ae1e9db5b4516d849cf58c82))
+* **deps:** update dependency prettier to v3.8.2 ([#708](https://github.com/TimSchoenle/Portfolio/issues/708)) ([418e9ba](https://github.com/TimSchoenle/Portfolio/commit/418e9ba0d332a30e6336983b2f0acef5232094cd))
+* **deps:** update dependency typescript-eslint to v8.58.1 ([#657](https://github.com/TimSchoenle/Portfolio/issues/657)) ([4b520e7](https://github.com/TimSchoenle/Portfolio/commit/4b520e7f0a284e5d678a03f3ae198e2c101e6b3f))
+* **deps:** update dhi.io/bun:1-alpine3.22 docker digest to ea6a4ea ([#696](https://github.com/TimSchoenle/Portfolio/issues/696)) ([757fa2b](https://github.com/TimSchoenle/Portfolio/commit/757fa2ba1a1e568bfebdea3c2220a07ec0f25aa7))
+* **deps:** update dhi.io/bun:1-alpine3.22-dev docker digest to 9c1b904 ([#697](https://github.com/TimSchoenle/Portfolio/issues/697)) ([50c4fc5](https://github.com/TimSchoenle/Portfolio/commit/50c4fc53ce466117e5ffe628c653ad5edca5ed01))
+* **deps:** update docker/build-push-action digest to bcafcac ([#693](https://github.com/TimSchoenle/Portfolio/issues/693)) ([27a6060](https://github.com/TimSchoenle/Portfolio/commit/27a6060f28efe540678e6763fe22c760d803d0dc))
+* **deps:** update vitest monorepo to v4.1.3 ([#694](https://github.com/TimSchoenle/Portfolio/issues/694)) ([cfa1060](https://github.com/TimSchoenle/Portfolio/commit/cfa1060736337ec4d5c2a7972d0cab295056dcbd))
+* **deps:** update vitest monorepo to v4.1.4 ([#702](https://github.com/TimSchoenle/Portfolio/issues/702)) ([077a654](https://github.com/TimSchoenle/Portfolio/commit/077a6549a92827ed8cb1edf46ca7330d1adaa950))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#621](https://github.com/TimSchoenle/Portfolio/issues/621)) ([96f33be](https://github.com/TimSchoenle/Portfolio/commit/96f33be2147b903289324c895e7d041337818b81))
+* **deps:** lock file maintenance ([#701](https://github.com/TimSchoenle/Portfolio/issues/701)) ([0088ea9](https://github.com/TimSchoenle/Portfolio/commit/0088ea995d3f09be55b5e569fa270a74d646ca7d))
+
 ## [1.17.1](https://github.com/TimSchoenle/Portfolio/compare/v1.17.0...v1.17.1) (2026-04-06)
 
 
