@@ -138,7 +138,7 @@ export interface TechRadarTooltipProperties {
 
 const TechRadarTooltip: React.FC<TechRadarTooltipProperties> = ({
   blips,
-}: TechRadarTooltipProperties): JSX.Element => {
+}: TechRadarTooltipProperties): JSX.Element | null => {
   const { hoveredBlip }: HoverContextValue = useHover()
   const tooltipReference: RefObject<HTMLDivElement | null> =
     React.useRef<HTMLDivElement>(null)
@@ -154,35 +154,42 @@ const TechRadarTooltip: React.FC<TechRadarTooltipProperties> = ({
     ref: tooltipReference,
   })
 
-  if (hoveredBlip === null || !hoveredBlipData || !position) {
-    return <div className="invisible absolute" ref={tooltipReference} />
+  let tooltipContent: JSX.Element | null = null
+
+  if (hoveredBlip !== null && hoveredBlipData !== undefined) {
+    if (position === null) {
+      tooltipContent = (
+        <div className="invisible absolute" ref={tooltipReference} />
+      )
+    } else {
+      const Icon: LucideIcon = getSkillIcon(hoveredBlipData.iconName)
+      tooltipContent = (
+        <div
+          className="pointer-events-none absolute z-50 flex flex-col items-center justify-center rounded-lg border border-border bg-popover px-3 py-2 text-sm shadow-md transition-opacity animate-in fade-in zoom-in-95"
+          ref={tooltipReference}
+          style={{
+            left: position.x,
+            top: position.y,
+            transform: 'translate(-50%, calc(-100% - 8px))',
+          }}
+        >
+          <Icon className="mb-1 h-4 w-4 text-primary" />
+          <BlueprintText className="font-semibold text-popover-foreground">
+            {hoveredBlipData.name}
+          </BlueprintText>
+          <BlueprintText
+            className="text-xs text-muted-foreground"
+            uppercase={true}
+            variant="muted"
+          >
+            {hoveredBlipData.quadrant}
+          </BlueprintText>
+        </div>
+      )
+    }
   }
 
-  const Icon: LucideIcon = getSkillIcon(hoveredBlipData.iconName)
-
-  return (
-    <div
-      className="pointer-events-none absolute z-50 flex flex-col items-center justify-center rounded-lg border border-border bg-popover px-3 py-2 text-sm shadow-md transition-opacity animate-in fade-in zoom-in-95"
-      ref={tooltipReference}
-      style={{
-        left: position.x,
-        top: position.y,
-        transform: 'translate(-50%, calc(-100% - 8px))',
-      }}
-    >
-      <Icon className="mb-1 h-4 w-4 text-primary" />
-      <BlueprintText className="font-semibold text-popover-foreground">
-        {hoveredBlipData.name}
-      </BlueprintText>
-      <BlueprintText
-        className="text-xs text-muted-foreground"
-        uppercase={true}
-        variant="muted"
-      >
-        {hoveredBlipData.quadrant}
-      </BlueprintText>
-    </div>
-  )
+  return tooltipContent
 }
 
 export default TechRadarTooltip
