@@ -1,5 +1,6 @@
 import tseslint from 'typescript-eslint'
 import globals from 'globals'
+import { fixupConfigRules, fixupPluginRules } from '@eslint/compat'
 import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import nextPlugin from '@next/eslint-plugin-next'
@@ -20,6 +21,8 @@ const forTS = (...groups) =>
     .flat()
     .filter(Boolean)
     .map((c) => ({ ...c, files: TSLINT_FILES }))
+
+const reactCompat = fixupPluginRules(react)
 
 const sonarRecommended = (sonarjs.configs &&
   sonarjs.configs['flat/recommended']) || {
@@ -51,7 +54,12 @@ export default tseslint.config(
   // Disallow JS/CJS/MJS everywhere...
   {
     files: ['**/*.{js,jsx,cjs,mjs}'],
-    ignores: ['eslint.config.mjs', 'postcss.config.mjs', '.lintstagedrc.mjs'], // ...except these two
+    ignores: [
+      'eslint.config.mjs',
+      'postcss.config.mjs',
+      '.lintstagedrc.mjs',
+      '.github/lighthouse/lighthouserc.js',
+    ], // ...except these two
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -66,7 +74,12 @@ export default tseslint.config(
 
   // Allow + lightly lint our two Node-side config files
   {
-    files: ['eslint.config.mjs', 'postcss.config.mjs', '.lintstagedrc.mjs'],
+    files: [
+      'eslint.config.mjs',
+      'postcss.config.mjs',
+      '.lintstagedrc.mjs',
+      '.github/lighthouse/lighthouserc.js',
+    ],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
@@ -89,7 +102,7 @@ export default tseslint.config(
     jsxA11y.flatConfigs.strict,
     sonarRecommended,
     securityPlugin.configs.recommended,
-    react.configs.flat.recommended,
+    fixupConfigRules(react.configs.flat.recommended),
     reactCompiler.configs.recommended,
     noUnsanitized.configs.recommended
   ),
@@ -109,7 +122,7 @@ export default tseslint.config(
       },
     },
     plugins: {
-      react,
+      react: reactCompat,
       'react-hooks': reactHooks,
       next: nextPlugin,
       import: importPlugin,
