@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-restricted-syntax
 const isDesktop = (process.env.LHCI_FORM_FACTOR || 'mobile') === 'desktop'
 
 module.exports = {
