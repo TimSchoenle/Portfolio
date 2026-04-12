@@ -1,112 +1,168 @@
 # Portfolio
 
 [![Codecov](https://codecov.io/gh/timschoenle/Portfolio/branch/main/graph/badge.svg)](https://codecov.io/gh/timschoenle/Portfolio)
-[![CI](https://github.com/timschoenle/Portfolio/actions/workflows/ci.yaml/badge.svg)](https://github.com/timschoenle/Portfolio/actions)
+[![CI](https://github.com/timschoenle/Portfolio/actions/workflows/ci.yaml/badge.svg)](https://github.com/timschoenle/Portfolio/actions/workflows/ci.yaml)
 
-This repository is my personal portfolio website, designed to showcase my projects, skills, and experience through an automated pipeline.
+Personal portfolio codebase for [tim-schoenle.de](https://tim-schoenle.de).
 
-## 🚀 Features
+It includes:
 
-- **Next.js 16 App Router**: Utilizes the latest features of Next.js with Server Components and Suspense.
-- **Modern UI Stack**: Styled with **Tailwind CSS v4** and **shadcn/ui** (Radix UI) for a premium, accessible, and responsive design.
-- **Internationalization (i18n)**: Complete multi-language support (English & German) powered by `next-intl`, including localized routing and metadata.
-- **Dynamic Resume Generation**: Automated PDF resume generation using `@react-pdf/renderer` and project data.
-- **Type-Safe**: 100% TypeScript codebase with strict type checking.
-- **Accessibility First**: Designed with a11y in mind and tested with Axe-core.
-- **Comprehensive Testing**:
-  - **Unit**: Powered by **Vitest** for fast and reliable unit testing.
-  - **E2E**: Full end-to-end testing coverage with **Playwright**.
-- **DevOps Ready**:
-  - **Docker**: Production-ready containerization.
-  - **CI/CD**: GitHub Actions pipeline for testing, linting, and bundle analysis.
-  - **Code Quality**: Enforced via ESLint, Prettier, and Husky git hooks.
+- localized routes (`/en`, `/de`)
+- live GitHub project and contribution data
+- generated PDF resumes (optionally digitally signed)
+- strict CI quality gates, security checks, and Docker build pipeline
 
-## 📂 Project Structure
+## Before You Clone
+
+This repository is under a **proprietary license**. You can inspect and run it locally for personal evaluation, but reuse and public deployment are restricted. See [LICENSE](./LICENSE).
+
+## Stack
+
+- Runtime: Bun
+- Framework: Next.js App Router (React 19, TypeScript strict mode)
+- Styling: Tailwind CSS v4 + Radix primitives + custom "blueprint" design system
+- i18n: `next-intl`
+- Monitoring/analytics: optional Sentry + Cloudflare Web Analytics
+- PWA: Serwist service worker and web app manifest
+- Testing: Vitest (unit/component), Playwright (e2e), fuzzy tests
+- Quality: ESLint, Prettier, Knip, dependency-cruiser, Lighthouse CI, license check
+- Delivery: multi-stage Docker image (`output: "standalone"`) + GitHub Actions
+
+## What Is In The App
+
+- Landing page sections for hero, about, skills, projects, experience, contact
+- Command palette (`Ctrl+K` / `Cmd+K`) for navigation and quick actions
+- GitHub integration for featured repos, profile stats, and contribution heatmap
+- Public API endpoints:
+  - `GET /api/health`
+  - `GET /api/v1/profile`
+  - `GET /api/v1/profile/schema`
+- Resume generation at build time to `public/resume/{locale}.pdf`
+- Optional resume signing with certificate export + fingerprint verification UI
+- Localized legal pages (`/imprint`, `/privacy`)
+
+## Repository Layout
 
 ```text
-├── messages/             # i18n translation files
-├── public/               # Static assets & generated resumes
-├── scripts/              # Build and utility scripts
-├── src/
-│   ├── app/              # Next.js App Router pages
-│   ├── components/       # UI components & features
-│   ├── i18n/             # Internationalization config
-│   ├── lib/              # Utilities & helpers
-│   └── types/            # TypeScript definitions
-├── tests/                # E2E & integration tests
-└── ...
+.
+|- messages/                     # Translation files (en/de)
+|- scripts/                      # Build helpers (resume generation, standalone startup, licenses)
+|- src/
+|  |- app/                       # App Router pages, metadata routes, API routes, service worker
+|  |- components/
+|  |  |- blueprint/              # Portfolio-specific design primitives
+|  |  |- sections/               # Home page sections
+|  |  |- features/               # Command palette, contribution graph, analytics, etc.
+|  |- data/                      # Site configuration and skills data
+|  |- i18n/                      # Locale routing and request helpers
+|  |- lib/                       # GitHub client, logger, utility modules
+|  |- models/                    # API/data schemas (zod)
+|- test/                         # Vitest setup
+|- tests/                        # Playwright tests + global setup
+|- .github/workflows/            # CI/CD + security workflows
 ```
 
-## 🏁 Getting Started
+## Quick Start
 
-### Prerequisites
-
-- **Bun**: v1.1 or higher
-
-### Installation
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/timschoenle/Portfolio.git
-    cd Portfolio
-    ```
-
-2.  **Install dependencies:**
-
-    ```bash
-    bun install
-    ```
-
-3.  **Setup Environment Variables:**
-    Duplicate `.env.local.example` (if available) or create `.env.local` and add the following:
-
-    ```env
-    GITHUB_TOKEN=your_github_token_here # Required for fetching latest repo data
-    NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=your_token_here # Optional: Production analytics (public)
-    ```
-
-### Development
-
-Start the development server:
+### 1. Install dependencies
 
 ```bash
-bun dev
-# Open http://localhost:3000
+bun install
 ```
 
-### Production Build
+### 2. Create `.env.local` (recommended)
 
-Build the application for production:
+```env
+GITHUB_TOKEN=ghp_xxx
+```
+
+Notes:
+
+- `GITHUB_TOKEN` is optional, but without it GitHub data may be empty/rate-limited.
+
+### 3. Run in development
+
+```bash
+bun run dev
+```
+
+Open:
+
+- http://localhost:3000/en
+- http://localhost:3000/de
+
+### 4. Build and run production locally
 
 ```bash
 bun run build
-bun start
+bun run start
 ```
 
-## 📜 Scripts
+`start` runs a standalone server helper (`scripts/start-standalone.ts`) with `HOSTNAME=0.0.0.0` and `PORT=3000`.
 
-| Script             | Description                                                         |
-| ------------------ | ------------------------------------------------------------------- |
-| `bun dev`          | Starts the development server.                                      |
-| `bun run build`    | Builds the application for production (includes resume generation). |
-| `bun start`        | Starts the production server.                                       |
-| `bun lint`         | Runs ESLint to catch code quality issues.                           |
-| `bun format`       | Formats code using Prettier.                                        |
-| `bun test`         | Runs unit tests with Vitest.                                        |
-| `bun e2e`          | Runs end-to-end tests with Playwright.                              |
-| `bun docker:run`   | Runs the application in a local Docker container.                   |
-| `bun build:resume` | Generates the PDF resumes from data.                                |
-| `bun analyze`      | Runs bundle analysis to visualize size and dependencies.            |
+## API Endpoints
 
-## 🐳 Docker
+### `GET /api/health`
 
-You can containerize the application for consistent deployment.
+Returns runtime liveness:
 
-**Build and Run:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "<ISO-8601 timestamp>"
+}
+```
+
+### `GET /api/v1/profile`
+
+Returns public profile data (contact, social links, typed skill groups). Response includes:
+
+- validated payload based on zod schema
+- `$schema` link pointing to `/api/v1/profile/schema`
+
+### `GET /api/v1/profile/schema`
+
+Returns the JSON schema for `/api/v1/profile`.
+
+## Resume Generation And Signing
+
+Builds always generate localized PDFs:
 
 ```bash
-bun docker:build
-bun docker:run
-# Access at http://localhost:3000
+bun run build:resume
 ```
+
+Unsigned mode:
+
+- writes `public/resume/en.pdf` and `public/resume/de.pdf`
+
+Signed mode:
+
+1. Provide `RESUME_SIGNING_CERT_BASE64` and `RESUME_SIGNING_CERT_PASSWORD`
+2. Build resumes again
+3. Script exports:
+   - signed PDFs
+   - `public/resume/certificate.crt`
+   - `public/resume-fingerprint.json`
+
+For local certificate bootstrap:
+
+```bash
+bun scripts/generate-resume-certificate.ts
+```
+
+## Troubleshooting
+
+- GitHub cards or contribution graph empty:
+  - check `GITHUB_TOKEN`
+  - check API rate limits
+
+## Related Documents
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [SECURITY.md](./SECURITY.md)
+- [CHANGELOG.md](./CHANGELOG.md)
+
+## License
+
+Proprietary license. See [LICENSE](./LICENSE) for terms.
