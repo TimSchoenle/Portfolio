@@ -18,6 +18,9 @@ env:
 
 jobs:
   release-please:
+    environment:
+      name: release
+      deployment: false
     name: Release Please
     runs-on: ubuntu-latest
     outputs:
@@ -47,6 +50,9 @@ jobs:
           token: ${{ steps.generate_token.outputs.token }}
 
   publish-docker:
+    environment:
+      name: release
+      deployment: false
     name: Publish Docker
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
@@ -126,6 +132,9 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   create-sentry-release:
+    environment:
+      name: release
+      deployment: false
     name: Create Sentry Release
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
@@ -155,6 +164,9 @@ jobs:
           version: ${{ needs.release-please.outputs.tag_name }}
 
   update-helm-chart:
+    environment:
+      name: release
+      deployment: false
     name: Update Helm Chart
     needs: [release-please, publish-docker]
     if: ${{ needs.release-please.outputs.release_created }}

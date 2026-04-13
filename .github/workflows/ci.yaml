@@ -181,6 +181,9 @@ jobs:
 
   # Unit and component tests
   test:
+    environment:
+      name: ci
+      deployment: false
     name: Unit & Component Tests
     runs-on: ubuntu-latest
     needs: install-deps
@@ -355,6 +358,9 @@ jobs:
 
   # Consolidated Docker pipeline (Build -> Test -> Scan)
   docker-pipeline:
+    environment:
+      name: ci-container-test
+      deployment: false
     name: Docker Pipeline
     runs-on: ubuntu-latest
     steps:
