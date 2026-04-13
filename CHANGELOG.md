@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.17.3](https://github.com/TimSchoenle/Portfolio/compare/v1.17.2...v1.17.3) (2026-04-13)
+
+
+### Documentation
+
+* add simple security policy ([82c7f89](https://github.com/TimSchoenle/Portfolio/commit/82c7f890dd74dba35b32afef61ac1719bd583a0d))
+* update README ([08abce7](https://github.com/TimSchoenle/Portfolio/commit/08abce7e66829468c26378fcf200c8d2abc275a0))
+
+
+### Build System
+
+* **ci:** isolate secrets by environment ([#715](https://github.com/TimSchoenle/Portfolio/issues/715)) ([30cfece](https://github.com/TimSchoenle/Portfolio/commit/30cfecece245c7d023e52219d94ab6f8eb137ffa))
+
+
+### Miscellaneous
+
+* **deps:** update actions/create-github-app-token action to v3.1.1 ([#711](https://github.com/TimSchoenle/Portfolio/issues/711)) ([143beab](https://github.com/TimSchoenle/Portfolio/commit/143beabaa3237c3560965667f5336425f0fe24cc))
+* **deps:** update dependency eslint to v10 ([#498](https://github.com/TimSchoenle/Portfolio/issues/498)) ([bc7d7c8](https://github.com/TimSchoenle/Portfolio/commit/bc7d7c8c3ad4028e62e68d7f968107c2fce1a5c7))
+* **deps:** update dependency knip to v6.4.0 ([#713](https://github.com/TimSchoenle/Portfolio/issues/713)) ([2c5d725](https://github.com/TimSchoenle/Portfolio/commit/2c5d7257c38a46d18deec53617507a096eeb049b))
+* **deps:** update dependency typescript to v6 ([#659](https://github.com/TimSchoenle/Portfolio/issues/659)) ([4d61f76](https://github.com/TimSchoenle/Portfolio/commit/4d61f76258a03ba329a507e24fd488523fe92cb2))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#714](https://github.com/TimSchoenle/Portfolio/issues/714)) ([c97a5ce](https://github.com/TimSchoenle/Portfolio/commit/c97a5ce49212d782138378dfb55fa7f7fbe56abf))
+
 ## [1.17.2](https://github.com/TimSchoenle/Portfolio/compare/v1.17.1...v1.17.2) (2026-04-11)
 
 
