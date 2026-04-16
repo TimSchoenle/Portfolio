@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.17.4](https://github.com/TimSchoenle/Portfolio/compare/v1.17.3...v1.17.4) (2026-04-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.48.0 ([#726](https://github.com/TimSchoenle/Portfolio/issues/726)) ([8106594](https://github.com/TimSchoenle/Portfolio/commit/81065941fd208a0dd8bc49f2cba84faa0d1bc2e4))
+* **deps:** update nextjs monorepo to v16.2.4 ([a092485](https://github.com/TimSchoenle/Portfolio/commit/a092485865021c995290bf6bd0a578811e591923))
+* **deps:** update nextjs monorepo to v16.2.4 (patch) ([#727](https://github.com/TimSchoenle/Portfolio/issues/727)) ([a092485](https://github.com/TimSchoenle/Portfolio/commit/a092485865021c995290bf6bd0a578811e591923))
+
+
+### Build System
+
+* **ci:** adjust version comments for zizmor ([cd59354](https://github.com/TimSchoenle/Portfolio/commit/cd59354a50d6e5d5e9763b8a5f8347b3e8b277db))
+* **deps:** correctly ping all versions ([f3a066c](https://github.com/TimSchoenle/Portfolio/commit/f3a066c8c48c4f00efd925d29f0015b3b8a06e80))
+
+
+### Miscellaneous
+
+* **deps:** update actions/cache digest to 27d5ce7 ([#716](https://github.com/TimSchoenle/Portfolio/issues/716)) ([59929b2](https://github.com/TimSchoenle/Portfolio/commit/59929b29e2c3158ae57c5734c0a61e0b086a31e5))
+* **deps:** update dependency @react-pdf/renderer to v4.5.1 ([#733](https://github.com/TimSchoenle/Portfolio/issues/733)) ([c54c605](https://github.com/TimSchoenle/Portfolio/commit/c54c6055402e4b20bbe02bc127a59afeda1ee530))
+* **deps:** update dependency eslint-plugin-sonarjs to v4.0.3 ([#734](https://github.com/TimSchoenle/Portfolio/issues/734)) ([3b08b0c](https://github.com/TimSchoenle/Portfolio/commit/3b08b0cc1dbec1921688555ad802373c14475bbd))
+* **deps:** update dependency globals to v17.5.0 ([#723](https://github.com/TimSchoenle/Portfolio/issues/723)) ([1a94c25](https://github.com/TimSchoenle/Portfolio/commit/1a94c257e66dc6d4c485cd1753e74b435c689d79))
+* **deps:** update dependency happy-dom to v20.9.0 ([#728](https://github.com/TimSchoenle/Portfolio/issues/728)) ([673429b](https://github.com/TimSchoenle/Portfolio/commit/673429bfbc192b841bb396ac659d2da1c6e2979e))
+* **deps:** update dependency knip to v6.4.1 ([#720](https://github.com/TimSchoenle/Portfolio/issues/720)) ([7144216](https://github.com/TimSchoenle/Portfolio/commit/71442160e6872f2fe5e51c6929c9206319851148))
+* **deps:** update dependency postcss to v8.5.10 ([#730](https://github.com/TimSchoenle/Portfolio/issues/730)) ([d3599ee](https://github.com/TimSchoenle/Portfolio/commit/d3599ee291eb8ec9ed3e46a37d9715a5ac54bf89))
+* **deps:** update dependency prettier to v3.8.3 ([#731](https://github.com/TimSchoenle/Portfolio/issues/731)) ([7e22e70](https://github.com/TimSchoenle/Portfolio/commit/7e22e70f237ff9f095b909c79d0c23e00d5cc467))
+* **deps:** update dependency typescript-eslint to v8.58.2 ([#732](https://github.com/TimSchoenle/Portfolio/issues/732)) ([04f8de2](https://github.com/TimSchoenle/Portfolio/commit/04f8de2305df470e67f3ab14bc358a5a4b5dd626))
+* **deps:** update googleapis/release-please-action digest to 5c625bf ([#717](https://github.com/TimSchoenle/Portfolio/issues/717)) ([61c2a7a](https://github.com/TimSchoenle/Portfolio/commit/61c2a7a6bd16a2adcb6b5942b39463d394c87fe8))
+* **deps:** update step-security/harden-runner action to v2.18.0 ([#729](https://github.com/TimSchoenle/Portfolio/issues/729)) ([6afcfc0](https://github.com/TimSchoenle/Portfolio/commit/6afcfc039516685be3a2b074483e5df52eded457))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.3 ([#721](https://github.com/TimSchoenle/Portfolio/issues/721)) ([0eb0929](https://github.com/TimSchoenle/Portfolio/commit/0eb0929883b8604d98bb480964a8f2d8ddeef1d6))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-wipe-cache.yaml to vworkflows-maintenance-wipe-cache-v1.1.6 ([#722](https://github.com/TimSchoenle/Portfolio/issues/722)) ([2443b59](https://github.com/TimSchoenle/Portfolio/commit/2443b5922a14a72520ecdd6daacaeb56b48ccd68))
+* **deps:** update timschoenle/actions/actions/bun/setup-cached to vactions-bun-setup-cached-v1.1.8 ([#724](https://github.com/TimSchoenle/Portfolio/issues/724)) ([c40aca9](https://github.com/TimSchoenle/Portfolio/commit/c40aca91956f35da0c9b3bb3f47c96de89606f50))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.9 ([#725](https://github.com/TimSchoenle/Portfolio/issues/725)) ([d788352](https://github.com/TimSchoenle/Portfolio/commit/d78835221eb8abafdf45352894bee9282a5923ad))
+* **deps:** update zizmorcore/zizmor-action action to v0.5.3 ([#719](https://github.com/TimSchoenle/Portfolio/issues/719)) ([8732eee](https://github.com/TimSchoenle/Portfolio/commit/8732eeef6f7a99fe00629d9166ccc1205df08c0f))
+
 ## [1.17.3](https://github.com/TimSchoenle/Portfolio/compare/v1.17.2...v1.17.3) (2026-04-13)
 
 
