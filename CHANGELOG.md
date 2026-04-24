@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.17.5](https://github.com/TimSchoenle/Portfolio/compare/v1.17.4...v1.17.5) (2026-04-24)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.49.0 ([#738](https://github.com/TimSchoenle/Portfolio/issues/738)) ([e5d04e3](https://github.com/TimSchoenle/Portfolio/commit/e5d04e30222b10be56f3f16adab0d19c43c7f335))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @cyclonedx/cdxgen to v12.2.0 ([#745](https://github.com/TimSchoenle/Portfolio/issues/745)) ([bb7822a](https://github.com/TimSchoenle/Portfolio/commit/bb7822a938155a36afd9ce9ac3924da9eb1bce03))
+* **deps:** update dependency eslint to v10.2.1 ([#743](https://github.com/TimSchoenle/Portfolio/issues/743)) ([4a034b2](https://github.com/TimSchoenle/Portfolio/commit/4a034b27d628de908ed01331209d522b8b302a4c))
+* **deps:** update dependency eslint-plugin-perfectionist to v5.9.0 ([#746](https://github.com/TimSchoenle/Portfolio/issues/746)) ([cfe6201](https://github.com/TimSchoenle/Portfolio/commit/cfe620137241be6d0e3c11a157cb6feafafde0bc))
+* **deps:** update dependency eslint-plugin-react-hooks to v7.1.0 ([#740](https://github.com/TimSchoenle/Portfolio/issues/740)) ([a91e478](https://github.com/TimSchoenle/Portfolio/commit/a91e4783cef8588c4105c0b91b20d06f732a87cb))
+* **deps:** update dependency eslint-plugin-react-hooks to v7.1.1 ([#744](https://github.com/TimSchoenle/Portfolio/issues/744)) ([433c33f](https://github.com/TimSchoenle/Portfolio/commit/433c33fbc4add4f29b76a9e9b7012c7ca322316f))
+* **deps:** update dependency knip to v6.5.0 ([#747](https://github.com/TimSchoenle/Portfolio/issues/747)) ([e31de5b](https://github.com/TimSchoenle/Portfolio/commit/e31de5b9dacf98d2c1288458ded0680c1e77c963))
+* **deps:** update dependency knip to v6.6.0 ([#751](https://github.com/TimSchoenle/Portfolio/issues/751)) ([fe73261](https://github.com/TimSchoenle/Portfolio/commit/fe73261662d847987912fc78b31f93064d7f50db))
+* **deps:** update dependency typescript to v6.0.3 ([#739](https://github.com/TimSchoenle/Portfolio/issues/739)) ([0d78be9](https://github.com/TimSchoenle/Portfolio/commit/0d78be9635c37a0097638deebec57710c247da5d))
+* **deps:** update dhi.io/bun:1-alpine3.22 docker digest to 6b9638f ([#741](https://github.com/TimSchoenle/Portfolio/issues/741)) ([2e2ce90](https://github.com/TimSchoenle/Portfolio/commit/2e2ce90709450fa02a446c8c099db73956937b32))
+* **deps:** update dhi.io/bun:1-alpine3.22-dev docker digest to a791761 ([#742](https://github.com/TimSchoenle/Portfolio/issues/742)) ([82bfd95](https://github.com/TimSchoenle/Portfolio/commit/82bfd9551ad1bc5d3c3c689f8cfc7f4469c89e6a))
+* **deps:** update step-security/harden-runner action to v2.19.0 ([#748](https://github.com/TimSchoenle/Portfolio/issues/748)) ([bbbd816](https://github.com/TimSchoenle/Portfolio/commit/bbbd816a58c9fc0203b92ac0218e5b764ee08f23))
+* **deps:** update tailwindcss monorepo to v4.2.3 ([9cfa78c](https://github.com/TimSchoenle/Portfolio/commit/9cfa78ca821b4f5e3b6bf836991c668508f77fc0))
+* **deps:** update tailwindcss monorepo to v4.2.3 (patch) ([#749](https://github.com/TimSchoenle/Portfolio/issues/749)) ([9cfa78c](https://github.com/TimSchoenle/Portfolio/commit/9cfa78ca821b4f5e3b6bf836991c668508f77fc0))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.4 ([#735](https://github.com/TimSchoenle/Portfolio/issues/735)) ([26403c2](https://github.com/TimSchoenle/Portfolio/commit/26403c247ab52abbf7274734ff6bd1cf76898454))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.14 ([#736](https://github.com/TimSchoenle/Portfolio/issues/736)) ([ff0c985](https://github.com/TimSchoenle/Portfolio/commit/ff0c985f4ffbcc5f08f4fe3b8e09be8e7ceb3f6c))
+
 ## [1.17.4](https://github.com/TimSchoenle/Portfolio/compare/v1.17.3...v1.17.4) (2026-04-16)
 
 
