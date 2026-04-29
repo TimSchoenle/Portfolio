@@ -64,7 +64,7 @@
     "@cyclonedx/cdxgen": "12.2.1",
     "@fast-check/vitest": "0.4.0",
     "@lhci/cli": "0.15.1",
-    "@lingual/i18n-check": "0.9.3",
+    "@lingual/i18n-check": "0.9.4",
     "@next/bundle-analyzer": "16.2.4",
     "@next/eslint-plugin-next": "16.2.4",
     "@playwright/test": "1.59.1",
