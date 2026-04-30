@@ -108,7 +108,7 @@
     "node-forge": "1.4.0",
     "postcss": "8.5.12",
     "prettier": "3.8.3",
-    "prettier-plugin-tailwindcss": "0.7.3",
+    "prettier-plugin-tailwindcss": "0.7.4",
     "serwist": "9.5.7",
     "tailwindcss": "4.2.4",
     "typescript": "6.0.3",
