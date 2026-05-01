@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.17.6](https://github.com/TimSchoenle/Portfolio/compare/v1.17.5...v1.17.6) (2026-05-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.50.0 ([#763](https://github.com/TimSchoenle/Portfolio/issues/763)) ([d17b85d](https://github.com/TimSchoenle/Portfolio/commit/d17b85d2c0aee533fcc23032a4e36e52ce703394))
+* **deps:** update dependency lucide-react to v1.11.0 ([#767](https://github.com/TimSchoenle/Portfolio/issues/767)) ([fe12a1f](https://github.com/TimSchoenle/Portfolio/commit/fe12a1f1cca07b99aaf035463a0cb9a0f1ef179a))
+* **deps:** update dependency lucide-react to v1.9.0 ([#764](https://github.com/TimSchoenle/Portfolio/issues/764)) ([bc17f40](https://github.com/TimSchoenle/Portfolio/commit/bc17f4078a8bddea54cdd08a7975d4f8539b3517))
+* **deps:** update dependency next-intl to v4.9.2 ([#777](https://github.com/TimSchoenle/Portfolio/issues/777)) ([a8b5092](https://github.com/TimSchoenle/Portfolio/commit/a8b5092f87d2b7ba236ab652d85ca6c30ec8a1bb))
+
+
+### Miscellaneous
+
+* **deps:** update aquasecurity/trivy-action action to v0.36.0 ([#757](https://github.com/TimSchoenle/Portfolio/issues/757)) ([df85464](https://github.com/TimSchoenle/Portfolio/commit/df8546423d45949a2beb3b9073b71e75e4ae9de5))
+* **deps:** update dependency @commitlint/cli to v20.5.2 ([#769](https://github.com/TimSchoenle/Portfolio/issues/769)) ([ed2c55b](https://github.com/TimSchoenle/Portfolio/commit/ed2c55b06cd33cbfac04c69c3dfed3fce0598467))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.2.1 ([#766](https://github.com/TimSchoenle/Portfolio/issues/766)) ([c371822](https://github.com/TimSchoenle/Portfolio/commit/c37182288e4ac9dfbd6379003dceb8f0cb72abb9))
+* **deps:** update dependency @lingual/i18n-check to v0.9.4 ([#773](https://github.com/TimSchoenle/Portfolio/issues/773)) ([d5d1556](https://github.com/TimSchoenle/Portfolio/commit/d5d1556c02fff72a8aac569c6af8603f67c356b0))
+* **deps:** update dependency jsdom to v29.1.0 ([#774](https://github.com/TimSchoenle/Portfolio/issues/774)) ([2a79ad2](https://github.com/TimSchoenle/Portfolio/commit/2a79ad24ff74e98db0f3193b8002ea8497fe747f))
+* **deps:** update dependency knip to v6.6.1 ([#756](https://github.com/TimSchoenle/Portfolio/issues/756)) ([b86ce90](https://github.com/TimSchoenle/Portfolio/commit/b86ce90ac53b3e1ee106cf986059f945f8a4a10c))
+* **deps:** update dependency knip to v6.6.2 ([#760](https://github.com/TimSchoenle/Portfolio/issues/760)) ([a82392d](https://github.com/TimSchoenle/Portfolio/commit/a82392dc35c8e3ed96fbbff43ca31bd85d58bb7b))
+* **deps:** update dependency knip to v6.6.3 ([#768](https://github.com/TimSchoenle/Portfolio/issues/768)) ([ab5d541](https://github.com/TimSchoenle/Portfolio/commit/ab5d5419715431c9cc437522c51f58d3ad813fde))
+* **deps:** update dependency knip to v6.7.0 ([#770](https://github.com/TimSchoenle/Portfolio/issues/770)) ([11e594b](https://github.com/TimSchoenle/Portfolio/commit/11e594b377ced4938cdd37e86d120c839fc06d6b))
+* **deps:** update dependency postcss to v8.5.12 ([#771](https://github.com/TimSchoenle/Portfolio/issues/771)) ([48ae931](https://github.com/TimSchoenle/Portfolio/commit/48ae931ac66e3773298bd58da2d61ee46f99e562))
+* **deps:** update dependency prettier-plugin-tailwindcss to v0.7.3 ([#759](https://github.com/TimSchoenle/Portfolio/issues/759)) ([c43660b](https://github.com/TimSchoenle/Portfolio/commit/c43660b6310b90a4094ad8c1faa905ea73f0eaee))
+* **deps:** update dependency prettier-plugin-tailwindcss to v0.7.4 ([#775](https://github.com/TimSchoenle/Portfolio/issues/775)) ([7e7b4ff](https://github.com/TimSchoenle/Portfolio/commit/7e7b4ffa0ae7d351194712c9e47d2098f8057e97))
+* **deps:** update dependency prettier-plugin-tailwindcss to v0.8.0 ([#776](https://github.com/TimSchoenle/Portfolio/issues/776)) ([7c84ba4](https://github.com/TimSchoenle/Portfolio/commit/7c84ba489f84bfbbb0f5c22f70eb3271d9813ac7))
+* **deps:** update googleapis/release-please-action action to v5 ([#758](https://github.com/TimSchoenle/Portfolio/issues/758)) ([80fe059](https://github.com/TimSchoenle/Portfolio/commit/80fe059f9ea4c7c2bde79433e5dcd90c5e618e66))
+* **deps:** update tailwindcss monorepo to v4.2.4 ([089979f](https://github.com/TimSchoenle/Portfolio/commit/089979f9f204a19020c4582bbe3f6de242f19455))
+* **deps:** update tailwindcss monorepo to v4.2.4 (patch) ([#754](https://github.com/TimSchoenle/Portfolio/issues/754)) ([089979f](https://github.com/TimSchoenle/Portfolio/commit/089979f9f204a19020c4582bbe3f6de242f19455))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.5 ([#761](https://github.com/TimSchoenle/Portfolio/issues/761)) ([28f4a9a](https://github.com/TimSchoenle/Portfolio/commit/28f4a9afba41648f0d2b23fcbc7afb799e33ed39))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.6 ([#778](https://github.com/TimSchoenle/Portfolio/issues/778)) ([af1cccf](https://github.com/TimSchoenle/Portfolio/commit/af1cccf242c4cf3372c1c71edd92b07d7af71ca4))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.15 ([#755](https://github.com/TimSchoenle/Portfolio/issues/755)) ([b4aa0fd](https://github.com/TimSchoenle/Portfolio/commit/b4aa0fda1c840ddf9efb24f298c88c542e0aa88e))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.16 ([#772](https://github.com/TimSchoenle/Portfolio/issues/772)) ([e878a60](https://github.com/TimSchoenle/Portfolio/commit/e878a60feddaf984d50acc7ac8bf275216b2a7f0))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-wipe-cache.yaml to vworkflows-maintenance-wipe-cache-v1.1.7 ([#762](https://github.com/TimSchoenle/Portfolio/issues/762)) ([da424f2](https://github.com/TimSchoenle/Portfolio/commit/da424f20e1fe4bd17447bcc247fa0896d67707b4))
+* **deps:** update vitest monorepo to v4.1.5 ([a8e42f7](https://github.com/TimSchoenle/Portfolio/commit/a8e42f769a94f76460f4e4ea6cb97ce23742668a))
+* **deps:** update vitest monorepo to v4.1.5 (patch) ([#752](https://github.com/TimSchoenle/Portfolio/issues/752)) ([a8e42f7](https://github.com/TimSchoenle/Portfolio/commit/a8e42f769a94f76460f4e4ea6cb97ce23742668a))
+
 ## [1.17.5](https://github.com/TimSchoenle/Portfolio/compare/v1.17.4...v1.17.5) (2026-04-24)
 
 
