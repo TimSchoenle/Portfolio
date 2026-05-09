@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.17.7](https://github.com/TimSchoenle/Portfolio/compare/v1.17.6...v1.17.7) (2026-05-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.51.0 ([#787](https://github.com/TimSchoenle/Portfolio/issues/787)) ([466a71c](https://github.com/TimSchoenle/Portfolio/commit/466a71cf42cecc818a7e1c3a73762d7051dc8b04))
+* **deps:** update dependency @serwist/next to v9.5.10 ([#798](https://github.com/TimSchoenle/Portfolio/issues/798)) ([7b2b5b9](https://github.com/TimSchoenle/Portfolio/commit/7b2b5b92fa88f04ffcbcec31fedbd2725a5603eb))
+* **deps:** update dependency @serwist/next to v9.5.11 ([#807](https://github.com/TimSchoenle/Portfolio/issues/807)) ([04ce835](https://github.com/TimSchoenle/Portfolio/commit/04ce835b31da59f2a0a69beeebf00f7b1b7e88ef))
+* **deps:** update dependency @serwist/next to v9.5.8 ([#790](https://github.com/TimSchoenle/Portfolio/issues/790)) ([d7965b6](https://github.com/TimSchoenle/Portfolio/commit/d7965b64d8fc05613e53cf4137f13035d790b29c))
+* **deps:** update dependency @serwist/next to v9.5.9 ([#795](https://github.com/TimSchoenle/Portfolio/issues/795)) ([5dd4ff4](https://github.com/TimSchoenle/Portfolio/commit/5dd4ff4e1b477eaf96747540d29638c327fccf78))
+* **deps:** update dependency lucide-react to v1.12.0 ([#779](https://github.com/TimSchoenle/Portfolio/issues/779)) ([05829da](https://github.com/TimSchoenle/Portfolio/commit/05829daaefe961604dbb6ec68b5f659454367e10))
+* **deps:** update dependency lucide-react to v1.14.0 ([#786](https://github.com/TimSchoenle/Portfolio/issues/786)) ([34dd8af](https://github.com/TimSchoenle/Portfolio/commit/34dd8af2f937c3f49e31e9063fe321794795604a))
+* **deps:** update dependency next-intl to v4.10.1 ([#780](https://github.com/TimSchoenle/Portfolio/issues/780)) ([e307aaf](https://github.com/TimSchoenle/Portfolio/commit/e307aaf4ad511a799d45ec79b0a3000faf382de1))
+* **deps:** update dependency next-intl to v4.11.0 ([#782](https://github.com/TimSchoenle/Portfolio/issues/782)) ([8345bfd](https://github.com/TimSchoenle/Portfolio/commit/8345bfd3698b9a4e1df30717abf3949ddb6d738f))
+* **deps:** update dependency zod to v4.4.1 ([#791](https://github.com/TimSchoenle/Portfolio/issues/791)) ([2846377](https://github.com/TimSchoenle/Portfolio/commit/2846377c79895e77c37bafa1d019624eea368e60))
+* **deps:** update dependency zod to v4.4.2 ([#803](https://github.com/TimSchoenle/Portfolio/issues/803)) ([3b6a6de](https://github.com/TimSchoenle/Portfolio/commit/3b6a6de70b031824645047281114c1275568c393))
+* **deps:** update dependency zod to v4.4.3 ([#813](https://github.com/TimSchoenle/Portfolio/issues/813)) ([0ff4e62](https://github.com/TimSchoenle/Portfolio/commit/0ff4e625d1618bd5776a929d3e10492bc9b6cfea))
+
+
+### Miscellaneous
+
+* **deps:** update commitlint monorepo to v20.5.3 ([27c06b0](https://github.com/TimSchoenle/Portfolio/commit/27c06b0fa52b8c557373a50cd85bcfa6a69af6df))
+* **deps:** update commitlint monorepo to v20.5.3 (patch) ([#792](https://github.com/TimSchoenle/Portfolio/issues/792)) ([27c06b0](https://github.com/TimSchoenle/Portfolio/commit/27c06b0fa52b8c557373a50cd85bcfa6a69af6df))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.3.0 ([#784](https://github.com/TimSchoenle/Portfolio/issues/784)) ([ca84908](https://github.com/TimSchoenle/Portfolio/commit/ca849089979d2fbaac47673b629f359abe8616b1))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.3.1 ([#802](https://github.com/TimSchoenle/Portfolio/issues/802)) ([bd3304c](https://github.com/TimSchoenle/Portfolio/commit/bd3304c834c80ed3e8a0bd1981ec5f71a2dc0d7c))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.3.2 ([#808](https://github.com/TimSchoenle/Portfolio/issues/808)) ([345afc5](https://github.com/TimSchoenle/Portfolio/commit/345afc5711ffc6c067a58356162825585f90f5ce))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.3.3 ([#815](https://github.com/TimSchoenle/Portfolio/issues/815)) ([ccffb86](https://github.com/TimSchoenle/Portfolio/commit/ccffb86a95c1b47f6b60ef581ead8fb095ad4d47))
+* **deps:** update dependency @fast-check/vitest to v0.4.1 ([#783](https://github.com/TimSchoenle/Portfolio/issues/783)) ([4173add](https://github.com/TimSchoenle/Portfolio/commit/4173adde2b07db8b720ccfe13e2dad3172ed2610))
+* **deps:** update dependency @lingual/i18n-check to v0.9.5 ([#810](https://github.com/TimSchoenle/Portfolio/issues/810)) ([29b6f57](https://github.com/TimSchoenle/Portfolio/commit/29b6f57061dd681dce675dc36b5a785c577eee37))
+* **deps:** update dependency dependency-cruiser to v17.4.0 ([#805](https://github.com/TimSchoenle/Portfolio/issues/805)) ([1d453e5](https://github.com/TimSchoenle/Portfolio/commit/1d453e59f039c3133702b1f7bf551cd680190996))
+* **deps:** update dependency eslint to v10.3.0 ([#799](https://github.com/TimSchoenle/Portfolio/issues/799)) ([632d1e1](https://github.com/TimSchoenle/Portfolio/commit/632d1e18d75c3e42bb4639631448410539d78956))
+* **deps:** update dependency globals to v17.6.0 ([#800](https://github.com/TimSchoenle/Portfolio/issues/800)) ([42769d4](https://github.com/TimSchoenle/Portfolio/commit/42769d4da8565313afbab2b8ba53dc9c74663dea))
+* **deps:** update dependency jsdom to v29.1.1 ([#793](https://github.com/TimSchoenle/Portfolio/issues/793)) ([0e08d09](https://github.com/TimSchoenle/Portfolio/commit/0e08d091660148b3f639326d4fbb80eb6c65885c))
+* **deps:** update dependency knip to v6.11.0 ([#801](https://github.com/TimSchoenle/Portfolio/issues/801)) ([423c39b](https://github.com/TimSchoenle/Portfolio/commit/423c39b291853f7284ed9a0370a37600b1b4e680))
+* **deps:** update dependency knip to v6.12.0 ([#816](https://github.com/TimSchoenle/Portfolio/issues/816)) ([4401496](https://github.com/TimSchoenle/Portfolio/commit/44014962dd4771505e218ef8dcaae9f7ee2c95ff))
+* **deps:** update dependency knip to v6.8.0 ([#785](https://github.com/TimSchoenle/Portfolio/issues/785)) ([7b4cb4f](https://github.com/TimSchoenle/Portfolio/commit/7b4cb4f6fc26383313449a5f69caddbfb5cf90bd))
+* **deps:** update dependency knip to v6.9.0 ([#788](https://github.com/TimSchoenle/Portfolio/issues/788)) ([0398e27](https://github.com/TimSchoenle/Portfolio/commit/0398e27e3001a9f2689049dc57931449ba16f73e))
+* **deps:** update dependency postcss to v8.5.13 ([#796](https://github.com/TimSchoenle/Portfolio/issues/796)) ([1b71957](https://github.com/TimSchoenle/Portfolio/commit/1b719571472ac4b8a82b1cd7c032a06bb038d763))
+* **deps:** update dependency postcss to v8.5.14 ([#814](https://github.com/TimSchoenle/Portfolio/issues/814)) ([8fd7185](https://github.com/TimSchoenle/Portfolio/commit/8fd7185b2bc2c0a6b1e20d5f5d3826eda6e25096))
+* **deps:** update dependency serwist to v9.5.10 ([#797](https://github.com/TimSchoenle/Portfolio/issues/797)) ([38b3fd8](https://github.com/TimSchoenle/Portfolio/commit/38b3fd8037a17d787fdd370cf679350f0758a4ba))
+* **deps:** update dependency serwist to v9.5.11 ([#806](https://github.com/TimSchoenle/Portfolio/issues/806)) ([41a3684](https://github.com/TimSchoenle/Portfolio/commit/41a3684f90fdc182c636ecddefc25d53d3c47b75))
+* **deps:** update dependency serwist to v9.5.8 ([#789](https://github.com/TimSchoenle/Portfolio/issues/789)) ([5caaa87](https://github.com/TimSchoenle/Portfolio/commit/5caaa87cff6ea72c91fd362b15c3d0f93761e459))
+* **deps:** update dependency serwist to v9.5.9 ([#794](https://github.com/TimSchoenle/Portfolio/issues/794)) ([74a0ae0](https://github.com/TimSchoenle/Portfolio/commit/74a0ae053cc1dbb03942bf37f60c2bb5e8927746))
+* **deps:** update step-security/harden-runner action to v2.19.1 ([#804](https://github.com/TimSchoenle/Portfolio/issues/804)) ([d223aa5](https://github.com/TimSchoenle/Portfolio/commit/d223aa52cfc38b5eaea2e5d92be7a9178f7a2660))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.7 ([#811](https://github.com/TimSchoenle/Portfolio/issues/811)) ([e2d7b8a](https://github.com/TimSchoenle/Portfolio/commit/e2d7b8a239e6061e4bb3a2033a1d6c877adc388e))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.17 ([#809](https://github.com/TimSchoenle/Portfolio/issues/809)) ([d894e7e](https://github.com/TimSchoenle/Portfolio/commit/d894e7e0619cfba69985655c15590aec282e099a))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-wipe-cache.yaml to vworkflows-maintenance-wipe-cache-v1.1.8 ([#812](https://github.com/TimSchoenle/Portfolio/issues/812)) ([8332372](https://github.com/TimSchoenle/Portfolio/commit/8332372d59f1ed5ed71b1155e557a16b7ceb52d7))
+
 ## [1.17.6](https://github.com/TimSchoenle/Portfolio/compare/v1.17.5...v1.17.6) (2026-05-01)
 
 
