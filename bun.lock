@@ -71,7 +71,7 @@
         "happy-dom": "20.9.0",
         "husky": "9.1.7",
         "jsdom": "29.1.1",
-        "knip": "6.12.0",
+        "knip": "6.12.1",
         "license-checker-rseidelsohn": "4.4.2",
         "lint-staged": "17.0.2",
         "node-forge": "1.4.0",
@@ -1927,7 +1927,7 @@
 
     "kleur": ["kleur@3.0.3", "", {}, "sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w=="],
 
-    "knip": ["knip@6.12.0", "", { "dependencies": { "fdir": "^6.5.0", "formatly": "^0.3.0", "get-tsconfig": "4.14.0", "jiti": "^2.6.0", "minimist": "^1.2.8", "oxc-parser": "^0.128.0", "oxc-resolver": "^11.19.1", "picomatch": "^4.0.4", "smol-toml": "^1.6.1", "strip-json-comments": "5.0.3", "tinyglobby": "^0.2.16", "unbash": "^3.0.0", "yaml": "^2.8.2", "zod": "^4.1.11" }, "bin": { "knip": "bin/knip.js", "knip-bun": "bin/knip-bun.js" } }, "sha512-nRg8+DOFcfBD6NjmNzu9+3D35QnEmMsnojJGOHQUqv+70r1aOx99wpSUXvEV7syQVOL5E6tNXXkoyG1Fuz8BWg=="],
+    "knip": ["knip@6.12.1", "", { "dependencies": { "fdir": "^6.5.0", "formatly": "^0.3.0", "get-tsconfig": "4.14.0", "jiti": "^2.7.0", "minimist": "^1.2.8", "oxc-parser": "^0.128.0", "oxc-resolver": "^11.19.1", "picomatch": "^4.0.4", "smol-toml": "^1.6.1", "strip-json-comments": "5.0.3", "tinyglobby": "^0.2.16", "unbash": "^3.0.0", "yaml": "^2.8.2", "zod": "^4.1.11" }, "bin": { "knip": "bin/knip.js", "knip-bun": "bin/knip-bun.js" } }, "sha512-9JRZB1mENe8xNMpP4jJRiFXkRVBHTWzD7YtiLywkO7aKXCefbvI+hA0YDl7H7dPvJt7gcVolgxKgABJQ31NL3w=="],
 
     "kolorist": ["kolorist@1.8.0", "", {}, "sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ=="],
 
@@ -3090,6 +3090,10 @@
     "jsdom/whatwg-mimetype": ["whatwg-mimetype@5.0.0", "", {}, "sha512-sXcNcHOC51uPGF0P/D4NVtrkjSU2fNsm9iog4ZvZJsL3rjoDAzXZhkm2MWt1y+PUdggKAYVoMAIYcs78wJ51Cw=="],
 
     "knip/get-tsconfig": ["get-tsconfig@4.14.0", "", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-yTb+8DXzDREzgvYmh6s9vHsSVCHeC0G3PI5bEXNBHtmshPnO+S5O7qgLEOn0I5QvMy6kpZN8K1NKGyilLb93wA=="],
+
+    "knip/jiti": ["jiti@2.7.0", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ=="],
+
+    "knip/yaml": ["yaml@2.8.4", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-ml/JPOj9fOQK8RNnWojA67GbZ0ApXAUlN2UQclwv2eVgTgn7O9gg9o7paZWKMp4g0H3nTLtS9LVzhkpOFIKzog=="],
 
     "lighthouse/@sentry/node": ["@sentry/node@7.120.4", "", { "dependencies": { "@sentry-internal/tracing": "7.120.4", "@sentry/core": "7.120.4", "@sentry/integrations": "7.120.4", "@sentry/types": "7.120.4", "@sentry/utils": "7.120.4" } }, "sha512-qq3wZAXXj2SRWhqErnGCSJKUhPSlZ+RGnCZjhfjHpP49KNpcd9YdPTIUsFMgeyjdh6Ew6aVCv23g1hTP0CHpYw=="],
 
