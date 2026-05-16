@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.17.8](https://github.com/TimSchoenle/Portfolio/compare/v1.17.7...v1.17.8) (2026-05-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.52.0 ([#822](https://github.com/TimSchoenle/Portfolio/issues/822)) ([ed7a956](https://github.com/TimSchoenle/Portfolio/commit/ed7a956d5619179d74b4e968ec897766dc7bb662))
+* **deps:** update dependency @sentry/nextjs to v10.53.0 ([#844](https://github.com/TimSchoenle/Portfolio/issues/844)) ([a808108](https://github.com/TimSchoenle/Portfolio/commit/a8081081fefdd9f31d4e756af2b41cad1f35126e))
+* **deps:** update dependency @sentry/nextjs to v10.53.1 ([#847](https://github.com/TimSchoenle/Portfolio/issues/847)) ([ee91d6e](https://github.com/TimSchoenle/Portfolio/commit/ee91d6e83b4394e4e48b675c0973e3de45ae7ffd))
+* **deps:** update dependency next-intl to v4.11.1 ([#827](https://github.com/TimSchoenle/Portfolio/issues/827)) ([e46c43b](https://github.com/TimSchoenle/Portfolio/commit/e46c43b1cd34b840d1a64895292acfcf65c45859))
+* **deps:** update dependency next-intl to v4.11.2 ([#837](https://github.com/TimSchoenle/Portfolio/issues/837)) ([958e596](https://github.com/TimSchoenle/Portfolio/commit/958e596517aec4f5fd8d2639c0f79270ce0de288))
+* **deps:** update dependency next-intl to v4.12.0 ([#849](https://github.com/TimSchoenle/Portfolio/issues/849)) ([1fac6a8](https://github.com/TimSchoenle/Portfolio/commit/1fac6a8848f00b523313ba768283a4d803c07f78))
+* **deps:** update dependency tailwind-merge to v3.6.0 ([#834](https://github.com/TimSchoenle/Portfolio/issues/834)) ([bd602d6](https://github.com/TimSchoenle/Portfolio/commit/bd602d63333e887d3e297725700a584f5ad2d121))
+* **deps:** update nextjs monorepo to v16.2.5 ([4a0dc60](https://github.com/TimSchoenle/Portfolio/commit/4a0dc60ee03ae580525247ddf93c530150b5cff9))
+* **deps:** update nextjs monorepo to v16.2.5 (patch) ([#819](https://github.com/TimSchoenle/Portfolio/issues/819)) ([4a0dc60](https://github.com/TimSchoenle/Portfolio/commit/4a0dc60ee03ae580525247ddf93c530150b5cff9))
+* **deps:** update nextjs monorepo to v16.2.6 ([2f843de](https://github.com/TimSchoenle/Portfolio/commit/2f843deff43471bc4ff4853fc4d222478765d601))
+* **deps:** update nextjs monorepo to v16.2.6 (patch) ([#826](https://github.com/TimSchoenle/Portfolio/issues/826)) ([2f843de](https://github.com/TimSchoenle/Portfolio/commit/2f843deff43471bc4ff4853fc4d222478765d601))
+* **deps:** update react monorepo to v19.2.6 ([7aa00c7](https://github.com/TimSchoenle/Portfolio/commit/7aa00c7b93d4ed0e797e09e30f9a8113238ebabf))
+* **deps:** update react monorepo to v19.2.6 (patch) ([#820](https://github.com/TimSchoenle/Portfolio/issues/820)) ([7aa00c7](https://github.com/TimSchoenle/Portfolio/commit/7aa00c7b93d4ed0e797e09e30f9a8113238ebabf))
+
+
+### Miscellaneous
+
+* **deps:** update actions/create-github-app-token action to v3.2.0 ([#848](https://github.com/TimSchoenle/Portfolio/issues/848)) ([23f663d](https://github.com/TimSchoenle/Portfolio/commit/23f663d386ba58400de03b785f557e12bb91063c))
+* **deps:** update commitlint monorepo to v21 ([8333471](https://github.com/TimSchoenle/Portfolio/commit/8333471d4fb77f111f5c519720d035685ef6cfc3))
+* **deps:** update commitlint monorepo to v21 (major) ([#830](https://github.com/TimSchoenle/Portfolio/issues/830)) ([8333471](https://github.com/TimSchoenle/Portfolio/commit/8333471d4fb77f111f5c519720d035685ef6cfc3))
+* **deps:** update commitlint monorepo to v21.0.1 ([#845](https://github.com/TimSchoenle/Portfolio/issues/845)) ([4ac40da](https://github.com/TimSchoenle/Portfolio/commit/4ac40da000f84c55340f5992609ad20ddecb61e6))
+* **deps:** update dependency @eslint/compat to v2.1.0 ([#828](https://github.com/TimSchoenle/Portfolio/issues/828)) ([b39c76f](https://github.com/TimSchoenle/Portfolio/commit/b39c76f1bfb522d8978f626134ed578c9faed647))
+* **deps:** update dependency @playwright/test to v1.60.0 ([#839](https://github.com/TimSchoenle/Portfolio/issues/839)) ([30ffc5c](https://github.com/TimSchoenle/Portfolio/commit/30ffc5caedb67be486081afeb599a6ff1de0fe65))
+* **deps:** update dependency @types/node to v25.6.1 ([#823](https://github.com/TimSchoenle/Portfolio/issues/823)) ([15eb126](https://github.com/TimSchoenle/Portfolio/commit/15eb1269516112ebfec34e8ecb4b6e48d01dc697))
+* **deps:** update dependency @types/node to v25.6.2 ([#825](https://github.com/TimSchoenle/Portfolio/issues/825)) ([5751652](https://github.com/TimSchoenle/Portfolio/commit/57516528a9a8097cf2be1cef030cd21f6501e717))
+* **deps:** update dependency @types/node to v25.7.0 ([#840](https://github.com/TimSchoenle/Portfolio/issues/840)) ([41c9e50](https://github.com/TimSchoenle/Portfolio/commit/41c9e501bd648f434cf66406a97bc382d74c9f54))
+* **deps:** update dependency knip to v6.12.1 ([#824](https://github.com/TimSchoenle/Portfolio/issues/824)) ([9496827](https://github.com/TimSchoenle/Portfolio/commit/94968270034f59791e0fece07bb8f179faad7757))
+* **deps:** update dependency knip to v6.12.2 ([#832](https://github.com/TimSchoenle/Portfolio/issues/832)) ([431bbcc](https://github.com/TimSchoenle/Portfolio/commit/431bbcceb46d55d020cfbf95ad4bca903aa4aa0c))
+* **deps:** update dependency knip to v6.13.0 ([#843](https://github.com/TimSchoenle/Portfolio/issues/843)) ([435250b](https://github.com/TimSchoenle/Portfolio/commit/435250b8116f95db987939bd6ac3e4159c0ad402))
+* **deps:** update dependency knip to v6.13.1 ([#846](https://github.com/TimSchoenle/Portfolio/issues/846)) ([d1d1984](https://github.com/TimSchoenle/Portfolio/commit/d1d198462ab6d574909bebdb64b009e886834f43))
+* **deps:** update dependency lint-staged to v17 ([#817](https://github.com/TimSchoenle/Portfolio/issues/817)) ([7f3b0bd](https://github.com/TimSchoenle/Portfolio/commit/7f3b0bd5419e6032b57ced7696eb164609153777))
+* **deps:** update dependency lint-staged to v17.0.3 ([#829](https://github.com/TimSchoenle/Portfolio/issues/829)) ([cbf8382](https://github.com/TimSchoenle/Portfolio/commit/cbf8382094998f1dd3a5ff7b62f2c1b18753ccc1))
+* **deps:** update dependency lint-staged to v17.0.4 ([#833](https://github.com/TimSchoenle/Portfolio/issues/833)) ([ae6c839](https://github.com/TimSchoenle/Portfolio/commit/ae6c839e01f7b55bc4d7703c3495d1b513acbcf7))
+* **deps:** update dhi.io/bun:1-alpine3.22 docker digest to 9045abc ([#835](https://github.com/TimSchoenle/Portfolio/issues/835)) ([5be5db9](https://github.com/TimSchoenle/Portfolio/commit/5be5db9ba6915440ff6b93b454fd56b36d3b9add))
+* **deps:** update dhi.io/bun:1-alpine3.22-dev docker digest to 5d9e080 ([#836](https://github.com/TimSchoenle/Portfolio/issues/836)) ([ab70c2e](https://github.com/TimSchoenle/Portfolio/commit/ab70c2e3783f0cb15d9671912f6eb67b8b4f699c))
+* **deps:** update docker/dockerfile docker tag to v1.24 ([#850](https://github.com/TimSchoenle/Portfolio/issues/850)) ([bf2724c](https://github.com/TimSchoenle/Portfolio/commit/bf2724c0dd3b7017914ae80e7f27fa1e736f22b7))
+* **deps:** update sigstore/cosign-installer action to v4.1.2 ([#821](https://github.com/TimSchoenle/Portfolio/issues/821)) ([8a4ffaa](https://github.com/TimSchoenle/Portfolio/commit/8a4ffaa90ec436e69cac692c00bbba2d72e23f20))
+* **deps:** update tailwindcss monorepo to v4.3.0 ([c7ad92e](https://github.com/TimSchoenle/Portfolio/commit/c7ad92e6fb581cb47b451408ece2df160f6c2f3a))
+* **deps:** update tailwindcss monorepo to v4.3.0 (minor) ([#831](https://github.com/TimSchoenle/Portfolio/issues/831)) ([c7ad92e](https://github.com/TimSchoenle/Portfolio/commit/c7ad92e6fb581cb47b451408ece2df160f6c2f3a))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.18 ([#841](https://github.com/TimSchoenle/Portfolio/issues/841)) ([e08fd85](https://github.com/TimSchoenle/Portfolio/commit/e08fd85bfcb9255eab65cc8c9b816ab1774c23df))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.10 ([#842](https://github.com/TimSchoenle/Portfolio/issues/842)) ([d1a5852](https://github.com/TimSchoenle/Portfolio/commit/d1a585218e1ae484347a5ce941bccb7a364272d0))
+* **deps:** update vitest monorepo to v4.1.6 ([#838](https://github.com/TimSchoenle/Portfolio/issues/838)) ([187bc11](https://github.com/TimSchoenle/Portfolio/commit/187bc11377cc5192c10831f73e5866ecda1b70ff))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#765](https://github.com/TimSchoenle/Portfolio/issues/765)) ([2c5f1e8](https://github.com/TimSchoenle/Portfolio/commit/2c5f1e80c50c6e23e1ac86ca0301314f9c250f1f))
+
 ## [1.17.7](https://github.com/TimSchoenle/Portfolio/compare/v1.17.6...v1.17.7) (2026-05-09)
 
 
