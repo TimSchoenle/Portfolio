@@ -61,7 +61,7 @@
     "@commitlint/cli": "21.0.1",
     "@commitlint/config-conventional": "21.0.1",
     "@commitlint/types": "21.0.1",
-    "@cyclonedx/cdxgen": "12.4.0",
+    "@cyclonedx/cdxgen": "12.4.1",
     "@fast-check/vitest": "0.4.1",
     "@lhci/cli": "0.15.1",
     "@lingual/i18n-check": "0.9.5",
