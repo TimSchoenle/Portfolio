@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.17.9](https://github.com/TimSchoenle/Portfolio/compare/v1.17.8...v1.17.9) (2026-05-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.16.0 ([#853](https://github.com/TimSchoenle/Portfolio/issues/853)) ([0faeb0f](https://github.com/TimSchoenle/Portfolio/commit/0faeb0f3140119b092bfeb7ed1feb0690dbe3084))
+
+
+### Miscellaneous
+
+* **deps:** update codecov/codecov-action digest to e79a696 ([#861](https://github.com/TimSchoenle/Portfolio/issues/861)) ([107002b](https://github.com/TimSchoenle/Portfolio/commit/107002b6544b8fee06ade72038b2e3b289af91c8))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.4.0 ([#859](https://github.com/TimSchoenle/Portfolio/issues/859)) ([a12144a](https://github.com/TimSchoenle/Portfolio/commit/a12144a36eda3f1b10315319db61f928410b9683))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.4.1 ([#866](https://github.com/TimSchoenle/Portfolio/issues/866)) ([a31c305](https://github.com/TimSchoenle/Portfolio/commit/a31c305fcecb050aa234bd6faa96c44e6b940280))
+* **deps:** update dependency @types/node to v25.8.0 ([#854](https://github.com/TimSchoenle/Portfolio/issues/854)) ([9f752ad](https://github.com/TimSchoenle/Portfolio/commit/9f752ad2dd826c05560145f9461227ef7fe1e082))
+* **deps:** update dependency @types/node to v25.9.0 ([#867](https://github.com/TimSchoenle/Portfolio/issues/867)) ([49e2dc5](https://github.com/TimSchoenle/Portfolio/commit/49e2dc5b2d254dcd8e5735afc7e764ecde0ee3d1))
+* **deps:** update dependency @types/node to v25.9.1 ([#873](https://github.com/TimSchoenle/Portfolio/issues/873)) ([1a08f71](https://github.com/TimSchoenle/Portfolio/commit/1a08f71468280f13de6786f8c8e0f66bdbbf03b2))
+* **deps:** update dependency @types/react to v19.2.15 ([#874](https://github.com/TimSchoenle/Portfolio/issues/874)) ([a487c04](https://github.com/TimSchoenle/Portfolio/commit/a487c0493da6b6ac948b1dc73f101b4427670c08))
+* **deps:** update dependency @vitejs/plugin-react to v6.0.2 ([#855](https://github.com/TimSchoenle/Portfolio/issues/855)) ([1696ba7](https://github.com/TimSchoenle/Portfolio/commit/1696ba7ec43586b8fdae37016038f9eb4b54fe13))
+* **deps:** update dependency eslint to v10.4.0 ([#860](https://github.com/TimSchoenle/Portfolio/issues/860)) ([f53a547](https://github.com/TimSchoenle/Portfolio/commit/f53a5471e980c783b4927d38f202ec977978d84a))
+* **deps:** update dependency knip to v6.14.0 ([#862](https://github.com/TimSchoenle/Portfolio/issues/862)) ([c849adf](https://github.com/TimSchoenle/Portfolio/commit/c849adfe914416ed633cb3fefac4c3a6b40639d5))
+* **deps:** update dependency knip to v6.14.1 ([#863](https://github.com/TimSchoenle/Portfolio/issues/863)) ([3d3314c](https://github.com/TimSchoenle/Portfolio/commit/3d3314cbae282586d968de828fe20b1f2b50d5d6))
+* **deps:** update dependency lint-staged to v17.0.5 ([#864](https://github.com/TimSchoenle/Portfolio/issues/864)) ([5009381](https://github.com/TimSchoenle/Portfolio/commit/50093818a1c04bfaab267d12f2cb25f1caae2f53))
+* **deps:** update dependency postcss to v8.5.15 ([#872](https://github.com/TimSchoenle/Portfolio/issues/872)) ([459c1e4](https://github.com/TimSchoenle/Portfolio/commit/459c1e453555369622f0e8b1fc902d36b3c2bf2b))
+* **deps:** update docker/build-push-action digest to f9f3042 ([#868](https://github.com/TimSchoenle/Portfolio/issues/868)) ([beba66d](https://github.com/TimSchoenle/Portfolio/commit/beba66d01a24d0a3b169617d4796d6c558ba137a))
+* **deps:** update docker/login-action digest to 650006c ([#869](https://github.com/TimSchoenle/Portfolio/issues/869)) ([1cf5350](https://github.com/TimSchoenle/Portfolio/commit/1cf535025e7411d49133602961d7def38a245205))
+* **deps:** update docker/metadata-action digest to 80c7e94 ([#870](https://github.com/TimSchoenle/Portfolio/issues/870)) ([5f1562e](https://github.com/TimSchoenle/Portfolio/commit/5f1562e3e178d29229f60f453749a84c7cf7ac61))
+* **deps:** update docker/setup-buildx-action digest to d7f5e7f ([#871](https://github.com/TimSchoenle/Portfolio/issues/871)) ([a3e752e](https://github.com/TimSchoenle/Portfolio/commit/a3e752e74cdfd68747fa93530ec8df3a3b3ebc87))
+* **deps:** update step-security/harden-runner action to v2.19.2 ([#851](https://github.com/TimSchoenle/Portfolio/issues/851)) ([982d783](https://github.com/TimSchoenle/Portfolio/commit/982d78384b69604dfe4b9946a7876aa8d1418b22))
+* **deps:** update step-security/harden-runner action to v2.19.3 ([#856](https://github.com/TimSchoenle/Portfolio/issues/856)) ([ad3c758](https://github.com/TimSchoenle/Portfolio/commit/ad3c758705cce00ef6611163b0cf6b04e35bb3de))
+* **deps:** update zizmorcore/zizmor-action action to v0.5.5 ([#858](https://github.com/TimSchoenle/Portfolio/issues/858)) ([3e02a64](https://github.com/TimSchoenle/Portfolio/commit/3e02a649756c472af75a71c5861fdadeed18e530))
+* **deps:** update zizmorcore/zizmor-action action to v0.5.6 ([#865](https://github.com/TimSchoenle/Portfolio/issues/865)) ([4c27de0](https://github.com/TimSchoenle/Portfolio/commit/4c27de08f9bfd074328a87bbdad342a3b8bd852c))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#857](https://github.com/TimSchoenle/Portfolio/issues/857)) ([a58dbc8](https://github.com/TimSchoenle/Portfolio/commit/a58dbc8c4149e6e32b9895d6c140eae531c6461a))
+
 ## [1.17.8](https://github.com/TimSchoenle/Portfolio/compare/v1.17.7...v1.17.8) (2026-05-16)
 
 
