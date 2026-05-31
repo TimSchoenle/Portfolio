@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.17.10](https://github.com/TimSchoenle/Portfolio/compare/v1.17.9...v1.17.10) (2026-05-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.54.0 ([#889](https://github.com/TimSchoenle/Portfolio/issues/889)) ([9d133ff](https://github.com/TimSchoenle/Portfolio/commit/9d133ff26638440ef4331ff85df6ac1d6046035a))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @cyclonedx/cdxgen to v12.4.2 ([#879](https://github.com/TimSchoenle/Portfolio/issues/879)) ([25a7bad](https://github.com/TimSchoenle/Portfolio/commit/25a7badfbd87f3832b9971e490e75bef191b9364))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.4.3 ([#880](https://github.com/TimSchoenle/Portfolio/issues/880)) ([bb7a3ad](https://github.com/TimSchoenle/Portfolio/commit/bb7a3ad169d2529b0bd2f4459f04a96ca88f9b5b))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.4.4 ([#884](https://github.com/TimSchoenle/Portfolio/issues/884)) ([42b1eaa](https://github.com/TimSchoenle/Portfolio/commit/42b1eaad432b2c44e7ab535435bd17230bd25de8))
+* **deps:** update dependency dependency-cruiser to v17.4.2 ([#881](https://github.com/TimSchoenle/Portfolio/issues/881)) ([e0b3dd1](https://github.com/TimSchoenle/Portfolio/commit/e0b3dd10be02adfa82fd08a7f86fa5e7d14a1c1e))
+* **deps:** update dependency knip to v6.14.2 ([#878](https://github.com/TimSchoenle/Portfolio/issues/878)) ([541b429](https://github.com/TimSchoenle/Portfolio/commit/541b429a8af3c305627b2dde0844a8660d2de9e7))
+* **deps:** update docker/setup-qemu-action digest to 0611638 ([#883](https://github.com/TimSchoenle/Portfolio/issues/883)) ([cd08c6d](https://github.com/TimSchoenle/Portfolio/commit/cd08c6d6285202617b7c79110a7c9fd8e3440d42))
+* **deps:** update getsentry/action-release digest to f71adb4 ([#882](https://github.com/TimSchoenle/Portfolio/issues/882)) ([e1e4325](https://github.com/TimSchoenle/Portfolio/commit/e1e43259d84eb25a71d959373b382dea62513a14))
+* **deps:** update step-security/harden-runner action to v2.19.4 ([#877](https://github.com/TimSchoenle/Portfolio/issues/877)) ([6f87d4c](https://github.com/TimSchoenle/Portfolio/commit/6f87d4c15e2a7fc15959c2ea4f63f842ceb07797))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.8 ([#885](https://github.com/TimSchoenle/Portfolio/issues/885)) ([1223d8a](https://github.com/TimSchoenle/Portfolio/commit/1223d8a3c28cfca1d58d316fae110c2efa192a1d))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.19 ([#886](https://github.com/TimSchoenle/Portfolio/issues/886)) ([de4bcc3](https://github.com/TimSchoenle/Portfolio/commit/de4bcc35e60d0e7b174229a50ab0c27a49b3322c))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-wipe-cache.yaml to vworkflows-maintenance-wipe-cache-v1.1.9 ([#887](https://github.com/TimSchoenle/Portfolio/issues/887)) ([33aec2f](https://github.com/TimSchoenle/Portfolio/commit/33aec2f38a57a57854b40bc7304cb8de2f9c362f))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.11 ([#888](https://github.com/TimSchoenle/Portfolio/issues/888)) ([72620b9](https://github.com/TimSchoenle/Portfolio/commit/72620b94cf52c2bda51d371da7c7c21b3d63e7cc))
+* **deps:** update vitest monorepo to v4.1.7 ([#875](https://github.com/TimSchoenle/Portfolio/issues/875)) ([df1a1a3](https://github.com/TimSchoenle/Portfolio/commit/df1a1a32f5a7c37d37c4d908eca5ae4bdb10b11e))
+
 ## [1.17.9](https://github.com/TimSchoenle/Portfolio/compare/v1.17.8...v1.17.9) (2026-05-22)
 
 
