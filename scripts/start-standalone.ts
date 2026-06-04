@@ -189,7 +189,7 @@ interface BunProcessVersions extends NodeJS.ProcessVersions {
 }
 
 function getRuntimeBin(): string {
-  const versions: BunProcessVersions = process.versions as BunProcessVersions
+  const versions: BunProcessVersions = process.versions
 
   if (versions.bun !== undefined && versions.bun !== '') {
     return process.execPath
