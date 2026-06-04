@@ -6,7 +6,15 @@ import type { ResumeExperience } from '@/types/resume'
 
 // Mock createFormatter result
 const mockFormat = {
-  dateTime: vi.fn((date: Date) => date.toISOString().split('T')[0]), // Return ISO date string for easy verification
+  dateTime: vi.fn(
+    (
+      date: Date,
+      _options?: {
+        readonly month: string
+        readonly year: string
+      }
+    ): string => date.toISOString().split('T')[0]!
+  ),
 }
 
 describe('Experience Utilities Fuzzy Tests', () => {
@@ -57,14 +65,26 @@ describe('Experience Utilities Fuzzy Tests', () => {
           expect(item.location).toBe(source.location)
           expect(item.achievements).toEqual(source.achievements)
 
-          // Check duration string format (start - end)
-          expect(item.duration).toContain('-')
+          const expectedStart = mockFormat.dateTime(
+            new Date(Date.UTC(source.start.year, source.start.month - 1, 1)),
+            {
+              month: 'short',
+              year: 'numeric',
+            }
+          )
 
-          if (source.end === null || source.end === undefined) {
-            expect(item.duration.endsWith(presentLabel)).toBe(true)
-          } else {
-            expect(item.duration.endsWith(presentLabel)).toBe(false)
-          }
+          const expectedEnd =
+            source.end === null || source.end === undefined
+              ? presentLabel
+              : mockFormat.dateTime(
+                  new Date(Date.UTC(source.end.year, source.end.month - 1, 1)),
+                  {
+                    month: 'short',
+                    year: 'numeric',
+                  }
+                )
+
+          expect(item.duration).toBe(`${expectedStart} - ${expectedEnd}`)
         })
       }
     )
