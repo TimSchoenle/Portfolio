@@ -1,10 +1,6 @@
 import React, { type JSX } from 'react'
 
-import {
-  type Locale,
-  type TranslationValues,
-  type useTranslations,
-} from 'next-intl'
+import { type Locale, type useTranslations } from 'next-intl'
 
 import { ContributionGraphSvg } from '@/components/features/contribution-graph/contribution-graph-svg'
 import { Heading } from '@/components/ui/heading'
@@ -72,7 +68,7 @@ export const HeaderSection: FCStrict<HeaderSectionProperties> = ({
           {translate('totalAmount', {
             count: total,
             year: selectedYear,
-          } as TranslationValues)}
+          })}
         </p>
       </div>
 
