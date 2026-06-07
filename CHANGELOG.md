@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.17.11](https://github.com/TimSchoenle/Portfolio/compare/v1.17.10...v1.17.11) (2026-06-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/nextjs to v10.55.0 ([#893](https://github.com/TimSchoenle/Portfolio/issues/893)) ([0b62a6f](https://github.com/TimSchoenle/Portfolio/commit/0b62a6f3d3063cfdcc41d17f63310b22e4408501))
+* **deps:** update dependency lucide-react to v1.17.0 ([#891](https://github.com/TimSchoenle/Portfolio/issues/891)) ([8c19308](https://github.com/TimSchoenle/Portfolio/commit/8c193087489ade81e4eb850b9e71e4cce728a0d5))
+* **deps:** update dependency next-intl to v4.13.0 ([#894](https://github.com/TimSchoenle/Portfolio/issues/894)) ([fb3a865](https://github.com/TimSchoenle/Portfolio/commit/fb3a8658c560a7cc95a090116ace2c05bb3e2123))
+* **deps:** update nextjs monorepo to v16.2.7 ([#912](https://github.com/TimSchoenle/Portfolio/issues/912)) ([7574130](https://github.com/TimSchoenle/Portfolio/commit/7574130c7fe7f429a18686259005f8cb06102262))
+* **deps:** update react monorepo ([523f5b5](https://github.com/TimSchoenle/Portfolio/commit/523f5b5a9fbee4c3dc5ba337ef5e9b796f0cfebd))
+* **deps:** update react monorepo ([#913](https://github.com/TimSchoenle/Portfolio/issues/913)) ([523f5b5](https://github.com/TimSchoenle/Portfolio/commit/523f5b5a9fbee4c3dc5ba337ef5e9b796f0cfebd))
+* **deps:** update sentry-javascript monorepo to v10.56.0 ([#914](https://github.com/TimSchoenle/Portfolio/issues/914)) ([074c03a](https://github.com/TimSchoenle/Portfolio/commit/074c03a0024f5ee178b1f949f31f4a1cc74b5e37))
+
+
+### Tests
+
+* fix faulty fuzzy test ([#910](https://github.com/TimSchoenle/Portfolio/issues/910)) ([c5433cd](https://github.com/TimSchoenle/Portfolio/commit/c5433cd20e8b6545d552dd4c4cd68c080d938873))
+
+
+### Miscellaneous
+
+* **deps:** update actions/checkout digest to df4cb1c ([#905](https://github.com/TimSchoenle/Portfolio/issues/905)) ([c51cfa6](https://github.com/TimSchoenle/Portfolio/commit/c51cfa62b3cb214de2c4e619d159bbb09759a97b))
+* **deps:** update codecov/codecov-action digest to fb8b358 ([#917](https://github.com/TimSchoenle/Portfolio/issues/917)) ([1bf352e](https://github.com/TimSchoenle/Portfolio/commit/1bf352e64f5f59fc29b3dd03bde2d1bec87b8f37))
+* **deps:** update commitlint monorepo to v21.0.2 ([#896](https://github.com/TimSchoenle/Portfolio/issues/896)) ([f0d7537](https://github.com/TimSchoenle/Portfolio/commit/f0d753765dfdf474ce6e52968287119ee18b7a6c))
+* **deps:** update dependency @cyclonedx/cdxgen to v12.5.0 ([#902](https://github.com/TimSchoenle/Portfolio/issues/902)) ([e1b6eca](https://github.com/TimSchoenle/Portfolio/commit/e1b6ecaf17bbb9c39d60e9194fed879bd028f9da))
+* **deps:** update dependency dependency-cruiser to v17.4.3 ([#898](https://github.com/TimSchoenle/Portfolio/issues/898)) ([b4ee1ef](https://github.com/TimSchoenle/Portfolio/commit/b4ee1ef92e3edcb52d18d9717f844e2911b04c76))
+* **deps:** update dependency eslint to v10.4.1 ([#899](https://github.com/TimSchoenle/Portfolio/issues/899)) ([54fc072](https://github.com/TimSchoenle/Portfolio/commit/54fc072d1c7dcc58d6cb8353be3e8a1dffc09b88))
+* **deps:** update dependency eslint-import-resolver-typescript to v4.4.5 ([#908](https://github.com/TimSchoenle/Portfolio/issues/908)) ([765f756](https://github.com/TimSchoenle/Portfolio/commit/765f756fd751006b042762be9bfe5dfd797b3213))
+* **deps:** update dependency knip to v6.15.0 ([#907](https://github.com/TimSchoenle/Portfolio/issues/907)) ([c3e322f](https://github.com/TimSchoenle/Portfolio/commit/c3e322fa8d866dcd6608d5582d600efe9ca29ca2))
+* **deps:** update dependency lint-staged to v17.0.6 ([#903](https://github.com/TimSchoenle/Portfolio/issues/903)) ([d5ac253](https://github.com/TimSchoenle/Portfolio/commit/d5ac253348911b525c6c26ca7b8a3d50fb1c47c4))
+* **deps:** update dependency lint-staged to v17.0.7 ([#904](https://github.com/TimSchoenle/Portfolio/issues/904)) ([45d4774](https://github.com/TimSchoenle/Portfolio/commit/45d4774b7958656d5d1415b344d579b32b7b9f61))
+* **deps:** update dependency web-vitals to v5.3.0 ([#895](https://github.com/TimSchoenle/Portfolio/issues/895)) ([adf1a66](https://github.com/TimSchoenle/Portfolio/commit/adf1a667371e65070f6ad7d18cb5f12a6be27e7f))
+* **deps:** update getsentry/action-release digest to ff07929 ([#906](https://github.com/TimSchoenle/Portfolio/issues/906)) ([9bb2a87](https://github.com/TimSchoenle/Portfolio/commit/9bb2a870c7a20862f4fd4d9bdad8d950011d21cd))
+* **deps:** update happy-dom monorepo to v20.10.1 ([#916](https://github.com/TimSchoenle/Portfolio/issues/916)) ([d21a206](https://github.com/TimSchoenle/Portfolio/commit/d21a206fb18d328ce709b09ac63618a52a56d0e0))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.10 ([#918](https://github.com/TimSchoenle/Portfolio/issues/918)) ([c9c2d16](https://github.com/TimSchoenle/Portfolio/commit/c9c2d168fdf11a6f016a1389897a4989585506eb))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.9 ([#901](https://github.com/TimSchoenle/Portfolio/issues/901)) ([d2ecf57](https://github.com/TimSchoenle/Portfolio/commit/d2ecf576018aaa258d8e76307cf4770f756b81fd))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.20 ([#900](https://github.com/TimSchoenle/Portfolio/issues/900)) ([ed1abbc](https://github.com/TimSchoenle/Portfolio/commit/ed1abbcb3244e2142fb2bdf1404d9d1ff59922af))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.12 ([#897](https://github.com/TimSchoenle/Portfolio/issues/897)) ([5e2f0b8](https://github.com/TimSchoenle/Portfolio/commit/5e2f0b86a4076170205c18813939e119232bc5f5))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.13 ([#915](https://github.com/TimSchoenle/Portfolio/issues/915)) ([1fe8417](https://github.com/TimSchoenle/Portfolio/commit/1fe84177bade10fbe51316956d3ca6bd2e2077f3))
+* **deps:** update typescript-eslint monorepo to v8.60.0 ([#750](https://github.com/TimSchoenle/Portfolio/issues/750)) ([216418e](https://github.com/TimSchoenle/Portfolio/commit/216418e194ac3fd074032a40efc4c3cf2b5c7300))
+* **deps:** update typescript-eslint monorepo to v8.60.1 ([#911](https://github.com/TimSchoenle/Portfolio/issues/911)) ([6de6c2d](https://github.com/TimSchoenle/Portfolio/commit/6de6c2d49c1db16ebb05614c1d01a2c50efc16d7))
+* **deps:** update vitest monorepo to v4.1.8 ([#909](https://github.com/TimSchoenle/Portfolio/issues/909)) ([2ad1dcc](https://github.com/TimSchoenle/Portfolio/commit/2ad1dccc0a1b6ad50ba5eaa4811b9909bde8ea6d))
+
 ## [1.17.10](https://github.com/TimSchoenle/Portfolio/compare/v1.17.9...v1.17.10) (2026-05-31)
 
 
