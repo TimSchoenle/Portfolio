@@ -112,7 +112,7 @@
     "serwist": "9.5.11",
     "tailwindcss": "4.3.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.60.1",
+    "typescript-eslint": "8.61.0",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "4.1.8",
     "web-vitals": "5.3.0"
