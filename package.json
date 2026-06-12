@@ -107,7 +107,7 @@
     "lint-staged": "17.0.7",
     "node-forge": "1.4.0",
     "postcss": "8.5.15",
-    "prettier": "3.8.3",
+    "prettier": "3.8.4",
     "prettier-plugin-tailwindcss": "0.8.0",
     "serwist": "9.5.11",
     "tailwindcss": "4.3.0",
