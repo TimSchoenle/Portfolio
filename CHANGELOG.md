@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.17.12](https://github.com/TimSchoenle/Portfolio/compare/v1.17.11...v1.17.12) (2026-06-14)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v16.2.9 ([#939](https://github.com/TimSchoenle/Portfolio/issues/939)) ([b5ba3b2](https://github.com/TimSchoenle/Portfolio/commit/b5ba3b20ce463da3f16b82c08aae9f5302694b63))
+* **deps:** update radix-ui-primitives monorepo ([2dfc0b9](https://github.com/TimSchoenle/Portfolio/commit/2dfc0b9b01881d95b1e982de96ef701f34ba8d4a))
+* **deps:** update radix-ui-primitives monorepo ([#927](https://github.com/TimSchoenle/Portfolio/issues/927)) ([2dfc0b9](https://github.com/TimSchoenle/Portfolio/commit/2dfc0b9b01881d95b1e982de96ef701f34ba8d4a))
+* **deps:** update sentry-javascript monorepo to v10.57.0 ([#937](https://github.com/TimSchoenle/Portfolio/issues/937)) ([5b0fca9](https://github.com/TimSchoenle/Portfolio/commit/5b0fca9cf3f366313ba66b99943a0f0965baf911))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @cyclonedx/cdxgen to v12.5.1 ([#919](https://github.com/TimSchoenle/Portfolio/issues/919)) ([902e9b8](https://github.com/TimSchoenle/Portfolio/commit/902e9b841f116c98c1336f3ee49d5c0613875da2))
+* **deps:** update dependency @types/node to v25.9.2 ([#926](https://github.com/TimSchoenle/Portfolio/issues/926)) ([d6002a3](https://github.com/TimSchoenle/Portfolio/commit/d6002a318f667e14b53ff62d4f6a89cf6f2be1a3))
+* **deps:** update dependency @types/node to v25.9.3 ([#940](https://github.com/TimSchoenle/Portfolio/issues/940)) ([7dbc4df](https://github.com/TimSchoenle/Portfolio/commit/7dbc4dfd86d5c93970b6dfa7596c3150a8e36109))
+* **deps:** update dependency knip to v6.16.0 ([#924](https://github.com/TimSchoenle/Portfolio/issues/924)) ([abc8764](https://github.com/TimSchoenle/Portfolio/commit/abc87643e1aa5033d1bd8eeca99854bec51981e5))
+* **deps:** update dependency knip to v6.16.1 ([#928](https://github.com/TimSchoenle/Portfolio/issues/928)) ([4d9f092](https://github.com/TimSchoenle/Portfolio/commit/4d9f0928bf5b14464c6ce556664090702e3170fa))
+* **deps:** update dependency prettier to v3.8.4 ([#938](https://github.com/TimSchoenle/Portfolio/issues/938)) ([23ff18a](https://github.com/TimSchoenle/Portfolio/commit/23ff18a524f86f756d5da1ed9087d012468210a6))
+* **deps:** update dhi.io/bun:1-alpine3.22-dev docker digest to cd852cc ([#934](https://github.com/TimSchoenle/Portfolio/issues/934)) ([059236c](https://github.com/TimSchoenle/Portfolio/commit/059236c01997abde41eec33107d67eb46d3b4f55))
+* **deps:** update happy-dom monorepo to v20.10.2 ([#929](https://github.com/TimSchoenle/Portfolio/issues/929)) ([2743213](https://github.com/TimSchoenle/Portfolio/commit/274321376278a4603bd4c61dd8b88df53c5828b3))
+* **deps:** update react monorepo to v19.2.17 ([#925](https://github.com/TimSchoenle/Portfolio/issues/925)) ([e16449a](https://github.com/TimSchoenle/Portfolio/commit/e16449af768337d73c50a224993809875e207174))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.11 ([#936](https://github.com/TimSchoenle/Portfolio/issues/936)) ([dde8cca](https://github.com/TimSchoenle/Portfolio/commit/dde8ccaa0d6c2ed778ce11ccf40a3685e9dcf700))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.21 ([#930](https://github.com/TimSchoenle/Portfolio/issues/930)) ([5d0be93](https://github.com/TimSchoenle/Portfolio/commit/5d0be932b2eb2bf0315470d5d265929bf9714242))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.14 ([#931](https://github.com/TimSchoenle/Portfolio/issues/931)) ([8fc117b](https://github.com/TimSchoenle/Portfolio/commit/8fc117b2e8d5120a83487a2441ee1c51c2395cd4))
+* **deps:** update typescript-eslint monorepo to v8.61.0 ([#935](https://github.com/TimSchoenle/Portfolio/issues/935)) ([a75b2b2](https://github.com/TimSchoenle/Portfolio/commit/a75b2b28263915ae51035fdd28b27c1862ccba7e))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#921](https://github.com/TimSchoenle/Portfolio/issues/921)) ([f2a3439](https://github.com/TimSchoenle/Portfolio/commit/f2a3439701e730b985583456095ae830ff58b53e))
+* **deps:** lock file maintenance ([#922](https://github.com/TimSchoenle/Portfolio/issues/922)) ([725cbbb](https://github.com/TimSchoenle/Portfolio/commit/725cbbbc2766ce394cf6e37aa99a73312baf2240))
+* **deps:** lock file maintenance ([#923](https://github.com/TimSchoenle/Portfolio/issues/923)) ([f061086](https://github.com/TimSchoenle/Portfolio/commit/f061086b0e87e647426c6c3db1362278a3f2358b))
+
 ## [1.17.11](https://github.com/TimSchoenle/Portfolio/compare/v1.17.10...v1.17.11) (2026-06-07)
 
 
