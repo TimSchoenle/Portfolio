@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.17.13](https://github.com/TimSchoenle/Portfolio/compare/v1.17.12...v1.17.13) (2026-06-16)
+
+
+### Bug Fixes
+
+* **deps:** update lucide monorepo to v1.18.0 ([#947](https://github.com/TimSchoenle/Portfolio/issues/947)) ([f134f98](https://github.com/TimSchoenle/Portfolio/commit/f134f989ddcd5975d97b8e003a5ea4688a514bc4))
+
+
+### Miscellaneous
+
+* **deps:** update dependency eslint-plugin-security to v4.0.1 ([#942](https://github.com/TimSchoenle/Portfolio/issues/942)) ([3842ccf](https://github.com/TimSchoenle/Portfolio/commit/3842ccf5773332744d7e81193ea4d7ec3fe67820))
+* **deps:** update happy-dom monorepo to v20.10.3 ([#944](https://github.com/TimSchoenle/Portfolio/issues/944)) ([b0b4b35](https://github.com/TimSchoenle/Portfolio/commit/b0b4b35fc130c8061bfb726d152cf3586f288315))
+* **deps:** update tailwindcss monorepo to v4.3.1 ([#945](https://github.com/TimSchoenle/Portfolio/issues/945)) ([ec35bc1](https://github.com/TimSchoenle/Portfolio/commit/ec35bc1125874cb258f585a98856d2d7192aacdf))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#941](https://github.com/TimSchoenle/Portfolio/issues/941)) ([73d8d46](https://github.com/TimSchoenle/Portfolio/commit/73d8d46455bf716325417328b9e1e205e1b7dcdf))
+
 ## [1.17.12](https://github.com/TimSchoenle/Portfolio/compare/v1.17.11...v1.17.12) (2026-06-14)
 
 
