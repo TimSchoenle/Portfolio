@@ -103,7 +103,7 @@
     "husky": "9.1.7",
     "jsdom": "29.1.1",
     "knip": "6.16.1",
-    "license-checker-rseidelsohn": "4.4.2",
+    "license-checker-rseidelsohn": "5.0.1",
     "lint-staged": "17.0.7",
     "node-forge": "1.4.0",
     "postcss": "8.5.15",
