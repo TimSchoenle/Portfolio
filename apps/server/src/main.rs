@@ -14,8 +14,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 /// `'wasm-unsafe-eval'` for instantiating the WASM module.
 const CSP: &str = "default-src 'self'; \
      script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; \
-     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
-     font-src 'self' https://fonts.gstatic.com; \
+     style-src 'self' 'unsafe-inline'; \
+     font-src 'self'; \
      img-src 'self' data:; \
      connect-src 'self'; \
      object-src 'none'; \

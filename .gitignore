@@ -23,6 +23,10 @@ dist/
 # Note: apps/frontend/repos.json is generated AND committed by the
 # `update-repos` workflow, so it is intentionally tracked (not ignored).
 
+# CONFIG-derived metadata emitted by the `site-meta` pre_build hook
+# (head fragment, robots.txt, sitemap.xml, web manifest).
+apps/frontend/generated/
+
 # ---------------------------------------------------------------------------
 # Node (Tailwind CSS tooling only)
 # ---------------------------------------------------------------------------

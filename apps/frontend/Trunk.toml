@@ -1,11 +1,33 @@
 [build]
 target = "index.html"
 dist = "dist"
+minify = "on_release"
+
+[tools]
+# wasm_opt = true
+
+[optimize]
+enabled = true
+
+[pack]
+pipeline = "release"
 
 [watch]
-ignore = ["./dist", "./target", "./node_modules"]
+# "./generated" holds the pre_build hook's own output; ignoring it stops
+# `trunk serve` from looping (regenerate -> file change -> rebuild -> …).
+ignore = ["./dist", "./target", "./node_modules", "./generated"]
 
 [serve]
 address = "127.0.0.1"
 port = 8080
 open = false
+
+# Regenerate the CONFIG-derived static metadata (generated/head.html,
+# robots.txt, sitemap.xml, site.webmanifest) before Trunk parses index.html,
+# so the `rel="inline"` / `rel="copy-file"` links below pick up fresh output.
+# Runs on every (re)build; cargo's freshness check makes it a near no-op when
+# portfolio-data is unchanged.
+[[hooks]]
+stage = "pre_build"
+command = "cargo"
+command_arguments = ["run", "--quiet", "--package", "site-meta"]

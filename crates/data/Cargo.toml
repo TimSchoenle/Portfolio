@@ -4,8 +4,14 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 
+[features]
+# Derives JSON Schema for the profile API model. Enabled by the server; left
+# off for the WebAssembly frontend, which only reads the data.
+schema = ["dep:schemars"]
+
 [dependencies]
 serde.workspace = true
+schemars = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_json.workspace = true

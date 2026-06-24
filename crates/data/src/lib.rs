@@ -6,6 +6,8 @@
 
 use serde::{Deserialize, Serialize};
 
+pub mod profile;
+
 /// English translations, embedded at compile time.
 pub const I18N_EN: &str = include_str!("../i18n/en.json");
 /// German translations, embedded at compile time.
@@ -61,6 +63,11 @@ pub struct Config {
     pub full_name: &'static str,
     pub name: &'static str,
     pub title: &'static str,
+    /// Role on its own, e.g. for schema.org `jobTitle` (the full document
+    /// `title` is `"{full_name} — {job_title}"`).
+    pub job_title: &'static str,
+    /// Contact country exposed by the profile API and structured metadata.
+    pub location: &'static str,
     pub email: &'static str,
     pub url: &'static str,
     pub github: &'static str,
@@ -77,6 +84,8 @@ pub const CONFIG: Config = Config {
     full_name: "Tim Schönle",
     name: "Tim",
     title: "Tim Schönle — Software Developer",
+    job_title: "Software Developer",
+    location: "Germany",
     email: "contact@tim-schoenle.de",
     url: "https://tim-schoenle.de",
     github: "https://github.com/timschoenle",
