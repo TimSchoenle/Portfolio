@@ -1,10 +1,8 @@
+mod api;
+
 use std::net::SocketAddr;
 
-use axum::{
-    Router,
-    http::{HeaderValue, header},
-    routing::get,
-};
+use axum::http::{HeaderValue, header};
 use tower_http::{
     services::{ServeDir, ServeFile},
     set_header::SetResponseHeaderLayer,
@@ -43,9 +41,7 @@ async fn main() {
         SetResponseHeaderLayer::overriding(name, HeaderValue::from_static(value))
     };
 
-    let app = Router::new()
-        .route("/api/health", get(|| async { "ok" }))
-        // Add further /api/* routes here before the SPA fallback
+    let app = api::router()
         .fallback_service(spa)
         .layer(static_header(header::CONTENT_SECURITY_POLICY, CSP))
         .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))

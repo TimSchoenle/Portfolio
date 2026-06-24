@@ -14,3 +14,10 @@ tokio.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+portfolio-data = { workspace = true, features = ["schema"] }
+serde.workspace = true
+schemars.workspace = true
+time = { workspace = true, features = ["macros"] }
+
+[dev-dependencies]
+serde_json.workspace = true
