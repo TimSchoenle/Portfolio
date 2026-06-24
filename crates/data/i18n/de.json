@@ -1,0 +1,240 @@
+{
+  "common": {
+    "country": "Deutschland",
+    "present": "Heute",
+    "now": "jetzt",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "backToHome": "Zur Startseite",
+    "filter": "Filter",
+    "all": "Alle",
+    "months": {
+      "m1": "Jan.",
+      "m2": "Feb.",
+      "m3": "März",
+      "m4": "Apr.",
+      "m5": "Mai",
+      "m6": "Juni",
+      "m7": "Juli",
+      "m8": "Aug.",
+      "m9": "Sept.",
+      "m10": "Okt.",
+      "m11": "Nov.",
+      "m12": "Dez."
+    }
+  },
+  "nav": {
+    "about": "Über mich",
+    "skills": "Stack",
+    "projects": "Projekte",
+    "experience": "Erfahrung",
+    "contact": "Kontakt",
+    "search": "suche",
+    "languageToggle": "Sprache auf Englisch umstellen"
+  },
+  "hero": {
+    "eyebrow": "Java · Rust · Next.js",
+    "jobTitle": "Senior Softwareentwickler",
+    "statusLabel": "STATUS",
+    "status": "Offen für Software-Entwickler-Rollen",
+    "tagline": "Java im Kern. Rust und Next.js an den Rändern.",
+    "taglineSub": "Open-Source-Beitragender. Fokus auf gute Software."
+  },
+  "about": {
+    "title": "Über mich",
+    "intro": "Ich baue zuverlässige Software, End-to-End.",
+    "body": "Mein Kern-Stack ist Java; mit Rust und Next.js baue ich meine Erfahrung aktiv aus. Ich liefere gerne aus — Open-Source-Tools, Helm-Charts, kleine Services — und betreibe sie auf containerisierter Infrastruktur mit GitOps. Sauberer Code, klare Verträge, ehrliche Tests.",
+    "focusLabel": "Schwerpunkte",
+    "focus": {
+      "f1": { "k": "Java & Spring Boot", "v": "Services, Daten, Domänen-Modellierung" },
+      "f2": { "k": "Rust & Next.js", "v": "Aktiv lernend, aktiv ausliefernd" },
+      "f3": { "k": "Kubernetes & Helm", "v": "ArgoCD · GitOps · Docker" },
+      "f4": { "k": "Open Source", "v": "PaperMC, Bukkit/Spigot-Plugins, Utilities" }
+    }
+  },
+  "skills": {
+    "title": "Stack",
+    "intro": "Die Werkzeuge, zu denen ich greife — gewichtet nach Confidence.",
+    "languages": "Sprachen",
+    "frameworks": "Frameworks",
+    "build": "Build & Tools",
+    "infrastructure": "Infrastruktur",
+    "confidenceLabel": "Confidence",
+    "hoverHint": "Über einen Punkt fahren"
+  },
+  "projects": {
+    "title": "Ausgewählte Projekte",
+    "intro": "Einige Dinge, die ich gebaut habe.",
+    "statRepos": "REPOSITORIES",
+    "statStars": "STARS GESAMT",
+    "statForks": "FORKS GESAMT",
+    "statSync": "LETZTER SYNC",
+    "repoOne": "Repo",
+    "repoMany": "Repos",
+    "loading": "lädt…",
+    "offline": "offline",
+    "viewAll": "Alle Repos auf GitHub ansehen",
+    "emptyTitle": "Repositories werden aktualisiert…",
+    "emptyBody": "Öffentliche GitHub-Repos werden aus repos.json geladen, täglich über einen GitHub-Actions-Workflow neu gebaut.",
+    "featured": "★ FEATURED"
+  },
+  "experience": {
+    "title": "Erfahrung",
+    "intro": "Ein chronologischer Verlauf.",
+    "entries": {
+      "sixtwenty": {
+        "role": "Senior Softwareentwickler",
+        "org": "SixTwenty Cloud LLC",
+        "bullets": {
+          "b1": "CI/CD- und GitOps-Workflows auf einer Kubernetes-basierten Infrastruktur aufgebaut und gepflegt, um Deployments, Release-Strategien und Konfiguration über mehrere Services und Umgebungen hinweg zu standardisieren.",
+          "b2": "Partnerspezifische Funktionen und Integrationen als White-Label-Lösungen auf Basis der Plattform implementiert, sodass Partner individuelle Produkte bereitstellen konnten, während sie auf die gemeinsame Kerninfrastruktur und das gemeinsame Tooling zurückgreifen."
+        }
+      },
+      "mineplex-studios": {
+        "role": "Senior Softwareentwickler",
+        "org": "Mineplex Studios LLC",
+        "bullets": {
+          "b1": "Zentrale Frontend- und Backend-Engine-Komponenten für eine interne und externe Entwicklungsplattform in Java, TypeScript und Rust implementiert, sodass Teams Services konsistent über den gesamten Stack hinweg entwickeln und integrieren konnten.",
+          "b2": "CI/CD- und GitOps-Workflows auf einer Kubernetes-basierten Infrastruktur aufgebaut und gepflegt, um Deployments, Release-Strategien und Konfiguration über mehrere Services und Umgebungen hinweg zu standardisieren.",
+          "b3": "Partnerspezifische Funktionen und Integrationen als White-Label-Lösungen auf Basis der Plattform implementiert, sodass Partner individuelle Produkte bereitstellen konnten, während sie auf die gemeinsame Kerninfrastruktur und das gemeinsame Tooling zurückgreifen."
+        }
+      },
+      "self-employed": {
+        "role": "Selbstständiger Softwareentwickler",
+        "org": "Selbstständig",
+        "bullets": {
+          "b1": "Backend-Services und Datenverarbeitungspipelines hauptsächlich in Java (z. B. Spring Boot) sowie TypeScript/Node.js entwickelt, mit ausgewählten Komponenten in Rust für performance- oder sicherheitskritische Teile, und über REST- und gRPC-APIs mit klar definierten Schnittstellen und starker Validierung bereitgestellt.",
+          "b2": "CI/CD-Pipelines (z. B. GitHub Actions) sowie Kubernetes-basierte Deployments aufgebaut und gepflegt, um Tests, Security-Checks und Releases für mehrere Services zu automatisieren.",
+          "b3": "Backend-Infrastruktur (Datenbanken, Message-Broker, Caches und Reverse Proxies) bereitgestellt und betrieben und mithilfe von Infrastructure-as-Code und Monitoring zuverlässig, beobachtbar und gut debugbar gehalten."
+        }
+      },
+      "mineplex-dev": {
+        "role": "Softwareentwickler",
+        "org": "Mineplex LLC",
+        "bullets": {
+          "b1": "Gameplay- und Backend-Features für groß angelegte Minecraft-Minispiele implementiert und gewartet, mit Fokus auf Stabilität, Debuggability und Spielererlebnis.",
+          "b2": "Komplexe Produktionsfehler über mehrere Plugins und Services hinweg untersucht, unklare Meldungen in reproduzierbare Fälle und konkrete Code-Fixes überführt.",
+          "b3": "Eng mit Product-, Community- und Operations-Teams zusammengearbeitet, um Gameplay-Features zu planen und umzusetzen und Spielerfeedback in die Entwicklungsroadmap einfließen zu lassen."
+        }
+      },
+      "mineplex-qa": {
+        "role": "Qualitätssicherung",
+        "org": "Mineplex LLC",
+        "bullets": {
+          "b1": "Gameplay- und Backend-Probleme auf einem groß angelegten Minecraft-Servernetzwerk untersucht und reproduziert, um Entwicklern bei der Ursachenanalyse zu helfen und die Stabilität schrittweise zu verbessern.",
+          "b2": "Live-Incident-Meldungen von Spielern und internen Monitoring-Systemen bearbeitet, Probleme schnell reproduziert, Auswirkungen bewertet und kritische Fehler bis zur Behebung nachverfolgt.",
+          "b3": "Eng mit Entwickler- und Community-Team zusammengearbeitet, um kritische Produktionsfehler zu reproduzieren, zu priorisieren und deren Behebung zu verifizieren."
+        }
+      }
+    }
+  },
+  "contact": {
+    "title": "Kontakt",
+    "intro": "Sag hallo.",
+    "copy": "Kopieren",
+    "copied": "Kopiert ✓",
+    "write": "Schreiben",
+    "resumeEn": "Lebenslauf (EN)",
+    "resumeDe": "Lebenslauf (DE)",
+    "fingerprintNote": "Heruntergeladene Lebensläufe lassen sich über den Vergleich der SHA-256-Prüfsumme mit diesen Fingerprints verifizieren."
+  },
+  "palette": {
+    "placeholder": "Zu Sektion, Projekt oder Aktion springen…",
+    "hint": "Navigieren ↑↓ · Auswählen ↵ · Schließen Esc",
+    "noMatches": "Keine Treffer.",
+    "groupNav": "Navigation",
+    "groupWork": "Projekte",
+    "groupActions": "Aktionen",
+    "copyEmail": "E-Mail-Adresse kopieren",
+    "toggleLang": "Zu English wechseln",
+    "openGithub": "GitHub-Profil öffnen",
+    "openLinkedin": "LinkedIn öffnen",
+    "downloadResume": "Lebenslauf herunterladen (PDF)",
+    "imprint": "Impressum",
+    "privacy": "Datenschutzerklärung"
+  },
+  "footer": {
+    "credit": "Entworfen und gebaut von Tim Schönle.",
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "colophon": "Kolophon",
+    "built": "Mit Sorgfalt gebaut"
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "description": "Die angeforderten Koordinaten entsprechen keinem bekannten Sektor in diesem System.",
+    "home": "Zur Basis zurückkehren"
+  },
+  "legal": {
+    "emailLabel": "E-Mail",
+    "contactFormLabel": "Kontaktformular"
+  },
+  "imprint": {
+    "title": "Impressum",
+    "tmgHeading": "Angaben gemäß § 5 DDG",
+    "contactHeading": "Kontakt",
+    "vatHeading": "Umsatzsteuer-ID",
+    "vatBody": "Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:",
+    "mstvHeading": "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV",
+    "disputeHeading": "Streitschlichtung",
+    "disputeBody": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: https://ec.europa.eu/consumers/odr/\n\nUnsere E-Mail-Adresse finden Sie oben im Impressum.\n\nWir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "socialHeading": "Dieses Impressum gilt auch für folgende Social-Media-Profile",
+    "liabilityContentHeading": "Haftung für Inhalte",
+    "liabilityContentBody": "Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden entsprechender Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.",
+    "liabilityLinksHeading": "Haftung für Links",
+    "liabilityLinksBody": "Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.",
+    "copyrightHeading": "Urheberrecht",
+    "copyrightBody": "Die durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet, soweit nicht anders vereinbart. Soweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen."
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "intro": "Diese Datenschutzerklärung informiert darüber, wie Ihre personenbezogenen Daten beim Besuch dieser Website verarbeitet werden.",
+    "controllerHeading": "1. Verantwortlicher",
+    "controllerBody": "Verantwortlicher im Sinne von Art. 4 Nr. 7 DSGVO ist die oben genannte Person.",
+    "generalHeading": "2. Allgemeine Hinweise",
+    "generalBody": "Diese Website ist ein persönliches Portfolio zur beruflichen Darstellung als Software Developer. Personenbezogene Daten werden nur verarbeitet, soweit dies zur Bereitstellung, Sicherheit und Optimierung dieser Website sowie zur Bearbeitung von Kontaktanfragen erforderlich ist. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionsfähigen und sicheren Online-Präsenz (Art. 6 Abs. 1 lit. f DSGVO) sowie — soweit einschlägig — die Durchführung vorvertraglicher Maßnahmen oder die Erfüllung eines Vertrags (Art. 6 Abs. 1 lit. b DSGVO).",
+    "hostingHeading": "3. Hosting",
+    "hostingBody": "Unsere Website wird bei der netcup GmbH, Daimlerstraße 25, 76185 Karlsruhe (nachfolgend „netcup\") gehostet. Die personenbezogenen Daten, die auf dieser Website erfasst werden, werden auf den Servern von netcup gespeichert. Hierbei kann es sich v. a. um IP-Adressen, Meta- und Kommunikationsdaten, Webseitenzugriffe und sonstige Daten handeln, die über eine Website generiert werden. Die Nutzung von netcup erfolgt zum Zwecke der Vertragserfüllung gegenüber unseren potenziellen und bestehenden Kunden (Art. 6 Abs. 1 lit. b DSGVO) und im Interesse einer sicheren, schnellen und effizienten Bereitstellung unseres Online-Angebots durch einen professionellen Anbieter (Art. 6 Abs. 1 lit. f DSGVO). netcup wird Ihre Daten nur insoweit verarbeiten, wie dies zur Erfüllung seiner Leistungspflichten erforderlich ist, und befolgt unsere Weisungen in Bezug auf diese Daten. Wir haben einen Vertrag über Auftragsverarbeitung (AVV) mit netcup geschlossen. Weitere Informationen finden Sie in der Datenschutzerklärung von netcup: https://www.netcup.de/kontakt/datenschutzerklaerung.php",
+    "encryptionHeading": "4. SSL-/TLS-Verschlüsselung",
+    "encryptionBody": "Diese Website nutzt aus Sicherheitsgründen und zum Schutz der Übertragung vertraulicher Inhalte eine SSL- bzw. TLS-Verschlüsselung. Eine verschlüsselte Verbindung erkennen Sie an der Zeichenfolge \"https://\" und dem Schloss-Symbol in der Adresszeile Ihres Browsers. Ist die SSL-/TLS-Verschlüsselung aktiviert, können die Daten, die Sie an uns übermitteln, nicht von Dritten mitgelesen werden.",
+    "logsHeading": "5. Server-Logdateien",
+    "logsBody": "Beim Aufruf dieser Website werden durch den Server automatisch Informationen in so genannten Server-Logdateien erhoben und gespeichert (z. B. IP-Adresse, Datum und Uhrzeit des Abrufs, Browsertyp und -version, verwendetes Betriebssystem, Referrer-URL, aufgerufene Seite und übertragene Datenmenge). Die Verarbeitung dieser Daten erfolgt zur Sicherstellung eines störungsfreien Betriebs der Website, zur Gewährleistung der IT-Sicherheit sowie zur Abwehr und Aufklärung von Missbrauchsfällen. Die Logdateien werden bis zu 7 Tage gespeichert und danach gelöscht, sofern keine längere Aufbewahrung zu Beweiszwecken erforderlich ist. Serverstandort: Deutschland. Rechtsgrundlage ist unser berechtigtes Interesse an der sicheren und zuverlässigen Bereitstellung der Website (Art. 6 Abs. 1 lit. f DSGVO).",
+    "cloudflareHeading": "6. Nutzung von Cloudflare",
+    "cloudflareBody": "Diese Website wird über einen Cloudflare-Tunnel von Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA ausgeliefert. Hierzu verarbeitet Cloudflare technische Verbindungsdaten (insbesondere IP-Adressen, aufgerufene URLs, Systemkonfigurationsinformationen und weitere Metadaten), um die Auslieferung der Website zu ermöglichen und Sicherheitsfunktionen bereitzustellen (z. B. DDoS-Schutz, Performance-Optimierung). Cloudflare verarbeitet diese Daten als Auftragsverarbeiter auf Grundlage eines Auftragsverarbeitungsvertrags. Je nach Standort können Daten in Rechenzentren außerhalb der EU, insbesondere in den USA, verarbeitet werden. Die Übermittlung erfolgt auf Grundlage von Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO) sowie der Zertifizierung von Cloudflare nach dem EU-US Data Privacy Framework. Cloudflare hat zudem zusätzliche technische und organisatorische Maßnahmen implementiert, um den Schutz Ihrer Daten zu gewährleisten. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren und effizienten Betrieb dieser Website (Art. 6 Abs. 1 lit. f DSGVO). Weitere Informationen finden Sie in der Datenschutzerklärung von Cloudflare: https://www.cloudflare.com/privacypolicy/",
+    "contactHeading": "7. Kontaktaufnahme",
+    "contactBody": "Wenn Sie uns per E-Mail kontaktieren, werden die von Ihnen mitgeteilten Daten (insbesondere E-Mail-Adresse, Name und der Inhalt Ihrer Nachricht) zum Zweck der Bearbeitung und Beantwortung Ihrer Anfrage verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre Anfrage mit der Anbahnung oder Durchführung eines Vertrags zusammenhängt, und im Übrigen Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Bearbeitung eingehender Anfragen). Eine Weitergabe an Dritte erfolgt nur, soweit dies zur Bearbeitung der Anfrage erforderlich ist oder eine gesetzliche Verpflichtung besteht. Die Daten werden gelöscht, sobald Ihre Anfrage abschließend erledigt ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.",
+    "rightsHeading": "8. Rechte der betroffenen Personen",
+    "rightsBody": "Sie haben die nach der DSGVO gewährten Rechte, insbesondere das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO), Einschränkung der Verarbeitung (Art. 18 DSGVO), Datenübertragbarkeit (Art. 20 DSGVO) sowie Widerspruch gegen Verarbeitungen, die auf Art. 6 Abs. 1 lit. f DSGVO beruhen (Art. 21 DSGVO). Soweit eine Verarbeitung auf Ihrer Einwilligung beruht, können Sie diese jederzeit mit Wirkung für die Zukunft widerrufen. Zudem haben Sie das Recht, sich bei einer Datenschutzaufsichtsbehörde, insbesondere in dem Mitgliedstaat Ihres gewöhnlichen Aufenthaltsorts oder Ihres Arbeitsplatzes, zu beschweren (Art. 77 DSGVO). Für Baden-Württemberg ist dies der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg: https://www.baden-wuerttemberg.datenschutz.de",
+    "storageHeading": "9. Cookies und Browser-Speicher",
+    "storageBody": "Diese Website setzt selbst keine Cookies. Sie speichert einen einzelnen Eintrag im lokalen Speicher Ihres Browsers:\n\n- lang: speichert Ihre Sprachpräferenz („en\" oder „de\"), damit die Website in der gewählten Sprache angezeigt werden kann.\n\nDurch die Auslieferung über Cloudflare können technisch notwendige Cookies gesetzt werden:\n\n- _cf_bm: Bot-Management und Erkennung bösartiger Besucher (Gültigkeitsdauer: 30 Minuten).\n- __cflb: Session-Affinity für Load Balancing (Gültigkeitsdauer: bis zu 24 Stunden).\n- __cfruid: Unterstützung für Rate Limiting zur Unterscheidung einzelner Nutzer (Session-Cookie).\n- cf_clearance: Wird nach erfolgreicher Sicherheitsüberprüfung gesetzt, um wiederholte Challenges zu vermeiden (Gültigkeitsdauer: 30–60 Minuten).\n- cf_chl_rc_i: Unterstützt Cloudflare-Challenge-Produkte (Session-Cookie).\n- cf_chl_rc_ni: Unterstützt Cloudflare-Challenge-Produkte (Session-Cookie).\n\nDiese Einträge sind technisch erforderlich, um die Website in der gewählten Sprache bereitzustellen, die Sicherheit zu gewährleisten, bösartige Besucher zu identifizieren und Web-Traffic zu filtern. Die Speicherung und der Zugriff auf diese technisch notwendigen Informationen erfolgen auf Grundlage von § 25 Abs. 2 Nr. 2 TDDDG, da diese ausschließlich der Durchführung der Übertragung einer Nachricht über ein öffentliches Telekommunikationsnetz dienen oder unbedingt erforderlich sind, damit der Anbieter einen vom Nutzer ausdrücklich gewünschten Dienst zur Verfügung stellen kann. Für technisch notwendige Cookies ist daher keine Einwilligung erforderlich. Rechtsgrundlage für die damit verbundene Datenverarbeitung ist unser berechtigtes Interesse an einer sicheren und nutzerfreundlichen Darstellung der Website (Art. 6 Abs. 1 lit. f DSGVO). Es findet keine Profilbildung oder seitenübergreifende Nachverfolgung statt. Sie können diese Einträge jederzeit über die Einstellungen Ihres Browsers löschen.",
+    "noTrackingHeading": "10. Keine Analyse- und Tracking-Tools",
+    "noTrackingBody": "Abgesehen von den oben beschriebenen technisch notwendigen Verarbeitungen verwendet diese Website keine Tracking-Tools, Analysedienste, Verhaltensprofile, Werbenetzwerke oder Social-Media-Plugins. Es werden keine personenbezogenen Daten zu Marketing- oder Profiling-Zwecken an Dritte weitergegeben.",
+    "changesHeading": "11. Änderungen",
+    "changesBody": "Diese Datenschutzerklärung kann bei technischen oder rechtlichen Änderungen aktualisiert werden. Die jeweils aktuelle Fassung ist stets auf dieser Seite verfügbar."
+  },
+  "resume": {
+    "summaryTitle": "Professionelle Zusammenfassung",
+    "summary": "Ich bin Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Mein Kernstack ist Java, ergänzt durch wachsende Erfahrung mit Rust und Next.js. Ich arbeite End-to-End von Code bis Produktion mit containerisierten Services, Kubernetes, Helm und GitOps-zentrierten Workflows. Mir sind sauberer Code, klare Abstraktionen und gut getestete, zuverlässige Systeme wichtig, die sich einfach betreiben und weiterentwickeln lassen.",
+    "experienceTitle": "Berufserfahrung",
+    "skillsTitle": "Technische Fähigkeiten",
+    "educationTitle": "Ausbildung",
+    "languagesTitle": "Sprachkenntnisse",
+    "languages": {
+      "german": "Deutsch",
+      "germanLevel": "Muttersprache",
+      "english": "Englisch",
+      "englishLevel": "Fließend"
+    },
+    "stackLabel": "Stack",
+    "contactTitle": "Kontakt",
+    "education": {
+      "uni-konstanz": {
+        "degree": "Informatik (ohne Abschluss)",
+        "institution": "Universität Konstanz"
+      },
+      "abitur": {
+        "degree": "Abitur (Wirtschaftsgymnasium)",
+        "institution": "Rudolf-Eberle-Schule, Bad Säckingen"
+      }
+    }
+  }
+}

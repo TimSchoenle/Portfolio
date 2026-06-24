@@ -1,0 +1,19 @@
+{
+  "name": "Tim Schönle — Software Developer",
+  "short_name": "Tim Schönle",
+  "description": "Portfolio of Tim Schönle — Software Developer specializing in Java, Rust and Next.js.",
+  "id": "portfolio",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0d14",
+  "theme_color": "#0a0d14",
+  "categories": ["productivity", "portfolio", "developer"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

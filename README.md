@@ -1,168 +1,88 @@
 # Portfolio
 
-[![Codecov](https://codecov.io/gh/timschoenle/Portfolio/branch/main/graph/badge.svg)](https://codecov.io/gh/timschoenle/Portfolio)
-[![CI](https://github.com/timschoenle/Portfolio/actions/workflows/ci.yaml/badge.svg)](https://github.com/timschoenle/Portfolio/actions/workflows/ci.yaml)
+Personal portfolio at [tim-schoenle.de](https://tim-schoenle.de).
 
-Personal portfolio codebase for [tim-schoenle.de](https://tim-schoenle.de).
+Built with **Rust + Yew (WASM)** and **Tailwind CSS**. A static SPA compiled to
+WebAssembly, served by a tiny static Axum server in a scratch container.
 
-It includes:
+## Workspace
 
-- localized routes (`/en`, `/de`)
-- live GitHub project and contribution data
-- generated PDF resumes (optionally digitally signed)
-- strict CI quality gates, security checks, and Docker build pipeline
-
-## Before You Clone
-
-This repository is under a **proprietary license**. You can inspect and run it locally for personal evaluation, but reuse and public deployment are restricted. See [LICENSE](./LICENSE).
+| Crate | Purpose |
+| --- | --- |
+| `crates/data` | Shared language-neutral data (config, skills, experience, repos schema) + embedded `i18n/{en,de}.json` translations |
+| `apps/frontend` | Yew 0.22 CSR app (Trunk build) |
+| `apps/server` | Axum static server with SPA fallback, security headers, `/api/health` |
+| `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (genpdf, embedded subset of Liberation Sans) |
 
 ## Stack
 
-- Runtime: Bun
-- Framework: Next.js App Router (React 19, TypeScript strict mode)
-- Styling: Tailwind CSS v4 + Radix primitives + custom "blueprint" design system
-- i18n: `next-intl`
-- Monitoring/analytics: optional Sentry + Cloudflare Web Analytics
-- PWA: Serwist service worker and web app manifest
-- Testing: Vitest (unit/component), Playwright (e2e), fuzzy tests
-- Quality: ESLint, Prettier, Knip, dependency-cruiser, Lighthouse CI, license check
-- Delivery: multi-stage Docker image (`output: "standalone"`) + GitHub Actions
+- **Frontend:** Rust, [Yew](https://yew.rs) 0.22 (WASM CSR), [yew-router](https://crates.io/crates/yew-router)
+- **i18n:** EN/DE via [i18nrs](https://crates.io/crates/i18nrs); translations live in
+  `crates/data/i18n/`, language is persisted in `localStorage` (`lang`) and
+  detected from the browser language on first visit. A unit test in
+  `crates/data` enforces key parity between both languages.
+- **Styling:** Tailwind CSS v3 + custom design tokens
+- **Build:** [Trunk](https://trunkrs.dev)
+- **Data:** `apps/frontend/repos.json` rebuilt daily by GitHub Actions from the public GitHub API
 
-## What Is In The App
+## Features
 
-- Landing page sections for hero, about, skills, projects, experience, contact
-- Command palette (`Ctrl+K` / `Cmd+K`) for navigation and quick actions
-- GitHub integration for featured repos, profile stats, and contribution heatmap
-- Public API endpoints:
-  - `GET /api/health`
-  - `GET /api/v1/profile`
-  - `GET /api/v1/profile/schema`
-- Resume generation at build time to `public/resume/{locale}.pdf`
-- Optional resume signing with certificate export + fingerprint verification UI
-- Localized legal pages (`/imprint`, `/privacy`)
+Implements the "Portfolio v4" design (editorial grid with sticky label rails):
 
-## Repository Layout
+- Routes: `/` (single-page sections `s1`–`s5`), `/imprint`, `/privacy`, 404
+- Hero with two-line display name, scroll parallax and live meta card
+- Fixed chapter rail with scroll tracking; staggered reveal-on-scroll blocks
+- Stack section: interactive skill radar (per-skill hover tooltips, category
+  filtering/dimming) + chip matrix with confidence bars
+- Projects: GitHub stats strip, language filter, loading skeletons fed by `repos.json`
+- Experience accordion with year badges and animated bodies (real career data)
+- Contact: terminal with type-in `ssh` animation, oversized email, action buttons
+- Command palette (⌘K / Ctrl+K) with fuzzy search and keyboard navigation
+- Language switcher (EN/DE) — every visible string is translated
+- Localized, single-page, ATS-readable resume PDFs (`Tim-Schönle-Resume.pdf`,
+  `Tim-Schönle-Lebenslauf.pdf`) with SHA-256 fingerprints on the contact card;
+  the generator scales typography down until the content fits one A4 page
+- Legal pages (imprint, privacy policy) localized and rendered from the translation files
+- SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, web manifest
+- Security headers (CSP, HSTS, …) set by the server
+- WASM binary tuned for size: `opt-level = "z"`, LTO, single codegen unit
 
-```text
-.
-|- messages/                     # Translation files (en/de)
-|- scripts/                      # Build helpers (resume generation, standalone startup, licenses)
-|- src/
-|  |- app/                       # App Router pages, metadata routes, API routes, service worker
-|  |- components/
-|  |  |- blueprint/              # Portfolio-specific design primitives
-|  |  |- sections/               # Home page sections
-|  |  |- features/               # Command palette, contribution graph, analytics, etc.
-|  |- data/                      # Site configuration and skills data
-|  |- i18n/                      # Locale routing and request helpers
-|  |- lib/                       # GitHub client, logger, utility modules
-|  |- models/                    # API/data schemas (zod)
-|- test/                         # Vitest setup
-|- tests/                        # Playwright tests + global setup
-|- .github/workflows/            # CI/CD + security workflows
-```
-
-## Quick Start
-
-### 1. Install dependencies
+## Development
 
 ```bash
-bun install
+# frontend (http://localhost:8080)
+cd apps/frontend
+npm install
+trunk serve
+
+# tests (incl. i18n key parity)
+cargo test -p portfolio-data
+
+# resume PDFs (written to dist/resume + dist/resume-fingerprint.json)
+cargo run -p resume-generator -- apps/frontend/dist
 ```
 
-### 2. Create `.env.local` (recommended)
-
-```env
-GITHUB_TOKEN=ghp_xxx
-```
-
-Notes:
-
-- `GITHUB_TOKEN` is optional, but without it GitHub data may be empty/rate-limited.
-
-### 3. Run in development
+### Production build
 
 ```bash
-bun run dev
+cd apps/frontend && npm install && trunk build --release
+cargo run --release -p resume-generator -- apps/frontend/dist
 ```
 
-Open:
-
-- http://localhost:3000/en
-- http://localhost:3000/de
-
-### 4. Build and run production locally
+Or build the container, which does all of the above and serves the result on
+port 8080:
 
 ```bash
-bun run build
-bun run start
+docker build -t portfolio .
 ```
 
-`start` runs a standalone server helper (`scripts/start-standalone.ts`) with `HOSTNAME=0.0.0.0` and `PORT=3000`.
+## repos.json
 
-## API Endpoints
-
-### `GET /api/health`
-
-Returns runtime liveness:
-
-```json
-{
-  "status": "healthy",
-  "timestamp": "<ISO-8601 timestamp>"
-}
-```
-
-### `GET /api/v1/profile`
-
-Returns public profile data (contact, social links, typed skill groups). Response includes:
-
-- validated payload based on zod schema
-- `$schema` link pointing to `/api/v1/profile/schema`
-
-### `GET /api/v1/profile/schema`
-
-Returns the JSON schema for `/api/v1/profile`.
-
-## Resume Generation And Signing
-
-Builds always generate localized PDFs:
-
-```bash
-bun run build:resume
-```
-
-Unsigned mode:
-
-- writes `public/resume/en.pdf` and `public/resume/de.pdf`
-
-Signed mode:
-
-1. Provide `RESUME_SIGNING_CERT_BASE64` and `RESUME_SIGNING_CERT_PASSWORD`
-2. Build resumes again
-3. Script exports:
-   - signed PDFs
-   - `public/resume/certificate.crt`
-   - `public/resume-fingerprint.json`
-
-For local certificate bootstrap:
-
-```bash
-bun scripts/generate-resume-certificate.ts
-```
-
-## Troubleshooting
-
-- GitHub cards or contribution graph empty:
-  - check `GITHUB_TOKEN`
-  - check API rate limits
-
-## Related Documents
-
-- [CONTRIBUTING.md](./CONTRIBUTING.md)
-- [SECURITY.md](./SECURITY.md)
-- [CHANGELOG.md](./CHANGELOG.md)
+The projects section loads `./repos.json` at runtime. A placeholder is
+committed at `apps/frontend/repos.json`; the `update-repos.yml` workflow
+refreshes it daily from the public GitHub API and commits the result.
 
 ## License
 
-Proprietary license. See [LICENSE](./LICENSE) for terms.
+Proprietary. See [LICENSE](./LICENSE). Bundled Liberation Sans fonts are
+licensed under the SIL OFL (see `apps/resume-generator/fonts/LICENSE`).

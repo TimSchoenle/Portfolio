@@ -1,6 +1,0 @@
-{
-  "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "include": ["dependencies"],
-  "exclude": ["binaries", "exports", "files", "types"],
-  "ignoreDependencies": ["@types/webpack", "serwist", "@types/node-forge", "node-forge", "@signpdf/signpdf", "@signpdf/placeholder-plain", "@signpdf/signer-p12", "@eslint/compat"]
-}

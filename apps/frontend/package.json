@@ -1,0 +1,8 @@
+{
+  "name": "portfolio-frontend-styles",
+  "private": true,
+  "description": "Tailwind CSS toolchain for the Yew frontend (build-time only)",
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
