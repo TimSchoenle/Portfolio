@@ -2,19 +2,14 @@
 //! oversized email link, action buttons — plus the localized resume PDFs with
 //! their SHA-256 fingerprints.
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use i18nrs::yew::use_translation;
 use portfolio_data::{CONFIG, resume_file};
-use wasm_bindgen::JsCast;
-use wasm_bindgen::JsValue;
-use wasm_bindgen::closure::Closure;
 use wasm_bindgen_futures::JsFuture;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
 use crate::github::{ResumeFingerprints, load_resume_fingerprints};
+use crate::hooks::use_in_view;
 
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
@@ -40,46 +35,19 @@ pub fn contact() -> Html {
     }
 
     // Type the `ssh` command once the section scrolls into view.
+    let in_view = use_in_view(&section, 0.3);
     {
         let typed = typed.clone();
-        let section = section.clone();
-        use_effect_with((), move |_| {
-            let observer: Rc<RefCell<Option<web_sys::IntersectionObserver>>> =
-                Rc::new(RefCell::new(None));
-            let observer_in_cb = observer.clone();
-            let cb =
-                Closure::<dyn Fn(js_sys::Array)>::wrap(Box::new(move |entries: js_sys::Array| {
-                    let entry: web_sys::IntersectionObserverEntry = entries.get(0).unchecked_into();
-                    if entry.is_intersecting() {
-                        if let Some(obs) = observer_in_cb.borrow_mut().take() {
-                            obs.disconnect();
-                        }
-                        let typed = typed.clone();
-                        spawn_local(async move {
-                            let target: Vec<char> =
-                                format!("ssh {}", CONFIG.email).chars().collect();
-                            for i in 0..=target.len() {
-                                typed.set(target[..i].iter().collect());
-                                let jitter = (js_sys::Math::random() * 40.0) as u32;
-                                gloo_timers::future::TimeoutFuture::new(40 + jitter).await;
-                            }
-                        });
+        use_effect_with(in_view, move |&in_view| {
+            if in_view {
+                spawn_local(async move {
+                    let target: Vec<char> = format!("ssh {}", CONFIG.email).chars().collect();
+                    for i in 0..=target.len() {
+                        typed.set(target[..i].iter().collect());
+                        let jitter = (js_sys::Math::random() * 40.0) as u32;
+                        gloo_timers::future::TimeoutFuture::new(40 + jitter).await;
                     }
-                }));
-            let init = web_sys::IntersectionObserverInit::new();
-            init.set_threshold(&JsValue::from_f64(0.3));
-            if let (Some(el), Ok(obs)) = (
-                section.cast::<web_sys::Element>(),
-                web_sys::IntersectionObserver::new_with_options(cb.as_ref().unchecked_ref(), &init),
-            ) {
-                obs.observe(&el);
-                *observer.borrow_mut() = Some(obs);
-            }
-            move || {
-                if let Some(obs) = observer.borrow_mut().take() {
-                    obs.disconnect();
-                }
-                drop(cb);
+                });
             }
         });
     }

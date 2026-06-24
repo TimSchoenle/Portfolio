@@ -2,9 +2,9 @@
 //! track the active section while scrolling and reveal the section name.
 
 use i18nrs::yew::use_translation;
-use wasm_bindgen::JsCast;
-use wasm_bindgen::closure::Closure;
 use yew::prelude::*;
+
+use crate::hooks::use_window_event;
 
 /// (rail label, element id, i18n key or None for the intro chapter).
 const CHAPTERS: [(&str, &str, Option<&str>); 6] = [
@@ -42,23 +42,16 @@ pub fn chapter_rail() -> Html {
     let (i18n, _) = use_translation();
     let active = use_state_eq(|| 0_usize);
 
+    // Set the initial active chapter once mounted (the DOM isn't laid out yet
+    // at first render), then keep it in sync on scroll.
     {
         let active = active.clone();
-        use_effect_with((), move |_| {
+        use_effect_with((), move |_| active.set(active_chapter()));
+    }
+    {
+        let active = active.clone();
+        use_window_event("scroll", (), move |_: web_sys::Event| {
             active.set(active_chapter());
-            let cb = Closure::<dyn Fn()>::wrap(Box::new(move || {
-                active.set(active_chapter());
-            }));
-            let win = web_sys::window().expect("window available");
-            win.add_event_listener_with_callback("scroll", cb.as_ref().unchecked_ref())
-                .ok();
-            move || {
-                if let Some(win) = web_sys::window() {
-                    win.remove_event_listener_with_callback("scroll", cb.as_ref().unchecked_ref())
-                        .ok();
-                }
-                drop(cb);
-            }
         });
     }
 

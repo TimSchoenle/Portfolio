@@ -532,18 +532,6 @@ pub struct ReposFile {
     pub repos: Vec<Repo>,
 }
 
-impl ReposFile {
-    pub fn total(&self) -> usize {
-        self.repos.len()
-    }
-    pub fn total_stars(&self) -> u32 {
-        self.repos.iter().map(|r| r.stargazers_count).sum()
-    }
-    pub fn total_forks(&self) -> u32 {
-        self.repos.iter().map(|r| r.forks_count).sum()
-    }
-}
-
 /// GitHub-style language color for a repo card.
 pub fn lang_color(lang: &str) -> &'static str {
     match lang {

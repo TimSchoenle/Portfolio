@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use i18nrs::yew::{I18nProvider, use_translation};
 use portfolio_data::{I18N_DE, I18N_EN};
-use wasm_bindgen::JsCast;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::github::{ReposState, load_repos};
+use crate::hooks::use_window_event;
 use crate::i18n::{LANG_STORAGE_KEY, ensure_language_seeded, set_document_lang};
 use crate::pages::{
     home::Home, imprint::Imprint, not_found::NotFound, privacy_policy::PrivacyPolicy,
@@ -78,25 +78,12 @@ fn shell() -> Html {
     {
         let palette_open = palette_open.clone();
         let is_open = *palette_open;
-        use_effect_with(is_open, move |_| {
-            let cb = wasm_bindgen::closure::Closure::<dyn Fn(web_sys::KeyboardEvent)>::wrap(
-                Box::new(move |e: web_sys::KeyboardEvent| {
-                    if (e.meta_key() || e.ctrl_key()) && e.key() == "k" {
-                        e.prevent_default();
-                        palette_open.set(!is_open);
-                    } else if e.key() == "Escape" {
-                        palette_open.set(false);
-                    }
-                }),
-            );
-            let win = web_sys::window().unwrap();
-            win.add_event_listener_with_callback("keydown", cb.as_ref().unchecked_ref())
-                .ok();
-            move || {
-                let win = web_sys::window().unwrap();
-                win.remove_event_listener_with_callback("keydown", cb.as_ref().unchecked_ref())
-                    .ok();
-                drop(cb);
+        use_window_event("keydown", is_open, move |e: web_sys::KeyboardEvent| {
+            if (e.meta_key() || e.ctrl_key()) && e.key() == "k" {
+                e.prevent_default();
+                palette_open.set(!is_open);
+            } else if e.key() == "Escape" {
+                palette_open.set(false);
             }
         });
     }
