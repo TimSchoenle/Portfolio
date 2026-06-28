@@ -1,15 +1,25 @@
-//! Runtime data loaded relative to the site root.
+//! Portfolio data embedded into the WASM binary at build time.
+//!
+//! `repos.json` and `resume-fingerprint.json` used to be fetched at runtime
+//! relative to the site root; they are now compiled in, so the projects and
+//! contact sections render from the first paint without an extra round-trip.
 
-use std::collections::BTreeMap;
+use portfolio_data::{Repo, ReposFile, ResumeFingerprints};
 
-use gloo_net::http::Request;
-use portfolio_data::{Repo, ReposFile};
-use serde::Deserialize;
+/// `repos.json`, embedded at compile time. Refreshed daily by the
+/// `update-repos` workflow, which commits `apps/frontend/repos.json`.
+const REPOS_JSON: &str = include_str!("../repos.json");
 
-/// Load state of `repos.json`, driving skeletons vs. content vs. offline UI.
+/// `resume-fingerprint.json`, embedded at compile time. `build.rs` writes the
+/// generated manifest (or an empty default when no resumes were produced) into
+/// `OUT_DIR`, so this include always resolves.
+const RESUME_FINGERPRINT_JSON: &str =
+    include_str!(concat!(env!("OUT_DIR"), "/resume-fingerprint.json"));
+
+/// Availability of the embedded repo list, kept as an enum so the projects
+/// section can still degrade gracefully if `repos.json` ever fails to parse.
 #[derive(Clone, PartialEq)]
 pub enum ReposState {
-    Loading,
     Ready(ReposFile),
     Failed,
 }
@@ -19,34 +29,30 @@ impl ReposState {
     pub fn repos(&self) -> Vec<Repo> {
         match self {
             ReposState::Ready(file) => file.repos.clone(),
-            _ => Vec::new(),
+            ReposState::Failed => Vec::new(),
         }
     }
 }
 
-/// Loads `repos.json`, generated daily by the `update-repos` workflow.
-pub async fn load_repos() -> Result<ReposFile, String> {
-    fetch_json("./repos.json").await
-}
-
-/// Checksums of the generated resume PDFs, written by the resume generator.
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-pub struct ResumeFingerprints {
-    pub algorithm: String,
-    pub generated_at: String,
-    /// File name (e.g. "en.pdf") -> hex digest.
-    pub files: BTreeMap<String, String>,
-}
-
-/// Loads `resume-fingerprint.json`; absent in dev builds without resumes.
-pub async fn load_resume_fingerprints() -> Result<ResumeFingerprints, String> {
-    fetch_json("./resume-fingerprint.json").await
-}
-
-async fn fetch_json<T: for<'de> Deserialize<'de>>(url: &str) -> Result<T, String> {
-    let resp = Request::get(url).send().await.map_err(|e| e.to_string())?;
-    if !resp.ok() {
-        return Err(format!("{url}: HTTP {}", resp.status()));
+/// Parses the embedded `repos.json` (generated daily by the `update-repos`
+/// workflow and committed to the repository).
+pub fn load_repos() -> ReposState {
+    match serde_json::from_str::<ReposFile>(REPOS_JSON) {
+        Ok(file) => ReposState::Ready(file),
+        Err(e) => {
+            web_sys::console::warn_1(&format!("repos.json parse failed: {e}").into());
+            ReposState::Failed
+        }
     }
-    resp.json::<T>().await.map_err(|e| e.to_string())
+}
+
+/// Parses the embedded `resume-fingerprint.json`; `None` when no resumes were
+/// generated (the embedded manifest is empty) or the manifest is malformed.
+pub fn load_resume_fingerprints() -> Option<ResumeFingerprints> {
+    let parsed = serde_json::from_str::<ResumeFingerprints>(RESUME_FINGERPRINT_JSON).ok()?;
+    if parsed.is_empty() {
+        None
+    } else {
+        Some(parsed)
+    }
 }

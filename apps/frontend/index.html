@@ -30,7 +30,9 @@
          single-page app paints without a render-blocking stylesheet request. -->
     <link data-trunk rel="tailwind-css" href="assets/input.css" data-inline />
 
-    <link data-trunk rel="copy-file" href="repos.json" />
+    <!-- repos.json and resume-fingerprint.json are embedded into the WASM at
+         build time (see src/github.rs); only the resume PDFs are served. -->
+    <link data-trunk rel="copy-dir" href="generated/resume" />
     <link data-trunk rel="copy-file" href="generated/robots.txt" />
     <link data-trunk rel="copy-file" href="generated/sitemap.xml" />
     <link data-trunk rel="copy-file" href="generated/site.webmanifest" />

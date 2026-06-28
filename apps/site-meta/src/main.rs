@@ -25,6 +25,9 @@ fn main() -> std::io::Result<()> {
         .unwrap_or_else(|| PathBuf::from("."));
     let out = base.join("generated");
     fs::create_dir_all(&out)?;
+    // Ensure the served resume directory exists so the `copy-dir` link in
+    // index.html resolves even in dev builds where no resumes were generated.
+    fs::create_dir_all(out.join("resume"))?;
 
     fs::write(out.join("head.html"), head_html())?;
     fs::write(out.join("robots.txt"), robots_txt())?;

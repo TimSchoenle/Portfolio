@@ -4,6 +4,8 @@
 //! [`I18N_DE`]); this crate only holds facts (names, dates, URLs, confidence
 //! values) and the schema for `repos.json`.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 pub mod profile;
@@ -31,6 +33,34 @@ pub fn resume_file(lang: &str) -> &'static str {
         .find(|(l, _)| *l == lang)
         .map(|(_, f)| *f)
         .unwrap_or(RESUME_FILES[0].1)
+}
+
+/// SHA-256 checksums of the generated resume PDFs.
+///
+/// Written by the resume generator as `resume-fingerprint.json` and embedded
+/// into the frontend at build time, where it is shown on the contact card so a
+/// downloaded resume can be verified against its published digest.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct ResumeFingerprints {
+    /// Hash algorithm used for the digests (e.g. "SHA-256").
+    pub algorithm: String,
+    /// RFC 3339 timestamp of when the manifest was generated.
+    pub generated_at: String,
+    /// Resume file name (e.g. "Tim-Schönle-Resume.pdf") -> hex digest.
+    pub files: BTreeMap<String, String>,
+}
+
+impl ResumeFingerprints {
+    /// `true` when no resume digests are present (e.g. dev builds without
+    /// generated resumes).
+    pub fn is_empty(&self) -> bool {
+        self.files.is_empty()
+    }
+
+    /// Digest of the resume for the given language, if present.
+    pub fn digest_for(&self, lang: &str) -> Option<&str> {
+        self.files.get(resume_file(lang)).map(String::as_str)
+    }
 }
 
 // ---------- Site configuration ----------
@@ -77,6 +107,10 @@ pub struct Config {
     pub description: &'static str,
     pub keywords: &'static [&'static str],
     pub featured_repos: &'static [&'static str],
+    /// Exact set of repositories fetched into `repos.json` by `update-repos`.
+    /// Only these repos are queried (by name) from the GitHub API, rather than
+    /// listing every public repository of the user.
+    pub repos: &'static [&'static str],
     pub legal: Legal,
 }
 
@@ -111,6 +145,7 @@ pub const CONFIG: Config = Config {
         "Portfolio",
         "helm-charts",
     ],
+    repos: &["Portfolio", "actions", "helm-charts", "gradle-jextract"],
     legal: Legal {
         address_lines: &[
             "tim-schoenle.de – Tim Schönle",

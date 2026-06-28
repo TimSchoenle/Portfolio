@@ -16,7 +16,6 @@ wasm-bindgen-futures.workspace = true
 js-sys.workspace = true
 web-sys.workspace = true
 gloo-timers.workspace = true
-gloo-net.workspace = true
 
 serde.workspace = true
 serde_json.workspace = true

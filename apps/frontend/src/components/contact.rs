@@ -1,6 +1,6 @@
 //! Contact section from the v4 design: terminal with a type-in `ssh` command,
-//! oversized email link, action buttons — plus the localized resume PDFs with
-//! their SHA-256 fingerprints.
+//! oversized email link, action buttons — plus the resume PDF for the active
+//! language with its SHA-256 fingerprint.
 
 use i18nrs::yew::use_translation;
 use portfolio_data::{CONFIG, resume_file};
@@ -8,7 +8,7 @@ use wasm_bindgen_futures::JsFuture;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
-use crate::github::{ResumeFingerprints, load_resume_fingerprints};
+use crate::github::load_resume_fingerprints;
 use crate::hooks::use_in_view;
 
 use super::reveal::Reveal;
@@ -18,21 +18,23 @@ use super::section_header::SectionHeader;
 pub fn contact() -> Html {
     let (i18n, _) = use_translation();
     let copied = use_state(|| false);
+    let show_fingerprint = use_state(|| false);
     let typed = use_state(String::new);
-    let fingerprints: UseStateHandle<Option<ResumeFingerprints>> = use_state(|| None);
+    // Embedded at build time; `None` in dev builds without generated resumes.
+    let fingerprints = load_resume_fingerprints();
     let section = use_node_ref();
 
-    {
-        let fingerprints = fingerprints.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                // Absent in dev builds without generated resumes — fine.
-                if let Ok(f) = load_resume_fingerprints().await {
-                    fingerprints.set(Some(f));
-                }
-            });
-        });
-    }
+    // Only the resume for the active language is offered and verified.
+    let lang = i18n.get_current_language();
+    let resume_name = resume_file(lang);
+    let resume_label = if lang == "de" {
+        i18n.t("contact.resumeDe")
+    } else {
+        i18n.t("contact.resumeEn")
+    };
+    let resume_digest = fingerprints
+        .as_ref()
+        .and_then(|f| f.digest_for(lang).map(|d| (f.algorithm.clone(), d.to_string())));
 
     // Type the `ssh` command once the section scrolls into view.
     let in_view = use_in_view(&section, 0.3);
@@ -65,6 +67,15 @@ pub fn contact() -> Html {
                     copied.set(false);
                 }
             });
+        })
+    };
+
+    let toggle_fingerprint = {
+        let show_fingerprint = show_fingerprint.clone();
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            e.stop_propagation();
+            show_fingerprint.set(!*show_fingerprint);
         })
     };
 
@@ -126,32 +137,36 @@ pub fn contact() -> Html {
                             <a href={CONFIG.linkedin} target="_blank" rel="noreferrer" class="btn-outline">
                                 <span class="mono">{"LinkedIn →"}</span>
                             </a>
-                            <a href={format!("/resume/{}", resume_file("en"))} target="_blank" rel="noopener" class="btn-outline">
-                                <span class="mono">{ format!("{} ↓", i18n.t("contact.resumeEn")) }</span>
-                            </a>
-                            <a href={format!("/resume/{}", resume_file("de"))} target="_blank" rel="noopener" class="btn-outline">
-                                <span class="mono">{ format!("{} ↓", i18n.t("contact.resumeDe")) }</span>
-                            </a>
+                            <div class="resume-btn-group">
+                                <a href={format!("/resume/{resume_name}")} target="_blank" rel="noopener" class="btn-outline resume-dl">
+                                    <span class="mono">{ format!("{resume_label} ↓") }</span>
+                                </a>
+                                if let Some((algorithm, digest)) = resume_digest.clone() {
+                                    <button type="button"
+                                            class="resume-info-btn"
+                                            onclick={toggle_fingerprint}
+                                            aria-label={ format!("{algorithm} fingerprint") }
+                                            title={ format!("{algorithm} fingerprint") }>
+                                        <span class="mono">{"ⓘ"}</span>
+                                    </button>
+                                    if *show_fingerprint {
+                                        <div class="fp-popup">
+                                            <span class="mono text-muted">{ format!("{algorithm} fingerprint") }</span>
+                                            <div class="fp-row" title={digest.clone()}>
+                                                <span class="text-fg/80 shrink-0">{resume_name}</span>
+                                                <span class="fp-digest">{digest}</span>
+                                            </div>
+                                            <span class="text-muted text-[11.5px]">{ i18n.t("contact.fingerprintNote") }</span>
+                                        </div>
+                                    }
+                                }
+                            </div>
                             <a href={CONFIG.url} target="_blank" rel="noreferrer" class="btn-outline">
                                 <span class="mono">{ format!("{url_display} ↗") }</span>
                             </a>
                         </div>
                     </Reveal>
 
-                    if let Some(f) = fingerprints.as_ref() {
-                        <Reveal delay={320}>
-                            <div class="resume-fingerprints">
-                                <span class="mono text-muted">{ format!("{} fingerprints", f.algorithm) }</span>
-                                { for f.files.iter().map(|(name, digest)| html!{
-                                    <div class="fp-row" title={digest.clone()}>
-                                        <span class="text-fg/80 shrink-0">{name.clone()}</span>
-                                        <span class="fp-digest">{digest.clone()}</span>
-                                    </div>
-                                })}
-                                <span class="text-muted text-[11.5px]">{ i18n.t("contact.fingerprintNote") }</span>
-                            </div>
-                        </Reveal>
-                    }
                 </div>
             </div>
         </section>

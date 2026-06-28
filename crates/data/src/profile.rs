@@ -29,7 +29,11 @@ pub enum RenderArea {
 impl RenderArea {
     /// Every area, in render order — the default for a skill that is not
     /// radar-only.
-    pub const ALL: [RenderArea; 3] = [RenderArea::Resume, RenderArea::Section, RenderArea::TechRadar];
+    pub const ALL: [RenderArea; 3] = [
+        RenderArea::Resume,
+        RenderArea::Section,
+        RenderArea::TechRadar,
+    ];
 }
 
 impl Skill {
@@ -200,7 +204,10 @@ mod tests {
         };
 
         // `Java` is a matrix skill -> rendered everywhere.
-        assert_eq!(render_area("Java"), json!(["resume", "section", "tech-radar"]));
+        assert_eq!(
+            render_area("Java"),
+            json!(["resume", "section", "tech-radar"])
+        );
         // `Markdown` is radar-only -> only the tech radar.
         assert_eq!(render_area("Markdown"), json!(["tech-radar"]));
     }

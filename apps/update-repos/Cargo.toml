@@ -1,0 +1,12 @@
+[package]
+name = "update-repos"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+portfolio-data.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+time.workspace = true
+ureq.workspace = true

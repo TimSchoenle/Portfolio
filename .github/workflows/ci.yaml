@@ -52,12 +52,15 @@ jobs:
         working-directory: apps/frontend
         run: npm install
 
+      # Generate the resume PDFs + resume-fingerprint.json BEFORE the frontend
+      # build so the fingerprint is embedded into the WASM (build.rs) and the
+      # PDFs are picked up by the index.html copy-dir link.
+      - name: Generate resume PDFs
+        run: cargo run --release -p resume-generator -- apps/frontend/generated
+
       - name: Build release
         working-directory: apps/frontend
         run: trunk build --release
-
-      - name: Generate resume PDFs
-        run: cargo run --release -p resume-generator -- apps/frontend/dist
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
@@ -95,7 +98,7 @@ jobs:
         run: cargo clippy -p frontend --target wasm32-unknown-unknown -- -D warnings
 
       - name: Clippy (native crates)
-        run: cargo clippy -p portfolio-data -p server -p resume-generator -- -D warnings
+        run: cargo clippy -p portfolio-data -p server -p resume-generator -p update-repos -- -D warnings
 
       - name: Format check
         run: cargo fmt --check

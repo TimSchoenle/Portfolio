@@ -1,5 +1,5 @@
 //! Selected-work section from the v4 design: GitHub stats strip, language
-//! filter, skeleton cards while repos.json loads, and the project grid.
+//! filter, and the project grid, fed by the build-time embedded repos.json.
 
 use i18nrs::yew::use_translation;
 use portfolio_data::{CONFIG, Repo, lang_color};
@@ -20,7 +20,6 @@ pub fn projects(p: &ProjProps) -> Html {
     let (i18n, _) = use_translation();
     let filter = use_state(|| "All".to_string());
 
-    let loading = matches!(p.state, ReposState::Loading);
     let offline = matches!(p.state, ReposState::Failed);
 
     // Non-fork, non-archived repos sorted by stars (v4 behavior).
@@ -59,9 +58,6 @@ pub fn projects(p: &ProjProps) -> Html {
             i18n.t("projects.repoMany")
         };
         let mut line = format!("{} {unit}", filtered.len());
-        if loading {
-            line.push_str(&format!(" · {}", i18n.t("projects.loading")));
-        }
         if offline {
             line.push_str(&format!(" · {}", i18n.t("projects.offline")));
         }
@@ -82,11 +78,11 @@ pub fn projects(p: &ProjProps) -> Html {
                     <Reveal delay={80}>
                         <div class="stats-strip">
                             <StatCell label={i18n.t("projects.statRepos")}
-                                value={ if loading { "—".to_string() } else { repos.len().to_string() } } />
+                                value={ repos.len().to_string() } />
                             <StatCell label={i18n.t("projects.statStars")}
-                                value={ if loading { "—".to_string() } else { total_stars.to_string() } } />
+                                value={ total_stars.to_string() } />
                             <StatCell label={i18n.t("projects.statForks")}
-                                value={ if loading { "—".to_string() } else { total_forks.to_string() } } />
+                                value={ total_forks.to_string() } />
                             <StatCell label={i18n.t("projects.statSync")} value={updated} small=true />
                         </div>
                     </Reveal>
@@ -119,13 +115,7 @@ pub fn projects(p: &ProjProps) -> Html {
                         </div>
                     </Reveal>
 
-                    if loading {
-                        <Reveal delay={180}>
-                            <div class="project-grid">
-                                { for (0..6).map(|_| html!{ <div class="project-card skeleton" /> }) }
-                            </div>
-                        </Reveal>
-                    } else if filtered.is_empty() {
+                    if filtered.is_empty() {
                         <div class="empty-state">
                             <span class="mono text-muted">{"// awaiting_sync"}</span>
                             <h3 class="mt-3 mb-1.5">{ i18n.t("projects.emptyTitle") }</h3>

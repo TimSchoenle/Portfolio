@@ -5,6 +5,7 @@ members = [
     "apps/server",
     "apps/resume-generator",
     "apps/site-meta",
+    "apps/update-repos",
 ]
 resolver = "2"
 
@@ -46,6 +47,10 @@ web-sys = { version = "0.3", features = [
 ] }
 gloo-timers = { version = "0.4.0", features = ["futures"] }
 gloo-net = "0.7.0"
+
+# Blocking, pure-Rust HTTP client used by the `update-repos` builder to call the
+# GitHub REST API from CI (no async runtime needed for a one-shot fetch).
+ureq = { version = "3", features = ["json"] }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

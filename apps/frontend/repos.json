@@ -1,8 +1,67 @@
 {
-  "generated_at": "",
+  "generated_at": "2026-06-28T08:54:36.9006872Z",
   "user": "timschoenle",
-  "total": 0,
-  "total_stars": 0,
-  "total_forks": 0,
-  "repos": []
+  "repos": [
+    {
+      "name": "Portfolio",
+      "full_name": "TimSchoenle/Portfolio",
+      "description": "Personal portfolio built with Next.js",
+      "html_url": "https://github.com/TimSchoenle/Portfolio",
+      "language": "TypeScript",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "updated_at": "2026-06-16T06:31:59Z",
+      "topics": [],
+      "fork": false,
+      "archived": false,
+      "homepage": ""
+    },
+    {
+      "name": "actions",
+      "full_name": "TimSchoenle/actions",
+      "description": "Centralized collection of reusable GitHub Actions, Workflows, and configurations.",
+      "html_url": "https://github.com/TimSchoenle/actions",
+      "language": "TypeScript",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "updated_at": "2026-06-28T07:19:57Z",
+      "topics": [],
+      "fork": false,
+      "archived": false,
+      "homepage": ""
+    },
+    {
+      "name": "helm-charts",
+      "full_name": "TimSchoenle/helm-charts",
+      "description": "A repository of personal and utility-focused Helm charts.",
+      "html_url": "https://github.com/TimSchoenle/helm-charts",
+      "language": "Go Template",
+      "stargazers_count": 0,
+      "forks_count": 0,
+      "updated_at": "2026-06-28T07:16:07Z",
+      "topics": [],
+      "fork": false,
+      "archived": false,
+      "homepage": ""
+    },
+    {
+      "name": "gradle-jextract",
+      "full_name": "TimSchoenle/gradle-jextract",
+      "description": "A Gradle plugin that automates the download and execution of jextract to generate Java Foreign Function & Memory (FFM) API bindings from C header files with bundled library loading support.",
+      "html_url": "https://github.com/TimSchoenle/gradle-jextract",
+      "language": "Java",
+      "stargazers_count": 1,
+      "forks_count": 0,
+      "updated_at": "2026-06-28T08:44:13Z",
+      "topics": [
+        "bundled-libraries",
+        "gradle-plugin",
+        "java",
+        "jextract"
+      ],
+      "fork": false,
+      "archived": false,
+      "homepage": ""
+    }
+  ]
 }

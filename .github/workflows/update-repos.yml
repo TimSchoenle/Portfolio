@@ -16,61 +16,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Fetch public repos (all pages)
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-update-repos-${{ hashFiles('Cargo.toml', '**/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-update-repos-
+
+      - name: Fetch configured repos
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python3 - <<'EOF'
-          import json, urllib.request, os, sys
-          from datetime import datetime, timezone
-
-          token = os.environ["GH_TOKEN"]
-          username = "timschoenle"
-          repos = []
-          page = 1
-
-          while True:
-              url = f"https://api.github.com/users/{username}/repos?type=public&per_page=100&page={page}"
-              req = urllib.request.Request(url, headers={
-                  "Authorization": f"token {token}",
-                  "Accept": "application/vnd.github.v3+json",
-                  "User-Agent": "portfolio-update-repos/1.0",
-              })
-              with urllib.request.urlopen(req) as resp:
-                  page_data = json.loads(resp.read())
-              if not page_data:
-                  break
-              repos.extend(page_data)
-              if len(page_data) < 100:
-                  break
-              page += 1
-
-          now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-          out = {
-              "generated_at": now,
-              "user": username,
-              "repos": [
-                  {
-                      "name": r["name"],
-                      "full_name": r["full_name"],
-                      "description": r["description"],
-                      "html_url": r["html_url"],
-                      "language": r["language"],
-                      "stargazers_count": r["stargazers_count"],
-                      "forks_count": r["forks_count"],
-                      "updated_at": r["updated_at"],
-                      "topics": r.get("topics", []),
-                      "fork": r["fork"],
-                      "archived": r["archived"],
-                      "homepage": r.get("homepage"),
-                  }
-                  for r in repos
-              ],
-          }
-          with open("apps/frontend/repos.json", "w") as f:
-              json.dump(out, f, indent=2)
-          print(f"Fetched {len(repos)} repos")
-          EOF
+        run: cargo run --release -p update-repos -- apps/frontend/repos.json
 
       - name: Commit if changed
         run: |

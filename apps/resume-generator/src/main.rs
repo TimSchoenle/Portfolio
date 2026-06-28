@@ -41,7 +41,7 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-use portfolio_data::{CONFIG, I18N_DE, I18N_EN, RESUME_FILES};
+use portfolio_data::{CONFIG, I18N_DE, I18N_EN, RESUME_FILES, ResumeFingerprints};
 use sha2::{Digest, Sha256};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
@@ -92,11 +92,11 @@ fn run() -> Result<(), Box<dyn Error>> {
         );
     }
 
-    let manifest = serde_json::json!({
-        "algorithm": "SHA-256",
-        "generated_at": OffsetDateTime::now_utc().format(&Rfc3339)?,
-        "files": fingerprints,
-    });
+    let manifest = ResumeFingerprints {
+        algorithm: "SHA-256".to_string(),
+        generated_at: OffsetDateTime::now_utc().format(&Rfc3339)?,
+        files: fingerprints,
+    };
     let manifest_path = Path::new(&out_dir).join("resume-fingerprint.json");
     fs::write(&manifest_path, serde_json::to_string_pretty(&manifest)?)?;
     println!("wrote {}", manifest_path.display());

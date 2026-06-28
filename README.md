@@ -12,7 +12,9 @@ WebAssembly, served by a tiny static Axum server in a scratch container.
 | `crates/data` | Shared language-neutral data (config, skills, experience, repos schema) + embedded `i18n/{en,de}.json` translations |
 | `apps/frontend` | Yew 0.22 CSR app (Trunk build) |
 | `apps/server` | Axum static server with SPA fallback, security headers, `/api/health` |
-| `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (genpdf, embedded subset of Liberation Sans) |
+| `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (genpdf, embedded subset of Liberation Sans); the fingerprint is embedded into the frontend at build time |
+| `apps/site-meta` | Build-time generator for the frontend's static metadata (`head.html`, `robots.txt`, `sitemap.xml`, web manifest) from `CONFIG` |
+| `apps/update-repos` | Builder that fetches the configured GitHub repos (`CONFIG.repos`) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
 
 ## Stack
 
@@ -23,7 +25,10 @@ WebAssembly, served by a tiny static Axum server in a scratch container.
   `crates/data` enforces key parity between both languages.
 - **Styling:** Tailwind CSS v3 + custom design tokens
 - **Build:** [Trunk](https://trunkrs.dev)
-- **Data:** `apps/frontend/repos.json` rebuilt daily by GitHub Actions from the public GitHub API
+- **Data:** `apps/frontend/repos.json` rebuilt daily by GitHub Actions from the
+  GitHub API (only the repos listed in `CONFIG.repos`) and embedded into the
+  WASM binary at build time (alongside `resume-fingerprint.json`) instead of
+  being fetched at runtime
 
 ## Features
 
@@ -50,6 +55,10 @@ Implements the "Portfolio v4" design (editorial grid with sticky label rails):
 ## Development
 
 ```bash
+# resume PDFs + resume-fingerprint.json (run BEFORE the frontend build so the
+# fingerprint is embedded and the PDFs are served via index.html's copy-dir)
+cargo run -p resume-generator -- apps/frontend/generated
+
 # frontend (http://localhost:8080)
 cd apps/frontend
 npm install
@@ -57,16 +66,13 @@ trunk serve
 
 # tests (incl. i18n key parity)
 cargo test -p portfolio-data
-
-# resume PDFs (written to dist/resume + dist/resume-fingerprint.json)
-cargo run -p resume-generator -- apps/frontend/dist
 ```
 
 ### Production build
 
 ```bash
+cargo run --release -p resume-generator -- apps/frontend/generated
 cd apps/frontend && npm install && trunk build --release
-cargo run --release -p resume-generator -- apps/frontend/dist
 ```
 
 Or build the container, which does all of the above and serves the result on
@@ -78,9 +84,26 @@ docker build -t portfolio .
 
 ## repos.json
 
-The projects section loads `./repos.json` at runtime. A placeholder is
-committed at `apps/frontend/repos.json`; the `update-repos.yml` workflow
-refreshes it daily from the public GitHub API and commits the result.
+The projects section reads `repos.json`, embedded into the WASM binary at build
+time via `include_str!`. A placeholder is committed at
+`apps/frontend/repos.json`; the `update-repos.yml` workflow refreshes it daily
+from the GitHub API and commits the result, so the next build picks it up.
+
+The refresh runs the `update-repos` builder, which fetches each repository listed
+in `CONFIG.repos` by name (one `GET /repos/{user}/{name}` request each),
+deserializes them directly into the shared `portfolio_data::Repo`/`ReposFile`
+models and writes the pretty-printed JSON via a dedicated `UpdateReposError`
+model. The repository set is configured centrally in `CONFIG.repos` and can be
+overridden at runtime via `GITHUB_REPOS` (comma-separated):
+
+```bash
+# defaults: user = CONFIG.github_username, repos = CONFIG.repos,
+#           output = apps/frontend/repos.json
+GH_TOKEN=<token> cargo run --release -p update-repos -- apps/frontend/repos.json
+
+# override the repo set for a one-off run
+GITHUB_REPOS=Portfolio,actions cargo run --release -p update-repos
+```
 
 ## License
 

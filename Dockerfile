@@ -37,9 +37,13 @@ RUN cargo build --release --target x86_64-unknown-linux-musl -p server -p resume
 RUN ./target/x86_64-unknown-linux-musl/release/resume-generator /app/resume-out
 
 # ── build WASM frontend ───────────────────────────────────────────────────────
-# Independent of server stages — BuildKit runs both in parallel.
+# The resume PDFs + resume-fingerprint.json from the server stage are dropped
+# into the frontend's `generated/` dir before the build, so the fingerprint is
+# embedded into the WASM (build.rs) and the PDFs are served (copy-dir in
+# index.html).
 FROM tools AS frontend-builder
 COPY . .
+COPY --from=server-builder /app/resume-out/ /app/apps/frontend/generated/
 WORKDIR /app/apps/frontend
 RUN npm install && trunk build --release
 
@@ -59,9 +63,8 @@ COPY --from=certs \
 COPY --from=server-builder \
     /app/target/x86_64-unknown-linux-musl/release/server /server
 
+# Includes the resume PDFs (served via the index.html copy-dir link).
 COPY --from=frontend-builder /app/apps/frontend/dist /dist
-# resume/{en,de}.pdf + resume-fingerprint.json into the served tree
-COPY --from=server-builder /app/resume-out/ /dist/
 
 ENV DIST_DIR=/dist \
     PORT=8080 \

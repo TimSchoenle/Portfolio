@@ -2,11 +2,10 @@ use std::collections::HashMap;
 
 use i18nrs::yew::{I18nProvider, use_translation};
 use portfolio_data::{I18N_DE, I18N_EN};
-use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::github::{ReposState, load_repos};
+use crate::github::load_repos;
 use crate::hooks::use_window_event;
 use crate::i18n::{LANG_STORAGE_KEY, ensure_language_seeded, set_document_lang};
 use crate::pages::{
@@ -47,25 +46,10 @@ pub fn app() -> Html {
 #[function_component(Shell)]
 fn shell() -> Html {
     let (i18n, _) = use_translation();
-    let repos = use_state(|| ReposState::Loading);
+    // repos.json is embedded at build time, so it is available synchronously.
+    let repos = use_state(load_repos);
     let palette_open = use_state(|| false);
     let location = use_location();
-
-    // Fetch repos.json once on mount.
-    {
-        let repos = repos.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                match load_repos().await {
-                    Ok(file) => repos.set(ReposState::Ready(file)),
-                    Err(e) => {
-                        web_sys::console::warn_1(&format!("repos.json load failed: {e}").into());
-                        repos.set(ReposState::Failed);
-                    }
-                }
-            });
-        });
-    }
 
     // Mirror the active language onto <html lang> on first render.
     {
