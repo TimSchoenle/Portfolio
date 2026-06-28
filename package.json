@@ -58,9 +58,9 @@
   },
   "devDependencies": {
     "@eslint/compat": "2.1.0",
-    "@commitlint/cli": "21.0.2",
-    "@commitlint/config-conventional": "21.0.2",
-    "@commitlint/types": "21.0.1",
+    "@commitlint/cli": "21.1.0",
+    "@commitlint/config-conventional": "21.1.0",
+    "@commitlint/types": "21.1.0",
     "@cyclonedx/cdxgen": "12.5.1",
     "@fast-check/vitest": "0.4.1",
     "@lhci/cli": "0.15.1",
