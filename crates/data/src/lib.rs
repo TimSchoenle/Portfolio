@@ -107,10 +107,10 @@ pub struct Config {
     pub description: &'static str,
     pub keywords: &'static [&'static str],
     pub featured_repos: &'static [&'static str],
-    /// Exact set of repositories fetched into `repos.json` by `update-repos`.
-    /// Only these repos are queried (by name) from the GitHub API, rather than
-    /// listing every public repository of the user.
-    pub repos: &'static [&'static str],
+    /// Repositories that must never appear in `repos.json`, regardless of their
+    /// activity. Matched case-insensitively by name when listing all of the
+    /// user's repositories in `update-repos`.
+    pub blacklisted_repos: &'static [&'static str],
     pub legal: Legal,
 }
 
@@ -145,7 +145,7 @@ pub const CONFIG: Config = Config {
         "Portfolio",
         "helm-charts",
     ],
-    repos: &["Portfolio", "actions", "helm-charts", "gradle-jextract"],
+    blacklisted_repos: &["TimSchoenle", "actions-testing"],
     legal: Legal {
         address_lines: &[
             "tim-schoenle.de – Tim Schönle",

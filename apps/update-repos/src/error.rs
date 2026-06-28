@@ -13,7 +13,8 @@ use std::fmt;
 pub enum UpdateReposError {
     /// The GitHub username to query was empty.
     MissingUser,
-    /// No repositories were configured to fetch.
+    /// No repositories were found to write (the user has no non-archived
+    /// repositories, or the explicitly configured set was empty).
     NoRepos,
     /// An HTTP transport failure or a non-2xx response from the GitHub API
     /// (`ureq` surfaces HTTP status codes as errors by default).
@@ -33,7 +34,7 @@ impl fmt::Display for UpdateReposError {
                 f.write_str("no GitHub username configured (set GITHUB_USERNAME)")
             }
             UpdateReposError::NoRepos => f.write_str(
-                "no repositories configured to fetch (set CONFIG.repos or GITHUB_REPOS)",
+                "no repositories found to write (none non-archived, or GITHUB_REPOS was empty)",
             ),
             UpdateReposError::Http(e) => write!(f, "GitHub API request failed: {e}"),
             UpdateReposError::Io(e) => write!(f, "file I/O failed: {e}"),

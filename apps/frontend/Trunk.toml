@@ -13,9 +13,10 @@ enabled = true
 pipeline = "release"
 
 [watch]
-# "./generated" holds the pre_build hook's own output; ignoring it stops
-# `trunk serve` from looping (regenerate -> file change -> rebuild -> …).
-ignore = ["./dist", "./target", "./node_modules", "./generated"]
+# "./generated" holds the pre_build hook's own output; ignoring it (and the
+# build-time "./repos.json") stops `trunk serve` from looping
+# (regenerate -> file change -> rebuild -> …).
+ignore = ["./dist", "./target", "./node_modules", "./generated", "./repos.json"]
 
 [serve]
 address = "127.0.0.1"
@@ -31,3 +32,13 @@ open = false
 stage = "pre_build"
 command = "cargo"
 command_arguments = ["run", "--quiet", "--package", "site-meta"]
+
+# Generate the embedded project list (repos.json) from the GitHub API before the
+# WASM build. The result is cached by `generated_at` (10h on CI, 60min locally),
+# so this is a near no-op while fresh; a non-zero exit fails the build, so the
+# frontend never ships a stale-by-omission or unbuildable repos.json. Set
+# GH_TOKEN to authenticate and lift the API rate limit.
+[[hooks]]
+stage = "pre_build"
+command = "cargo"
+command_arguments = ["run", "--quiet", "--package", "update-repos", "--", "repos.json"]

@@ -52,6 +52,21 @@ jobs:
         working-directory: apps/frontend
         run: npm install
 
+      # repos.json is generated at build time by the update-repos Trunk hook.
+      # Persisting it across runs (keyed by a ~10h window, matching the CI cache
+      # TTL) lets the hook reuse a fresh file instead of calling the GitHub API
+      # on every build, which keeps us well under its rate limits.
+      - name: Repos cache window
+        id: repos-cache
+        run: echo "window=$(( $(date +%s) / 36000 ))" >> "$GITHUB_OUTPUT"
+
+      - name: Cache repos.json (GitHub API rate limits)
+        uses: actions/cache@v4
+        with:
+          path: apps/frontend/repos.json
+          key: ${{ runner.os }}-repos-json-${{ steps.repos-cache.outputs.window }}
+          restore-keys: ${{ runner.os }}-repos-json-
+
       # Generate the resume PDFs + resume-fingerprint.json BEFORE the frontend
       # build so the fingerprint is embedded into the WASM (build.rs) and the
       # PDFs are picked up by the index.html copy-dir link.
@@ -60,6 +75,10 @@ jobs:
 
       - name: Build release
         working-directory: apps/frontend
+        env:
+          # Authenticates the update-repos hook so it isn't rate-limited; CI is
+          # set automatically, so the 10h cache TTL applies.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: trunk build --release
 
       - name: Upload dist artifact

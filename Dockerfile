@@ -45,7 +45,13 @@ FROM tools AS frontend-builder
 COPY . .
 COPY --from=server-builder /app/resume-out/ /app/apps/frontend/generated/
 WORKDIR /app/apps/frontend
-RUN npm install && trunk build --release
+# The update-repos Trunk hook regenerates repos.json from the GitHub API during
+# the build and fails the build if it cannot be produced. CI=1 selects the 10h
+# cache TTL so the committed/cached repos.json is reused when fresh; an optional
+# `gh_token` build secret authenticates the call and lifts the API rate limit:
+#   docker build --secret id=gh_token,env=GH_TOKEN .
+RUN --mount=type=secret,id=gh_token,env=GH_TOKEN \
+    CI=1 sh -c 'npm install && trunk build --release'
 
 # ── pull CA certs for future outbound HTTPS calls ─────────────────────────────
 FROM alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS certs

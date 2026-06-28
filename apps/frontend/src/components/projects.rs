@@ -10,6 +10,9 @@ use crate::github::ReposState;
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
 
+/// Cards shown per slide window: 2 rows of the 3-column grid.
+const PAGE_SIZE: usize = 6;
+
 #[derive(Properties, PartialEq)]
 pub struct ProjProps {
     pub state: ReposState,
@@ -18,7 +21,10 @@ pub struct ProjProps {
 #[function_component(Projects)]
 pub fn projects(p: &ProjProps) -> Html {
     let (i18n, _) = use_translation();
-    let filter = use_state(|| "All".to_string());
+    // "Favorites" is the special, default filter: the config-pinned repos are
+    // shown first, before the rest can be reached through the language filters.
+    let filter = use_state(|| "Favorites".to_string());
+    let page = use_state(|| 0usize);
 
     let offline = matches!(p.state, ReposState::Failed);
 
@@ -39,17 +45,24 @@ pub fn projects(p: &ProjProps) -> Html {
     langs.dedup();
 
     let active = filter.as_str().to_string();
-    let filtered: Vec<&Repo> = repos
-        .iter()
-        .filter(|r| active == "All" || r.language.as_deref() == Some(active.as_str()))
-        .collect();
-
-    let total_stars: u32 = repos.iter().map(|r| r.stargazers_count).sum();
-    let total_forks: u32 = repos.iter().map(|r| r.forks_count).sum();
-    let updated = match &p.state {
-        ReposState::Ready(file) => file.generated_at.get(..10).unwrap_or("—").to_string(),
-        _ => "—".to_string(),
+    let filtered: Vec<&Repo> = if active == "Favorites" {
+        let favs: Vec<&Repo> = repos.iter().filter(|r| r.is_featured()).collect();
+        // Gracefully fall back to every repo when nothing is pinned (or while
+        // the data is still loading), so the section is never empty.
+        if favs.is_empty() {
+            repos.iter().collect()
+        } else {
+            favs
+        }
+    } else {
+        repos
+            .iter()
+            .filter(|r| active == "All" || r.language.as_deref() == Some(active.as_str()))
+            .collect()
     };
+
+    let pages = filtered.len().div_ceil(PAGE_SIZE).max(1);
+    let cur = (*page).min(pages - 1);
 
     let count_line = {
         let unit = if filtered.len() == 1 {
@@ -64,6 +77,47 @@ pub fn projects(p: &ProjProps) -> Html {
         line
     };
 
+    // Helper that builds a filter chip and resets the slide window to page 0.
+    let make_filter = {
+        let filter = filter.clone();
+        let page = page.clone();
+        move |value: String, label: String, is_active: bool| {
+            let onclick = {
+                let filter = filter.clone();
+                let page = page.clone();
+                let value = value.clone();
+                Callback::from(move |_| {
+                    filter.set(value.clone());
+                    page.set(0);
+                })
+            };
+            html! {
+                <button class={classes!("filter-chip", is_active.then_some("active"))} {onclick}>
+                    <span class="mono">{label}</span>
+                </button>
+            }
+        }
+    };
+
+    let on_prev = {
+        let page = page.clone();
+        Callback::from(move |_| {
+            let c = *page;
+            if c > 0 {
+                page.set(c - 1);
+            }
+        })
+    };
+    let on_next = {
+        let page = page.clone();
+        Callback::from(move |_| {
+            let c = *page;
+            if c + 1 < pages {
+                page.set(c + 1);
+            }
+        })
+    };
+
     html! {
         <section id="s3" class="sec">
             <Reveal>
@@ -75,59 +129,50 @@ pub fn projects(p: &ProjProps) -> Html {
             <div class="grid-12">
                 <div class="col-label" />
                 <div class="col-body">
-                    <Reveal delay={80}>
-                        <div class="stats-strip">
-                            <StatCell label={i18n.t("projects.statRepos")}
-                                value={ repos.len().to_string() } />
-                            <StatCell label={i18n.t("projects.statStars")}
-                                value={ total_stars.to_string() } />
-                            <StatCell label={i18n.t("projects.statForks")}
-                                value={ total_forks.to_string() } />
-                            <StatCell label={i18n.t("projects.statSync")} value={updated} small=true />
-                        </div>
-                    </Reveal>
-
                     <Reveal delay={120}>
                         <div class="work-filter">
                             <span class="mono text-muted">{ i18n.t("common.filter") }</span>
-                            <button class={classes!("filter-chip", (active == "All").then_some("active"))}
-                                    onclick={{
-                                        let filter = filter.clone();
-                                        Callback::from(move |_| filter.set("All".to_string()))
-                                    }}>
-                                <span class="mono">{ i18n.t("common.all") }</span>
-                            </button>
-                            { for langs.iter().map(|l| {
-                                let is_active = active == *l;
-                                let onclick = {
-                                    let filter = filter.clone();
-                                    let l = l.clone();
-                                    Callback::from(move |_| filter.set(l.clone()))
-                                };
-                                html!{
-                                    <button class={classes!("filter-chip", is_active.then_some("active"))} {onclick}>
-                                        <span class="mono">{l.clone()}</span>
-                                    </button>
-                                }
-                            })}
+                            { make_filter("Favorites".to_string(), i18n.t("projects.favorites"), active == "Favorites") }
+                            { make_filter("All".to_string(), i18n.t("common.all"), active == "All") }
+                            { for langs.iter().map(|l| make_filter(l.clone(), l.clone(), active == *l)) }
                             <span class="flex-1" />
                             <span class="mono text-muted">{count_line}</span>
                         </div>
                     </Reveal>
 
-                    if filtered.is_empty() {
-                        <div class="empty-state">
-                            <span class="mono text-muted">{"// awaiting_sync"}</span>
-                            <h3 class="mt-3 mb-1.5">{ i18n.t("projects.emptyTitle") }</h3>
-                            <p class="text-muted max-w-md mx-auto m-0">{ i18n.t("projects.emptyBody") }</p>
-                        </div>
-                    } else {
-                        <div class="project-grid">
-                            { for filtered.iter().enumerate().map(|(i, r)| html!{
-                                <Reveal delay={(180 + i * 60).min(600) as u32}>
-                                    <ProjectCard repo={(*r).clone()} index={i} />
-                                </Reveal>
+                    <div class="project-slider">
+                        <div class="project-track"
+                             style={format!("transform: translateX(-{}%);", cur * 100)}>
+                            { for filtered.chunks(PAGE_SIZE).enumerate().map(|(pi, chunk)| html!{
+                                <div class="project-grid">
+                                    { for chunk.iter().enumerate().map(|(i, r)| html!{
+                                        <Reveal delay={(180 + i * 60).min(600) as u32}>
+                                            <ProjectCard repo={(*r).clone()} index={pi * PAGE_SIZE + i} />
+                                        </Reveal>
+                                    })}
+                                </div>
                             })}
+                        </div>
+                    </div>
+
+                    if pages > 1 {
+                        <div class="slider-nav">
+                            <button class="slider-btn" disabled={cur == 0} onclick={on_prev}
+                                    aria-label={ i18n.t("projects.prevPage") }>{"←"}</button>
+                            <div class="slider-dots">
+                                { for (0..pages).map(|pi| {
+                                    let onclick = {
+                                        let page = page.clone();
+                                        Callback::from(move |_| page.set(pi))
+                                    };
+                                    html!{
+                                        <button class={classes!("slider-dot", (pi == cur).then_some("active"))}
+                                                aria-label={format!("{}", pi + 1)} {onclick} />
+                                    }
+                                })}
+                            </div>
+                            <button class="slider-btn" disabled={cur + 1 >= pages} onclick={on_next}
+                                    aria-label={ i18n.t("projects.nextPage") }>{"→"}</button>
                         </div>
                     }
 
@@ -181,13 +226,10 @@ fn project_card(p: &CardProps) -> Html {
         <a href={r.html_url.clone()} target="_blank" rel="noopener noreferrer"
            class={classes!("project-card", featured.then_some("featured"))}>
             <div class="project-card-head">
-                <span class="mono text-accent">
-                    { if featured { i18n.t("projects.featured") } else { format!("REPO_{:02}", p.index + 1) } }
-                </span>
+                <div class="project-name">{r.name.clone()}</div>
                 <span class="mono text-muted">{"↗"}</span>
             </div>
             <div class="project-card-body">
-                <div class="project-name">{r.name.clone()}</div>
                 <div class="project-desc">{ r.description.clone().unwrap_or_else(|| "—".into()) }</div>
                 if !r.topics.is_empty() {
                     <div class="project-tags">

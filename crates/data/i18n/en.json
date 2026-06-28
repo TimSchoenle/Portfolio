@@ -75,7 +75,10 @@
     "viewAll": "View all repos on GitHub",
     "emptyTitle": "Repositories refreshing…",
     "emptyBody": "Public GitHub repos are loaded from repos.json, rebuilt daily by a scheduled GitHub Actions workflow.",
-    "featured": "★ FEATURED"
+    "featured": "★ FEATURED",
+    "favorites": "★ Favorites",
+    "prevPage": "Previous projects",
+    "nextPage": "More projects"
   },
   "experience": {
     "title": "Experience",

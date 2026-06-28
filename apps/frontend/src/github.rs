@@ -6,8 +6,8 @@
 
 use portfolio_data::{Repo, ReposFile, ResumeFingerprints};
 
-/// `repos.json`, embedded at compile time. Refreshed daily by the
-/// `update-repos` workflow, which commits `apps/frontend/repos.json`.
+/// `repos.json`, embedded at compile time. Regenerated at build time by the
+/// `update-repos` Trunk `pre_build` hook (cached by `generated_at`).
 const REPOS_JSON: &str = include_str!("../repos.json");
 
 /// `resume-fingerprint.json`, embedded at compile time. `build.rs` writes the
@@ -34,8 +34,8 @@ impl ReposState {
     }
 }
 
-/// Parses the embedded `repos.json` (generated daily by the `update-repos`
-/// workflow and committed to the repository).
+/// Parses the embedded `repos.json` (regenerated at build time by the
+/// `update-repos` Trunk hook).
 pub fn load_repos() -> ReposState {
     match serde_json::from_str::<ReposFile>(REPOS_JSON) {
         Ok(file) => ReposState::Ready(file),

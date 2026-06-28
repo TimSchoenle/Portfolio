@@ -1,10 +1,13 @@
-//! A small builder for fetching a configured set of GitHub repositories and
-//! assembling them into the shared [`portfolio_data::ReposFile`] model.
+//! A small builder for fetching a user's GitHub repositories and assembling
+//! them into the shared [`portfolio_data::ReposFile`] model.
 //!
-//! Rather than listing every public repository of a user, the builder fetches
-//! only the explicitly configured repositories by name (one
-//! `GET /repos/{user}/{name}` request each), so `repos.json` mirrors exactly the
-//! projects declared in `CONFIG.repos`.
+//! By default the builder lists every repository the user owns
+//! (`GET /users/{user}/repos`, paginated) and keeps only the ones that are
+//! active: not archived, not blacklisted and updated within the last
+//! [`MAX_AGE_DAYS`] days, so `repos.json` mirrors all of the user's live
+//! projects. An explicit set of repository names may still be supplied (e.g.
+//! via the `GITHUB_REPOS` env var), in which case each is fetched directly by
+//! name (one `GET /repos/{user}/{name}` request each) without filtering.
 //!
 //! The builder is deliberately decoupled from I/O concerns: [`ReposBuilder::fetch`]
 //! talks to the GitHub REST API and returns a fully-populated `ReposFile`, while
@@ -23,6 +26,11 @@ use crate::error::UpdateReposError;
 const GITHUB_API_BASE: &str = "https://api.github.com";
 /// Identifies this client to the GitHub API (a User-Agent is mandatory).
 const USER_AGENT: &str = concat!("portfolio-update-repos/", env!("CARGO_PKG_VERSION"));
+/// Page size used when listing all of a user's repositories (GitHub's maximum).
+const PER_PAGE: u32 = 100;
+/// Repositories with no update within this many days are considered stale and
+/// dropped from the listing.
+const MAX_AGE_DAYS: i64 = 365;
 
 /// Fluent builder that fetches a specific set of repositories and produces a
 /// [`ReposFile`] ready to be serialized to `repos.json`.
@@ -30,6 +38,7 @@ pub struct ReposBuilder {
     user: String,
     token: Option<String>,
     repos: Vec<String>,
+    blacklist: Vec<String>,
     api_base: String,
     agent: ureq::Agent,
 }
@@ -45,6 +54,7 @@ impl ReposBuilder {
             user: user.into(),
             token: None,
             repos: Vec::new(),
+            blacklist: Vec::new(),
             api_base: GITHUB_API_BASE.to_string(),
             agent,
         }
@@ -73,22 +83,118 @@ impl ReposBuilder {
         self
     }
 
-    /// Fetches each configured repository by name and assembles them into a
-    /// [`ReposFile`], preserving the configured order.
+    /// Sets the list of repository names that must never appear in the result
+    /// when listing all of the user's repositories (empty names are ignored).
+    /// Matched case-insensitively by name.
+    pub fn blacklist<I, S>(mut self, blacklist: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.blacklist = blacklist
+            .into_iter()
+            .map(Into::into)
+            .filter(|name| !name.is_empty())
+            .collect();
+        self
+    }
+
+    /// Fetches the user's repositories and assembles them into a [`ReposFile`].
+    ///
+    /// When no explicit repository names are configured (the default), every
+    /// repository the user owns is listed and the archived ones are filtered
+    /// out. Otherwise only the configured repositories are fetched by name,
+    /// preserving their order.
     pub fn fetch(&self) -> Result<ReposFile, UpdateReposError> {
         if self.user.is_empty() {
             return Err(UpdateReposError::MissingUser);
         }
-        if self.repos.is_empty() {
+
+        let repos = if self.repos.is_empty() {
+            self.fetch_all()?
+        } else {
+            let mut repos = Vec::with_capacity(self.repos.len());
+            for name in &self.repos {
+                repos.push(self.fetch_repo(name)?);
+            }
+            repos
+        };
+
+        if repos.is_empty() {
             return Err(UpdateReposError::NoRepos);
         }
 
-        let mut repos = Vec::with_capacity(self.repos.len());
-        for name in &self.repos {
-            repos.push(self.fetch_repo(name)?);
+        self.assemble(repos)
+    }
+
+    /// Lists every repository the user owns (following pagination) and keeps
+    /// only the active repositories (not archived, not blacklisted and updated
+    /// within the last [`MAX_AGE_DAYS`] days).
+    fn fetch_all(&self) -> Result<Vec<Repo>, UpdateReposError> {
+        let mut all = Vec::new();
+        let mut page = 1u32;
+        loop {
+            let url = format!(
+                "{base}/users/{user}/repos?per_page={PER_PAGE}&page={page}&type=owner&sort=updated",
+                base = self.api_base,
+                user = self.user,
+            );
+
+            let batch = self.get(&url).call()?.body_mut().read_json::<Vec<Repo>>()?;
+            let fetched = batch.len();
+            all.extend(batch);
+
+            // A short page signals the last one; stop before an empty request.
+            if (fetched as u32) < PER_PAGE {
+                break;
+            }
+            page += 1;
         }
 
-        self.assemble(repos)
+        Ok(Self::active_repos(all, &self.blacklist, OffsetDateTime::now_utc()))
+    }
+
+    /// Pure filter step: drops archived repositories, blacklisted repositories
+    /// (matched case-insensitively by name) and repositories that have not been
+    /// updated within [`MAX_AGE_DAYS`] days of `now`. Keeps API order.
+    /// Exposed for unit testing without network access.
+    fn active_repos(repos: Vec<Repo>, blacklist: &[String], now: OffsetDateTime) -> Vec<Repo> {
+        let cutoff = now - time::Duration::days(MAX_AGE_DAYS);
+        repos
+            .into_iter()
+            .filter(|repo| !repo.archived)
+            .filter(|repo| !Self::is_blacklisted(&repo.name, blacklist))
+            .filter(|repo| Self::is_recent(repo, cutoff))
+            .collect()
+    }
+
+    /// `true` when `name` matches an entry on the blacklist (case-insensitive).
+    fn is_blacklisted(name: &str, blacklist: &[String]) -> bool {
+        blacklist.iter().any(|b| b.eq_ignore_ascii_case(name))
+    }
+
+    /// `true` when the repository's `updated_at` is at or after `cutoff`.
+    /// Repositories with a missing or unparsable timestamp are kept.
+    fn is_recent(repo: &Repo, cutoff: OffsetDateTime) -> bool {
+        match OffsetDateTime::parse(&repo.updated_at, &Rfc3339) {
+            Ok(updated) => updated >= cutoff,
+            Err(_) => true,
+        }
+    }
+
+    /// Builds a GET request to `url` with the shared GitHub API headers (and the
+    /// bearer token when configured).
+    fn get(&self, url: &str) -> ureq::RequestBuilder<ureq::typestate::WithoutBody> {
+        let mut request = self
+            .agent
+            .get(url)
+            .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", "2022-11-28")
+            .header("User-Agent", USER_AGENT);
+        if let Some(token) = &self.token {
+            request = request.header("Authorization", format!("Bearer {token}"));
+        }
+        request
     }
 
     /// Fetches a single repository by name, deserializing GitHub's JSON directly
@@ -100,17 +206,7 @@ impl ReposBuilder {
             user = self.user,
         );
 
-        let mut request = self
-            .agent
-            .get(&url)
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", USER_AGENT);
-        if let Some(token) = &self.token {
-            request = request.header("Authorization", format!("Bearer {token}"));
-        }
-
-        let repo = request.call()?.body_mut().read_json::<Repo>()?;
+        let repo = self.get(&url).call()?.body_mut().read_json::<Repo>()?;
         Ok(repo)
     }
 
@@ -205,10 +301,62 @@ mod tests {
         assert!(matches!(err, UpdateReposError::MissingUser));
     }
 
+    /// A fixed "now" used by the filter tests; `SAMPLE`'s timestamps
+    /// (2026-05/06) fall comfortably inside the one-year window from here.
+    fn now() -> OffsetDateTime {
+        OffsetDateTime::parse("2026-06-28T00:00:00Z", &Rfc3339).unwrap()
+    }
+
     #[test]
-    fn no_repos_is_rejected() {
-        let err = ReposBuilder::new("u").fetch().unwrap_err();
-        assert!(matches!(err, UpdateReposError::NoRepos));
+    fn active_repos_drops_archived_and_keeps_order() {
+        let mut repos: Vec<Repo> = serde_json::from_str(SAMPLE).unwrap();
+        // Append an archived repo that must be filtered out.
+        let mut archived = repos[0].clone();
+        archived.name = "old-thing".to_string();
+        archived.archived = true;
+        repos.push(archived);
+
+        let active = ReposBuilder::active_repos(repos, &[], now());
+        assert_eq!(active.len(), 2, "archived repo is dropped");
+        assert_eq!(active[0].name, "Portfolio", "API order is preserved");
+        assert_eq!(active[1].name, "helm-charts");
+        assert!(
+            active.iter().all(|r| !r.archived),
+            "no archived repos remain"
+        );
+    }
+
+    #[test]
+    fn active_repos_drops_blacklisted_repos_case_insensitively() {
+        let repos: Vec<Repo> = serde_json::from_str(SAMPLE).unwrap();
+        // "portfolio" differs in case from the "Portfolio" sample repo.
+        let blacklist = vec!["portfolio".to_string()];
+
+        let active = ReposBuilder::active_repos(repos, &blacklist, now());
+        assert_eq!(active.len(), 1, "blacklisted repo is dropped");
+        assert_eq!(active[0].name, "helm-charts");
+    }
+
+    #[test]
+    fn active_repos_drops_stale_repos() {
+        let mut repos: Vec<Repo> = serde_json::from_str(SAMPLE).unwrap();
+        // Older than 365 days before `now` (2026-06-28) -> stale.
+        let mut stale = repos[0].clone();
+        stale.name = "ancient".to_string();
+        stale.updated_at = "2024-01-01T00:00:00Z".to_string();
+        repos.push(stale);
+        // Exactly the cutoff (365 days back) is kept (>= comparison).
+        let mut edge = repos[0].clone();
+        edge.name = "edge".to_string();
+        edge.updated_at = "2025-06-28T00:00:00Z".to_string();
+        repos.push(edge);
+
+        let active = ReposBuilder::active_repos(repos, &[], now());
+        let names: Vec<&str> = active.iter().map(|r| r.name.as_str()).collect();
+        assert!(!names.contains(&"ancient"), "stale repo is dropped");
+        assert!(names.contains(&"edge"), "repo at the cutoff is kept");
+        assert!(names.contains(&"Portfolio"));
+        assert!(names.contains(&"helm-charts"));
     }
 
     #[test]

@@ -75,7 +75,10 @@
     "viewAll": "Alle Repos auf GitHub ansehen",
     "emptyTitle": "Repositories werden aktualisiert…",
     "emptyBody": "Öffentliche GitHub-Repos werden aus repos.json geladen, täglich über einen GitHub-Actions-Workflow neu gebaut.",
-    "featured": "★ FEATURED"
+    "featured": "★ FEATURED",
+    "favorites": "★ Favoriten",
+    "prevPage": "Vorherige Projekte",
+    "nextPage": "Weitere Projekte"
   },
   "experience": {
     "title": "Erfahrung",

@@ -14,7 +14,7 @@ WebAssembly, served by a tiny static Axum server in a scratch container.
 | `apps/server` | Axum static server with SPA fallback, security headers, `/api/health` |
 | `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (genpdf, embedded subset of Liberation Sans); the fingerprint is embedded into the frontend at build time |
 | `apps/site-meta` | Build-time generator for the frontend's static metadata (`head.html`, `robots.txt`, `sitemap.xml`, web manifest) from `CONFIG` |
-| `apps/update-repos` | Builder that fetches the configured GitHub repos (`CONFIG.repos`) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
+| `apps/update-repos` | Builder that fetches all of the user's active GitHub repos (skipping archived, blacklisted and >1-year-stale ones) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
 
 ## Stack
 
@@ -25,10 +25,13 @@ WebAssembly, served by a tiny static Axum server in a scratch container.
   `crates/data` enforces key parity between both languages.
 - **Styling:** Tailwind CSS v3 + custom design tokens
 - **Build:** [Trunk](https://trunkrs.dev)
-- **Data:** `apps/frontend/repos.json` rebuilt daily by GitHub Actions from the
-  GitHub API (only the repos listed in `CONFIG.repos`) and embedded into the
-  WASM binary at build time (alongside `resume-fingerprint.json`) instead of
-  being fetched at runtime
+- **Data:** `apps/frontend/repos.json` regenerated at build time by a Trunk
+  hook from the GitHub API (all of the user's active repositories — archived,
+  blacklisted and >1-year-stale repos excluded) and embedded into the WASM
+  binary at build time (alongside `resume-fingerprint.json`) instead of being
+  fetched at runtime. The result is cached by its `generated_at` timestamp (10h
+  on CI, 60min locally) to stay under the GitHub API rate limits; the build
+  fails if it cannot be (re)generated
 
 ## Features
 
@@ -85,19 +88,30 @@ docker build -t portfolio .
 ## repos.json
 
 The projects section reads `repos.json`, embedded into the WASM binary at build
-time via `include_str!`. A placeholder is committed at
-`apps/frontend/repos.json`; the `update-repos.yml` workflow refreshes it daily
-from the GitHub API and commits the result, so the next build picks it up.
+time via `include_str!`. It is **generated during the build**: the `update-repos`
+builder runs as a Trunk `pre_build` hook (see `apps/frontend/Trunk.toml`) and
+refreshes `apps/frontend/repos.json` before the WASM is compiled. If it cannot be
+generated, the build fails.
 
-The refresh runs the `update-repos` builder, which fetches each repository listed
-in `CONFIG.repos` by name (one `GET /repos/{user}/{name}` request each),
-deserializes them directly into the shared `portfolio_data::Repo`/`ReposFile`
-models and writes the pretty-printed JSON via a dedicated `UpdateReposError`
-model. The repository set is configured centrally in `CONFIG.repos` and can be
-overridden at runtime via `GITHUB_REPOS` (comma-separated):
+To avoid hitting the GitHub API on every rebuild (and its rate limits), the hook
+reuses the existing file while it is still fresh, deciding from its own
+`generated_at` timestamp: the fetch is skipped when the file is younger than the
+cache TTL — **10 hours on CI** (`CI` env var set) and **60 minutes** otherwise.
+CI additionally persists the file across runs with `actions/cache` (keyed by a
+~10h window) so a fresh copy is restored before the build.
+
+When it does run, the builder lists every repository the user owns
+(`GET /users/{user}/repos`, paginated), drops the archived ones, the repos
+blacklisted in `CONFIG.blacklisted_repos` and any repo with no update in the last
+365 days, deserializes the rest directly into the shared
+`portfolio_data::Repo`/`ReposFile` models and writes the pretty-printed JSON via
+a dedicated `UpdateReposError` model. An explicit repository set can be requested
+at runtime via `GITHUB_REPOS` (comma-separated), in which case each named repo is
+fetched directly (without filtering):
 
 ```bash
-# defaults: user = CONFIG.github_username, repos = CONFIG.repos,
+# defaults: user = CONFIG.github_username, repos = all active repos
+#           (archived/blacklisted/>1y-stale excluded),
 #           output = apps/frontend/repos.json
 GH_TOKEN=<token> cargo run --release -p update-repos -- apps/frontend/repos.json
 
