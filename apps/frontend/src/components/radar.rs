@@ -3,7 +3,7 @@
 //! rings and a rotating sweep wedge.
 
 use i18nrs::yew::use_translation;
-use portfolio_data::{Quadrant, Skill, matrix_skills};
+use portfolio_data::{Quadrant, SKILLS, Skill, matrix_skills};
 use yew::prelude::*;
 
 const SIZE: f32 = 480.0;
@@ -55,12 +55,23 @@ struct FillerDot {
     y: f32,
     size: f32,
     opacity: f32,
-    quadrant: Quadrant,
+    skill: Skill,
+    /// True when a named (highlighted) dot sits close enough that it should win
+    /// the hover; such filler dots ignore pointer events so the named dot wins.
+    near_named: bool,
 }
 
 fn polar(angle_deg: f32, r: f32) -> (f32, f32) {
     let rad = angle_deg.to_radians();
     (CX + r * rad.cos(), CY + r * rad.sin())
+}
+
+/// Maps a skill's confidence (0..=1) onto a normalized radar radius so the dot
+/// sits at the matching percentage mark: 0.95 confidence lands near the rim,
+/// low confidence stays close to the centre. A touch of seeded jitter keeps
+/// dots from stacking on a perfect ring.
+fn radius_for(confidence: f32, jitter: f32) -> f32 {
+    (confidence + (jitter - 0.5) * 0.04).clamp(0.05, 0.97)
 }
 
 fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
@@ -81,30 +92,48 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
                 0.5
             };
             let angle = a0 + 10.0 + t * (span - 20.0);
-            let prof = skill.level() as f32;
-            let r_norm = 0.45 + (5.0 - prof) * 0.11 + (rnd.next() - 0.5) * 0.04;
+            let r_norm = radius_for(skill.confidence, rnd.next());
             let (x, y) = polar(angle, MAX_R * r_norm);
             named.push(NamedDot {
                 x,
                 y,
-                size: 5.0 + prof * 0.4,
+                size: 5.0 + skill.level() as f32 * 0.4,
                 skill: *skill,
             });
         }
 
-        for _ in 0..14 {
+        // Radar-only skills scatter as the secondary dots: the same
+        // confidence-based radius puts them at their true mark, but they are
+        // smaller, dimmer and hoverable in their own right.
+        let extras: Vec<Skill> = SKILLS
+            .iter()
+            .filter(|s| s.radar_only && s.quadrant == q)
+            .copied()
+            .collect();
+        for skill in extras {
             let angle = a0 + 6.0 + rnd.next() * (span - 12.0);
-            let r_norm = 0.2 + rnd.next() * 0.75;
+            let r_norm = radius_for(skill.confidence, rnd.next());
             let (x, y) = polar(angle, MAX_R * r_norm);
             filler.push(FillerDot {
                 x,
                 y,
-                size: 1.4 + rnd.next() * 1.8,
-                opacity: 0.2 + rnd.next() * 0.35,
-                quadrant: q,
+                size: 2.4 + skill.level() as f32 * 0.3,
+                opacity: 0.35 + skill.confidence * 0.4,
+                skill,
+                near_named: false,
             });
         }
     }
+
+    // A highlighted dot always wins the hover: flag any filler dot that overlaps
+    // a named one so it lets pointer events fall through to the named dot.
+    for f in filler.iter_mut() {
+        f.near_named = named.iter().any(|n| {
+            n.skill.quadrant == f.skill.quadrant
+                && (n.x - f.x).hypot(n.y - f.y) <= n.size + f.size + 2.0
+        });
+    }
+
     (named, filler)
 }
 
@@ -118,6 +147,7 @@ pub struct RadarProps {
 pub fn radar(p: &RadarProps) -> Html {
     let (i18n, _) = use_translation();
     let hovered = use_state(|| None::<usize>);
+    let hovered_filler = use_state(|| None::<usize>);
     let (named, filler) = build_dots();
 
     let label = |q: Quadrant| i18n.t(q.i18n_key()).to_uppercase();
@@ -202,13 +232,42 @@ pub fn radar(p: &RadarProps) -> Html {
                     { label(Quadrant::Infra) }
                 </text>
 
-                // background filler dots
-                { for filler.iter().map(|d| {
-                    let dim = p.active.is_some() && p.active != Some(d.quadrant);
+                // radar-only scatter dots: hoverable, but they defer to a nearby
+                // highlighted dot so the named skill always wins the hover.
+                { for filler.iter().enumerate().map(|(i, d)| {
+                    let dim = p.active.is_some() && p.active != Some(d.skill.quadrant);
+                    let is_hover = *hovered_filler == Some(i);
+                    let enter = {
+                        let hovered_filler = hovered_filler.clone();
+                        let on_hover = p.on_hover.clone();
+                        let skill = d.skill;
+                        Callback::from(move |_: MouseEvent| {
+                            hovered_filler.set(Some(i));
+                            on_hover.emit(Some(skill));
+                        })
+                    };
+                    let leave = {
+                        let hovered_filler = hovered_filler.clone();
+                        let on_hover = p.on_hover.clone();
+                        Callback::from(move |_: MouseEvent| {
+                            hovered_filler.set(None);
+                            on_hover.emit(None);
+                        })
+                    };
+                    let opacity = if dim {
+                        0.15
+                    } else if is_hover {
+                        0.95
+                    } else {
+                        d.opacity
+                    };
                     html!{
-                        <circle cx={d.x.to_string()} cy={d.y.to_string()} r={d.size.to_string()}
-                                fill={d.quadrant.color()}
-                                opacity={ if dim { "0.15".to_string() } else { format!("{:.2}", d.opacity) } } />
+                        <circle cx={d.x.to_string()} cy={d.y.to_string()}
+                                r={ if is_hover { (d.size + 1.5).to_string() } else { d.size.to_string() } }
+                                fill={d.skill.quadrant.color()}
+                                opacity={format!("{opacity:.2}")}
+                                style={ if d.near_named { "pointer-events: none" } else { "cursor: pointer" } }
+                                onmouseenter={enter} onmouseleave={leave} />
                     }
                 })}
 
