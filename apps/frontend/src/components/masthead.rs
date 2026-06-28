@@ -48,9 +48,7 @@ pub fn masthead(p: &MastheadProps) -> Html {
         <header class="masthead">
             <div class="masthead-left">
                 <Link<Route> to={Route::Home} classes="logo-mark">
-                    <span class="logo-glyph">{"◇"}</span>
-                    <span class="mono text-fg">{"TS"}</span>
-                    <span class="mono text-muted ml-1.5">{"/ portfolio.v4"}</span>
+                    <img class="logo-img" src="/favicon.svg" alt="TS" width="28" height="28" />
                 </Link<Route>>
             </div>
 
