@@ -204,7 +204,7 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 /* ============ SECTIONS ============ */
 .sec { padding: 60px 0; }
 .section-header { border-top: 1px solid var(--line-strong); padding-top: 24px; padding-bottom: 32px; }
-.section-title { font-size: clamp(32px, 4vw, 52px); font-weight: 700; letter-spacing: -0.03em; margin: 8px 0 0; line-height: 1; }
+.section-title { font-size: clamp(32px, 4vw, 52px); font-weight: 700; letter-spacing: -0.03em; margin: 8px 0 0; line-height: 1; overflow-wrap: break-word; hyphens: auto; }
 .section-intro { font-size: clamp(17px, 1.5vw, 20px); color: var(--muted); padding-top: 36px; max-width: 620px; }
 
 /* ============ ABOUT ============ */
