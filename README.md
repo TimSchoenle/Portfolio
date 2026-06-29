@@ -12,7 +12,7 @@ WebAssembly, served by a tiny static Axum server in a scratch container.
 | `crates/data` | Shared language-neutral data (config, skills, experience, repos schema) + embedded `i18n/{en,de}.json` translations |
 | `apps/frontend` | Yew 0.22 CSR app (Trunk build) |
 | `apps/server` | Axum static server with SPA fallback, security headers, `/api/health` |
-| `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (genpdf, embedded subset of Liberation Sans); the fingerprint is embedded into the frontend at build time |
+| `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans); the fingerprint is embedded into the frontend at build time. On CI each PDF is signed keylessly via [pdf-sign](https://github.com/0x77dev/pdf-sign) (Sigstore) and the signer identity is recorded in the fingerprint |
 | `apps/site-meta` | Build-time generator for the frontend's static metadata (`head.html`, `robots.txt`, `sitemap.xml`, web manifest) from `CONFIG` |
 | `apps/update-repos` | Builder that fetches all of the user's active GitHub repos (skipping archived, blacklisted and >1-year-stale ones) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
 
@@ -49,7 +49,10 @@ Implements the "Portfolio v4" design (editorial grid with sticky label rails):
 - Language switcher (EN/DE) — every visible string is translated
 - Localized, single-page, ATS-readable resume PDFs (`Tim-Schönle-Resume.pdf`,
   `Tim-Schönle-Lebenslauf.pdf`) with SHA-256 fingerprints on the contact card;
-  the generator scales typography down until the content fits one A4 page
+  the generator scales typography down until the content fits one A4 page. On CI
+  the PDFs are signed keylessly through Sigstore (via
+  [pdf-sign](https://github.com/0x77dev/pdf-sign)) and the signer identity is
+  shown next to the fingerprint in the contact card's info popup
 - Legal pages (imprint, privacy policy) localized and rendered from the translation files
 - SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, web manifest
 - Security headers (CSP, HSTS, …) set by the server
@@ -117,6 +120,30 @@ GH_TOKEN=<token> cargo run --release -p update-repos -- apps/frontend/repos.json
 
 # override the repo set for a one-off run
 GITHUB_REPOS=Portfolio,actions cargo run --release -p update-repos
+```
+
+## Resume signing
+
+The resume PDFs are signed keylessly with **Sigstore** via
+[pdf-sign](https://github.com/0x77dev/pdf-sign), which appends the signature
+after the PDF's `%%EOF` (the file stays a valid, readable PDF).
+
+Signing is **opt-in via the `SIGSTORE_IDENTITY_TOKEN` environment variable** and
+only happens when it is set, so local builds need no token, network access or
+`pdf-sign` binary. On CI the workflow installs `pdf-sign`, mints a GitHub Actions
+OIDC token (audience `sigstore`, requiring `id-token: write`) and passes it to
+the generator. Each PDF is then signed *before* it is hashed, so the SHA-256
+fingerprint shown on the contact card always matches the signed download. The
+signer identity (the CI workflow ref) and OIDC issuer are recorded in
+`resume-fingerprint.json` and shown next to the fingerprint in the contact
+card's info popup.
+
+Verify a downloaded resume against the published identity:
+
+```bash
+pdf-sign verify Tim-Schönle-Resume.pdf \
+  --certificate-identity https://github.com/<owner>/<repo>/.github/workflows/ci.yaml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 ## License

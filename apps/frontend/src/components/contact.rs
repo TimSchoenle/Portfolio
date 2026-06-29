@@ -35,6 +35,11 @@ pub fn contact() -> Html {
     let resume_digest = fingerprints
         .as_ref()
         .and_then(|f| f.digest_for(lang).map(|d| (f.algorithm.clone(), d.to_string())));
+    // Sigstore signature for the active language's resume, when the PDF was
+    // signed on CI (keyless OIDC). `None` on unsigned dev builds.
+    let resume_signature = fingerprints
+        .as_ref()
+        .and_then(|f| f.signature_for(lang).cloned());
 
     // Type the `ssh` command once the section scrolls into view.
     let in_view = use_in_view(&section, 0.3);
@@ -157,6 +162,25 @@ pub fn contact() -> Html {
                                                 <span class="fp-digest">{digest}</span>
                                             </div>
                                             <span class="text-muted text-[11.5px]">{ i18n.t("contact.fingerprintNote") }</span>
+                                            if let Some(sig) = resume_signature.clone() {
+                                                <hr class="fp-sep" />
+                                                <span class="mono text-muted">{ i18n.t("contact.signatureTitle") }</span>
+                                                <div class="fp-row" title={sig.identity.clone()}>
+                                                    <span class="text-fg/80 shrink-0">{ i18n.t("contact.signatureIdentity") }</span>
+                                                    <span class="fp-digest">{sig.identity.clone()}</span>
+                                                </div>
+                                                <div class="fp-row" title={sig.issuer.clone()}>
+                                                    <span class="text-fg/80 shrink-0">{ i18n.t("contact.signatureIssuer") }</span>
+                                                    <span class="fp-digest">{sig.issuer.clone()}</span>
+                                                </div>
+                                                if let Some(log_url) = sig.rekor_log_url.clone() {
+                                                    <div class="fp-row">
+                                                        <span class="text-fg/80 shrink-0">{ i18n.t("contact.signatureLog") }</span>
+                                                        <a class="fp-digest" href={log_url.clone()} target="_blank" rel="noreferrer">{log_url}</a>
+                                                    </div>
+                                                }
+                                                <span class="text-muted text-[11.5px]">{ i18n.t("contact.signatureNote") }</span>
+                                            }
                                         </div>
                                     }
                                 }

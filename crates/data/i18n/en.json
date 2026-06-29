@@ -140,7 +140,12 @@
     "write": "Write",
     "resumeEn": "Resume (EN)",
     "resumeDe": "Resume (DE)",
-    "fingerprintNote": "Verify a downloaded resume by comparing its SHA-256 checksum with these fingerprints."
+    "fingerprintNote": "Verify a downloaded resume by comparing its SHA-256 checksum with these fingerprints.",
+    "signatureTitle": "Sigstore signature (keyless)",
+    "signatureIdentity": "Signed by",
+    "signatureIssuer": "Issuer",
+    "signatureLog": "Transparency log",
+    "signatureNote": "Signed on CI with pdf-sign via Sigstore. Verify with: pdf-sign verify the downloaded PDF against this identity and issuer."
   },
   "palette": {
     "placeholder": "Jump to section, project, or action…",

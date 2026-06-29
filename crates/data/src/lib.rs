@@ -35,11 +35,37 @@ pub fn resume_file(lang: &str) -> &'static str {
         .unwrap_or(RESUME_FILES[0].1)
 }
 
+/// A keyless Sigstore signature appended to a resume PDF.
+///
+/// Produced on CI by the [`pdf-sign`](https://github.com/0x77dev/pdf-sign) tool
+/// (Sigstore backend, keyless OIDC) and recorded by the resume generator so the
+/// signer identity can be shown next to the fingerprint and the published
+/// resume can be verified against the public transparency log.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct ResumeSignature {
+    /// Signing backend that produced the signature (e.g. "sigstore").
+    pub backend: String,
+    /// OIDC identity bound to the signing certificate — on GitHub Actions the
+    /// signing workflow ref, e.g.
+    /// `https://github.com/<owner>/<repo>/.github/workflows/ci.yaml@refs/heads/main`.
+    pub identity: String,
+    /// OIDC issuer that vouched for the identity, e.g.
+    /// `https://token.actions.githubusercontent.com`.
+    pub issuer: String,
+    /// Rekor transparency-log entry URL, when the signing tool reports one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rekor_log_url: Option<String>,
+    /// RFC 3339 timestamp of when the PDF was signed.
+    pub signed_at: String,
+}
+
 /// SHA-256 checksums of the generated resume PDFs.
 ///
 /// Written by the resume generator as `resume-fingerprint.json` and embedded
 /// into the frontend at build time, where it is shown on the contact card so a
-/// downloaded resume can be verified against its published digest.
+/// downloaded resume can be verified against its published digest. When the
+/// PDFs are signed on CI, the matching Sigstore signatures are recorded in
+/// [`signatures`](Self::signatures) so the signer can be shown alongside.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ResumeFingerprints {
     /// Hash algorithm used for the digests (e.g. "SHA-256").
@@ -48,6 +74,10 @@ pub struct ResumeFingerprints {
     pub generated_at: String,
     /// Resume file name (e.g. "Tim-Schönle-Resume.pdf") -> hex digest.
     pub files: BTreeMap<String, String>,
+    /// Resume file name -> Sigstore signature, for PDFs signed on CI. Empty on
+    /// dev builds (no signing token), so the field is omitted from the JSON.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub signatures: BTreeMap<String, ResumeSignature>,
 }
 
 impl ResumeFingerprints {
@@ -60,6 +90,11 @@ impl ResumeFingerprints {
     /// Digest of the resume for the given language, if present.
     pub fn digest_for(&self, lang: &str) -> Option<&str> {
         self.files.get(resume_file(lang)).map(String::as_str)
+    }
+
+    /// Sigstore signature of the resume for the given language, if present.
+    pub fn signature_for(&self, lang: &str) -> Option<&ResumeSignature> {
+        self.signatures.get(resume_file(lang))
     }
 }
 

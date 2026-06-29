@@ -152,6 +152,11 @@
     "write": "Schreiben",
     "resumeEn": "Lebenslauf (EN)",
     "resumeDe": "Lebenslauf (DE)",
+    "signatureTitle": "Sigstore-Signatur (schlüssellos)",
+    "signatureIdentity": "Signiert von",
+    "signatureIssuer": "Aussteller",
+    "signatureLog": "Transparenzlog",
+    "signatureNote": "In der CI mit pdf-sign über Sigstore signiert. Prüfung mit pdf-sign verify gegen diese Identität und diesen Aussteller.",
     "fingerprintNote": "Heruntergeladene Lebensläufe lassen sich über den Vergleich der SHA-256-Prüfsumme mit diesen Fingerprints verifizieren."
   },
   "palette": {

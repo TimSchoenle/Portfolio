@@ -17,6 +17,11 @@ jobs:
     name: Build (Trunk + WASM + resumes)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      # Required to mint the OIDC identity token used for keyless Sigstore
+      # signing of the resume PDFs (see the "Mint Sigstore OIDC token" step).
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,6 +48,12 @@ jobs:
         with:
           version: latest
 
+      # pdf-sign (https://github.com/0x77dev/pdf-sign) appends a keyless Sigstore
+      # signature to each generated resume PDF. Installed from source so the
+      # resume-generator can shell out to it during the build.
+      - name: Install pdf-sign
+        run: cargo install --git https://github.com/0x77dev/pdf-sign --locked
+
       - name: Setup Node (Tailwind CSS)
         uses: actions/setup-node@v4
         with:
@@ -67,10 +78,32 @@ jobs:
           key: ${{ runner.os }}-repos-json-${{ steps.repos-cache.outputs.window }}
           restore-keys: ${{ runner.os }}-repos-json-
 
+      # Mint a GitHub Actions OIDC token with the "sigstore" audience so the
+      # resume-generator can sign the PDFs keylessly via Fulcio/Rekor. The token
+      # is masked and exposed only to the generation step. On fork PRs the token
+      # endpoint is unavailable; signing is then skipped (the digests still
+      # match the unsigned PDFs).
+      - name: Mint Sigstore OIDC token
+        id: sigstore-token
+        run: |
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "OIDC token endpoint unavailable; skipping Sigstore signing."
+            exit 0
+          fi
+          token="$(curl -fsSL \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')"
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
       # Generate the resume PDFs + resume-fingerprint.json BEFORE the frontend
       # build so the fingerprint is embedded into the WASM (build.rs) and the
-      # PDFs are picked up by the index.html copy-dir link.
-      - name: Generate resume PDFs
+      # PDFs are picked up by the index.html copy-dir link. When a Sigstore
+      # token is present, each PDF is signed via pdf-sign and the signer
+      # identity is recorded in resume-fingerprint.json.
+      - name: Generate (and sign) resume PDFs
+        env:
+          SIGSTORE_IDENTITY_TOKEN: ${{ steps.sigstore-token.outputs.token }}
         run: cargo run --release -p resume-generator -- apps/frontend/generated
 
       - name: Build release
