@@ -5,50 +5,51 @@
 //!   resume/Tim-Schönle-Lebenslauf.pdf  (de)
 //!   resume-fingerprint.json            (SHA-256 per file, shown on the contact card)
 //!
-//! Layout: an open header (name and title left, contact right) over a
-//! gradient rule, a full-width professional summary, then a two-column body —
-//! skills (sorted strongest first, grouped by category), education and
-//! languages in a narrow left sidebar, reverse-chronological experience (each
-//! role with a plain-text "Stack:" keyword line) in the main column. All
-//! structural lines share one visual language: navy fading to a soft
-//! blue-gray, drawn as interpolated stroke segments since genpdf exposes no
-//! PDF shadings. Text is emitted in the order ATS parsers expect (identity →
-//! summary → skills → experience → education), with standard section names
-//! and consistent "Mon YYYY – Mon YYYY" ranges. Fonts are embedded
-//! (Liberation Sans, SIL OFL, pre-subset to Latin-1) so text stays selectable
-//! and machine-readable, including umlauts; the gradient lines are vector
-//! strokes, invisible to text extraction.
+//! Layout: a modern editorial, two-column house style rendered with Typst. A
+//! full-width header band (name in the accent, headline, accent hairline rule)
+//! sits over a grid of a tinted reference sidebar (Contact, Skills, Education,
+//! Languages) on the left and a wide main column (Summary, Experience) on the
+//! right. Hierarchy comes from weight, space and one accent (slate blue) —
+//! hairline rules, one sans family, a single subtle sidebar tint; no icons,
+//! gradients, shadows or skill bars. The main column is emitted *first* in the
+//! document (placed into the right grid cell) so a text extractor reads
+//! identity → summary → experience → contact → skills despite the sidebar
+//! showing on the left, with standard section names, real `·` separators and
+//! consistent "Mon YYYY – Mon YYYY" ranges.
 //!
-//! The single-page guarantee is dynamic and prefers readability over
-//! shrinking: a binary search finds the largest scale ≥ 0.9 that fits; if
-//! the content has grown too much, the two oldest roles are condensed to
-//! their two strongest bullets before smaller scales are even considered.
+//! The PDF is a tagged, standard **PDF 1.7** (RGB): Typst writes a structure
+//! tree (StructTreeRoot / MarkInfo / Lang) for the §12 reading-order insurance,
+//! subsets the embedded Liberation Sans faces, and emits live `/URI` link
+//! annotations for the contact links — none of which the previous genpdf engine
+//! could produce.
 //!
-//! The pipeline is split across modules: [`style`] (colors and typography),
-//! [`elements`] (custom gradient/bullet/divider elements), [`document`]
-//! (assembly and fonts), [`fit`] (single-page fitting), [`translations`]
-//! (the embedded i18n lookup) and [`metadata`] (UTF-16 info-dict fix-up).
+//! The single-page guarantee follows the guide's §9 ordering — prefer detail,
+//! then tighten density (Comfortable → Compact margins, spacing and
+//! line-height), and only then ease the type scale toward the readability
+//! floor. Page count is read straight from Typst's compiled document.
+//!
+//! The pipeline is split across modules: [`style`] (design tokens), [`template`]
+//! (the `.typ` document generator), [`world`] (the embedded-font Typst `World`
+//! and PDF export), [`fit`] (single-page fitting) and [`translations`] (the
+//! embedded i18n lookup).
 
-mod document;
-mod elements;
 mod fit;
-mod metadata;
 mod style;
+mod template;
 mod translations;
+mod world;
 
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-use portfolio_data::{CONFIG, I18N_DE, I18N_EN, RESUME_FILES, ResumeFingerprints};
+use portfolio_data::{RESUME_FILES, ResumeFingerprints};
 use sha2::{Digest, Sha256};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
-use crate::document::load_fonts;
 use crate::fit::fit_single_page;
-use crate::metadata::{fix_metadata, hex};
 use crate::translations::Translations;
 
 fn main() {
@@ -65,29 +66,26 @@ fn run() -> Result<(), Box<dyn Error>> {
     let resume_dir = Path::new(&out_dir).join("resume");
     fs::create_dir_all(&resume_dir)?;
 
-    let fonts = load_fonts()?;
     let mut fingerprints: BTreeMap<String, String> = BTreeMap::new();
 
     for (lang, file_name) in RESUME_FILES {
         let json = match lang {
-            "de" => I18N_DE,
-            _ => I18N_EN,
+            "de" => portfolio_data::I18N_DE,
+            _ => portfolio_data::I18N_EN,
         };
         let t = Translations::parse(json)?;
-        let fitted = fit_single_page(&fonts, &t)
-            .ok_or_else(|| format!("{file_name}: does not fit one page even condensed"))?;
-
-        let title = format!("{} — {}", CONFIG.full_name, t.get("hero.jobTitle"));
-        let bytes = fix_metadata(&fitted.bytes, &title)?;
+        let fitted =
+            fit_single_page(&t, lang).map_err(|err| format!("{file_name}: {err}"))?;
 
         let path = resume_dir.join(file_name);
-        fs::write(&path, &bytes)?;
-        fingerprints.insert(file_name.to_string(), hex(&Sha256::digest(&bytes)));
+        fs::write(&path, &fitted.bytes)?;
+        fingerprints.insert(file_name.to_string(), hex(&Sha256::digest(&fitted.bytes)));
         println!(
-            "wrote {} ({} bytes, scale {:.2}, {})",
+            "wrote {} ({} bytes, scale {:.2}, {} density, {})",
             path.display(),
-            bytes.len(),
+            fitted.bytes.len(),
             fitted.scale,
+            if fitted.dense { "compact" } else { "comfortable" },
             fitted.detail.describe()
         );
     }
@@ -102,4 +100,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     println!("wrote {}", manifest_path.display());
 
     Ok(())
+}
+
+/// Lowercase hex encoding of a byte slice (for SHA-256 digests).
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }

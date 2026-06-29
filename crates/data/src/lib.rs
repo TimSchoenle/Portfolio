@@ -427,7 +427,12 @@ pub struct Experience {
     pub tech: &'static [&'static str],
 }
 
-/// Work history, newest first. Localized roles/bullets live in the i18n files.
+/// Work history in the one deterministic order the resume relies on:
+/// **descending by start date** (most recent start first); ties keep this
+/// stable hand-authored order. An ongoing role can therefore sit below an
+/// ended one when the ended role started later (e.g. Mineplex Studios, started
+/// Aug 2023, precedes the Independent role, started Oct 2021) — intentional and
+/// consistent (F13). Localized roles/bullets live in the i18n files.
 pub const EXPERIENCE: &[Experience] = &[
     Experience {
         id: "sixtwenty",

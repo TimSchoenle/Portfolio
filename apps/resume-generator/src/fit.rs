@@ -1,27 +1,31 @@
 //! Dynamic single-page fitting. Standard one-page practice: recent roles get
 //! full bullets, older roles get fewer — content is condensed before type is
-//! shrunk below readable sizes. A binary search then finds the largest scale
-//! that still renders as a single page.
+//! shrunk below readable sizes. The §9 ordering is honored: prefer detail, then
+//! tighten density (Comfortable → Compact), and only then ease the type scale.
+//!
+//! Page count comes straight from Typst's compiled [`PagedDocument`]
+//! (`pages.len()`), so fitting needs no PDF parsing; the PDF is exported only
+//! for the scale that actually fits.
 
-use genpdf::fonts::{FontData, FontFamily};
-
-use crate::document::build_resume;
 use crate::style::Layout;
+use crate::template::build_typ;
 use crate::translations::Translations;
+use crate::world;
 
-/// Scales ≥ this keep the body font at ~9 pt — the readability floor
-/// recommended for human review. Content is condensed before going lower.
+/// Preferred lower bound while at Comfortable density: keeps the body type close
+/// to its 10 pt design size. The ladder switches to Compact density before
+/// pushing the scale below this.
 const PREFERRED_MIN_SCALE: f64 = 0.90;
 /// Hard floor; below this the generator refuses and fails the build.
-const ABSOLUTE_MIN_SCALE: f64 = 0.82;
+const ABSOLUTE_MIN_SCALE: f64 = 0.80;
 
 /// How much detail the experience section carries.
 #[derive(Clone, Copy, PartialEq)]
 pub(crate) enum Detail {
     /// Every bullet of every role.
     Full,
-    /// Ended roles beyond the two most recent keep their two strongest
-    /// bullets; ongoing engagements stay full.
+    /// Ended roles beyond the two most recent keep their two strongest bullets;
+    /// ongoing engagements stay full.
     Condensed,
     /// Every role beyond the two most recent keeps two bullets.
     Compact,
@@ -51,50 +55,60 @@ impl Detail {
 pub(crate) struct Fitted {
     pub(crate) bytes: Vec<u8>,
     pub(crate) scale: f64,
+    pub(crate) dense: bool,
     pub(crate) detail: Detail,
 }
 
-/// Degradation ladder: full detail at readable scales, then condensed at
-/// readable scales, then condensed down to the hard floor.
-pub(crate) fn fit_single_page(fonts: &FontFamily<FontData>, t: &Translations) -> Option<Fitted> {
+/// Degradation ladder (§9): full detail at Comfortable density, then condensed,
+/// then switch to Compact density before condensing the content further and,
+/// last, letting the scale drift toward the floor.
+pub(crate) fn fit_single_page(t: &Translations, lang: &str) -> Result<Fitted, String> {
+    // (dense, detail, lo, hi)
     let attempts = [
-        (Detail::Full, PREFERRED_MIN_SCALE, 1.0),
-        (Detail::Condensed, PREFERRED_MIN_SCALE, 1.0),
-        (Detail::Compact, PREFERRED_MIN_SCALE, 1.0),
-        (Detail::Compact, ABSOLUTE_MIN_SCALE, PREFERRED_MIN_SCALE),
+        (false, Detail::Full, PREFERRED_MIN_SCALE, 1.0),
+        (false, Detail::Condensed, PREFERRED_MIN_SCALE, 1.0),
+        (true, Detail::Full, PREFERRED_MIN_SCALE, 1.0),
+        (true, Detail::Condensed, PREFERRED_MIN_SCALE, 1.0),
+        (true, Detail::Compact, PREFERRED_MIN_SCALE, 1.0),
+        (true, Detail::Compact, ABSOLUTE_MIN_SCALE, PREFERRED_MIN_SCALE),
     ];
-    attempts.into_iter().find_map(|(detail, lo, hi)| {
-        largest_fitting_scale(fonts, t, detail, lo, hi).map(|(bytes, scale)| Fitted {
-            bytes,
-            scale,
-            detail,
-        })
-    })
+    for (dense, detail, lo, hi) in attempts {
+        if let Some((bytes, scale)) = largest_fitting_scale(t, lang, dense, detail, lo, hi)? {
+            return Ok(Fitted {
+                bytes,
+                scale,
+                dense,
+                detail,
+            });
+        }
+    }
+    Err("does not fit one page even condensed".to_string())
 }
 
-/// Binary-searches the largest scale within `[lo, hi]` that renders as a
-/// single page. Returns `None` if even `lo` overflows.
+/// Binary-searches the largest scale within `[lo, hi]` that renders as a single
+/// page. Returns `Ok(None)` if even `lo` overflows; `Err` on a compile failure.
 fn largest_fitting_scale(
-    fonts: &FontFamily<FontData>,
     t: &Translations,
+    lang: &str,
+    dense: bool,
     detail: Detail,
     lo: f64,
     hi: f64,
-) -> Option<(Vec<u8>, f64)> {
-    let render_at = |scale: f64| -> Option<(Vec<u8>, bool)> {
-        let doc = build_resume(fonts.clone(), t, Layout { scale }, detail);
-        let mut bytes = Vec::new();
-        doc.render(&mut bytes).ok()?;
-        let fits = page_count(&bytes) <= 1;
-        Some((bytes, fits))
+) -> Result<Option<(Vec<u8>, f64)>, String> {
+    // Compile + export at `scale`, returning whether it fit on one page.
+    let render_at = |scale: f64| -> Result<(bool, Vec<u8>), String> {
+        let source = build_typ(t, Layout { scale, dense }, detail, lang);
+        let (pages, bytes) = world::render(source)?;
+        Ok((pages <= 1, bytes))
     };
 
-    let (lo_bytes, lo_fits) = render_at(lo)?;
+    let (lo_fits, lo_bytes) = render_at(lo)?;
     if !lo_fits {
-        return None;
+        return Ok(None);
     }
-    if let Some((hi_bytes, true)) = render_at(hi) {
-        return Some((hi_bytes, hi));
+    let (hi_fits, hi_bytes) = render_at(hi)?;
+    if hi_fits {
+        return Ok(Some((hi_bytes, hi)));
     }
 
     // Invariant: `lo` fits, `hi` does not.
@@ -102,28 +116,13 @@ fn largest_fitting_scale(
     let mut best = (lo_bytes, lo);
     while hi - lo > 0.01 {
         let mid = (lo + hi) / 2.0;
-        match render_at(mid) {
-            Some((bytes, true)) => {
-                best = (bytes, mid);
-                lo = mid;
-            }
-            _ => hi = mid,
+        let (fits, bytes) = render_at(mid)?;
+        if fits {
+            best = (bytes, mid);
+            lo = mid;
+        } else {
+            hi = mid;
         }
     }
-    Some(best)
-}
-
-/// Number of pages, read from the `/Count N` entry of the PDF page tree.
-fn page_count(bytes: &[u8]) -> usize {
-    let needle = b"/Count ";
-    bytes
-        .windows(needle.len())
-        .position(|w| w == needle)
-        .map(|i| {
-            bytes[i + needle.len()..]
-                .iter()
-                .take_while(|b| b.is_ascii_digit())
-                .fold(0usize, |acc, b| acc * 10 + (b - b'0') as usize)
-        })
-        .unwrap_or(usize::MAX)
+    Ok(Some(best))
 }

@@ -63,9 +63,13 @@ tower-http = { version = "0.6", features = ["fs", "trace", "set-header"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
-genpdf = "0.2"
-# Post-processes PDF metadata (UTF-16BE title) — printpdf 0.3 writes raw UTF-8.
-lopdf = "0.41"
+# Typst is the resume PDF engine, embedded as a library so the generator stays
+# a self-contained `cargo run` (no external binary in CI/Docker). Unlike the
+# previous genpdf engine it emits a tagged PDF (StructTreeRoot/MarkInfo/Lang),
+# subsets embedded fonts, writes standard PDF 1.7 (RGB) and live /URI links.
+typst = "0.15"
+typst-layout = "0.15"
+typst-pdf = "0.15"
 sha2 = "0.10"
 time = { version = "0.3", features = ["formatting", "parsing"] }
 
