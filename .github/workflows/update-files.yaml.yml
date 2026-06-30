@@ -1,0 +1,72 @@
+﻿name: Update Files
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: { }
+
+jobs:
+  update-lock-file:
+    name: Ensure Cargo Lock File is Up-to-Date
+    environment:
+      name: ci
+      deployment: false
+    runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.auto-commit.outputs.changes_detected }}
+    permissions:
+      contents: write # to push build artifacts
+      pull-requests: write # to comment on PRs
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Generate Bot Token
+        id: generate_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+
+      - name: Sync Cargo.lock with Cargo.toml
+        run: cargo fetch
+
+      - name: Commit and Push if changed
+        id: auto-commit
+        uses: TimSchoenle/actions/actions/common/commit-changes@00849df4da5106ed5c70dae637325507eec5cc74 # tag=actions-common-commit-changes-v1.1.5
+        with:
+          commit_message: 'build: update Cargo.lock'
+          file_pattern: 'Cargo.lock'
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Comment on PR
+        if: steps.auto-commit.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          github-token: ${{ steps.generate_token.outputs.token }}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Cargo.lock has been updated to match Cargo.toml.'
+            })

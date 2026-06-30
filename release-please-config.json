@@ -1,19 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-
+  "release-type": "rust",
   "include-component-in-tag": false,
-  "include-v-in-tag": true,
   "always-update": true,
-
-  "release-type": "node",
-
+  "plugins": ["cargo-workspace"],
   "packages": {
     ".": {
-      "component": "portfolio",
-      "pull-request-title-pattern": "chore: release portfolio v${version}"
+      "release-type": "rust",
+      "package-name": "portfolio-workspace",
+      "draft": false,
+      "prerelease": false,
+      "include-component-in-tag": false,
+      "changelogPath": "CHANGELOG.md"
     }
   },
-
   "changelog-sections": [
     {
       "type": "feat",

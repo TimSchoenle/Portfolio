@@ -6,101 +6,48 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 ### Prerequisites
 
-- Bun 1.1 or higher
-- Docker (optional, for containerized development)
+- Rust (stable) with the `wasm32-unknown-unknown` target: `rustup target add wasm32-unknown-unknown`
+- [Trunk](https://trunkrs.dev): `cargo install trunk` (or `cargo binstall trunk`)
+- Node.js (only for the Tailwind CSS build step)
+- Docker (optional, for containerized builds)
 
 ### Getting Started
 
 1. Clone the repository:
-   \`\`\`bash
-   git clone https://github.com/timschoenle/portfolio.git
-   cd portfolio
-   \`\`\`
 
-2. Install dependencies:
-   \`\`\`bash
-   bun install
-   \`\`\`
+   ```bash
+   git clone https://github.com/timschoenle/Portfolio.git
+   cd Portfolio
+   ```
 
-3. Run the development server:
-   \`\`\`bash
-   bun dev
-   \`\`\`
+2. Run the frontend dev server:
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+   ```bash
+   cd apps/frontend
+   npm install
+   trunk serve
+   ```
 
-## Code Standards
+3. Open [http://localhost:8080](http://localhost:8080) in your browser.
 
-### TypeScript
+## Checks
 
-- Use TypeScript for all new files
-- Avoid `any` types when possible
-- Use proper type definitions
+Before opening a pull request, make sure the following pass:
 
-### Code Style
+```bash
+cargo fmt --check
+cargo test -p portfolio-data
+cargo clippy -p frontend --target wasm32-unknown-unknown -- -D warnings
+cargo clippy -p portfolio-data -p server -p resume-generator -- -D warnings
+```
 
-- We use Prettier for code formatting
-- We use ESLint for code linting
-- Run `bun format` before committing
-- Run `bun lint` to check for issues
+## Translations
 
-### Commit Messages
+All user-visible strings live in `crates/data/i18n/{en,de}.json`. Both files
+must define exactly the same key set — `cargo test -p portfolio-data` enforces
+this. When adding UI text, add the key to **both** files.
 
-Follow conventional commits format:
+## Commit Messages
 
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, etc.)
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks
-
-Example: `feat: add dark mode toggle`
-
-## Pull Request Process
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/my-feature`
-3. Make your changes
-4. Run tests and linting: `bun lint && bun type-check`
-5. Commit your changes with a descriptive message
-6. Push to your fork: `git push origin feat/my-feature`
-7. Open a Pull Request
-
-### PR Guidelines
-
-- Provide a clear description of the changes
-- Reference any related issues
-- Ensure all CI checks pass
-- Keep PRs focused and atomic
-- Update documentation if needed
-
-## Docker Development
-
-### Build and run with Docker:
-
-\`\`\`bash
-
-# Development
-
-bun docker:dev
-
-# Production
-
-bun docker:build
-bun docker:run
-\`\`\`
-
-## Testing
-
-Before submitting a PR, ensure:
-
-- [ ] Code builds successfully: `bun run build`
-- [ ] No linting errors: `bun lint`
-- [ ] No type errors: `bun type-check`
-- [ ] Code is formatted: `bun format:check`
-
-## Questions?
-
-Feel free to open an issue for any questions or concerns.
+Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`,
+`fix:`, `chore:`, …).

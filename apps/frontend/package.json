@@ -1,0 +1,13 @@
+{
+  "name": "portfolio-frontend-styles",
+  "private": true,
+  "description": "Tailwind CSS toolchain for the Yew frontend (build-time only)",
+  "scripts": {
+    "vendor:fonts": "node scripts/vendor-fonts.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
+    "tailwindcss": "^4.3.2"
+  }
+}

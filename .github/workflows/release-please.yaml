@@ -1,5 +1,4 @@
 ﻿name: release-please
-
 on:
   push:
     branches:
@@ -9,27 +8,25 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-permissions: {}
+permissions: { }
 
 env:
   DOCKER_REPO: timschoenle/portfolio
-  HELM_REPO: TimSchoenle/helm-charts
-  CHART_PATH: charts/portfolio
 
 jobs:
   release-please:
-    environment:
-      name: release
-      deployment: false
     name: Release Please
+    environment:
+      name: ci
+      deployment: false
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create release commits and tags
+      issues: write # Required to create release issues
+      pull-requests: write # Required to create release PRs
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
-    permissions:
-      contents: write # to create release tags/commits
-      issues: write # to comment on release issues
-      pull-requests: write # to create release PRs
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -43,25 +40,24 @@ jobs:
           app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
           private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
 
-      - name: Run release-please
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
-        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
-  publish-docker:
+  docker-release:
+    name: Docker Release
     environment:
-      name: release
+      name: publish
       deployment: false
-    name: Publish Docker
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ubuntu-latest
     outputs:
-      image_digest: ${{ steps.build-and-push.outputs.digest }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    runs-on: ubuntu-latest
     permissions:
-      contents: read # to fetch code
-      id-token: write # Needed for Cosign keyless signing
+      contents: read # Required to checkout the code
+      id-token: write # Required for OIDC authentication with Cosign
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -69,25 +65,18 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
-
-      - name: Get Git commit timestamps
-        run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
-
-      - name: Login to DHI Registry
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
-        with:
-          registry: dhi.io
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
@@ -95,7 +84,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Docker metadata
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
         with:
@@ -103,11 +92,9 @@ jobs:
           tags: |
             type=raw,value=${{ needs.release-please.outputs.tag_name }}
 
-      - name: Build and push Docker image
-        id: build-and-push
+      - name: Build and push
+        id: build
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
-        env:
-          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
         with:
           context: .
           push: true
@@ -115,82 +102,18 @@ jobs:
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GIT_SHA=${{ github.sha }}
-            SENTRY_RELEASE=${{ needs.release-please.outputs.tag_name }}
+          # gh_token lifts the GitHub API rate limit for the update-repos Trunk
+          # hook.
           secrets: |
-            resume_signing_cert_base64=${{ secrets.RESUME_SIGNING_CERT_BASE64 }}
-            resume_signing_cert_password=${{ secrets.RESUME_SIGNING_CERT_PASSWORD }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
-            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
-            SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }}
+            gh_token=${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sign the published Docker image
+      - name: Sign the images with GitHub OIDC Token
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-
-  create-sentry-release:
-    environment:
-      name: release
-      deployment: false
-    name: Create Sentry Release
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read # to fetch code
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          egress-policy: audit
-
-      - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Create Sentry release
-        uses: getsentry/action-release@ff07929a6537bac57790c3451cf4d364aca38528 # v3
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: production
-          version: ${{ needs.release-please.outputs.tag_name }}
-
-  update-helm-chart:
-    environment:
-      name: release
-      deployment: false
-    name: Update Helm Chart
-    needs: [release-please, publish-docker]
-    if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read # to fetch code
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          egress-policy: audit
-
-      - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Update Helm Chart
-        uses: TimSchoenle/actions/actions/helm/update-chart-version@2f1c6c6f6a0e38c100f2436a84707ab9e7b96292 # tag=actions-helm-update-chart-version-v1.5.14
-        with:
-          app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
-          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
-          helm-repo: ${{ env.HELM_REPO }}
-          chart-path: ${{ env.CHART_PATH }}
-          new-tag: ${{ needs.release-please.outputs.tag_name }}
-          image-digest: ${{ needs.publish-docker.outputs.image_digest }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}

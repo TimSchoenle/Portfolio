@@ -1,23 +1,23 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>TimSchoenle/actions//configs/renovate/default"],
-  "registryAliases": {
-    "dhi.io": "dhi.io"
-  },
-  "hostRules": [
-    {
-      "matchHost": "dhi.io",
-      "hostType": "docker",
-      "username": "timschoenle",
-      "password": "{{ secrets.MEND_DHI_PASSWORD }}"
-    }
+  "extends": [
+    "github>TimSchoenle/actions//configs/renovate/default"
   ],
   "packageRules": [
     {
-      "description": "Auto-merge safe dev updates",
-      "matchDepTypes": ["devDependencies"],
-      "matchUpdateTypes": ["major", "minor", "patch", "digest"],
-      "automerge": true
+      "matchPackageNames": [
+        "dtolnay/rust-toolchain",
+        "lukemathwalker/cargo-chef",
+        "aquasecurity/trivy-action",
+        "taiki-e/install-action"
+      ],
+      "enabled": false
+    },
+    {
+      "groupName": "yew packages",
+      "matchPackageNames": [
+        "/^yew/"
+      ]
     }
   ]
 }

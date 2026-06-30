@@ -1,0 +1,252 @@
+{
+  "common": {
+    "country": "Germany",
+    "region": "Baden-Württemberg",
+    "openToRemote": "Open to remote · CET (UTC+1)",
+    "present": "Present",
+    "now": "now",
+    "lastUpdated": "Last updated",
+    "backToHome": "Back to home",
+    "filter": "Filter",
+    "all": "All",
+    "months": {
+      "m1": "Jan",
+      "m2": "Feb",
+      "m3": "Mar",
+      "m4": "Apr",
+      "m5": "May",
+      "m6": "Jun",
+      "m7": "Jul",
+      "m8": "Aug",
+      "m9": "Sep",
+      "m10": "Oct",
+      "m11": "Nov",
+      "m12": "Dec"
+    }
+  },
+  "nav": {
+    "about": "About",
+    "skills": "Stack",
+    "projects": "Work",
+    "experience": "Experience",
+    "contact": "Contact",
+    "search": "search",
+    "languageToggle": "Switch language to German"
+  },
+  "hero": {
+    "eyebrow": "Java · Rust · Next.js",
+    "jobTitle": "Senior Software Developer",
+    "statusLabel": "STATUS",
+    "status": "Open to software developer roles",
+    "tagline": "Passionate about building great software.",
+    "taglineSub": "Specialising in scalable, high-performance backend systems."
+  },
+  "about": {
+    "title": "About Me",
+    "intro": "I build reliable software, end to end.",
+    "body": "I'm a Software Developer specializing in scalable, high-performance backend systems. My core stack is Java, with growing experience in Rust and Next.js. I work end-to-end from code to production using containerized services, Kubernetes, Helm, and GitOps-focused workflows. I care about clean code, clear abstractions, and well-tested, reliable systems that are easy to operate and evolve.",
+    "focusLabel": "Key Competencies",
+    "focus": {
+      "f1": { "k": "Backend Architecture", "v": "Java & Spring Boot · domain modelling" },
+      "f2": { "k": "Scalability & Performance", "v": "High-throughput, reliable systems" },
+      "f3": { "k": "Kubernetes, Helm & GitOps", "v": "ArgoCD · containerised infra · Docker" },
+      "f4": { "k": "Clean, Maintainable Code", "v": "Clear abstractions · well-tested" }
+    }
+  },
+  "skills": {
+    "title": "Stack",
+    "intro": "The tools I reach for, sized by confidence.",
+    "languages": "Languages",
+    "frameworks": "Frameworks",
+    "build": "Build & Tools",
+    "infrastructure": "Infrastructure",
+    "confidenceLabel": "Confidence",
+    "hoverHint": "Hover a dot"
+  },
+  "projects": {
+    "title": "Selected Work",
+    "intro": "A few things I've built.",
+    "statRepos": "REPOSITORIES",
+    "statStars": "TOTAL STARS",
+    "statForks": "TOTAL FORKS",
+    "statSync": "LAST SYNC",
+    "repoOne": "repo",
+    "repoMany": "repos",
+    "loading": "loading…",
+    "offline": "offline",
+    "viewAll": "View all repos on GitHub",
+    "emptyTitle": "Repositories refreshing…",
+    "emptyBody": "Public GitHub repos are loaded from repos.json, rebuilt daily by a scheduled GitHub Actions workflow.",
+    "featured": "★ FEATURED",
+    "favorites": "★ Favorites",
+    "prevPage": "Previous projects",
+    "nextPage": "More projects"
+  },
+  "experience": {
+    "title": "Experience",
+    "intro": "My career, in order.",
+    "entries": {
+      "sixtwenty": {
+        "role": "Senior Software Developer",
+        "org": "SixTwenty Cloud LLC",
+        "bullets": {
+          "b1": "Built and maintained CI/CD and GitOps workflows on Kubernetes-based infrastructure, standardizing deployments, release strategies and configuration across multiple services and environments.",
+          "b2": "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
+        }
+      },
+      "mineplex-studios": {
+        "role": "Senior Software Developer",
+        "org": "Mineplex Studios LLC",
+        "bullets": {
+          "b1": "Implemented core front-end and back-end engine components for an internal and external development platform in Java, TypeScript and Rust, enabling teams to build and integrate services consistently across the stack.",
+          "b2": "Built and maintained CI/CD and GitOps workflows on Kubernetes-based infrastructure, standardizing deployments, release strategies and configuration across multiple services and environments.",
+          "b3": "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
+        }
+      },
+      "self-employed": {
+        "role": "Independent Software Developer",
+        "org": "Self-employed",
+        "bullets": {
+          "b1": "Designed and implemented backend services and data-processing pipelines primarily in Java (e.g. Spring Boot) and TypeScript/Node.js, with selected components in Rust where performance or safety was critical, exposing REST and gRPC APIs with clear contracts and strong validation.",
+          "b2": "Built and maintained CI/CD pipelines (e.g. GitHub Actions) and Kubernetes-based deployments, automating tests, security checks and releases for multiple services.",
+          "b3": "Provisioned and operated backend infrastructure (databases, message brokers, caches and reverse proxies), using infrastructure-as-code and monitoring to keep systems reliable, observable and easy to debug."
+        }
+      },
+      "mineplex-dev": {
+        "role": "Software Developer",
+        "org": "Mineplex LLC",
+        "bullets": {
+          "b1": "Implemented and maintained gameplay and backend features for large-scale Minecraft minigames, with a focus on stability, debuggability and player impact.",
+          "b2": "Investigated complex production bugs across multiple plugins and services, turning vague reports into reproducible cases and concrete fixes in the codebase.",
+          "b3": "Worked closely with product, community and operations teams to plan and deliver gameplay features, incorporating player feedback into the development roadmap."
+        }
+      },
+      "mineplex-qa": {
+        "role": "Quality Assurance",
+        "org": "Mineplex LLC",
+        "bullets": {
+          "b1": "Investigated and reproduced gameplay and backend issues on a large-scale Minecraft server network, helping developers diagnose root causes and improve overall stability over time.",
+          "b2": "Handled live incident reports from players and internal monitoring, quickly reproducing issues, assessing impact and ensuring critical problems were escalated and tracked to resolution.",
+          "b3": "Collaborated closely with developers and community staff to reproduce, triage and verify fixes for critical production issues."
+        }
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Get in touch.",
+    "copy": "Copy",
+    "copied": "Copied ✓",
+    "write": "Write",
+    "resumeEn": "Resume (EN)",
+    "resumeDe": "Resume (DE)",
+    "fingerprintNote": "Verify a downloaded resume by comparing its SHA-256 checksum with these fingerprints."
+  },
+  "palette": {
+    "placeholder": "Jump to section, project, or action…",
+    "hint": "Navigate ↑↓ · Select ↵ · Close Esc",
+    "noMatches": "No results.",
+    "groupNav": "Navigate",
+    "groupWork": "Projects",
+    "groupActions": "Actions",
+    "copyEmail": "Copy email address",
+    "toggleLang": "Switch to Deutsch",
+    "openGithub": "Open GitHub profile",
+    "openLinkedin": "Open LinkedIn",
+    "downloadResume": "Download resume (PDF)",
+    "imprint": "Imprint",
+    "privacy": "Privacy policy"
+  },
+  "footer": {
+    "credit": "Designed and built by Tim Schönle.",
+    "imprint": "Imprint",
+    "privacy": "Privacy Policy",
+    "colophon": "Colophon",
+    "built": "Built with care"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The requested coordinates do not correspond to any known sector in this system.",
+    "home": "Return to Base"
+  },
+  "legal": {
+    "emailLabel": "Email",
+    "contactFormLabel": "Contact form"
+  },
+  "imprint": {
+    "title": "Imprint",
+    "tmgHeading": "Information according to § 5 DDG",
+    "contactHeading": "Contact",
+    "vatHeading": "VAT ID",
+    "vatBody": "Sales tax identification number according to Sect. 27 a of the Sales Tax Law:",
+    "mstvHeading": "Responsible for content according to § 18 Abs. 2 MStV",
+    "disputeHeading": "Dispute Resolution",
+    "disputeBody": "The European Commission provides a platform for online dispute resolution (ODR): https://ec.europa.eu/consumers/odr/\n\nYou can find our email address in the imprint above.\n\nWe are not willing or obliged to participate in dispute resolution proceedings before a consumer arbitration board.",
+    "socialHeading": "This legal notice also applies to the following social media profiles",
+    "liabilityContentHeading": "Liability for content",
+    "liabilityContentBody": "As a service provider, we are responsible for our own content on these pages in accordance with general legislation pursuant to Section 7 (1) of the Digital Services Act (DDG). However, according to Sections 8 to 10 DDG, we are not obligated as a service provider to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.",
+    "liabilityLinksHeading": "Liability for links",
+    "liabilityLinksBody": "Our website contains links to external third-party websites over whose content we have no influence. Therefore, we cannot accept any liability for this third-party content. The respective provider or operator of the pages is always responsible for the content of the linked pages.",
+    "copyrightHeading": "Copyright",
+    "copyrightBody": "The content and works created by the site operators on these pages are subject to German copyright law. The reproduction, editing, distribution and any kind of use outside the limits of copyright require the written consent of the respective author or creator."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "This privacy policy explains how your personal data is processed when you visit this website.",
+    "controllerHeading": "1. Controller",
+    "controllerBody": "The controller within the meaning of Art. 4(7) GDPR is the person named above.",
+    "generalHeading": "2. General Information",
+    "generalBody": "This website is a personal portfolio for professional presentation as a software developer. Personal data is processed only to the extent necessary to provide and secure this website and to respond to contact requests. The legal basis is our legitimate interest in a functional and secure online presence (Art. 6(1)(f) GDPR) and, where applicable, the performance or initiation of a contract (Art. 6(1)(b) GDPR).",
+    "hostingHeading": "3. Hosting",
+    "hostingBody": "Our website is hosted by netcup GmbH, Daimlerstraße 25, 76185 Karlsruhe, Germany (hereinafter 'netcup'). The personal data collected on this website is stored on netcup's servers. This may include, but is not limited to, IP addresses, meta and communication data, website accesses and other data generated via a website. The use of netcup is for the purpose of fulfilling the contract with our potential and existing customers (Art. 6(1)(b) GDPR) and in the interest of a secure, fast and efficient provision of our online offer by a professional provider (Art. 6(1)(f) GDPR). netcup will only process your data to the extent necessary to fulfill its performance obligations and follows our instructions regarding this data. We have concluded a data processing agreement (DPA) with netcup. Further information can be found in netcup's privacy policy: https://www.netcup.de/kontakt/datenschutzerklaerung.php",
+    "encryptionHeading": "4. SSL/TLS Encryption",
+    "encryptionBody": "This website uses SSL/TLS encryption for security reasons and to protect the transmission of confidential content. You can recognize an encrypted connection by the \"https://\" prefix in your browser's address bar and the lock icon. When SSL/TLS encryption is active, data you transmit to us cannot be read by third parties.",
+    "logsHeading": "5. Access Data and Logs",
+    "logsBody": "When visiting this website, the server automatically records log files (IP address, date and time of access, browser type and version, operating system, referrer URL, requested page and amount of data transferred). This data is processed to ensure the security and stability of the website and to detect and investigate misuse. Log files are kept for up to 7 days and then deleted, unless further storage is required for evidence purposes. Server location: Germany. The legal basis is our legitimate interest in secure and reliable operation of the website (Art. 6(1)(f) GDPR).",
+    "cloudflareHeading": "6. Use of Cloudflare",
+    "cloudflareBody": "This website is delivered through a Cloudflare Tunnel provided by Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA. For this purpose, Cloudflare processes technical connection data (in particular IP addresses, requested URLs, system configuration information and other metadata) to deliver and secure the website (e.g. DDoS protection, performance optimization). Cloudflare processes this data as a processor on our behalf under a data processing agreement. Depending on your location, data may be transferred to data centers outside the EU, including the USA. These transfers are protected by Standard Contractual Clauses (Art. 46(2)(c) GDPR) and Cloudflare's certification under the EU-U.S. Data Privacy Framework adequacy decision. Cloudflare has also implemented additional technical and organizational measures to ensure the protection of your data. Processing is based on our legitimate interest in secure and efficient operation of the website (Art. 6(1)(f) GDPR). Further information can be found in Cloudflare's privacy policy: https://www.cloudflare.com/privacypolicy/",
+    "contactHeading": "7. Contact",
+    "contactBody": "If you contact me by email, the data you provide (in particular email address, name and the content of your message) will be processed for the purpose of handling and responding to your request. The legal basis is Art. 6(1)(b) GDPR where the contact relates to an existing or potential contractual relationship, and otherwise Art. 6(1)(f) GDPR (our legitimate interest in processing inquiries). Your data will not be shared with third parties unless this is necessary to process your request or required by law, and will be deleted when your inquiry has been conclusively answered, unless statutory retention obligations apply.",
+    "rightsHeading": "8. Data Subject Rights",
+    "rightsBody": "You have the rights granted by Articles 15–21 GDPR: in particular the right of access, rectification, erasure, restriction of processing, data portability and objection to processing based on Art. 6(1)(f) GDPR. Where processing is based on consent, you may withdraw consent at any time with effect for the future. You also have the right to lodge a complaint with a supervisory authority, in particular in the Member State of your habitual residence or place of work (Art. 77 GDPR). For Baden-Württemberg, the competent authority is the State Commissioner for Data Protection and Freedom of Information Baden-Württemberg: https://www.baden-wuerttemberg.datenschutz.de",
+    "storageHeading": "9. Cookies and Browser Storage",
+    "storageBody": "This website itself does not set any cookies. It stores a single entry in your browser's local storage:\n\n- lang: stores your language preference (\"en\" or \"de\") so the site can be shown in your selected language.\n\nDelivery through Cloudflare may set technically necessary cookies:\n\n- _cf_bm: bot management and detection of malicious visitors (duration: 30 minutes).\n- __cflb: session affinity for load balancing (duration: up to 24 hours).\n- __cfruid: support for rate limiting to distinguish individual users (session cookie).\n- cf_clearance: set after successful security verification to avoid repeated challenges (duration: 30–60 minutes).\n- cf_chl_rc_i: supports Cloudflare challenge products (session cookie).\n- cf_chl_rc_ni: supports Cloudflare challenge products (session cookie).\n\nThese entries are technically required to provide the website in the selected language, ensure security, identify malicious visitors and filter web traffic. The storage and access of this technically necessary information is based on § 25(2)(2) TDDDG, as these are used exclusively for the purpose of carrying out the transmission of a communication over a public telecommunications network or are strictly necessary for the provider to supply a service explicitly requested by the user. Therefore, no consent is required for technically necessary cookies. The legal basis for the associated data processing is our legitimate interest in a secure and user-friendly presentation of the website (Art. 6(1)(f) GDPR). No profiling or cross-site tracking takes place. You can delete these entries at any time via your browser settings.",
+    "noTrackingHeading": "10. No Analytics or Tracking",
+    "noTrackingBody": "Apart from the technically necessary processing described above, this website uses no tracking tools, analytics, behavioral profiling, advertising networks or social media plugins. No personal data is shared with third parties for marketing or profiling purposes.",
+    "changesHeading": "11. Changes",
+    "changesBody": "This privacy policy may be updated if technical or legal changes occur. The latest version will always be available on this page."
+  },
+  "resume": {
+    "summaryTitle": "Professional Summary",
+    "summary": "Software developer specializing in scalable, high-performance backend systems. Core stack Java, with growing Rust and Next.js. Works end-to-end from code to production with containerized services, Kubernetes, Helm, and GitOps. Values clean code, clear abstractions, and well-tested, operable systems.",
+    "experienceTitle": "Professional Experience",
+    "skillsTitle": "Technical Skills",
+    "educationTitle": "Education",
+    "languagesTitle": "Languages",
+    "languages": {
+      "german": "German",
+      "germanLevel": "Native",
+      "english": "English",
+      "englishLevel": "Fluent"
+    },
+    "stackLabel": "Stack",
+    "contactTitle": "Contact",
+    "contactLabels": {
+      "location": "Location",
+      "email": "Email",
+      "web": "Web",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    },
+    "education": {
+      "uni-konstanz": {
+        "degree": "Computer Science (no degree)",
+        "institution": "University of Konstanz"
+      },
+      "abitur": {
+        "degree": "Abitur (Business High School)",
+        "institution": "Rudolf-Eberle-Schule, Bad Säckingen"
+      }
+    }
+  }
+}

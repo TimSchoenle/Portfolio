@@ -1,0 +1,89 @@
+[workspace]
+members = [
+    "crates/data",
+    "apps/frontend",
+    "apps/server",
+    "apps/resume-generator",
+    "apps/site-meta",
+    "apps/update-repos",
+]
+resolver = "2"
+
+[workspace.package]
+version = "2.0.0"
+edition = "2024"
+publish = false
+
+[workspace.dependencies]
+portfolio-data = { path = "crates/data" }
+
+# i18nrs 0.1.9 requires yew 0.22.x — keep yew/yew-router pinned in lockstep.
+yew = { version = "0.22.0", features = ["csr"] }
+yew-router = "0.19.0"
+i18nrs = { version = "0.1.9", features = ["yew"] }
+
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "HtmlElement",
+    "HtmlInputElement",
+    "Element",
+    "EventListener",
+    "KeyboardEvent",
+    "MouseEvent",
+    "IntersectionObserver",
+    "IntersectionObserverEntry",
+    "IntersectionObserverInit",
+    "DomRect",
+    "Navigator",
+    "Clipboard",
+    "Storage",
+    "ScrollIntoViewOptions",
+    "ScrollBehavior",
+    "DomTokenList",
+    "AddEventListenerOptions",
+] }
+gloo-timers = { version = "0.4.0", features = ["futures"] }
+gloo-net = "0.7.0"
+
+# Blocking, pure-Rust HTTP client used by the `update-repos` builder to call the
+# GitHub REST API from CI (no async runtime needed for a one-shot fetch).
+ureq = { version = "3", features = ["json"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1"
+
+axum = "0.8"
+# `util` brings `ServiceExt::oneshot`, used by the server's router-level
+# integration tests to dispatch requests through the real `Router`.
+tower = { version = "0.5", features = ["util"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = [
+    "fs",
+    "trace",
+    "set-header",
+    "compression-br",
+    "compression-gzip",
+] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Typst is the resume PDF engine, embedded as a library so the generator stays
+# a self-contained `cargo run` (no external binary in CI/Docker). It emits a
+# tagged, standard PDF 1.7 with subsetted fonts and live links.
+typst = "0.15"
+typst-layout = "0.15"
+typst-pdf = "0.15"
+sha2 = "0.10"
+time = { version = "0.3", features = ["formatting", "parsing"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

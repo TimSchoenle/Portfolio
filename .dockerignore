@@ -39,6 +39,7 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 # -------- Framework / build outputs
+target
 .next
 .next/cache
 out
