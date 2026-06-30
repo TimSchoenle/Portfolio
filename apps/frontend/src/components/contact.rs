@@ -13,6 +13,7 @@ use crate::hooks::use_in_view;
 
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
+use super::sections::{section_id, section_label};
 
 #[function_component(Contact)]
 pub fn contact() -> Html {
@@ -91,9 +92,9 @@ pub fn contact() -> Html {
         .trim_start_matches("http://");
 
     html! {
-        <section id="s5" class="sec" ref={section}>
+        <section id={ section_id("contact") } class="sec" ref={section}>
             <Reveal>
-                <SectionHeader num="§ 05 — contact"
+                <SectionHeader num={ section_label("contact") }
                     title={ i18n.t("contact.title") }
                     intro={ i18n.t("contact.intro") } />
             </Reveal>

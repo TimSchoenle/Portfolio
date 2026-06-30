@@ -3,15 +3,16 @@ use yew::prelude::*;
 
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
+use super::sections::{section_id, section_label};
 
 #[function_component(About)]
 pub fn about() -> Html {
     let (i18n, _) = use_translation();
 
     html! {
-        <section id="s1" class="sec">
+        <section id={ section_id("about") } class="sec">
             <Reveal>
-                <SectionHeader num="§ 01 — about"
+                <SectionHeader num={ section_label("about") }
                     title={ i18n.t("about.title") }
                     intro={ i18n.t("about.intro") } />
             </Reveal>

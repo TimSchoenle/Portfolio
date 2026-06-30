@@ -9,6 +9,7 @@ use crate::github::ReposState;
 
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
+use super::sections::{section_id, section_label};
 
 /// Cards shown per slide window: 2 rows of the 3-column grid.
 const PAGE_SIZE: usize = 6;
@@ -119,9 +120,9 @@ pub fn projects(p: &ProjProps) -> Html {
     };
 
     html! {
-        <section id="s3" class="sec">
+        <section id={ section_id("work") } class="sec">
             <Reveal>
-                <SectionHeader num="§ 03 — work"
+                <SectionHeader num={ section_label("work") }
                     title={ i18n.t("projects.title") }
                     intro={ i18n.t("projects.intro") } />
             </Reveal>

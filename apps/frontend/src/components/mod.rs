@@ -11,4 +11,5 @@ pub mod projects;
 pub mod radar;
 pub mod reveal;
 pub mod section_header;
+pub mod sections;
 pub mod skills;

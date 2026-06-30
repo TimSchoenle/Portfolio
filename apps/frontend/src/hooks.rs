@@ -111,9 +111,9 @@ pub fn scroll_to(id: &str) {
 
 /// Scrolls to a section after the next render, for use right after a route
 /// change to the home page.
-pub fn scroll_to_soon(id: &'static str) {
+pub fn scroll_to_soon(id: String) {
     wasm_bindgen_futures::spawn_local(async move {
         gloo_timers::future::TimeoutFuture::new(80).await;
-        scroll_to(id);
+        scroll_to(&id);
     });
 }

@@ -8,6 +8,7 @@ use yew::prelude::*;
 
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
+use super::sections::{section_id, section_label};
 
 /// "7y" badge; sub-year stints render as "<1y".
 fn years_badge(start: u16, end: Option<u16>) -> String {
@@ -26,9 +27,9 @@ pub fn experience_comp() -> Html {
     let open = use_state(|| 0_usize);
 
     html! {
-        <section id="s4" class="sec">
+        <section id={ section_id("experience") } class="sec">
             <Reveal>
-                <SectionHeader num="§ 04 — experience"
+                <SectionHeader num={ section_label("experience") }
                     title={ i18n.t("experience.title") }
                     intro={ i18n.t("experience.intro") } />
             </Reveal>

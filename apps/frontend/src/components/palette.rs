@@ -10,9 +10,11 @@ use crate::i18n::other_language;
 use crate::router::Route;
 
 use super::masthead::{SECTIONS, goto_section};
+use super::sections::{section_id, section_num};
 
 #[derive(Clone, PartialEq)]
 enum Action {
+    /// Holds the section slug; the DOM id is derived via [`section_id`].
     Section(&'static str),
     Goto(Route),
     Open(String),
@@ -50,12 +52,11 @@ pub fn palette(p: &PaletteProps) -> Html {
 
     let mut entries: Vec<Entry> = SECTIONS
         .iter()
-        .enumerate()
-        .map(|(i, (id, key))| Entry {
+        .map(|(slug, key)| Entry {
             group: g_nav.clone(),
             label: i18n.t(key),
-            hint: format!("§ {:02}", i + 1),
-            action: Action::Section(id),
+            hint: format!("§ {}", section_num(slug)),
+            action: Action::Section(slug),
         })
         .collect();
     entries.push(Entry {
@@ -132,7 +133,7 @@ pub fn palette(p: &PaletteProps) -> Html {
         let on_close = p.on_close.clone();
         Callback::from(move |action: Action| {
             match &action {
-                Action::Section(id) => goto_section(&navigator, route, id),
+                Action::Section(slug) => goto_section(&navigator, route, section_id(slug)),
                 Action::Goto(target) => navigator.push(target),
                 Action::Open(url) => {
                     if let Some(win) = web_sys::window() {

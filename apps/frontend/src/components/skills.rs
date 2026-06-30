@@ -9,6 +9,7 @@ use yew::prelude::*;
 use super::radar::Radar;
 use super::reveal::Reveal;
 use super::section_header::SectionHeader;
+use super::sections::{section_id, section_label};
 
 #[function_component(Skills)]
 pub fn skills_comp() -> Html {
@@ -31,9 +32,9 @@ pub fn skills_comp() -> Html {
     };
 
     html! {
-        <section id="s2" class="sec">
+        <section id={ section_id("stack") } class="sec">
             <Reveal>
-                <SectionHeader num="§ 02 — stack"
+                <SectionHeader num={ section_label("stack") }
                     title={ i18n.t("skills.title") }
                     intro={ i18n.t("skills.intro") } />
             </Reveal>

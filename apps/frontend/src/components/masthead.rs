@@ -2,23 +2,25 @@ use i18nrs::yew::use_translation;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use super::sections::section_id;
 use crate::hooks::{scroll_to, scroll_to_soon};
 use crate::i18n::other_language;
 use crate::router::Route;
 
-/// Home-page sections, in nav order: (element id, i18n key).
+/// Home-page sections, in nav order: (section slug, i18n key). The anchor id is
+/// derived from the slug via [`section_id`] so it tracks the dynamic numbering.
 pub const SECTIONS: [(&str, &str); 5] = [
-    ("s1", "nav.about"),
-    ("s2", "nav.skills"),
-    ("s3", "nav.projects"),
-    ("s4", "nav.experience"),
-    ("s5", "nav.contact"),
+    ("about", "nav.about"),
+    ("stack", "nav.skills"),
+    ("work", "nav.projects"),
+    ("experience", "nav.experience"),
+    ("contact", "nav.contact"),
 ];
 
 /// Navigates to a home-page section from anywhere in the app.
-pub fn goto_section(navigator: &Navigator, route: Route, id: &'static str) {
+pub fn goto_section(navigator: &Navigator, route: Route, id: String) {
     if route == Route::Home {
-        scroll_to(id);
+        scroll_to(&id);
     } else {
         navigator.push(&Route::Home);
         scroll_to_soon(id);
@@ -53,15 +55,19 @@ pub fn masthead(p: &MastheadProps) -> Html {
             </div>
 
             <nav class="masthead-nav">
-                { for SECTIONS.iter().enumerate().map(|(i, (id, key))| {
+                { for SECTIONS.iter().map(|(slug, key)| {
+                    let id = section_id(slug);
                     let navigator = navigator.clone();
-                    let onclick = Callback::from(move |e: MouseEvent| {
-                        e.prevent_default();
-                        goto_section(&navigator, route, id);
-                    });
+                    let onclick = {
+                        let id = id.clone();
+                        Callback::from(move |e: MouseEvent| {
+                            e.prevent_default();
+                            goto_section(&navigator, route, id.clone());
+                        })
+                    };
                     html!{
                         <a href={format!("/#{id}")} {onclick}>
-                            <span class="mono text-muted">{format!("{:02}", i+1)}</span>
+                            <span class="mono text-muted">{ super::sections::section_num(slug) }</span>
                             <span class="mono text-fg ml-1.5">{ i18n.t(key) }</span>
                         </a>
                     }

@@ -9,6 +9,8 @@ use yew::prelude::*;
 
 use crate::hooks::{scroll_to, use_scroll_y};
 
+use super::sections::{section_id, section_label, section_num};
+
 /// Full years since the earliest experience entry, e.g. 7 -> "7+".
 fn years_of_experience() -> u32 {
     let Some(earliest) = EXPERIENCE
@@ -80,9 +82,9 @@ pub fn hero() -> Html {
                 .unwrap_or(0.0);
 
             let target = if dy > 0.0 && y < vh * 0.5 {
-                Some("s1")
+                Some(section_id("about"))
             } else if dy < 0.0 && y > vh * 0.5 && y < vh * 1.3 {
-                Some("top")
+                Some("top".to_string())
             } else {
                 None
             };
@@ -90,7 +92,7 @@ pub fn hero() -> Html {
             if let Some(id) = target {
                 e.prevent_default();
                 *handler_lock.borrow_mut() = true;
-                scroll_to(id);
+                scroll_to(&id);
                 let release = handler_lock.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     gloo_timers::future::TimeoutFuture::new(900).await;
@@ -121,12 +123,12 @@ pub fn hero() -> Html {
         <section id="top" class="hero">
             <div class="hero-eyebrow">
                 <div class="bracket-line" />
-                <span class="mono text-accent">{"§ 00 — identity"}</span>
+                <span class="mono text-accent">{ section_label("identity") }</span>
                 <span class="mono text-muted">{ i18n.t("hero.eyebrow") }</span>
 
                 <div class="hero-meta">
                     <div class="hero-meta-card">
-                        <span class="mono text-muted">{"§ 00.a"}</span>
+                        <span class="mono text-muted">{ format!("§ {}.a", section_num("identity")) }</span>
                         <dl class="meta-dl">
                             <dt><span class="mono text-muted">{"ROLE"}</span></dt>
                             <dd>{ i18n.t("hero.jobTitle") }</dd>
@@ -149,7 +151,7 @@ pub fn hero() -> Html {
 
             <div class="hero-tagline">
                 <div class="tagline-label">
-                    <span class="mono text-muted">{"§ 01 — intro"}</span>
+                    <span class="mono text-muted">{ format!("§ {}.b", section_num("identity")) }</span>
                 </div>
                 <div class="tagline-body">
                     <p class="tagline-main">{ i18n.t("hero.tagline") }</p>
@@ -157,7 +159,7 @@ pub fn hero() -> Html {
                 </div>
             </div>
 
-            <a href="#s1" class="scroll-cue" aria-label="Scroll">
+            <a href={ format!("#{}", section_id("about")) } class="scroll-cue" aria-label="Scroll">
                 <span class="mono text-muted">{"SCROLL"}</span>
                 <span class="scroll-cue-line" />
             </a>
