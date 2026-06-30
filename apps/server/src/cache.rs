@@ -123,7 +123,9 @@ mod tests {
     #[test]
     fn unhashed_names_are_not_treated_as_immutable() {
         assert!(!is_content_hashed("/favicon.svg"));
-        assert!(!is_content_hashed("/fonts/jetbrains-mono-latin-400-normal.woff2"));
+        assert!(!is_content_hashed(
+            "/fonts/jetbrains-mono-latin-400-normal.woff2"
+        ));
         // 16 chars but not all hex.
         assert!(!is_content_hashed("/frontend-zzzzzzzzzzzzzzzz.js"));
     }

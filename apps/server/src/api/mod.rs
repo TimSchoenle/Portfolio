@@ -40,12 +40,7 @@ mod tests {
     /// Dispatches a `GET` through the real API router and returns the response.
     async fn get(path: &str) -> axum::response::Response {
         router()
-            .oneshot(
-                Request::builder()
-                    .uri(path)
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
             .await
             .unwrap()
     }
@@ -90,7 +85,10 @@ mod tests {
             );
             assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
             let status = json(response).await["status"].as_str().unwrap().to_owned();
-            assert!(status == "ready" || status == "unavailable", "{path}: {status}");
+            assert!(
+                status == "ready" || status == "unavailable",
+                "{path}: {status}"
+            );
         }
     }
 

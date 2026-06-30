@@ -148,7 +148,11 @@ impl ReposBuilder {
             page += 1;
         }
 
-        Ok(Self::active_repos(all, &self.blacklist, OffsetDateTime::now_utc()))
+        Ok(Self::active_repos(
+            all,
+            &self.blacklist,
+            OffsetDateTime::now_utc(),
+        ))
     }
 
     /// Pure filter step: drops archived repositories, blacklisted repositories

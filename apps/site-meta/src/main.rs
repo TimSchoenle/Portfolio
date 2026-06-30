@@ -246,9 +246,7 @@ mod tests {
         assert!(head.contains(&format!("content=\"{}\"", LANGUAGES[0])));
         for lang in LANGUAGES.iter().skip(1) {
             assert!(
-                head.contains(&format!(
-                    "og:locale:alternate\" content=\"{lang}\""
-                )),
+                head.contains(&format!("og:locale:alternate\" content=\"{lang}\"")),
                 "missing alternate locale {lang}"
             );
         }

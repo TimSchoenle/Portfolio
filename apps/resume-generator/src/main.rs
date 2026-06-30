@@ -64,8 +64,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             _ => portfolio_data::I18N_EN,
         };
         let t = Translations::parse(json)?;
-        let fitted =
-            fit_single_page(&t, lang).map_err(|err| format!("{file_name}: {err}"))?;
+        let fitted = fit_single_page(&t, lang).map_err(|err| format!("{file_name}: {err}"))?;
 
         let path = resume_dir.join(file_name);
         fs::write(&path, &fitted.bytes)?;
@@ -74,7 +73,11 @@ fn run() -> Result<(), Box<dyn Error>> {
             path.display(),
             fitted.bytes.len(),
             fitted.scale,
-            if fitted.dense { "compact" } else { "comfortable" },
+            if fitted.dense {
+                "compact"
+            } else {
+                "comfortable"
+            },
             fitted.detail.describe()
         );
 

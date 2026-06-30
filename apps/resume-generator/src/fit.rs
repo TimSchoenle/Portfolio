@@ -74,7 +74,12 @@ pub(crate) fn fit_single_page(t: &Translations, lang: &str) -> Result<Fitted, St
         (true, Detail::Full, PREFERRED_MIN_SCALE, 1.0),
         (true, Detail::Condensed, PREFERRED_MIN_SCALE, 1.0),
         (true, Detail::Compact, PREFERRED_MIN_SCALE, 1.0),
-        (true, Detail::Compact, ABSOLUTE_MIN_SCALE, PREFERRED_MIN_SCALE),
+        (
+            true,
+            Detail::Compact,
+            ABSOLUTE_MIN_SCALE,
+            PREFERRED_MIN_SCALE,
+        ),
     ];
     for (dense, detail, lo, hi) in attempts {
         if let Some((bytes, scale)) = largest_fitting_scale(t, lang, dense, detail, lo, hi)? {
@@ -191,7 +196,10 @@ mod tests {
         // Even at full detail for a recent role, the per-entry cap wins.
         assert_eq!(Detail::Full.bullet_count(0, &entry(3, Some(2), false)), 2);
         // The cap never raises the count above what the detail level allows.
-        assert_eq!(Detail::Compact.bullet_count(9, &entry(3, Some(2), false)), 2);
+        assert_eq!(
+            Detail::Compact.bullet_count(9, &entry(3, Some(2), false)),
+            2
+        );
     }
 
     #[test]

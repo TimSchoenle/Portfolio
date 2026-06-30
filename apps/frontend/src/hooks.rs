@@ -65,8 +65,8 @@ pub fn use_in_view(node: &NodeRef, threshold: f64) -> bool {
             let observer: Rc<RefCell<Option<web_sys::IntersectionObserver>>> =
                 Rc::new(RefCell::new(None));
             let observer_in_cb = observer.clone();
-            let cb = Closure::<dyn Fn(js_sys::Array)>::wrap(Box::new(
-                move |entries: js_sys::Array| {
+            let cb =
+                Closure::<dyn Fn(js_sys::Array)>::wrap(Box::new(move |entries: js_sys::Array| {
                     let entry: web_sys::IntersectionObserverEntry = entries.get(0).unchecked_into();
                     if entry.is_intersecting() {
                         if let Some(obs) = observer_in_cb.borrow_mut().take() {
@@ -74,8 +74,7 @@ pub fn use_in_view(node: &NodeRef, threshold: f64) -> bool {
                         }
                         visible.set(true);
                     }
-                },
-            ));
+                }));
 
             let init = web_sys::IntersectionObserverInit::new();
             init.set_threshold(&JsValue::from_f64(threshold));

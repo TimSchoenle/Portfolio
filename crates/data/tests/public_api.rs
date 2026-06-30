@@ -25,7 +25,10 @@ fn months() -> Vec<String> {
 #[test]
 fn config_contact_facts_are_well_formed() {
     assert!(CONFIG.url.starts_with("https://"), "url must be https");
-    assert!(CONFIG.email.contains('@'), "email must look like an address");
+    assert!(
+        CONFIG.email.contains('@'),
+        "email must look like an address"
+    );
     assert!(
         CONFIG.github.contains(CONFIG.github_username),
         "github url should embed the username"
@@ -291,5 +294,8 @@ fn fingerprints_look_up_digest_and_signature_per_language() {
     assert!(!fp.is_empty());
     assert_eq!(fp.digest_for("en"), Some("abc123"));
     assert!(fp.digest_for("de").is_none());
-    assert_eq!(fp.signature_for("en").map(|s| s.backend.as_str()), Some("sigstore"));
+    assert_eq!(
+        fp.signature_for("en").map(|s| s.backend.as_str()),
+        Some("sigstore")
+    );
 }

@@ -223,7 +223,10 @@ fn experience_entry(
             .collect();
         // Space below the company line so the bullets start clearly under the
         // header rather than hugging it.
-        s.push_str(&format!("\n\n#v({sp3})\n\n#list(\n{items})", sp3 = l.sp(style::SP_3)));
+        s.push_str(&format!(
+            "\n\n#v({sp3})\n\n#list(\n{items})",
+            sp3 = l.sp(style::SP_3)
+        ));
     }
 
     // Explicit technology keywords (`·` run) so resume parsers pick them up.
@@ -314,18 +317,32 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
 
     let rows = [
         row(label(&lbl("location")), region),
-        row(label(&lbl("email")), link(&format!("mailto:{}", CONFIG.email), CONFIG.email)),
-        row(label(&lbl("web")), link(CONFIG.url, &strip_scheme(CONFIG.url))),
-        row(label(&lbl("github")), link(CONFIG.github, &strip_scheme(CONFIG.github))),
-        row(label(&lbl("linkedin")), link(CONFIG.linkedin, &strip_scheme(CONFIG.linkedin))),
+        row(
+            label(&lbl("email")),
+            link(&format!("mailto:{}", CONFIG.email), CONFIG.email),
+        ),
+        row(
+            label(&lbl("web")),
+            link(CONFIG.url, &strip_scheme(CONFIG.url)),
+        ),
+        row(
+            label(&lbl("github")),
+            link(CONFIG.github, &strip_scheme(CONFIG.github)),
+        ),
+        row(
+            label(&lbl("linkedin")),
+            link(CONFIG.linkedin, &strip_scheme(CONFIG.linkedin)),
+        ),
     ]
     .join(",\n");
 
     // A clear step between contact items: the inter-item gap is larger than the
     // in-row label/value break.
-    format!("#stack(dir: ttb, spacing: {sp4},\n{rows},\n)", sp4 = l.sp(style::SP_4))
+    format!(
+        "#stack(dir: ttb, spacing: {sp4},\n{rows},\n)",
+        sp4 = l.sp(style::SP_4)
+    )
 }
-
 
 /// Skills: per-group label on its own line, items as wrapped white chips. Each
 /// chip is an atomic `#box`, with real whitespace between chips so the text

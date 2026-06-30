@@ -33,9 +33,10 @@ pub fn contact() -> Html {
     } else {
         i18n.t("contact.resumeEn")
     };
-    let resume_digest = fingerprints
-        .as_ref()
-        .and_then(|f| f.digest_for(lang).map(|d| (f.algorithm.clone(), d.to_string())));
+    let resume_digest = fingerprints.as_ref().and_then(|f| {
+        f.digest_for(lang)
+            .map(|d| (f.algorithm.clone(), d.to_string()))
+    });
     // Sigstore signature for the active language's resume, when the PDF was
     // signed on CI (keyless OIDC). `None` on unsigned dev builds.
     let resume_signature = fingerprints

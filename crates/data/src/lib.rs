@@ -533,7 +533,8 @@ pub fn experiences_sorted() -> Vec<&'static Experience> {
     let mut out: Vec<&'static Experience> = EXPERIENCE.iter().collect();
     out.sort_by(|a, b| {
         // Ongoing roles (no end) come first.
-        a.end.is_some()
+        a.end
+            .is_some()
             .cmp(&b.end.is_some())
             // Then most recent start first.
             .then_with(|| (b.start.year, b.start.month).cmp(&(a.start.year, a.start.month)))
