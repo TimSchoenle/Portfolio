@@ -53,11 +53,12 @@ RUN cargo chef cook --release --locked --target x86_64-unknown-linux-musl \
 
 # ── build server + resume generator, then generate the resume PDFs ────────────
 FROM server-deps AS server-builder
-# Identity recorded in resume-fingerprint.json for keyless Sigstore signing. The
-# release workflow supplies these so `pdf-sign verify --certificate-identity`
-# matches `{GITHUB_SERVER_URL}/{GITHUB_WORKFLOW_REF}`.
-ARG GITHUB_SERVER_URL
-ARG GITHUB_WORKFLOW_REF
+# Email identity recorded in resume-fingerprint.json for keyless Sigstore
+# signing. The release workflow supplies the contact email (the identity the
+# Sigstore token is bound to) so `pdf-sign verify --certificate-identity`
+# matches it.
+ARG SIGSTORE_IDENTITY_EMAIL
+ENV SIGSTORE_IDENTITY_EMAIL=${SIGSTORE_IDENTITY_EMAIL}
 COPY . .
 RUN cargo build --release --locked --target x86_64-unknown-linux-musl -p server -p resume-generator
 # Generate the resume PDFs + resume-fingerprint.json. Signing is opt-in via the

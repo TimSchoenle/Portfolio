@@ -12,6 +12,10 @@ permissions: { }
 
 env:
   DOCKER_REPO: timschoenle/portfolio
+  # Contact email (crates/data CONFIG.email) that the pre-obtained Sigstore
+  # identity token is bound to; recorded as the signer identity for the resume
+  # PDFs so `pdf-sign verify --certificate-identity` matches it.
+  SIGSTORE_IDENTITY_EMAIL: contact@tim-schoenle.de
 
 jobs:
   release-please:
@@ -84,19 +88,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Mint a GitHub Actions OIDC token with the "sigstore" audience so the
-      # resume-generator (inside the Docker build) can sign the resume PDFs
-      # keylessly via Fulcio/Rekor. Only the production release build receives
-      # this token, so PR/test images stay unsigned.
-      - name: Mint Sigstore OIDC token
-        id: sigstore-token
-        run: |
-          token="$(curl -fsSL \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')"
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
-
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
@@ -115,16 +106,16 @@ jobs:
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Identity recorded in resume-fingerprint.json for the keyless Sigstore
-          # signature (matches `pdf-sign verify --certificate-identity`).
+          # Email identity recorded in resume-fingerprint.json for the keyless
+          # Sigstore signature (matches `pdf-sign verify --certificate-identity`).
           build-args: |
-            GITHUB_SERVER_URL=${{ github.server_url }}
-            GITHUB_WORKFLOW_REF=${{ github.workflow_ref }}
+            SIGSTORE_IDENTITY_EMAIL=${{ env.SIGSTORE_IDENTITY_EMAIL }}
           # gh_token lifts the GitHub API rate limit for the update-repos Trunk
-          # hook; sigstore_token enables keyless signing of the resume PDFs.
+          # hook; sigstore_token (a pre-obtained Sigstore email-identity token)
+          # enables keyless signing of the resume PDFs.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
-            sigstore_token=${{ steps.sigstore-token.outputs.token }}
+            sigstore_token=${{ secrets.SIGSTORE_IDENTITY_TOKEN }}
 
       - name: Sign the images with GitHub OIDC Token
         env:

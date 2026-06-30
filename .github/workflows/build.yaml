@@ -50,12 +50,22 @@ jobs:
   signing-test:
     name: Resume Signing
     runs-on: ubuntu-latest
-    # Forks cannot mint an OIDC token (id-token: write is not granted to the
-    # GITHUB_TOKEN for fork PRs), so the keyless signing flow is skipped there.
+    # Keyless Sigstore signing with pdf-sign requires an *email-identity* OIDC
+    # token: sigstore-rs's IdentityToken claim set mandates an `email` claim,
+    # which GitHub Actions workflow OIDC tokens (machine identities) never carry.
+    # So signing is driven by a pre-obtained Sigstore identity token for the
+    # configured contact email, supplied via the SIGSTORE_IDENTITY_TOKEN secret;
+    # forks have no access to secrets, so the sign+verify steps skip there.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read # Required to checkout the code
-      id-token: write # Required to mint the Sigstore OIDC token
+    env:
+      # Pre-obtained Sigstore identity token (email identity) for non-interactive
+      # signing; empty on forks or when the secret is unset (steps then skip).
+      SIGSTORE_IDENTITY_TOKEN: ${{ secrets.SIGSTORE_IDENTITY_TOKEN }}
+      # Contact email (crates/data CONFIG.email) that the Sigstore (Dex)
+      # identity is bound to; used as the expected --certificate-identity.
+      SIGSTORE_IDENTITY_EMAIL: contact@tim-schoenle.de
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -97,33 +107,28 @@ jobs:
           %%EOF
           PDF
 
-      # Mint a GitHub Actions OIDC token with the "sigstore" audience, exactly
-      # as the release workflow does, so pdf-sign can sign keylessly.
-      - name: Mint Sigstore OIDC token
-        id: sigstore-token
-        run: |
-          token="$(curl -fsSL \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')"
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
-
+      # Sign with the pre-obtained email-identity token. The token is read from
+      # the SIGSTORE_IDENTITY_TOKEN env var (set from the secret above); the
+      # step is skipped when that secret is absent (e.g. on forks), so the
+      # capnp install + pdf-sign build are still exercised everywhere.
       - name: Sign the test PDF (keyless Sigstore)
+        if: ${{ env.SIGSTORE_IDENTITY_TOKEN != '' }}
         run: |
           pdf-sign sign \
             --backend sigstore \
-            --identity-token "${{ steps.sigstore-token.outputs.token }}" \
+            --identity-token "$SIGSTORE_IDENTITY_TOKEN" \
             --output signed.pdf \
             test.pdf
 
-      # Verify the freshly signed PDF against this workflow's own identity
-      # ({GITHUB_SERVER_URL}/{GITHUB_WORKFLOW_REF}), proving the signature is
-      # valid and bound to the expected signer.
+      # Verify the freshly signed PDF against the configured contact identity
+      # (crates/data CONFIG.email) and the Sigstore (Dex) OIDC issuer that mints
+      # email-based identities, proving the signature is bound to that signer.
       - name: Verify the signature
+        if: ${{ env.SIGSTORE_IDENTITY_TOKEN != '' }}
         run: |
           pdf-sign verify signed.pdf \
-            --certificate-identity "${{ github.server_url }}/${{ github.workflow_ref }}" \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+            --certificate-identity "$SIGSTORE_IDENTITY_EMAIL" \
+            --certificate-oidc-issuer https://oauth2.sigstore.dev/auth
 
   fmt:
     name: Auto Format
