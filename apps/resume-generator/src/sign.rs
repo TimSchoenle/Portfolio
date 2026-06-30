@@ -134,7 +134,10 @@ mod tests {
     fn signer_identity_is_unknown_without_an_email() {
         assert_eq!(format_signer_identity(None), "unknown");
         assert_eq!(format_signer_identity(Some(String::new())), "unknown");
-        assert_eq!(format_signer_identity(Some("   \t\n".to_string())), "unknown");
+        assert_eq!(
+            format_signer_identity(Some("   \t\n".to_string())),
+            "unknown"
+        );
     }
 
     #[test]
