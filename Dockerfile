@@ -76,7 +76,7 @@ RUN --mount=type=secret,id=gh_token,env=GH_TOKEN \
     CI=1 sh -c 'npm ci && trunk build --release --locked'
 
 # ── pull CA certs for future outbound HTTPS calls ─────────────────────────────
-FROM alpine:3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS certs
+FROM alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40 AS certs
 RUN apk add --no-cache ca-certificates
 
 # ── scratch runtime ───────────────────────────────────────────────────────────
