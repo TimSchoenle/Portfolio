@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.24@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
 
-FROM dhi.io/bun:1-alpine3.22-dev@sha256:cd852cc01ae5f07a10d61854900fc38ed907c252736e7c6fbcb6da4cd2d9e473 AS build_base
+FROM dhi.io/bun:1-alpine3.22-dev@sha256:d364f4eb6d20f8e906bdb9d12726995f8335878f46e0c1c69c910df9d92df5d8 AS build_base
 WORKDIR /app
 
 FROM build_base AS deps
