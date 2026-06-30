@@ -41,6 +41,20 @@
          a predictable URL (the icon above is content-hashed by Trunk). -->
     <link data-trunk rel="copy-file" href="assets/favicon.svg" />
     <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- WASM build pipeline. Explicit so we can run wasm-opt at the strongest
+         size-optimization level (z): Trunk leaves wasm-opt OFF by default, so
+         without this the released .wasm ships un-shrunk. Trunk auto-downloads
+         binaryen the first time it is needed. The opt params enable the
+         post-MVP features rustc now emits by default for wasm32-unknown-unknown
+         (bulk-memory, non-trapping float→int); without them wasm-opt aborts
+         with a validation error. -->
+    <link
+      data-trunk
+      rel="rust"
+      data-wasm-opt="z"
+      data-wasm-opt-params="--enable-bulk-memory --enable-nontrapping-float-to-int --enable-sign-ext --enable-mutable-globals"
+    />
   </head>
   <body>
     <div id="root"></div>

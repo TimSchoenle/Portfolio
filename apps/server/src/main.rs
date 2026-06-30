@@ -1,9 +1,11 @@
 mod api;
+mod cache;
 
 use std::net::SocketAddr;
 
 use axum::http::{HeaderValue, header};
 use tower_http::{
+    compression::CompressionLayer,
     services::{ServeDir, ServeFile},
     set_header::SetResponseHeaderLayer,
     trace::TraceLayer,
@@ -55,6 +57,17 @@ async fn main() {
             header::HeaderName::from_static("permissions-policy"),
             "camera=(), microphone=(), geolocation=(), interest-cohort=()",
         ))
+        // Compress text-y assets (HTML, the wasm-bindgen JS glue, WASM, CSS)
+        // with gzip/brotli per the client's Accept-Encoding. Already-compressed
+        // payloads (woff2, svg-as-image) are skipped automatically. This is the
+        // production substitute for minifying the wasm-bindgen JS, which Trunk
+        // cannot currently minify.
+        .layer(CompressionLayer::new())
+        // Assign a `Cache-Control` TTL per asset class: immutable (1y) for
+        // Trunk's content-hashed JS/WASM, a moderate TTL for fonts/resumes,
+        // a short one for generated metadata, and revalidate for HTML. Runs
+        // last so it only fills in a TTL the handlers/API did not set.
+        .layer(axum::middleware::from_fn(cache::set_cache_control))
         .layer(TraceLayer::new_for_http());
 
     let port: u16 = std::env::var("PORT")

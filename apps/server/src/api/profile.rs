@@ -8,18 +8,23 @@
 
 use std::sync::LazyLock;
 
-use axum::{Json, response::IntoResponse};
+use axum::{Json, http::header, response::IntoResponse};
 use portfolio_data::profile::{Profile, ProfileWithSchema};
 
 static PROFILE: LazyLock<ProfileWithSchema> = LazyLock::new(portfolio_data::profile::profile);
 static SCHEMA: LazyLock<schemars::Schema> = LazyLock::new(|| schemars::schema_for!(Profile));
 
+/// Both documents derive solely from compile-time data, so they only change on
+/// redeploy: a one-hour public TTL keeps them edge/browser cacheable while
+/// staying fresh enough.
+const CACHE_CONTROL: &str = "public, max-age=3600";
+
 pub async fn profile() -> impl IntoResponse {
-    Json(&*PROFILE)
+    ([(header::CACHE_CONTROL, CACHE_CONTROL)], Json(&*PROFILE))
 }
 
 pub async fn schema() -> impl IntoResponse {
-    Json(&*SCHEMA)
+    ([(header::CACHE_CONTROL, CACHE_CONTROL)], Json(&*SCHEMA))
 }
 
 #[cfg(test)]

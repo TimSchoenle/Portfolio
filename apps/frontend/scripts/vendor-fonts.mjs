@@ -17,9 +17,12 @@ const frontendRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dest = join(frontendRoot, "assets", "fonts");
 const fontsourceRoot = join(frontendRoot, "node_modules", "@fontsource");
 
-// "latin" covers ASCII + the German umlauts/ß; "latin-ext" covers the rest of
-// the accented Latin glyphs that can appear in repo names and prose.
-const SUBSETS = ["latin", "latin-ext"];
+// "latin" covers ASCII + Latin-1 (German umlauts/ß and the common Western
+// accents). The heavier "latin-ext" subset is intentionally not vendored: the
+// few extended glyphs that may appear in repo names fall back to the system
+// font via the @font-face unicode-range, which keeps the shipped payload
+// minimal without producing tofu.
+const SUBSETS = ["latin"];
 
 // pkg, weights, styles — mirrors the @font-face blocks in assets/fonts.css.
 const SPEC = [

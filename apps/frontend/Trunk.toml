@@ -3,15 +3,6 @@ target = "index.html"
 dist = "dist"
 minify = "on_release"
 
-[tools]
-# wasm_opt = true
-
-[optimize]
-enabled = true
-
-[pack]
-pipeline = "release"
-
 [watch]
 # "./generated" holds the pre_build hook's own output; ignoring it (and the
 # build-time "./repos.json") stops `trunk serve` from looping
