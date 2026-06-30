@@ -6,8 +6,8 @@
     "vendor:fonts": "node scripts/vendor-fonts.mjs"
   },
   "devDependencies": {
-    "@fontsource/jetbrains-mono": "^5.2.8",
-    "@fontsource/space-grotesk": "^5.2.10",
-    "tailwindcss": "^4.3.2"
+    "@fontsource/jetbrains-mono": "5.2.8",
+    "@fontsource/space-grotesk": "5.2.10",
+    "tailwindcss": "4.3.2"
   }
 }
