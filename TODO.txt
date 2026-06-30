@@ -1,1 +1,0 @@
-* Improve dark reader support for the hero title

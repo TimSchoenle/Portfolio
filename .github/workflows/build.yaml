@@ -123,17 +123,110 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Test Docker image serves health endpoint
+      - name: Test Docker image serves expected endpoints
         run: |
+          set -uo pipefail
+
+          # Boot the freshly built image as a detached container.
           docker run -d --rm --name portfolio-test -p 8080:8080 image:test
-          ok=0
+
+          # Always surface the container's logs and tear it down, no matter how
+          # the assertions below exit.
+          cleanup() {
+            echo "::group::portfolio-test container logs"
+            docker logs portfolio-test || true
+            echo "::endgroup::"
+            docker stop portfolio-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          base="http://localhost:8080"
+
+          # ── Readiness gate: wait until the server answers its health probe ────
+          ready=0
           for _ in $(seq 1 30); do
-            if curl -fsS http://localhost:8080/api/health; then ok=1; break; fi
+            if curl -fsS "$base/api/health" >/dev/null 2>&1; then ready=1; break; fi
             sleep 1
           done
-          docker logs portfolio-test || true
-          docker stop portfolio-test || true
-          [ "$ok" = "1" ]
+          if [ "$ready" != "1" ]; then
+            echo "::error::container did not become healthy within 30s"
+            exit 1
+          fi
+
+          fail=0
+
+          # Assert a GET returns the expected HTTP status code.
+          expect_status() {
+            local path="$1" want="$2" got
+            got=$(curl -s -o /dev/null -w '%{http_code}' "$base$path")
+            if [ "$got" = "$want" ]; then
+              echo "ok: GET $path -> HTTP $got"
+            else
+              echo "::error::GET $path expected HTTP $want, got $got"
+              fail=1
+            fi
+          }
+
+          # Assert the response body for a GET contains a substring.
+          expect_body_contains() {
+            local path="$1" needle="$2" body
+            body=$(curl -fsS "$base$path" 2>/dev/null || true)
+            if printf '%s' "$body" | grep -qF -- "$needle"; then
+              echo "ok: GET $path body contains '$needle'"
+            else
+              echo "::error::GET $path body did not contain '$needle'"
+              fail=1
+            fi
+          }
+
+          # Assert a response header equals an expected value (case-insensitive name).
+          expect_header() {
+            local path="$1" name="$2" want="$3" got
+            got=$(curl -fsS -D - -o /dev/null "$base$path" 2>/dev/null \
+              | tr -d '\r' \
+              | awk -F': ' -v h="$name" 'tolower($1)==tolower(h){print $2; exit}')
+            if [ "$got" = "$want" ]; then
+              echo "ok: GET $path header '$name: $got'"
+            else
+              echo "::error::GET $path header '$name' expected '$want', got '$got'"
+              fail=1
+            fi
+          }
+
+          # ── Health endpoint reports healthy and is never cached ───────────────
+          expect_status /api/health 200
+          expect_body_contains /api/health '"status":"healthy"'
+          expect_header /api/health cache-control no-store
+
+          # ── Profile API returns the document with the long-lived TTL ──────────
+          expect_status /api/v1/profile 200
+          expect_body_contains /api/v1/profile '"email"'
+          expect_header /api/v1/profile cache-control 'public, max-age=3600'
+
+          # ── Profile JSON Schema endpoint ──────────────────────────────────────
+          expect_status /api/v1/profile/schema 200
+          expect_body_contains /api/v1/profile/schema '"type":"object"'
+
+          # ── SPA: root and unknown client routes both serve index.html ─────────
+          expect_status / 200
+          expect_body_contains / '<html'
+          expect_status /some/client/route 200
+          expect_body_contains /some/client/route '<html'
+
+          # ── Static assets emitted by the Trunk build are served ───────────────
+          expect_status /robots.txt 200
+          expect_status /favicon.svg 200
+
+          # ── Security headers are applied to every response ────────────────────
+          expect_header / x-content-type-options nosniff
+          expect_header / x-frame-options DENY
+          expect_header / referrer-policy no-referrer
+
+          if [ "$fail" != "0" ]; then
+            echo "::error::container functional smoke tests failed"
+            exit 1
+          fi
+          echo "All container functional smoke tests passed."
 
       - name: Run structure tests
         run: |
