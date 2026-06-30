@@ -189,27 +189,6 @@ pub fn projects(p: &ProjProps) -> Html {
 }
 
 #[derive(Properties, PartialEq)]
-struct StatCellProps {
-    label: AttrValue,
-    value: AttrValue,
-    #[prop_or(false)]
-    small: bool,
-}
-
-#[function_component(StatCell)]
-fn stat_cell(p: &StatCellProps) -> Html {
-    html! {
-        <div class="stat-cell">
-            <span class="mono text-muted">{ p.label.clone() }</span>
-            <div class="stat-value"
-                 style={ p.small.then_some("font-size: clamp(15px, 1.2vw, 18px)") }>
-                { p.value.clone() }
-            </div>
-        </div>
-    }
-}
-
-#[derive(Properties, PartialEq)]
 struct CardProps {
     repo: Repo,
     index: usize,
@@ -217,7 +196,6 @@ struct CardProps {
 
 #[function_component(ProjectCard)]
 fn project_card(p: &CardProps) -> Html {
-    let (i18n, _) = use_translation();
     let r = &p.repo;
     let lang_label = r.language.clone().unwrap_or_else(|| "—".to_string());
     let color = lang_color(&lang_label);

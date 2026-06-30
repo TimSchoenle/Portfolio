@@ -6,9 +6,12 @@
 
 use portfolio_data::{Repo, ReposFile, ResumeFingerprints};
 
-/// `repos.json`, embedded at compile time. Regenerated at build time by the
-/// `update-repos` Trunk `pre_build` hook (cached by `generated_at`).
-const REPOS_JSON: &str = include_str!("../repos.json");
+/// `repos.json`, embedded at compile time. The `update-repos` Trunk
+/// `pre_build` hook regenerates `apps/frontend/repos.json` (cached by
+/// `generated_at`); `build.rs` copies it into `OUT_DIR` (or writes an empty
+/// default when absent, e.g. during `cargo test`), so this include always
+/// resolves.
+const REPOS_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/repos.json"));
 
 /// `resume-fingerprint.json`, embedded at compile time. `build.rs` writes the
 /// generated manifest (or an empty default when no resumes were produced) into
