@@ -18,7 +18,6 @@
 //! embedded i18n lookup).
 
 mod fit;
-mod sign;
 mod style;
 mod template;
 mod translations;
@@ -29,7 +28,7 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-use portfolio_data::{RESUME_FILES, ResumeFingerprints, ResumeSignature};
+use portfolio_data::{RESUME_FILES, ResumeFingerprints};
 use sha2::{Digest, Sha256};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
@@ -52,11 +51,6 @@ fn run() -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&resume_dir)?;
 
     let mut fingerprints: BTreeMap<String, String> = BTreeMap::new();
-    let mut signatures: BTreeMap<String, ResumeSignature> = BTreeMap::new();
-
-    // When an OIDC identity token is present (CI), each PDF is signed via
-    // `pdf-sign` (Sigstore keyless) right after it is written, before hashing.
-    let signing_token = sign::identity_token();
 
     for (lang, file_name) in RESUME_FILES {
         let json = match lang {
@@ -81,15 +75,6 @@ fn run() -> Result<(), Box<dyn Error>> {
             fitted.detail.describe()
         );
 
-        // Optionally append a Sigstore signature; this rewrites the file, so the
-        // digest is taken from the final bytes on disk to match the download.
-        if let Some(token) = signing_token.as_deref() {
-            let signature = sign::sign_pdf(&path, token)
-                .map_err(|err| format!("{file_name}: signing failed: {err}"))?;
-            println!("signed {} as {}", path.display(), signature.identity);
-            signatures.insert(file_name.to_string(), signature);
-        }
-
         let bytes = fs::read(&path)?;
         fingerprints.insert(file_name.to_string(), hex(&Sha256::digest(&bytes)));
     }
@@ -98,7 +83,6 @@ fn run() -> Result<(), Box<dyn Error>> {
         algorithm: "SHA-256".to_string(),
         generated_at: OffsetDateTime::now_utc().format(&Rfc3339)?,
         files: fingerprints,
-        signatures,
     };
     let manifest_path = Path::new(&out_dir).join("resume-fingerprint.json");
     fs::write(&manifest_path, serde_json::to_string_pretty(&manifest)?)?;

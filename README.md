@@ -21,7 +21,6 @@ running from a `scratch` container.
   - [Read-only and Security Posture](#read-only-and-security-posture)
   - [Reproducible Builds](#reproducible-builds)
 - [Project Data (`repos.json`)](#project-data-reposjson)
-- [Resume Signing](#resume-signing)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -36,7 +35,7 @@ applications.
 | `crates/data` | Shared, language-neutral data (config, skills, experience, repos schema) plus embedded `i18n/{en,de}.json` translations |
 | `apps/frontend` | Yew 0.22 client-side-rendered (CSR) application built with Trunk |
 | `apps/server` | Axum static server with SPA fallback, security headers, and health/liveness/readiness probe endpoints |
-| `apps/resume-generator` | Generates `resume/{en,de}.pdf` and `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans). On CI each PDF is signed keylessly via [pdf-sign](https://github.com/0x77dev/pdf-sign) (Sigstore) and the signer identity is recorded in the fingerprint |
+| `apps/resume-generator` | Generates `resume/{en,de}.pdf` and `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans) |
 | `apps/site-meta` | Build-time generator for the frontend's static metadata (`head.html`, `robots.txt`, `sitemap.xml`, web manifest) from `CONFIG` |
 | `apps/update-repos` | Builder that fetches the user's active GitHub repositories (skipping archived, blacklisted, and >1-year-stale ones) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
 
@@ -66,10 +65,7 @@ applications.
 - Command palette (Cmd+K / Ctrl+K) with fuzzy search and keyboard navigation
 - Language switcher (EN/DE) — every visible string is translated
 - Localized, single-page, ATS-readable resume PDFs with SHA-256 fingerprints on the contact card. The
-  generator scales typography down until the content fits one A4 page. On CI the
-  PDFs are signed keylessly through Sigstore (via
-  [pdf-sign](https://github.com/0x77dev/pdf-sign)), and the signer identity is
-  shown next to the fingerprint in the contact card's info popup.
+  generator scales typography down until the content fits one A4 page.
 - Legal pages (imprint, privacy policy) localized and rendered from the translation files
 - SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, and a web manifest
 - Security headers (CSP, HSTS, and others) set by the server
@@ -204,43 +200,6 @@ GH_TOKEN=<token> cargo run --release -p update-repos -- apps/frontend/repos.json
 
 # Override the repo set for a one-off run
 GITHUB_REPOS=Portfolio,actions cargo run --release -p update-repos
-```
-
-## Resume Signing
-
-The resume PDFs are signed keylessly with **Sigstore** via
-[pdf-sign](https://github.com/0x77dev/pdf-sign), which appends the signature after
-the PDF's `%%EOF` (the file remains a valid, readable PDF).
-
-Signing is **opt-in via the `SIGSTORE_IDENTITY_TOKEN` environment variable** and
-only happens when it is set, so local builds need no token, network access, or
-`pdf-sign` binary. `pdf-sign` (via `sigstore-rs`) only accepts *email-identity*
-OIDC tokens, so a pre-obtained Sigstore (Dex) token for the contact email is
-used — GitHub Actions workflow tokens (machine identities, no `email` claim)
-cannot be consumed. Only the production release build signs: the
-`release-please.yaml` workflow passes the `SIGSTORE_IDENTITY_TOKEN` secret as the
-`sigstore_token` build secret to the Docker build, where `pdf-sign` is installed
-and the generator signs each PDF *before* it is hashed, so the SHA-256
-fingerprint shown on the contact card always matches the signed download.
-PR/test images are built without the token and stay unsigned. The signer
-identity (the contact email, `SIGSTORE_IDENTITY_EMAIL`) and OIDC issuer are
-recorded in `resume-fingerprint.json` and shown next to the fingerprint in the
-contact card's info popup.
-
-The signing path itself is exercised on every CI run by the **Resume Signing**
-job in `build.yaml`: it installs `pdf-sign`, then — when the
-`SIGSTORE_IDENTITY_TOKEN` secret is present — signs **and verifies a throwaway,
-generated test PDF** (never the real resume) against the configured contact
-identity (`SIGSTORE_IDENTITY_EMAIL`). This proves the keyless Fulcio/Rekor flow
-works end-to-end without publishing a signed resume. The sign/verify steps are
-skipped on forks (and whenever the secret is unset), which have no access to it.
-
-Verify a downloaded resume against the published identity:
-
-```bash
-pdf-sign verify Tim-Schönle-Resume.pdf \
-  --certificate-identity contact@tim-schoenle.de \
-  --certificate-oidc-issuer https://oauth2.sigstore.dev/auth
 ```
 
 ## Contributing

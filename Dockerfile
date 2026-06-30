@@ -21,10 +21,8 @@ ARG CARGO_CHEF_VERSION
 ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
-# capnproto provides the `capnp` executable needed by sequoia-ipc's build
-# script (a transitive dependency of pdf-sign, installed when signing is on).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config libssl-dev curl musl-tools nodejs npm capnproto \
+    pkg-config libssl-dev curl musl-tools nodejs npm \
     && rm -rf /var/lib/apt/lists/*
 
 RUN rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl
@@ -53,24 +51,10 @@ RUN cargo chef cook --release --locked --target x86_64-unknown-linux-musl \
 
 # ── build server + resume generator, then generate the resume PDFs ────────────
 FROM server-deps AS server-builder
-# Email identity recorded in resume-fingerprint.json for keyless Sigstore
-# signing. The release workflow supplies the contact email (the identity the
-# Sigstore token is bound to) so `pdf-sign verify --certificate-identity`
-# matches it.
-ARG SIGSTORE_IDENTITY_EMAIL
-ENV SIGSTORE_IDENTITY_EMAIL=${SIGSTORE_IDENTITY_EMAIL}
 COPY . .
 RUN cargo build --release --locked --target x86_64-unknown-linux-musl -p server -p resume-generator
-# Generate the resume PDFs + resume-fingerprint.json. Signing is opt-in via the
-# `sigstore_token` build secret, which only the production release build passes:
-# when present, pdf-sign is installed and each PDF is signed keylessly (before it
-# is hashed); otherwise signing is skipped entirely (local and PR/test builds).
-#   docker build --secret id=sigstore_token,env=SIGSTORE_IDENTITY_TOKEN .
-RUN --mount=type=secret,id=sigstore_token,env=SIGSTORE_IDENTITY_TOKEN \
-    if [ -n "${SIGSTORE_IDENTITY_TOKEN:-}" ]; then \
-        cargo install --git https://github.com/0x77dev/pdf-sign --locked; \
-    fi; \
-    ./target/x86_64-unknown-linux-musl/release/resume-generator /app/resume-out
+# Generate the resume PDFs + resume-fingerprint.json.
+RUN ./target/x86_64-unknown-linux-musl/release/resume-generator /app/resume-out
 
 # ── build WASM frontend ───────────────────────────────────────────────────────
 # The resume PDFs + resume-fingerprint.json from the server stage are dropped

@@ -12,10 +12,6 @@ permissions: { }
 
 env:
   DOCKER_REPO: timschoenle/portfolio
-  # Contact email (crates/data CONFIG.email) that the pre-obtained Sigstore
-  # identity token is bound to; recorded as the signer identity for the resume
-  # PDFs so `pdf-sign verify --certificate-identity` matches it.
-  SIGSTORE_IDENTITY_EMAIL: contact@tim-schoenle.de
 
 jobs:
   release-please:
@@ -106,16 +102,10 @@ jobs:
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Email identity recorded in resume-fingerprint.json for the keyless
-          # Sigstore signature (matches `pdf-sign verify --certificate-identity`).
-          build-args: |
-            SIGSTORE_IDENTITY_EMAIL=${{ env.SIGSTORE_IDENTITY_EMAIL }}
           # gh_token lifts the GitHub API rate limit for the update-repos Trunk
-          # hook; sigstore_token (a pre-obtained Sigstore email-identity token)
-          # enables keyless signing of the resume PDFs.
+          # hook.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
-            sigstore_token=${{ secrets.SIGSTORE_IDENTITY_TOKEN }}
 
       - name: Sign the images with GitHub OIDC Token
         env:

@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use portfolio_data::{
     CONFIG, EDUCATION, EXPERIENCE, LANGUAGES, MIN_CONFIDENCE, Quadrant, RESUME_FILES, Repo,
-    ReposFile, ResumeFingerprints, ResumeSignature, SKILLS, YearMonth, experiences_sorted,
+    ReposFile, ResumeFingerprints, SKILLS, YearMonth, experiences_sorted,
     format_period, format_period_years, lang_color, matrix_skills, resume_file,
 };
 
@@ -264,38 +264,20 @@ fn empty_fingerprints_report_no_digests() {
     let fp = ResumeFingerprints::default();
     assert!(fp.is_empty());
     assert!(fp.digest_for("en").is_none());
-    assert!(fp.signature_for("en").is_none());
 }
 
 #[test]
-fn fingerprints_look_up_digest_and_signature_per_language() {
+fn fingerprints_look_up_digest_per_language() {
     let mut files = BTreeMap::new();
     files.insert(resume_file("en").to_string(), "abc123".to_string());
-
-    let mut signatures = BTreeMap::new();
-    signatures.insert(
-        resume_file("en").to_string(),
-        ResumeSignature {
-            backend: "sigstore".to_string(),
-            identity: "ci".to_string(),
-            issuer: "https://token.actions.githubusercontent.com".to_string(),
-            rekor_log_url: None,
-            signed_at: "2026-01-01T00:00:00Z".to_string(),
-        },
-    );
 
     let fp = ResumeFingerprints {
         algorithm: "SHA-256".to_string(),
         generated_at: "2026-01-01T00:00:00Z".to_string(),
         files,
-        signatures,
     };
 
     assert!(!fp.is_empty());
     assert_eq!(fp.digest_for("en"), Some("abc123"));
     assert!(fp.digest_for("de").is_none());
-    assert_eq!(
-        fp.signature_for("en").map(|s| s.backend.as_str()),
-        Some("sigstore")
-    );
 }
