@@ -130,3 +130,88 @@ fn largest_fitting_scale(
     }
     Ok(Some(best))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use portfolio_data::{Experience, YearMonth};
+
+    fn entry(bullet_count: u8, resume_bullet_cap: Option<u8>, ongoing: bool) -> Experience {
+        Experience {
+            id: "test",
+            location: "Remote",
+            start: YearMonth {
+                year: 2020,
+                month: 1,
+            },
+            end: if ongoing {
+                None
+            } else {
+                Some(YearMonth {
+                    year: 2022,
+                    month: 1,
+                })
+            },
+            bullet_count,
+            resume_bullet_cap,
+            tech: &[],
+        }
+    }
+
+    #[test]
+    fn full_detail_keeps_every_bullet_regardless_of_recency() {
+        let detail = Detail::Full;
+        let e = entry(3, None, false);
+        // Index well past the two most recent roles: still full.
+        assert_eq!(detail.bullet_count(7, &e), 3);
+    }
+
+    #[test]
+    fn condensed_trims_older_ended_roles_to_two() {
+        let detail = Detail::Condensed;
+        // Recent (index < 2) ended role keeps all bullets.
+        assert_eq!(detail.bullet_count(0, &entry(3, None, false)), 3);
+        // Ongoing role keeps all bullets even when old in the list.
+        assert_eq!(detail.bullet_count(5, &entry(3, None, true)), 3);
+        // Older ended role is condensed to two.
+        assert_eq!(detail.bullet_count(5, &entry(3, None, false)), 2);
+    }
+
+    #[test]
+    fn compact_trims_every_older_role_including_ongoing() {
+        let detail = Detail::Compact;
+        // Recent role stays full.
+        assert_eq!(detail.bullet_count(1, &entry(3, None, true)), 3);
+        // Older ongoing role is now also condensed to two.
+        assert_eq!(detail.bullet_count(4, &entry(3, None, true)), 2);
+    }
+
+    #[test]
+    fn resume_bullet_cap_is_always_honored() {
+        // Even at full detail for a recent role, the per-entry cap wins.
+        assert_eq!(Detail::Full.bullet_count(0, &entry(3, Some(2), false)), 2);
+        // The cap never raises the count above what the detail level allows.
+        assert_eq!(Detail::Compact.bullet_count(9, &entry(3, Some(2), false)), 2);
+    }
+
+    #[test]
+    fn describe_is_distinct_per_level() {
+        let labels = [
+            Detail::Full.describe(),
+            Detail::Condensed.describe(),
+            Detail::Compact.describe(),
+        ];
+        for label in labels {
+            assert!(!label.is_empty());
+        }
+        assert_ne!(labels[0], labels[1]);
+        assert_ne!(labels[1], labels[2]);
+    }
+
+    #[test]
+    fn preferred_floor_stays_above_absolute_floor() {
+        assert!(PREFERRED_MIN_SCALE > ABSOLUTE_MIN_SCALE);
+        assert!(ABSOLUTE_MIN_SCALE > 0.0);
+        assert!(PREFERRED_MIN_SCALE <= 1.0);
+    }
+}

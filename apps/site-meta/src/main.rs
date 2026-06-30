@@ -185,3 +185,86 @@ fn text(s: &str) -> String {
         .replace('<', "&lt;")
         .replace('>', "&gt;")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn attr_escapes_all_dangerous_characters() {
+        assert_eq!(
+            attr(r#"a & b < c > d " e"#),
+            "a &amp; b &lt; c &gt; d &quot; e"
+        );
+    }
+
+    #[test]
+    fn text_escapes_markup_but_keeps_quotes() {
+        // Text content does not need quote escaping, unlike attributes.
+        assert_eq!(text(r#"<a> & "b""#), r#"&lt;a&gt; &amp; "b""#);
+    }
+
+    #[test]
+    fn robots_allows_crawling_but_blocks_the_api_and_links_the_sitemap() {
+        let robots = robots_txt();
+        assert!(robots.contains("User-Agent: *"));
+        assert!(robots.contains("Allow: /"));
+        assert!(robots.contains("Disallow: /api/"));
+        assert!(robots.contains(&format!("Sitemap: {}/sitemap.xml", CONFIG.url)));
+    }
+
+    #[test]
+    fn sitemap_lists_every_public_route() {
+        let xml = sitemap_xml();
+        assert!(xml.starts_with("<?xml"));
+        for path in ["/", "/imprint", "/privacy"] {
+            assert!(
+                xml.contains(&format!("<loc>{}{path}</loc>", CONFIG.url)),
+                "sitemap missing route {path}"
+            );
+        }
+        assert_eq!(xml.matches("<url>").count(), 3);
+    }
+
+    #[test]
+    fn webmanifest_is_valid_json_derived_from_config() {
+        let manifest: serde_json::Value =
+            serde_json::from_str(&webmanifest()).expect("manifest is valid JSON");
+        assert_eq!(manifest["name"], CONFIG.title);
+        assert_eq!(manifest["short_name"], CONFIG.full_name);
+        assert_eq!(manifest["start_url"], "/");
+        assert!(manifest["icons"].as_array().is_some_and(|i| !i.is_empty()));
+    }
+
+    #[test]
+    fn head_carries_canonical_title_and_structured_data() {
+        let head = head_html();
+        assert!(head.contains(&format!("<title>{}</title>", text(CONFIG.title))));
+        assert!(head.contains(&format!("<link rel=\"canonical\" href=\"{}/\"", CONFIG.url)));
+        assert!(head.contains("application/ld+json"));
+        // The default language is the og:locale; alternates cover the rest.
+        assert!(head.contains(&format!("content=\"{}\"", LANGUAGES[0])));
+        for lang in LANGUAGES.iter().skip(1) {
+            assert!(
+                head.contains(&format!(
+                    "og:locale:alternate\" content=\"{lang}\""
+                )),
+                "missing alternate locale {lang}"
+            );
+        }
+    }
+
+    #[test]
+    fn head_json_ld_is_well_formed() {
+        let head = head_html();
+        let open = head.find("<script type=\"application/ld+json\">").unwrap();
+        let start = head[open..].find('\n').unwrap() + open + 1;
+        let end = head[start..].find("</script>").unwrap() + start;
+        let json: serde_json::Value =
+            serde_json::from_str(head[start..end].trim()).expect("JSON-LD parses");
+        let entities = json.as_array().expect("JSON-LD is an array");
+        assert_eq!(entities.len(), 2);
+        assert_eq!(entities[0]["name"], CONFIG.full_name);
+        assert_eq!(entities[0]["email"], CONFIG.email);
+    }
+}

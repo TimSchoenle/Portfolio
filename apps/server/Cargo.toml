@@ -21,3 +21,4 @@ time = { workspace = true, features = ["macros"] }
 
 [dev-dependencies]
 serde_json.workspace = true
+tower = { workspace = true }
