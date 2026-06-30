@@ -484,7 +484,7 @@ pub const EXPERIENCE: &[Experience] = &[
         end: None,
         bullet_count: 2,
         resume_bullet_cap: None,
-        tech: &["Kubernetes", "GitOps", "GitHub Actions", "Helm"],
+        tech: &["Java", "TypeScript", "Rust", "Kubernetes", "GitOps"],
     },
     Experience {
         id: "mineplex-studios",
