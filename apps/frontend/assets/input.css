@@ -1,12 +1,32 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+
+@source "../index.html";
+@source "../src/**/*.rs";
+
+/* Design tokens exposed to Tailwind as theme utilities. The values point at
+   the runtime `:root` CSS variables below, so Tailwind classes (e.g.
+   `text-accent`, `bg-bg-card`, `font-mono`) and the design's component CSS
+   always agree. Replaces the old tailwind.config.js `theme.extend`. */
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-bg-card: var(--bg-card);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
 
 /* ============================================================
    Portfolio v4 design system (ported verbatim from the design
    handoff: v2/styles.css + v2/styles-v3.css). Kept outside of
    Tailwind layers so none of it is purged; Tailwind utilities
-   reference the same CSS variables (see tailwind.config.js).
+   reference the same CSS variables (see the @theme block above).
    ============================================================ */
 
 :root {

@@ -3,6 +3,10 @@ target = "index.html"
 dist = "dist"
 minify = "on_release"
 
+[tools]
+# Pin the standalone Tailwind CSS CLI to v4 (Trunk's default is the v3 line).
+tailwindcss = "4.3.2"
+
 [watch]
 # "./generated" holds the pre_build hook's own output; ignoring it (and the
 # build-time "./repos.json") stops `trunk serve` from looping

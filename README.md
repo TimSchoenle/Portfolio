@@ -47,7 +47,7 @@ applications.
   Translations live in `crates/data/i18n/`; the active language is persisted in
   `localStorage` (`lang`) and detected from the browser language on first visit.
   A unit test in `crates/data` enforces key parity between both languages.
-- **Styling:** Tailwind CSS v3 with custom design tokens
+- **Styling:** Tailwind CSS v4 with custom design tokens
 - **Build:** [Trunk](https://trunkrs.dev)
 - **Data:** `apps/frontend/repos.json` is regenerated at build time by a Trunk
   hook from the GitHub API (all active repositories — archived, blacklisted
