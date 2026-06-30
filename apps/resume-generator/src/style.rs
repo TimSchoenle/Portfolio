@@ -37,6 +37,10 @@ pub(crate) const TAG_INK: &str = "#3A3F47";
 pub(crate) const TAG_BORDER: &str = "#D2D8E0";
 /// `--radius-tag`: skill-chip corner radius.
 pub(crate) const RADIUS_TAG_PT: f64 = 2.25; // ~3px
+/// `--rule-weight`: faint hairline weight for the divider between experience
+/// entries (S2 / §6.1). Kept at the low end (0.5pt) so it reads as a quiet
+/// `--c-rule` divider, never a heavy line.
+pub(crate) const RULE_WEIGHT_PT: f64 = 0.5;
 
 // ---- typography bases in points (§2.2 / §4) ----
 
@@ -55,17 +59,30 @@ const FS_LABEL: f64 = 7.5;
 const FS_TAG: f64 = 8.5;
 
 // ---- spacing bases in points (§2.3, 4 pt base) ----
+//
+// Spacing hierarchy rule (§2.3): each vertical level must read as visibly
+// larger than the one beneath it, each step roughly doubling, so the eye can
+// separate the levels — line < bullet < entry < section. Measured against the
+// body leading (`--lh-body` 1.45 ≈ 2.5pt line gap) the rhythm is
+// line ≈2.5 → bullet 5 → entry 15 → section 20.
 
-pub(crate) const SP_1: f64 = 2.0; // between bullets (legacy small gap)
-/// Dedicated inter-bullet gap (§2.3 `--bullet-gap`, N7): wider than `SP_1` so
-/// multi-line bullets don't read as one block.
-pub(crate) const BULLET_GAP: f64 = 3.0;
-pub(crate) const SP_2: f64 = 4.0; // title row → first bullet; header text → rule
-pub(crate) const SP_3: f64 = 6.0; // inside blocks; sidebar item / contact-row gaps
-pub(crate) const SP_4: f64 = 8.0; // section rule → first entry
-pub(crate) const SP_5: f64 = 11.0; // between entries
+pub(crate) const SP_1: f64 = 2.0; // title ↔ company (one unit); legacy small gap
+/// Dedicated inter-bullet gap (§2.3 `--bullet-gap`, N7): widened to 5pt so
+/// bullets sit clearly above the line gap and multi-line bullets don't read as
+/// one block — the second step of the hierarchy (line ≈2.5 → bullet 5).
+pub(crate) const BULLET_GAP: f64 = 5.0;
+pub(crate) const SP_2: f64 = 4.0; // header text → rule
+pub(crate) const SP_3: f64 = 6.0; // company line → first bullet; inside blocks
+/// Skills group label → its chips (§5.3): a small step that detaches the label
+/// from its chip rows without merging into the between-group gap.
+pub(crate) const SP_LABEL: f64 = 3.0;
+pub(crate) const SP_4: f64 = 8.0; // section rule → first entry; between sidebar groups
+/// Above the `Stack:` run (§6.2 `--stack-gap`): detaches it from the last
+/// bullet so it never reads as a fourth bullet.
+pub(crate) const STACK_GAP: f64 = 5.0;
+pub(crate) const SP_5: f64 = 15.0; // between entries — roles read as distinct blocks
 pub(crate) const SP_6: f64 = 14.0; // header band → grid
-pub(crate) const SP_7: f64 = 18.0; // above each section header (within a column)
+pub(crate) const SP_7: f64 = 20.0; // above each section header — the largest step
 
 /// Scaled token resolver. Sizes derive from the point bases times `scale`;
 /// spacing additionally tightens under the Compact density.
@@ -146,11 +163,12 @@ impl Layout {
         if self.dense { 5.5 } else { 7.0 }
     }
 
-    /// Body line-height (`--lh-body`, N7): Comfortable 1.40 / Compact 1.32 →
+    /// Body line-height (`--lh-body`, §2.3): Comfortable 1.45 / Compact 1.32 →
     /// Typst `leading` (the gap added on top of the font size, i.e. `lh - 1`).
-    /// The compact floor is held at 1.32 (never the old, clipping 1.22) so a
+    /// Comfortable gains a touch more air inside multi-line bullets (was 1.40);
+    /// the compact floor is held at 1.32 (never the old, clipping 1.22) so a
     /// line's descenders keep clear space above the next line's ascenders.
     pub(crate) fn leading_em(&self) -> f64 {
-        if self.dense { 0.32 } else { 0.40 }
+        if self.dense { 0.32 } else { 0.45 }
     }
 }

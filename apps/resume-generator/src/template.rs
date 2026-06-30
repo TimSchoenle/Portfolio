@@ -156,12 +156,25 @@ fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     blocks.push(main_section(l, &t.get("resume.experienceTitle")));
     for (i, e) in EXPERIENCE.iter().enumerate() {
         if i > 0 {
-            blocks.push(format!("#v({})", l.sp(style::SP_5)));
+            blocks.push(entry_divider(l));
         }
         blocks.push(experience_entry(t, l, detail, i, e));
     }
 
     blocks.join("\n\n")
+}
+
+/// Faint `--c-rule` hairline in the entry gap between experience entries (S2 /
+/// §6.1), never after the last one. The `SP_5` entry gap is split around the
+/// rule so the entry-level rhythm is preserved while the divider gives strong
+/// separation at near-zero vertical cost.
+fn entry_divider(l: &Layout) -> String {
+    format!(
+        "#v({half})\n\n#line(length: 100%, stroke: {w}pt + rgb(\"{rule}\"))\n\n#v({half})",
+        half = l.sp(style::SP_5 / 2.0),
+        w = style::RULE_WEIGHT_PT,
+        rule = style::RULE,
+    )
 }
 
 /// One Experience entry (§6.1, N1): the title owns line 1 with the right-aligned
@@ -211,16 +224,18 @@ fn experience_entry(
         let items: String = (1..=n)
             .map(|b| format!("[{}],\n", esc(&t.get(&key(&format!("bullets.b{b}"))))))
             .collect();
-        s.push_str(&format!("\n\n#v({sp2})\n\n#list(\n{items})", sp2 = l.sp(style::SP_2)));
+        // ~6pt below the company line before the first bullet (§6.1) so the
+        // bullets start clearly under the header rather than hugging it.
+        s.push_str(&format!("\n\n#v({sp3})\n\n#list(\n{items})", sp3 = l.sp(style::SP_3)));
     }
 
     // Explicit technology keywords (`·` run) for ATS / AI parity (§12). The
     // bold `Stack:` label stays in ink; the tech run is `--c-ink-soft`, not
     // accent, so accent reads as structure only (R4 / §8).
     s.push_str(&format!(
-        "\n\n#v({sp2})\n\n#text(size: {fsm}, weight: 700, fill: rgb(\"{ink}\"))[{label}: ]\
+        "\n\n#v({sgap})\n\n#text(size: {fsm}, weight: 700, fill: rgb(\"{ink}\"))[{label}: ]\
          #text(size: {fsm}, fill: rgb(\"{soft}\"))[{tech}]",
-        sp2 = l.sp(style::SP_2),
+        sgap = l.sp(style::STACK_GAP),
         fsm = l.fs_meta(),
         ink = style::INK,
         label = esc(&t.get("resume.stackLabel")),
@@ -312,7 +327,9 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
     ]
     .join(",\n");
 
-    format!("#stack(dir: ttb, spacing: {sp3},\n{rows},\n)", sp3 = l.sp(style::SP_3))
+    // A clear step between contact items (§5.3): label → value → next item, with
+    // the inter-item gap distinctly larger than the in-row label/value break.
+    format!("#stack(dir: ttb, spacing: {sp4},\n{rows},\n)", sp4 = l.sp(style::SP_4))
 }
 
 
@@ -325,7 +342,9 @@ fn skills_block(t: &Translations, l: &Layout) -> String {
     let mut blocks: Vec<String> = Vec::new();
     for (i, q) in Quadrant::all().into_iter().enumerate() {
         if i > 0 {
-            blocks.push(format!("#v({})", l.sp(style::SP_3)));
+            // Between skill groups (§5.3): distinctly more than the chip-row gap
+            // so the groups read as separated units, not a continuous list.
+            blocks.push(format!("#v({})", l.sp(style::SP_4)));
         }
         let chips: String = skills
             .iter()
@@ -350,7 +369,7 @@ fn skills_block(t: &Translations, l: &Layout) -> String {
             fs = l.fs_sidebar(),
             ink = style::INK,
             label = esc(&t.get(q.i18n_key())),
-            sp_h = l.sp(style::SP_1),
+            sp_h = l.sp(style::SP_LABEL),
             chips = chips,
         ));
     }

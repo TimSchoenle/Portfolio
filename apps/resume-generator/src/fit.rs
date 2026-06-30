@@ -35,12 +35,16 @@ impl Detail {
     pub(crate) fn bullet_count(self, entry_index: usize, e: &portfolio_data::Experience) -> u8 {
         let recent = entry_index < 2;
         let ongoing = e.end.is_none();
-        match self {
+        let n = match self {
             Detail::Full => e.bullet_count,
             Detail::Condensed if recent || ongoing => e.bullet_count,
             Detail::Compact if recent => e.bullet_count,
             _ => e.bullet_count.min(2),
-        }
+        };
+        // Apply the resume-exclusive bullet cap defined in the shared config:
+        // older roles with redundant bullets render fewer in the PDF, while the
+        // website still shows every bullet via `Experience::bullet_count`.
+        n.min(e.resume_bullet_cap.unwrap_or(u8::MAX))
     }
 
     pub(crate) fn describe(self) -> &'static str {

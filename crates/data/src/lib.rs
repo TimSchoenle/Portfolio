@@ -459,6 +459,16 @@ pub struct Experience {
     pub end: Option<YearMonth>,
     /// Number of localized bullets (`…bullets.b1` ..= `…bullets.b<n>`).
     pub bullet_count: u8,
+    /// Resume-exclusive ceiling on how many of the localized bullets the
+    /// generated resume renders (`None` = uncapped). The website always shows
+    /// every bullet via [`bullet_count`](Self::bullet_count); this field only
+    /// trims the PDF. The two oldest Mineplex roles each carry a redundant
+    /// third bullet that overlaps their first two (QA b3 restates the
+    /// triage/verify work of b1–b2; the Mineplex developer b3 is the weakest of
+    /// its three), so the resume caps them at two — matching the "older roles at
+    /// two bullets" rule and recovering the vertical budget the widened spacing
+    /// rhythm needs — while the shared config (and the site) keeps all three.
+    pub resume_bullet_cap: Option<u8>,
     pub tech: &'static [&'static str],
 }
 
@@ -475,6 +485,7 @@ pub const EXPERIENCE: &[Experience] = &[
         start: ym(2026, 3),
         end: None,
         bullet_count: 2,
+        resume_bullet_cap: None,
         tech: &["Kubernetes", "GitOps", "GitHub Actions", "Helm"],
     },
     Experience {
@@ -483,6 +494,7 @@ pub const EXPERIENCE: &[Experience] = &[
         start: ym(2023, 8),
         end: Some(ym(2026, 3)),
         bullet_count: 3,
+        resume_bullet_cap: None,
         tech: &["Java", "TypeScript", "Rust", "Kubernetes", "GitOps"],
     },
     Experience {
@@ -491,6 +503,7 @@ pub const EXPERIENCE: &[Experience] = &[
         start: ym(2021, 10),
         end: None,
         bullet_count: 3,
+        resume_bullet_cap: None,
         tech: &[
             "Java",
             "Spring Boot",
@@ -506,6 +519,7 @@ pub const EXPERIENCE: &[Experience] = &[
         start: ym(2021, 10),
         end: Some(ym(2023, 1)),
         bullet_count: 3,
+        resume_bullet_cap: Some(2),
         tech: &["Java", "PaperMC", "Bukkit API", "Spigot API"],
     },
     Experience {
@@ -514,6 +528,7 @@ pub const EXPERIENCE: &[Experience] = &[
         start: ym(2018, 11),
         end: Some(ym(2023, 1)),
         bullet_count: 3,
+        resume_bullet_cap: Some(2),
         tech: &["Java", "QA", "Testing"],
     },
 ];
