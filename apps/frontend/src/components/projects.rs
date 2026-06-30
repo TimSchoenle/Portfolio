@@ -39,7 +39,7 @@ pub fn projects(p: &ProjProps) -> Html {
             .collect(),
         _ => Vec::new(),
     };
-    repos.sort_by(|a, b| b.stargazers_count.cmp(&a.stargazers_count));
+    repos.sort_by_key(|b| std::cmp::Reverse(b.stargazers_count));
 
     let mut langs: Vec<String> = repos.iter().filter_map(|r| r.language.clone()).collect();
     langs.sort();

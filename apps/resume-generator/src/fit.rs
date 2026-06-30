@@ -218,8 +218,10 @@ mod tests {
 
     #[test]
     fn preferred_floor_stays_above_absolute_floor() {
-        assert!(PREFERRED_MIN_SCALE > ABSOLUTE_MIN_SCALE);
-        assert!(ABSOLUTE_MIN_SCALE > 0.0);
-        assert!(PREFERRED_MIN_SCALE <= 1.0);
+        const {
+            assert!(PREFERRED_MIN_SCALE > ABSOLUTE_MIN_SCALE);
+            assert!(ABSOLUTE_MIN_SCALE > 0.0);
+            assert!(PREFERRED_MIN_SCALE <= 1.0);
+        }
     }
 }
