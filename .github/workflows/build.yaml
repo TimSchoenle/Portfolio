@@ -47,6 +47,76 @@ jobs:
       - name: Run Test
         uses: TimSchoenle/actions/actions/rust/test@c6844b562767b6e68fff4d39bdf9eced6e29b318 # tag=actions-rust-test-v1.1.1
 
+  signing-test:
+    name: Resume Signing
+    runs-on: ubuntu-latest
+    # Forks cannot mint an OIDC token (id-token: write is not granted to the
+    # GITHUB_TOKEN for fork PRs), so the keyless signing flow is skipped there.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read # Required to checkout the code
+      id-token: write # Required to mint the Sigstore OIDC token
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          # "audit" (not "block") so the keyless flow can reach Fulcio/Rekor.
+          egress-policy: audit
+
+      # Install the same signing tool the release Docker build uses, so this
+      # job exercises the real keyless Sigstore signing path.
+      - name: Install pdf-sign
+        run: cargo install --git https://github.com/0x77dev/pdf-sign --locked
+
+      # A minimal, valid PDF generated on the fly purely to exercise signing
+      # end-to-end. This is NOT the real resume — the actual resume PDFs are
+      # only ever signed inside the production release Docker build.
+      - name: Create a throwaway test PDF
+        run: |
+          cat > test.pdf <<'PDF'
+          %PDF-1.7
+          1 0 obj
+          << /Type /Catalog /Pages 2 0 R >>
+          endobj
+          2 0 obj
+          << /Type /Pages /Kids [3 0 R] /Count 1 >>
+          endobj
+          3 0 obj
+          << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>
+          endobj
+          trailer
+          << /Root 1 0 R >>
+          %%EOF
+          PDF
+
+      # Mint a GitHub Actions OIDC token with the "sigstore" audience, exactly
+      # as the release workflow does, so pdf-sign can sign keylessly.
+      - name: Mint Sigstore OIDC token
+        id: sigstore-token
+        run: |
+          token="$(curl -fsSL \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')"
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Sign the test PDF (keyless Sigstore)
+        run: |
+          pdf-sign sign \
+            --backend sigstore \
+            --identity-token "${{ steps.sigstore-token.outputs.token }}" \
+            --output signed.pdf \
+            test.pdf
+
+      # Verify the freshly signed PDF against this workflow's own identity
+      # ({GITHUB_SERVER_URL}/{GITHUB_WORKFLOW_REF}), proving the signature is
+      # valid and bound to the expected signer.
+      - name: Verify the signature
+        run: |
+          pdf-sign verify signed.pdf \
+            --certificate-identity "${{ github.server_url }}/${{ github.workflow_ref }}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
   fmt:
     name: Auto Format
     environment:

@@ -224,6 +224,14 @@ the token and stay unsigned. The signer identity (the release workflow ref) and
 OIDC issuer are recorded in `resume-fingerprint.json` and shown next to the
 fingerprint in the contact card's info popup.
 
+The signing path itself is exercised on every CI run by the **Resume Signing**
+job in `build.yaml`: it installs `pdf-sign`, mints the same `sigstore`-audience
+OIDC token, then signs **and verifies a throwaway, generated test PDF** (never
+the real resume) against this workflow's own identity
+(`{GITHUB_SERVER_URL}/{GITHUB_WORKFLOW_REF}`). This proves the keyless
+Fulcio/Rekor flow works end-to-end without publishing a signed resume. The job
+is skipped on fork pull requests, which cannot mint an OIDC token.
+
 Verify a downloaded resume against the published identity:
 
 ```bash
