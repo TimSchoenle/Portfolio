@@ -63,6 +63,14 @@ jobs:
           # "audit" (not "block") so the keyless flow can reach Fulcio/Rekor.
           egress-policy: audit
 
+      # pdf-sign pulls in sequoia-ipc, whose build script invokes the `capnp`
+      # executable. The runner image doesn't ship it, so install it explicitly
+      # to avoid the "Failed to execute `capnp --version`" build failure.
+      - name: Install Cap'n Proto
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y capnproto
+
       # Install the same signing tool the release Docker build uses, so this
       # job exercises the real keyless Sigstore signing path.
       - name: Install pdf-sign

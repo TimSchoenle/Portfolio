@@ -21,8 +21,10 @@ ARG CARGO_CHEF_VERSION
 ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
+# capnproto provides the `capnp` executable needed by sequoia-ipc's build
+# script (a transitive dependency of pdf-sign, installed when signing is on).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config libssl-dev curl musl-tools nodejs npm \
+    pkg-config libssl-dev curl musl-tools nodejs npm capnproto \
     && rm -rf /var/lib/apt/lists/*
 
 RUN rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl
