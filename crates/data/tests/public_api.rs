@@ -7,8 +7,8 @@ use std::collections::BTreeMap;
 
 use portfolio_data::{
     CONFIG, EDUCATION, EXPERIENCE, LANGUAGES, MIN_CONFIDENCE, Quadrant, RESUME_FILES, Repo,
-    ReposFile, ResumeFingerprints, SKILLS, YearMonth, experiences_sorted,
-    format_period, format_period_years, lang_color, matrix_skills, resume_file,
+    ReposFile, ResumeFingerprints, SKILLS, YearMonth, experiences_sorted, format_period,
+    format_period_years, lang_color, matrix_skills, resume_file,
 };
 
 fn months() -> Vec<String> {
