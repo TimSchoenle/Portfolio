@@ -17,7 +17,7 @@ jobs:
   release-please:
     name: Release Please
     environment:
-      name: ci
+      name: release
       deployment: false
     runs-on: ubuntu-latest
     permissions:
@@ -48,7 +48,7 @@ jobs:
   docker-release:
     name: Docker Release
     environment:
-      name: publish
+      name: release
       deployment: false
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
