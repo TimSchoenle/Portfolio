@@ -157,10 +157,7 @@ mod tests {
             "unknown"
         );
         assert_eq!(
-            format_signer_identity(
-                Some("https://github.com".to_string()),
-                Some(String::new()),
-            ),
+            format_signer_identity(Some("https://github.com".to_string()), Some(String::new()),),
             "unknown"
         );
         assert_eq!(format_signer_identity(None, None), "unknown");
