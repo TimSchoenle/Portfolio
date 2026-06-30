@@ -75,7 +75,7 @@ pub fn sign_pdf(path: &Path, token: &str) -> Result<ResumeSignature, Box<dyn Err
 
 /// The OIDC identity bound to the signing certificate. On GitHub Actions this is
 /// `{GITHUB_SERVER_URL}/{GITHUB_WORKFLOW_REF}`, e.g.
-/// `https://github.com/owner/repo/.github/workflows/ci.yaml@refs/heads/main`,
+/// `https://github.com/owner/repo/.github/workflows/release-please.yaml@refs/heads/main`,
 /// which is exactly what `pdf-sign verify --certificate-identity` expects.
 fn signer_identity() -> String {
     match (

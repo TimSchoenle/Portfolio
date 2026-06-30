@@ -130,19 +130,21 @@ after the PDF's `%%EOF` (the file stays a valid, readable PDF).
 
 Signing is **opt-in via the `SIGSTORE_IDENTITY_TOKEN` environment variable** and
 only happens when it is set, so local builds need no token, network access or
-`pdf-sign` binary. On CI the workflow installs `pdf-sign`, mints a GitHub Actions
-OIDC token (audience `sigstore`, requiring `id-token: write`) and passes it to
-the generator. Each PDF is then signed *before* it is hashed, so the SHA-256
-fingerprint shown on the contact card always matches the signed download. The
-signer identity (the CI workflow ref) and OIDC issuer are recorded in
-`resume-fingerprint.json` and shown next to the fingerprint in the contact
-card's info popup.
+`pdf-sign` binary. Only the production release build signs: the
+`release-please.yaml` workflow mints a GitHub Actions OIDC token (audience
+`sigstore`, requiring `id-token: write`) and passes it as the `sigstore_token`
+build secret to the Docker build, where `pdf-sign` is installed and the
+generator signs each PDF *before* it is hashed, so the SHA-256 fingerprint shown
+on the contact card always matches the signed download. PR/test images are built
+without the token and stay unsigned. The signer identity (the release workflow
+ref) and OIDC issuer are recorded in `resume-fingerprint.json` and shown next to
+the fingerprint in the contact card's info popup.
 
 Verify a downloaded resume against the published identity:
 
 ```bash
 pdf-sign verify Tim-Schönle-Resume.pdf \
-  --certificate-identity https://github.com/<owner>/<repo>/.github/workflows/ci.yaml@refs/heads/main \
+  --certificate-identity https://github.com/<owner>/<repo>/.github/workflows/release-please.yaml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 

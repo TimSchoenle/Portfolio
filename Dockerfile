@@ -32,9 +32,23 @@ RUN cargo chef cook --release --target x86_64-unknown-linux-musl \
 
 # ── build server + resume generator, then generate the resume PDFs ────────────
 FROM server-deps AS server-builder
+# Identity recorded in resume-fingerprint.json for keyless Sigstore signing. The
+# release workflow supplies these so `pdf-sign verify --certificate-identity`
+# matches `{GITHUB_SERVER_URL}/{GITHUB_WORKFLOW_REF}`.
+ARG GITHUB_SERVER_URL
+ARG GITHUB_WORKFLOW_REF
 COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl -p server -p resume-generator
-RUN ./target/x86_64-unknown-linux-musl/release/resume-generator /app/resume-out
+# Generate the resume PDFs + resume-fingerprint.json. Signing is opt-in via the
+# `sigstore_token` build secret, which only the production release build passes:
+# when present, pdf-sign is installed and each PDF is signed keylessly (before it
+# is hashed); otherwise signing is skipped entirely (local and PR/test builds).
+#   docker build --secret id=sigstore_token,env=SIGSTORE_IDENTITY_TOKEN .
+RUN --mount=type=secret,id=sigstore_token,env=SIGSTORE_IDENTITY_TOKEN \
+    if [ -n "${SIGSTORE_IDENTITY_TOKEN:-}" ]; then \
+        cargo install --git https://github.com/0x77dev/pdf-sign --locked; \
+    fi; \
+    ./target/x86_64-unknown-linux-musl/release/resume-generator /app/resume-out
 
 # ── build WASM frontend ───────────────────────────────────────────────────────
 # The resume PDFs + resume-fingerprint.json from the server stage are dropped

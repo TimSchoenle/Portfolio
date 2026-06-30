@@ -1,0 +1,138 @@
+﻿name: release-please
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: { }
+
+env:
+  DOCKER_REPO: timschoenle/portfolio
+
+jobs:
+  release-please:
+    name: Release Please
+    environment:
+      name: ci
+      deployment: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create release commits and tags
+      issues: write # Required to create release issues
+      pull-requests: write # Required to create release PRs
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Generate Bot Token
+        id: generate_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
+        id: release
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+
+  docker-release:
+    name: Docker Release
+    environment:
+      name: publish
+      deployment: false
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the code
+      id-token: write # Required for OIDC authentication with Cosign
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Mint a GitHub Actions OIDC token with the "sigstore" audience so the
+      # resume-generator (inside the Docker build) can sign the resume PDFs
+      # keylessly via Fulcio/Rekor. Only the production release build receives
+      # this token, so PR/test images stay unsigned.
+      - name: Mint Sigstore OIDC token
+        id: sigstore-token
+        run: |
+          token="$(curl -fsSL \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')"
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
+        with:
+          images: ${{ env.DOCKER_REPO }}
+          tags: |
+            type=raw,value=${{ needs.release-please.outputs.tag_name }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Identity recorded in resume-fingerprint.json for the keyless Sigstore
+          # signature (matches `pdf-sign verify --certificate-identity`).
+          build-args: |
+            GITHUB_SERVER_URL=${{ github.server_url }}
+            GITHUB_WORKFLOW_REF=${{ github.workflow_ref }}
+          # gh_token lifts the GitHub API rate limit for the update-repos Trunk
+          # hook; sigstore_token enables keyless signing of the resume PDFs.
+          secrets: |
+            gh_token=${{ secrets.GITHUB_TOKEN }}
+            sigstore_token=${{ steps.sigstore-token.outputs.token }}
+
+      - name: Sign the images with GitHub OIDC Token
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}

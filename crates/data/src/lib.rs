@@ -47,7 +47,7 @@ pub struct ResumeSignature {
     pub backend: String,
     /// OIDC identity bound to the signing certificate — on GitHub Actions the
     /// signing workflow ref, e.g.
-    /// `https://github.com/<owner>/<repo>/.github/workflows/ci.yaml@refs/heads/main`.
+    /// `https://github.com/<owner>/<repo>/.github/workflows/release-please.yaml@refs/heads/main`.
     pub identity: String,
     /// OIDC issuer that vouched for the identity, e.g.
     /// `https://token.actions.githubusercontent.com`.
