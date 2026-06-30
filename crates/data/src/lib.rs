@@ -18,9 +18,8 @@ pub const I18N_DE: &str = include_str!("../i18n/de.json");
 /// Language codes supported by the site. The first entry is the default.
 pub const LANGUAGES: [&str; 2] = ["en", "de"];
 
-/// Resume PDF file names per language, served under `/resume/`.
-/// UTF-8 names (incl. "ö") are intentional; browsers percent-encode them in
-/// URLs and the server percent-decodes on lookup.
+/// Resume PDF file names per language, served under `/resume/`. The non-ASCII
+/// names are intentional; browsers percent-encode them in URLs.
 pub const RESUME_FILES: [(&str, &str); 2] = [
     ("en", "Tim-Schönle-Resume.pdf"),
     ("de", "Tim-Schönle-Lebenslauf.pdf"),
@@ -38,9 +37,8 @@ pub fn resume_file(lang: &str) -> &'static str {
 /// A keyless Sigstore signature appended to a resume PDF.
 ///
 /// Produced on CI by the [`pdf-sign`](https://github.com/0x77dev/pdf-sign) tool
-/// (Sigstore backend, keyless OIDC) and recorded by the resume generator so the
-/// signer identity can be shown next to the fingerprint and the published
-/// resume can be verified against the public transparency log.
+/// and recorded so the signer identity can be shown next to the fingerprint and
+/// the resume verified against the public transparency log.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ResumeSignature {
     /// Signing backend that produced the signature (e.g. "sigstore").
@@ -63,9 +61,9 @@ pub struct ResumeSignature {
 ///
 /// Written by the resume generator as `resume-fingerprint.json` and embedded
 /// into the frontend at build time, where it is shown on the contact card so a
-/// downloaded resume can be verified against its published digest. When the
-/// PDFs are signed on CI, the matching Sigstore signatures are recorded in
-/// [`signatures`](Self::signatures) so the signer can be shown alongside.
+/// downloaded resume can be verified against its published digest. Sigstore
+/// signatures (when signed on CI) are recorded in
+/// [`signatures`](Self::signatures).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ResumeFingerprints {
     /// Hash algorithm used for the digests (e.g. "SHA-256").
@@ -459,15 +457,10 @@ pub struct Experience {
     pub end: Option<YearMonth>,
     /// Number of localized bullets (`…bullets.b1` ..= `…bullets.b<n>`).
     pub bullet_count: u8,
-    /// Resume-exclusive ceiling on how many of the localized bullets the
-    /// generated resume renders (`None` = uncapped). The website always shows
-    /// every bullet via [`bullet_count`](Self::bullet_count); this field only
-    /// trims the PDF. The two oldest Mineplex roles each carry a redundant
-    /// third bullet that overlaps their first two (QA b3 restates the
-    /// triage/verify work of b1–b2; the Mineplex developer b3 is the weakest of
-    /// its three), so the resume caps them at two — matching the "older roles at
-    /// two bullets" rule and recovering the vertical budget the widened spacing
-    /// rhythm needs — while the shared config (and the site) keeps all three.
+    /// Caps how many localized bullets the generated resume renders
+    /// (`None` = uncapped). Only trims the PDF; the website always shows every
+    /// bullet via [`bullet_count`](Self::bullet_count). Used to drop a redundant
+    /// third bullet from the two oldest roles on the resume.
     pub resume_bullet_cap: Option<u8>,
     pub tech: &'static [&'static str],
 }
@@ -531,19 +524,11 @@ pub const EXPERIENCE: &[Experience] = &[
     },
 ];
 
-/// Work history in the one canonical order the site and resume render:
-/// **ongoing roles first** (those without an end date), then everything in
-/// reverse-chronological order by start date (most recent start first). Within
-/// each group the most recent end date breaks any equal-start ties, so the
-/// ordering is fully determined by the dates rather than by hand-authored
-/// declaration order.
-///
-/// Prioritising ongoing engagements means an open-ended role outranks an ended
-/// one even when the ended role started later (e.g. the Independent role,
-/// ongoing since Oct 2021, now precedes Mineplex Studios, which ran Aug 2023 –
-/// Mar 2026) — intentional and consistent (F13). The resume's "two most recent
-/// roles" rule reads the first two entries of this order, so it stays correct
-/// without any manual upkeep.
+/// Work history in the canonical order the site and resume render: ongoing
+/// roles first (no end date), then the rest in reverse-chronological order by
+/// start date, with the most recent end date breaking equal-start ties. The
+/// order is derived entirely from the dates, so an ongoing role can outrank an
+/// ended one that started later.
 pub fn experiences_sorted() -> Vec<&'static Experience> {
     let mut out: Vec<&'static Experience> = EXPERIENCE.iter().collect();
     out.sort_by(|a, b| {

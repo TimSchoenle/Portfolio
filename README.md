@@ -11,7 +11,7 @@ WebAssembly, served by a tiny static Axum server in a scratch container.
 | --- | --- |
 | `crates/data` | Shared language-neutral data (config, skills, experience, repos schema) + embedded `i18n/{en,de}.json` translations |
 | `apps/frontend` | Yew 0.22 CSR app (Trunk build) |
-| `apps/server` | Axum static server with SPA fallback, security headers, `/api/health` |
+| `apps/server` | Axum static server with SPA fallback, security headers, and health/liveness/readiness probe endpoints |
 | `apps/resume-generator` | Generates `resume/{en,de}.pdf` + `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans); the fingerprint is embedded into the frontend at build time. On CI each PDF is signed keylessly via [pdf-sign](https://github.com/0x77dev/pdf-sign) (Sigstore) and the signer identity is recorded in the fingerprint |
 | `apps/site-meta` | Build-time generator for the frontend's static metadata (`head.html`, `robots.txt`, `sitemap.xml`, web manifest) from `CONFIG` |
 | `apps/update-repos` | Builder that fetches all of the user's active GitHub repos (skipping archived, blacklisted and >1-year-stale ones) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
@@ -86,6 +86,60 @@ port 8080:
 
 ```bash
 docker build -t portfolio .
+```
+
+## Deployment (Kubernetes-ready)
+
+The image is a `scratch` base holding a single statically-linked (musl) `server`
+binary plus the read-only `/dist` assets — no shell, package manager or writable
+system paths. The Helm chart lives in a separate repository; the application and
+image here are prepared to run under a hardened pod spec out of the box.
+
+### Probe endpoints
+
+| Endpoint | Alias | Purpose |
+| --- | --- | --- |
+| `GET /api/health` | — | General health report with the current UTC time |
+| `GET /api/health/live` | `GET /livez` | **Liveness** — process is running; failure restarts the container |
+| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the SPA (`$DIST_DIR/index.html`) is present and servable; failure removes the pod from the Service endpoints |
+
+All probe responses are `no-store` (never cached). Readiness returns `503` until
+the assets are present.
+
+### Read-only & security
+
+The server only reads from `$DIST_DIR` and writes logs to stdout, so it runs
+unchanged with a fully read-only root filesystem (no writable volume, not even
+`/tmp`). It is built to satisfy the restricted Pod Security Standard:
+
+- runs as numeric non-root `1001:1001` (so `runAsNonRoot` verifies statically)
+- `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`
+- all Linux capabilities dropped, `seccompProfile: RuntimeDefault`
+- HTTP security headers (CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`) set on every response
+- listens on `:$PORT` (default `8080`); graceful shutdown on `SIGTERM`
+
+Configuration is via env vars: `DIST_DIR` (default `/dist`), `PORT` (default
+`8080`), `RUST_LOG` (default `info`).
+
+### Reproducible builds
+
+The build is pinned end-to-end so the image is reproducible:
+
+- base images pinned by digest; Rust toolchain pinned via the base image
+- `trunk` and `cargo-chef` pinned to exact versions (build args
+  `TRUNK_VERSION` / `CARGO_CHEF_VERSION`)
+- `cargo build`/`cargo chef cook` run `--locked` against the committed
+  `Cargo.lock`; the frontend uses `npm ci` against `package-lock.json`
+- pass `SOURCE_DATE_EPOCH` (and the OCI metadata build args `VCS_REF`,
+  `VERSION`, `CREATED`, `SOURCE_URL`) for deterministic, self-describing images:
+
+```bash
+docker build \
+  --build-arg SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) \
+  --build-arg VCS_REF=$(git rev-parse HEAD) \
+  --build-arg VERSION=$(git describe --tags --always) \
+  -t portfolio .
 ```
 
 ## repos.json

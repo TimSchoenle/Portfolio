@@ -1,12 +1,10 @@
 //! The embedded-font Typst [`World`] and the compile → PDF helpers.
 //!
-//! The generator ships its own fonts (Inter as the brand family with Liberation
-//! Sans as a metric-compatible fallback, both SIL OFL) and a single
-//! in-memory main source, so compilation is fully self-contained — no font
-//! discovery, no package downloads, no filesystem access. Typst subsets the
-//! embedded fonts, writes a tagged PDF (StructTreeRoot / MarkInfo / Lang) and
-//! standard PDF 1.7 (RGB) with live `/URI` link annotations, which the previous
-//! genpdf engine could not produce.
+//! The generator ships its own fonts (Inter, with Liberation Sans as a
+//! metric-compatible fallback) and a single in-memory main source, so
+//! compilation is fully self-contained: no font discovery, package downloads or
+//! filesystem access. Typst subsets the embedded fonts and writes a tagged,
+//! standard PDF 1.7 (RGB) with live `/URI` link annotations.
 
 use typst::diag::{FileError, FileResult, SourceDiagnostic, Warned};
 use typst::foundations::{Bytes, Datetime, Duration, Smart};
@@ -17,7 +15,7 @@ use typst::{Library, LibraryExt, World};
 use typst_layout::PagedDocument;
 use typst_pdf::{PdfOptions, PdfStandard, PdfStandards};
 
-// Inter (SIL OFL) — the brand family (N4). One face per file (index 0).
+// Inter (SIL OFL) — the brand family. One face per file (index 0).
 const INTER_REGULAR: &[u8] = include_bytes!("../fonts/Inter-Regular.ttf");
 const INTER_BOLD: &[u8] = include_bytes!("../fonts/Inter-Bold.ttf");
 const INTER_ITALIC: &[u8] = include_bytes!("../fonts/Inter-Italic.ttf");
@@ -118,8 +116,8 @@ pub(crate) fn render(markup: String) -> Result<(usize, Vec<u8>), String> {
         timestamp: None,
         page_ranges: None,
         standards,
-        // Tagged PDF (structure tree + marked content) for accessibility/ATS;
-        // this is the §12 reading-order insurance enforced at the file level.
+        // Tagged PDF (structure tree + marked content) for accessibility and
+        // reliable reading order in resume parsers.
         tagged: true,
         pretty: false,
     };

@@ -1,17 +1,12 @@
 //! `Cache-Control` TTLs for the served assets.
 //!
-//! The SPA is built by Trunk, which content-fingerprints its emitted JS/WASM
-//! (and the hashed favicon) with a 16-hex hash in the file stem. Those URLs
-//! change whenever their bytes change, so they can be cached *forever*
-//! (`immutable`, one year). `index.html` — which references them — must instead
-//! always be revalidated so a fresh deploy is picked up immediately. Stable but
-//! unhashed media (web fonts) get a moderate TTL, while the resume PDFs and the
-//! generated metadata (robots.txt, sitemap.xml, the web manifest) get a short
-//! one.
+//! Trunk content-hashes the emitted JS/WASM (and the favicon), so those URLs
+//! can be cached forever; `index.html` must always be revalidated to pick up a
+//! fresh deploy. Web fonts get a moderate TTL, and the resume PDFs and
+//! generated metadata (robots.txt, sitemap.xml, web manifest) a short one.
 //!
-//! Implemented as a response middleware that only fills in `Cache-Control` when
-//! a handler has not already set it (so the API's own `no-store` / `public`
-//! headers win), keeping the policy in one place.
+//! Implemented as a response middleware that only sets `Cache-Control` when a
+//! handler has not already done so, so the API's own headers win.
 
 use axum::{
     extract::Request,
@@ -52,9 +47,8 @@ fn cache_control_for(path: &str) -> &'static str {
     REVALIDATE
 }
 
-/// Whether the path's filename carries a Trunk content hash — a 16-hex segment
-/// in the stem, e.g. `frontend-87d64e6150ebfbc8.js`,
-/// `frontend-87d64e6150ebfbc8_bg.wasm` or `favicon-4203b67ddd500b42.svg`.
+/// Whether the path's filename carries a Trunk content hash: a 16-hex segment
+/// in the stem, e.g. `frontend-87d64e6150ebfbc8.js`.
 fn is_content_hashed(path: &str) -> bool {
     let file = path.rsplit('/').next().unwrap_or(path);
     let stem = file.split('.').next().unwrap_or(file);

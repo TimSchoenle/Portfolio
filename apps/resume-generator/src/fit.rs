@@ -1,7 +1,7 @@
-//! Dynamic single-page fitting. Standard one-page practice: recent roles get
-//! full bullets, older roles get fewer — content is condensed before type is
-//! shrunk below readable sizes. The §9 ordering is honored: prefer detail, then
-//! tighten density (Comfortable → Compact), and only then ease the type scale.
+//! Dynamic single-page fitting. Recent roles keep full bullets while older
+//! roles get fewer, so content is condensed before the type is shrunk below
+//! readable sizes. The order is: prefer detail, then tighten density
+//! (Comfortable → Compact), and only then ease the type scale.
 //!
 //! Page count comes straight from Typst's compiled [`PagedDocument`]
 //! (`pages.len()`), so fitting needs no PDF parsing; the PDF is exported only
@@ -41,9 +41,9 @@ impl Detail {
             Detail::Compact if recent => e.bullet_count,
             _ => e.bullet_count.min(2),
         };
-        // Apply the resume-exclusive bullet cap defined in the shared config:
-        // older roles with redundant bullets render fewer in the PDF, while the
-        // website still shows every bullet via `Experience::bullet_count`.
+        // Apply the resume-only bullet cap from the shared config: some older
+        // roles render fewer bullets in the PDF, while the website still shows
+        // every bullet via `Experience::bullet_count`.
         n.min(e.resume_bullet_cap.unwrap_or(u8::MAX))
     }
 
@@ -63,9 +63,9 @@ pub(crate) struct Fitted {
     pub(crate) detail: Detail,
 }
 
-/// Degradation ladder (§9): full detail at Comfortable density, then condensed,
-/// then switch to Compact density before condensing the content further and,
-/// last, letting the scale drift toward the floor.
+/// Fitting ladder: full detail at Comfortable density, then condensed, then
+/// Compact density, condensing further, and only last letting the scale drift
+/// toward the floor.
 pub(crate) fn fit_single_page(t: &Translations, lang: &str) -> Result<Fitted, String> {
     // (dense, detail, lo, hi)
     let attempts = [

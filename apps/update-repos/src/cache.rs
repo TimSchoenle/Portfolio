@@ -1,15 +1,12 @@
 //! Build-time caching for `repos.json`.
 //!
-//! Generating `repos.json` happens during the build (a Trunk `pre_build` hook),
-//! so to avoid hitting the GitHub API on every single rebuild — and tripping its
-//! rate limits — a freshly generated file is considered "fresh" for a while and
-//! the network fetch is skipped while it is. The freshness window depends on the
-//! environment: longer on CI (where many builds run back to back) than on a
-//! developer machine.
+//! `repos.json` is generated during the build, so to avoid hitting the GitHub
+//! API (and its rate limits) on every rebuild, a freshly generated file is
+//! reused while it is still "fresh". The freshness window is longer on CI than
+//! on a developer machine.
 //!
-//! Freshness is derived purely from the file's own `generated_at` RFC 3339
-//! timestamp, so the same logic works whether the file was produced locally or
-//! restored from a CI cache.
+//! Freshness is derived purely from the file's own `generated_at` timestamp, so
+//! it works whether the file was produced locally or restored from a CI cache.
 
 use std::fs;
 use std::path::Path;

@@ -5,28 +5,12 @@
 //!   resume/Tim-Schönle-Lebenslauf.pdf  (de)
 //!   resume-fingerprint.json            (SHA-256 per file, shown on the contact card)
 //!
-//! Layout: a modern editorial, two-column house style rendered with Typst. A
-//! full-width header band (name in the accent, headline, accent hairline rule)
-//! sits over a grid of a tinted reference sidebar (Contact, Skills, Education,
-//! Languages) on the left and a wide main column (Summary, Experience) on the
-//! right. Hierarchy comes from weight, space and one accent (slate blue) —
-//! hairline rules, one sans family, a single subtle sidebar tint; no icons,
-//! gradients, shadows or skill bars. The main column is emitted *first* in the
-//! document (placed into the right grid cell) so a text extractor reads
-//! identity → summary → experience → contact → skills despite the sidebar
-//! showing on the left, with standard section names, real `·` separators and
-//! consistent "Mon YYYY – Mon YYYY" ranges.
-//!
-//! The PDF is a tagged, standard **PDF 1.7** (RGB): Typst writes a structure
-//! tree (StructTreeRoot / MarkInfo / Lang) for the §12 reading-order insurance,
-//! subsets the embedded Liberation Sans faces, and emits live `/URI` link
-//! annotations for the contact links — none of which the previous genpdf engine
-//! could produce.
-//!
-//! The single-page guarantee follows the guide's §9 ordering — prefer detail,
-//! then tighten density (Comfortable → Compact margins, spacing and
-//! line-height), and only then ease the type scale toward the readability
-//! floor. Page count is read straight from Typst's compiled document.
+//! Layout: a two-column design rendered with Typst — a full-width header band
+//! over a tinted sidebar (Contact, Skills, Education, Languages) and a wide main
+//! column (Summary, Experience). The main column is emitted *first* so a text
+//! extractor reads it in order (identity → summary → experience → contact →
+//! skills) despite the sidebar showing on the left. The output is a tagged,
+//! standard PDF 1.7 (RGB) with live `/URI` link annotations.
 //!
 //! The pipeline is split across modules: [`style`] (design tokens), [`template`]
 //! (the `.typ` document generator), [`world`] (the embedded-font Typst `World`

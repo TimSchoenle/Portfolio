@@ -1,6 +1,9 @@
-//! HTTP API, mirroring the endpoints of the original Next.js portfolio.
+//! HTTP API, mirroring the endpoints of the original Next.js portfolio plus
+//! dedicated Kubernetes probe endpoints.
 //!
-//! - `GET /api/health` — liveness probe with the current UTC time.
+//! - `GET /api/health` — general health report with the current UTC time.
+//! - `GET /api/health/live`  (alias `GET /livez`)  — liveness probe.
+//! - `GET /api/health/ready` (alias `GET /readyz`) — readiness probe.
 //! - `GET /api/v1/profile` — static, language-neutral profile document.
 //! - `GET /api/v1/profile/schema` — JSON Schema for the profile document.
 
@@ -13,6 +16,12 @@ use axum::{Router, routing::get};
 pub fn router() -> Router {
     Router::new()
         .route("/api/health", get(health::health))
+        .route("/api/health/live", get(health::live))
+        .route("/api/health/ready", get(health::ready))
+        // Short, kubelet-friendly aliases so probes can target the
+        // conventional `/livez` and `/readyz` paths directly.
+        .route("/livez", get(health::live))
+        .route("/readyz", get(health::ready))
         .route("/api/v1/profile", get(profile::profile))
         .route("/api/v1/profile/schema", get(profile::schema))
 }
@@ -52,6 +61,37 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
         assert_eq!(json(response).await["status"], "healthy");
+    }
+
+    #[tokio::test]
+    async fn liveness_routes_are_wired_and_uncached() {
+        for path in ["/api/health/live", "/livez"] {
+            let response = get(path).await;
+            assert_eq!(response.status(), StatusCode::OK, "{path}");
+            assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+            assert_eq!(json(response).await["status"], "alive");
+        }
+    }
+
+    #[tokio::test]
+    async fn readiness_routes_are_wired_and_uncached() {
+        // The readiness verdict depends on DIST_DIR (asserted in unit tests in
+        // the `health` module); here we only assert the routes are wired,
+        // never cached, and report a well-formed status either way.
+        for path in ["/api/health/ready", "/readyz"] {
+            let response = get(path).await;
+            assert!(
+                matches!(
+                    response.status(),
+                    StatusCode::OK | StatusCode::SERVICE_UNAVAILABLE
+                ),
+                "{path}: unexpected status {}",
+                response.status()
+            );
+            assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+            let status = json(response).await["status"].as_str().unwrap().to_owned();
+            assert!(status == "ready" || status == "unavailable", "{path}: {status}");
+        }
     }
 
     #[tokio::test]

@@ -1,18 +1,15 @@
 //! A small builder for fetching a user's GitHub repositories and assembling
 //! them into the shared [`portfolio_data::ReposFile`] model.
 //!
-//! By default the builder lists every repository the user owns
-//! (`GET /users/{user}/repos`, paginated) and keeps only the ones that are
-//! active: not archived, not blacklisted and updated within the last
-//! [`MAX_AGE_DAYS`] days, so `repos.json` mirrors all of the user's live
-//! projects. An explicit set of repository names may still be supplied (e.g.
-//! via the `GITHUB_REPOS` env var), in which case each is fetched directly by
-//! name (one `GET /repos/{user}/{name}` request each) without filtering.
+//! By default it lists every repository the user owns (paginated) and keeps
+//! only the active ones: not archived, not blacklisted and updated within the
+//! last [`MAX_AGE_DAYS`] days. An explicit set of repository names may also be
+//! supplied (e.g. via `GITHUB_REPOS`), in which case each is fetched by name
+//! without filtering.
 //!
-//! The builder is deliberately decoupled from I/O concerns: [`ReposBuilder::fetch`]
-//! talks to the GitHub REST API and returns a fully-populated `ReposFile`, while
-//! [`ReposBuilder::assemble`] performs the pure assembly step (timestamp + user +
-//! repos) so it can be unit-tested without any network access.
+//! [`ReposBuilder::fetch`] performs the network calls; [`ReposBuilder::assemble`]
+//! is a pure step (timestamp + user + repos) so it can be unit-tested without
+//! network access.
 
 use std::time::Duration;
 

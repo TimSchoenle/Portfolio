@@ -1,10 +1,10 @@
-//! Generates the two-column editorial resume as Typst markup from the shared
-//! portfolio data and the localized translations.
+//! Generates the two-column resume as Typst markup from the shared portfolio
+//! data and the localized translations.
 //!
 //! The main column is emitted *first* in the document (placed into the right
 //! grid cell via `grid.cell(x: 1)`) so the tagged-PDF reading order is
 //! identity → summary → experience → contact → skills even though the sidebar
-//! renders on the left (§3.2 / §12 parseability insurance).
+//! renders on the left.
 
 use portfolio_data::{CONFIG, EDUCATION, Quadrant, experiences_sorted, matrix_skills};
 
@@ -60,9 +60,9 @@ pub(crate) fn build_typ(t: &Translations, l: Layout, detail: Detail, lang: &str)
     )
 }
 
-/// Full-width header band (§5.1): accent name on the left with a right-aligned
-/// availability status tag opposite it (R3 — muted pill, never accent, carrying
-/// the timezone signal), the soft headline beneath, then the accent hairline.
+/// Full-width header band: accent name on the left with a right-aligned
+/// availability tag opposite it, the soft headline beneath, then the accent
+/// hairline rule.
 fn header_band(t: &Translations, l: &Layout) -> String {
     format!(
         "#grid(columns: (1fr, auto), column-gutter: 8pt, align: (left + bottom, right + bottom),\n\
@@ -109,8 +109,7 @@ fn two_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     )
 }
 
-/// Main-column section header: UPPERCASE accent title over a `--c-rule`
-/// hairline (§6.5).
+/// Main-column section header: UPPERCASE accent title over a hairline rule.
 fn main_section(l: &Layout, title: &str) -> String {
     format!(
         "#text(size: {fs}, weight: 700, fill: rgb(\"{accent}\"), tracking: 0.08em)[{title}]\n\n\
@@ -138,11 +137,11 @@ fn side_section(l: &Layout, title: &str) -> String {
     )
 }
 
-/// Wide main column: Summary then reverse-chronological Experience (§3.1).
+/// Wide main column: Summary then reverse-chronological Experience.
 fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     let mut blocks: Vec<String> = Vec::new();
 
-    // -- Summary (pronoun-free, §5.5 / F11) --
+    // -- Summary --
     blocks.push(main_section(l, &t.get("resume.summaryTitle")));
     blocks.push(format!(
         "#text(size: {fs}, fill: rgb(\"{ink}\"))[{summary}]",
@@ -164,10 +163,9 @@ fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     blocks.join("\n\n")
 }
 
-/// Faint `--c-rule` hairline in the entry gap between experience entries (S2 /
-/// §6.1), never after the last one. The `SP_5` entry gap is split around the
-/// rule so the entry-level rhythm is preserved while the divider gives strong
-/// separation at near-zero vertical cost.
+/// Faint hairline in the gap between experience entries (never after the last
+/// one). The `SP_5` entry gap is split around the rule so the rhythm is
+/// preserved while the divider still separates entries clearly.
 fn entry_divider(l: &Layout) -> String {
     format!(
         "#v({half})\n\n#line(length: 100%, stroke: {w}pt + rgb(\"{rule}\"))\n\n#v({half})",
@@ -177,10 +175,9 @@ fn entry_divider(l: &Layout) -> String {
     )
 }
 
-/// One Experience entry (§6.1, N1): the title owns line 1 with the right-aligned
-/// date range beside it (so it never competes with the company for width); the
-/// company and location share line 2 (company in ink, non-breaking; location
-/// muted); then `–` bullets and a `·` tech run (§6.2).
+/// One Experience entry: the role owns line 1 with the date range right-aligned
+/// beside it; the company and location share line 2 (company in ink,
+/// non-breaking; location muted); then the `–` bullets and a `·` tech run.
 fn experience_entry(
     t: &Translations,
     l: &Layout,
@@ -218,20 +215,20 @@ fn experience_entry(
         loc = esc(e.location),
     ));
 
-    // Bullets (native list → marker precedes text, F7).
+    // Bullets (native list, so the marker precedes the text).
     let n = detail.bullet_count(index, e);
     if n > 0 {
         let items: String = (1..=n)
             .map(|b| format!("[{}],\n", esc(&t.get(&key(&format!("bullets.b{b}"))))))
             .collect();
-        // ~6pt below the company line before the first bullet (§6.1) so the
-        // bullets start clearly under the header rather than hugging it.
+        // Space below the company line so the bullets start clearly under the
+        // header rather than hugging it.
         s.push_str(&format!("\n\n#v({sp3})\n\n#list(\n{items})", sp3 = l.sp(style::SP_3)));
     }
 
-    // Explicit technology keywords (`·` run) for ATS / AI parity (§12). The
-    // bold `Stack:` label stays in ink; the tech run is `--c-ink-soft`, not
-    // accent, so accent reads as structure only (R4 / §8).
+    // Explicit technology keywords (`·` run) so resume parsers pick them up.
+    // The bold `Stack:` label stays in ink; the tech run is soft ink, not
+    // accent, so the accent color reads as structure only.
     s.push_str(&format!(
         "\n\n#v({sgap})\n\n#text(size: {fsm}, weight: 700, fill: rgb(\"{ink}\"))[{label}: ]\
          #text(size: {fsm}, fill: rgb(\"{soft}\"))[{tech}]",
@@ -246,7 +243,7 @@ fn experience_entry(
     s
 }
 
-/// Tinted reference sidebar: Contact, Skills, Education, Languages (§3.1).
+/// Tinted reference sidebar: Contact, Skills, Education, Languages.
 fn sidebar(t: &Translations, l: &Layout) -> String {
     let mut blocks: Vec<String> = Vec::new();
 
@@ -276,13 +273,10 @@ fn strip_scheme(url: &str) -> String {
         .to_string()
 }
 
-/// Contact block (F6 / R1): region-level location and label-prefixed live accent
-/// links (the no-icon `--contact-style: label`
-/// variant — inline SVG icons are unavailable in the offline Typst build).
-/// The availability/timezone signal now lives in the header band (R3), not here.
-/// Every row is uniformly label-above-value (R1): the narrow sidebar can't fit
-/// `LABEL + long-URL` on one line, so the label is its own line and the value
-/// always starts fresh beneath it, rather than some rows inline and some wrapped.
+/// Contact block: region-level location and label-prefixed live accent links
+/// (no icons; inline SVG is unavailable in the offline Typst build). Every row
+/// is label-above-value, since the narrow sidebar can't fit a label and a long
+/// URL on one line.
 fn contact_block(t: &Translations, l: &Layout) -> String {
     let label = |text: &str| {
         format!(
@@ -293,7 +287,7 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
         )
     };
     // The display value is wrapped in a `#box` so a handle never breaks
-    // mid-word across lines (N6); the sidebar accommodates its full width.
+    // mid-word across lines.
     let link = |uri: &str, display: &str| {
         format!(
             "#link(\"{uri}\")[#box[#text(size: {fs})[{d}]]]",
@@ -302,13 +296,13 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
             d = esc(display),
         )
     };
-    // R1: the label is a block (its own line); the value starts fresh beneath it
-    // via `#linebreak()`, so every row has the same label-above-value shape.
+    // The label is its own line; the value starts fresh beneath it, so every
+    // row has the same label-above-value shape.
     let row = |lab: String, val: String| format!("[{lab}#linebreak(){val}]");
 
-    // R2: the region name is wrapped in a `#box` so it stays intact on one line
-    // (never splitting at the `Baden-Württemberg` hyphen); only the comma before
-    // the country may break.
+    // The region name is wrapped in a `#box` so it stays intact on one line
+    // (never splitting at its hyphen); only the comma before the country may
+    // break.
     let region = format!(
         "#text(size: {fs}, fill: rgb(\"{muted}\"))[#box[{region}], {country}]",
         fs = l.fs_contact(),
@@ -327,23 +321,22 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
     ]
     .join(",\n");
 
-    // A clear step between contact items (§5.3): label → value → next item, with
-    // the inter-item gap distinctly larger than the in-row label/value break.
+    // A clear step between contact items: the inter-item gap is larger than the
+    // in-row label/value break.
     format!("#stack(dir: ttb, spacing: {sp4},\n{rows},\n)", sp4 = l.sp(style::SP_4))
 }
 
 
-/// Skills: per-group label on its own line, items as flex-wrapped white chips
-/// (§5.3 / §6.3 / N3). Each chip is an atomic `#box`, so no `·` separator can
-/// float to a line start; real whitespace between chips keeps the text layer
-/// parseable (no run-on tokens).
+/// Skills: per-group label on its own line, items as wrapped white chips. Each
+/// chip is an atomic `#box`, with real whitespace between chips so the text
+/// layer stays parseable.
 fn skills_block(t: &Translations, l: &Layout) -> String {
     let skills = matrix_skills();
     let mut blocks: Vec<String> = Vec::new();
     for (i, q) in Quadrant::all().into_iter().enumerate() {
         if i > 0 {
-            // Between skill groups (§5.3): distinctly more than the chip-row gap
-            // so the groups read as separated units, not a continuous list.
+            // Between skill groups: a larger gap than between chip rows so the
+            // groups read as separate units.
             blocks.push(format!("#v({})", l.sp(style::SP_4)));
         }
         let chips: String = skills
@@ -376,7 +369,7 @@ fn skills_block(t: &Translations, l: &Layout) -> String {
     blocks.join("\n\n")
 }
 
-/// Education: `Degree` (semibold) / `Institution · Year` (muted), §5.4.
+/// Education: `Degree` (semibold) / `Institution · Year` (muted).
 fn education_block(t: &Translations, l: &Layout) -> String {
     let mut blocks: Vec<String> = Vec::new();
     for (i, e) in EDUCATION.iter().enumerate() {
@@ -384,8 +377,8 @@ fn education_block(t: &Translations, l: &Layout) -> String {
             blocks.push(format!("#v({})", l.sp(style::SP_3)));
         }
         let key = |field: &str| format!("resume.education.{}.{field}", e.id);
-        // An explicit `#linebreak()` guarantees the muted institution line
-        // starts fresh beneath the degree regardless of paragraph spacing (N2).
+        // An explicit `#linebreak()` keeps the muted institution line beneath
+        // the degree regardless of paragraph spacing.
         blocks.push(format!(
             "#text(size: {fs}, weight: 700, fill: rgb(\"{ink}\"))[{degree}]#linebreak()\
              #text(size: {fs}, fill: rgb(\"{muted}\"))[{inst} · {years}]",
@@ -400,7 +393,7 @@ fn education_block(t: &Translations, l: &Layout) -> String {
     blocks.join("\n\n")
 }
 
-/// Languages: `Language — Level` (§5.4).
+/// Languages: `Language — Level`.
 fn languages_block(t: &Translations, l: &Layout) -> String {
     let mut blocks: Vec<String> = Vec::new();
     for (i, (name_key, level_key)) in [("german", "germanLevel"), ("english", "englishLevel")]
