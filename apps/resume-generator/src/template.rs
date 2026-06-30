@@ -6,7 +6,7 @@
 //! identity → summary → experience → contact → skills even though the sidebar
 //! renders on the left (§3.2 / §12 parseability insurance).
 
-use portfolio_data::{CONFIG, EDUCATION, EXPERIENCE, Quadrant, matrix_skills};
+use portfolio_data::{CONFIG, EDUCATION, Quadrant, experiences_sorted, matrix_skills};
 
 use crate::fit::Detail;
 use crate::style::{self, Layout};
@@ -154,7 +154,7 @@ fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     // -- Experience --
     blocks.push(format!("#v({})", l.sp(style::SP_7)));
     blocks.push(main_section(l, &t.get("resume.experienceTitle")));
-    for (i, e) in EXPERIENCE.iter().enumerate() {
+    for (i, e) in experiences_sorted().into_iter().enumerate() {
         if i > 0 {
             blocks.push(entry_divider(l));
         }

@@ -472,12 +472,10 @@ pub struct Experience {
     pub tech: &'static [&'static str],
 }
 
-/// Work history in the one deterministic order the resume relies on:
-/// **descending by start date** (most recent start first); ties keep this
-/// stable hand-authored order. An ongoing role can therefore sit below an
-/// ended one when the ended role started later (e.g. Mineplex Studios, started
-/// Aug 2023, precedes the Independent role, started Oct 2021) — intentional and
-/// consistent (F13). Localized roles/bullets live in the i18n files.
+/// Raw work-history entries. The declaration order here is *not* significant:
+/// the site and resume never read this slice directly but go through
+/// [`experiences_sorted`], which derives the canonical order. Localized
+/// roles/bullets live in the i18n files.
 pub const EXPERIENCE: &[Experience] = &[
     Experience {
         id: "sixtwenty",
@@ -532,6 +530,36 @@ pub const EXPERIENCE: &[Experience] = &[
         tech: &["Java", "QA", "Testing"],
     },
 ];
+
+/// Work history in the one canonical order the site and resume render:
+/// **ongoing roles first** (those without an end date), then everything in
+/// reverse-chronological order by start date (most recent start first). Within
+/// each group the most recent end date breaks any equal-start ties, so the
+/// ordering is fully determined by the dates rather than by hand-authored
+/// declaration order.
+///
+/// Prioritising ongoing engagements means an open-ended role outranks an ended
+/// one even when the ended role started later (e.g. the Independent role,
+/// ongoing since Oct 2021, now precedes Mineplex Studios, which ran Aug 2023 –
+/// Mar 2026) — intentional and consistent (F13). The resume's "two most recent
+/// roles" rule reads the first two entries of this order, so it stays correct
+/// without any manual upkeep.
+pub fn experiences_sorted() -> Vec<&'static Experience> {
+    let mut out: Vec<&'static Experience> = EXPERIENCE.iter().collect();
+    out.sort_by(|a, b| {
+        // Ongoing roles (no end) come first.
+        a.end.is_some()
+            .cmp(&b.end.is_some())
+            // Then most recent start first.
+            .then_with(|| (b.start.year, b.start.month).cmp(&(a.start.year, a.start.month)))
+            // Finally, the most recent end breaks equal-start ties.
+            .then_with(|| match (a.end, b.end) {
+                (Some(ae), Some(be)) => (be.year, be.month).cmp(&(ae.year, ae.month)),
+                _ => std::cmp::Ordering::Equal,
+            })
+    });
+    out
+}
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Education {
@@ -718,6 +746,52 @@ mod tests {
                 assert!(en.contains(&bullet), "missing key '{bullet}'");
             }
         }
+    }
+
+    #[test]
+    fn experiences_sorted_prioritises_ongoing_then_recent_start() {
+        let order = experiences_sorted();
+        // No entry lost or duplicated by sorting.
+        assert_eq!(order.len(), EXPERIENCE.len());
+
+        // All ongoing roles (no end) come before any ended one.
+        let first_ended = order.iter().position(|e| e.end.is_some());
+        let last_ongoing = order.iter().rposition(|e| e.end.is_none());
+        if let (Some(first_ended), Some(last_ongoing)) = (first_ended, last_ongoing) {
+            assert!(
+                last_ongoing < first_ended,
+                "an ended role precedes an ongoing one"
+            );
+        }
+
+        // Within each group (ongoing, then ended) the start dates are
+        // non-increasing, so each group is reverse-chronological by start.
+        for pair in order.windows(2) {
+            let (a, b) = (pair[0], pair[1]);
+            if a.end.is_none() == b.end.is_none() {
+                assert!(
+                    (a.start.year, a.start.month) >= (b.start.year, b.start.month),
+                    "{} (start {:?}) must not precede {} (start {:?})",
+                    a.id,
+                    a.start,
+                    b.id,
+                    b.start,
+                );
+            }
+        }
+
+        // The "two most recent roles" the resume keeps in full are the two
+        // ongoing engagements, newest start first.
+        assert_eq!(order[0].id, "sixtwenty");
+        assert_eq!(order[1].id, "self-employed");
+        // Ongoing roles outrank ended ones that started later: the Independent
+        // role (ongoing, Oct 2021) precedes Mineplex Studios (ended, Aug 2023).
+        let self_pos = order.iter().position(|e| e.id == "self-employed").unwrap();
+        let studios_pos = order
+            .iter()
+            .position(|e| e.id == "mineplex-studios")
+            .unwrap();
+        assert!(self_pos < studios_pos);
     }
 
     #[test]

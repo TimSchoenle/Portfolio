@@ -37,14 +37,14 @@
     "eyebrow": "Java · Rust · Next.js",
     "jobTitle": "Senior Softwareentwickler",
     "statusLabel": "STATUS",
-    "status": "Offen für Software-Entwickler-Rollen",
+    "status": "Offen für neue Aufgaben als Softwareentwickler",
     "tagline": "Java im Kern. Rust und Next.js an den Rändern.",
-    "taglineSub": "Open-Source-Beitragender. Fokus auf gute Software."
+    "taglineSub": "Open-Source-Entwickler. Mit Fokus auf hervorragende Software."
   },
   "about": {
     "title": "Über mich",
     "intro": "Ich baue zuverlässige Software, End-to-End.",
-    "body": "Mein Kern-Stack ist Java; mit Rust und Next.js baue ich meine Erfahrung aktiv aus. Ich liefere gerne aus — Open-Source-Tools, Helm-Charts, kleine Services — und betreibe sie auf containerisierter Infrastruktur mit GitOps. Sauberer Code, klare Verträge, ehrliche Tests.",
+    "body": "Mein Kern-Stack ist Java; mit Rust und Next.js baue ich meine Erfahrung aktiv aus. Ich liefere gerne aus — Open-Source-Tools, Helm-Charts, kleine Services — und betreibe sie auf containerisierter Infrastruktur mit GitOps. Sauberer Code, klare Schnittstellen, aussagekräftige Tests.",
     "focusLabel": "Schwerpunkte",
     "focus": {
       "f1": {
@@ -53,7 +53,7 @@
       },
       "f2": {
         "k": "Rust & Next.js",
-        "v": "Aktiv lernend, aktiv ausliefernd"
+        "v": "Lerne und liefere aktiv"
       },
       "f3": {
         "k": "Kubernetes & Helm",
@@ -67,13 +67,13 @@
   },
   "skills": {
     "title": "Stack",
-    "intro": "Die Werkzeuge, zu denen ich greife — gewichtet nach Confidence.",
+    "intro": "Die Werkzeuge, zu denen ich greife — gewichtet nach Erfahrung.",
     "languages": "Sprachen",
     "frameworks": "Frameworks",
     "build": "Build & Tools",
     "infrastructure": "Infrastruktur",
-    "confidenceLabel": "Confidence",
-    "hoverHint": "Über einen Punkt fahren"
+    "confidenceLabel": "Sicherheit",
+    "hoverHint": "Auf einen Punkt zeigen"
   },
   "projects": {
     "title": "Ausgewählte Projekte",
@@ -89,20 +89,20 @@
     "viewAll": "Alle Repos auf GitHub ansehen",
     "emptyTitle": "Repositories werden aktualisiert…",
     "emptyBody": "Öffentliche GitHub-Repos werden aus repos.json geladen, täglich über einen GitHub-Actions-Workflow neu gebaut.",
-    "featured": "★ FEATURED",
+    "featured": "★ EMPFOHLEN",
     "favorites": "★ Favoriten",
     "prevPage": "Vorherige Projekte",
     "nextPage": "Weitere Projekte"
   },
   "experience": {
     "title": "Erfahrung",
-    "intro": "Ein chronologischer Verlauf.",
+    "intro": "Mein beruflicher Werdegang.",
     "entries": {
       "sixtwenty": {
         "role": "Senior Softwareentwickler",
         "org": "SixTwenty Cloud",
         "bullets": {
-          "b1": "CI/CD- und GitOps-Workflows auf Kubernetes aufgebaut und Deployments, Releases und Konfiguration über Services und Umgebungen hinweg standardisiert.",
+          "b1": "CI/CD- und GitOps-Workflows auf Kubernetes entworfen und aufgebaut und Deployments, Releases und Konfiguration über Services und Umgebungen hinweg standardisiert.",
           "b2": "Partnerspezifische White-Label-Integrationen auf der gemeinsamen Plattform umgesetzt, sodass Partner eigene Produkte ohne Fork des Kerns ausliefern konnten."
         }
       },
@@ -110,16 +110,16 @@
         "role": "Senior Softwareentwickler",
         "org": "Mineplex Studios",
         "bullets": {
-          "b1": "Zentrale Frontend- und Backend-Engine-Komponenten für eine interne und externe Entwicklerplattform in Java, TypeScript und Rust gebaut.",
-          "b2": "Interne SDKs und Tooling erstellt, damit Produktteams Services konsistent gegen die gemeinsame Plattform entwickeln, testen und integrieren konnten.",
-          "b3": "Observability über die Plattform hinweg ergänzt – strukturiertes Logging, Metriken und Tracing – um Incident-Analyse zu beschleunigen und die Zuverlässigkeit zu erhöhen."
+          "b1": "Zentrale Frontend- und Backend-Engine-Komponenten in Java, TypeScript und Rust für eine Entwicklerplattform für interne und externe Teams gebaut.",
+          "b2": "Interne SDKs und Tooling erstellt, mit denen Produktteams Services konsistent gegen die gemeinsame Plattform entwickeln, testen und integrieren konnten.",
+          "b3": "Die Plattform mit strukturiertem Logging, Metriken und Tracing instrumentiert und so die Incident-Analyse beschleunigt und die Zuverlässigkeit erhöht."
         }
       },
       "self-employed": {
         "role": "Selbstständiger Softwareentwickler",
         "org": "Selbstständig",
         "bullets": {
-          "b1": "Backend-Services und Datenpipelines in Java, TypeScript/Node.js und Rust entwickelt und über REST- und gRPC-APIs mit starker Validierung bereitgestellt.",
+          "b1": "Backend-Services und Datenpipelines in Java, TypeScript/Node.js und Rust entworfen und gebaut und über REST- und gRPC-APIs mit starker Eingabevalidierung bereitgestellt.",
           "b2": "Tests und Security-Scans automatisiert, sodass mehrere Services sicher und reproduzierbar ausgeliefert wurden.",
           "b3": "Datenbanken, Message-Broker, Caches und Proxies mit Infrastructure-as-Code und Monitoring bereitgestellt und betrieben."
         }
@@ -130,15 +130,15 @@
         "bullets": {
           "b1": "Gameplay- und Backend-Features für groß angelegte Minecraft-Minispiele implementiert und gewartet, mit Fokus auf Stabilität und Spielererlebnis.",
           "b2": "Unklare Produktionsfehler-Meldungen in reproduzierbare Fälle und konkrete Fixes über mehrere Plugins und Services hinweg überführt.",
-          "b3": "Mit Product-, Community- und Operations-Teams Gameplay-Features anhand von Spielerfeedback geplant und umgesetzt."
+          "b3": "Mit Product-, Community- und Operations-Teams Gameplay-Features auf Basis von Spielerfeedback geplant und umgesetzt."
         }
       },
       "mineplex-qa": {
         "role": "Qualitätssicherung",
         "org": "Mineplex",
         "bullets": {
-          "b1": "Gameplay- und Backend-Probleme auf einem großen Minecraft-Netzwerk reproduziert und Entwicklern bei Ursachenanalyse und Stabilität geholfen.",
-          "b2": "Live-Incident-Meldungen von Spielern und Monitoring bearbeitet, Probleme reproduziert, Auswirkungen bewertet und kritische Fehler eskaliert.",
+          "b1": "Gameplay- und Backend-Probleme auf einem großen Minecraft-Netzwerk reproduziert und Entwicklern dabei geholfen, Ursachen zu finden und die Stabilität zu verbessern.",
+          "b2": "Live-Incident-Meldungen von Spielern und Monitoring priorisiert – Probleme reproduziert, Auswirkungen bewertet und kritische Fehler eskaliert.",
           "b3": "Mit Entwickler- und Community-Team kritische Produktionsfehler reproduziert, priorisiert und deren Behebung verifiziert."
         }
       }
@@ -146,7 +146,7 @@
   },
   "contact": {
     "title": "Kontakt",
-    "intro": "Sag hallo.",
+    "intro": "Schreiben Sie mir.",
     "copy": "Kopieren",
     "copied": "Kopiert ✓",
     "write": "Schreiben",
@@ -213,7 +213,7 @@
     "controllerHeading": "1. Verantwortlicher",
     "controllerBody": "Verantwortlicher im Sinne von Art. 4 Nr. 7 DSGVO ist die oben genannte Person.",
     "generalHeading": "2. Allgemeine Hinweise",
-    "generalBody": "Diese Website ist ein persönliches Portfolio zur beruflichen Darstellung als Software Developer. Personenbezogene Daten werden nur verarbeitet, soweit dies zur Bereitstellung, Sicherheit und Optimierung dieser Website sowie zur Bearbeitung von Kontaktanfragen erforderlich ist. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionsfähigen und sicheren Online-Präsenz (Art. 6 Abs. 1 lit. f DSGVO) sowie — soweit einschlägig — die Durchführung vorvertraglicher Maßnahmen oder die Erfüllung eines Vertrags (Art. 6 Abs. 1 lit. b DSGVO).",
+    "generalBody": "Diese Website ist ein persönliches Portfolio zur beruflichen Darstellung als Softwareentwickler. Personenbezogene Daten werden nur verarbeitet, soweit dies zur Bereitstellung, Sicherheit und Optimierung dieser Website sowie zur Bearbeitung von Kontaktanfragen erforderlich ist. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionsfähigen und sicheren Online-Präsenz (Art. 6 Abs. 1 lit. f DSGVO) sowie — soweit einschlägig — die Durchführung vorvertraglicher Maßnahmen oder die Erfüllung eines Vertrags (Art. 6 Abs. 1 lit. b DSGVO).",
     "hostingHeading": "3. Hosting",
     "hostingBody": "Unsere Website wird bei der netcup GmbH, Daimlerstraße 25, 76185 Karlsruhe (nachfolgend „netcup\") gehostet. Die personenbezogenen Daten, die auf dieser Website erfasst werden, werden auf den Servern von netcup gespeichert. Hierbei kann es sich v. a. um IP-Adressen, Meta- und Kommunikationsdaten, Webseitenzugriffe und sonstige Daten handeln, die über eine Website generiert werden. Die Nutzung von netcup erfolgt zum Zwecke der Vertragserfüllung gegenüber unseren potenziellen und bestehenden Kunden (Art. 6 Abs. 1 lit. b DSGVO) und im Interesse einer sicheren, schnellen und effizienten Bereitstellung unseres Online-Angebots durch einen professionellen Anbieter (Art. 6 Abs. 1 lit. f DSGVO). netcup wird Ihre Daten nur insoweit verarbeiten, wie dies zur Erfüllung seiner Leistungspflichten erforderlich ist, und befolgt unsere Weisungen in Bezug auf diese Daten. Wir haben einen Vertrag über Auftragsverarbeitung (AVV) mit netcup geschlossen. Weitere Informationen finden Sie in der Datenschutzerklärung von netcup: https://www.netcup.de/kontakt/datenschutzerklaerung.php",
     "encryptionHeading": "4. SSL-/TLS-Verschlüsselung",

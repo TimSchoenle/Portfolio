@@ -3,7 +3,7 @@
 //! and a tech-tag column.
 
 use i18nrs::yew::use_translation;
-use portfolio_data::{EXPERIENCE, format_period_years};
+use portfolio_data::{experiences_sorted, format_period_years};
 use yew::prelude::*;
 
 use super::reveal::Reveal;
@@ -37,7 +37,7 @@ pub fn experience_comp() -> Html {
                 <div class="col-label" />
                 <div class="col-body">
                     <div class="experience-list">
-                        { for EXPERIENCE.iter().enumerate().map(|(i, e)| {
+                        { for experiences_sorted().into_iter().enumerate().map(|(i, e)| {
                             let is_open = *open == i;
                             let toggle = {
                                 let open = open.clone();

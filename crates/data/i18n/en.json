@@ -37,14 +37,14 @@
     "eyebrow": "Java · Rust · Next.js",
     "jobTitle": "Senior Software Developer",
     "statusLabel": "STATUS",
-    "status": "Open to software-developer roles",
+    "status": "Open to software developer roles",
     "tagline": "Java at the core. Rust and Next.js on the edges.",
     "taglineSub": "Open-source contributor. Focused on building great software."
   },
   "about": {
     "title": "About",
     "intro": "I build reliable software, end to end.",
-    "body": "My core stack is Java; I'm growing my experience with Rust and Next.js. I enjoy shipping things — open-source tools, Helm charts, small services — and operating them on containerised infrastructure with GitOps. Clean code, clear contracts, honest tests.",
+    "body": "My core stack is Java; I'm growing my experience with Rust and Next.js. I enjoy shipping things — open-source tools, Helm charts, small services — and operating them on containerised infrastructure with GitOps. Clean code, clear contracts, meaningful tests.",
     "focusLabel": "Focus areas",
     "focus": {
       "f1": { "k": "Java & Spring Boot", "v": "Services, data, domain modelling" },
@@ -84,49 +84,49 @@
   },
   "experience": {
     "title": "Experience",
-    "intro": "A chronological record.",
+    "intro": "My career, in order.",
     "entries": {
       "sixtwenty": {
         "role": "Senior Software Developer",
         "org": "SixTwenty Cloud",
         "bullets": {
-          "b1": "Built CI/CD and GitOps workflows on Kubernetes, standardizing deployments, releases and configuration across services and environments.",
-          "b2": "Delivered partner-specific, white-labeled integrations on the shared platform, letting partners ship customised products without forking the core."
+          "b1": "Designed and built CI/CD and GitOps workflows on Kubernetes, standardising how deployments, releases and configuration ship across services and environments.",
+          "b2": "Delivered partner-specific, white-label integrations on the shared platform, so partners could ship customised products without forking the core."
         }
       },
       "mineplex-studios": {
         "role": "Senior Software Developer",
         "org": "Mineplex Studios",
         "bullets": {
-          "b1": "Built core front-end and back-end engine components for an internal and external developer platform in Java, TypeScript and Rust.",
-          "b2": "Created internal SDKs and tooling so product teams could build, test and integrate services consistently against the shared platform.",
-          "b3": "Added observability across the platform — structured logging, metrics and tracing — to speed incident diagnosis and improve reliability."
+          "b1": "Built core front-end and back-end engine components in Java, TypeScript and Rust for a developer platform serving internal and external teams.",
+          "b2": "Created internal SDKs and tooling that let product teams build, test and integrate services consistently against the shared platform.",
+          "b3": "Instrumented the platform with structured logging, metrics and tracing, speeding up incident diagnosis and improving reliability."
         }
       },
       "self-employed": {
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Designed backend services and data pipelines in Java, TypeScript/Node.js and Rust, exposing REST and gRPC APIs with strong validation.",
+          "b1": "Designed and built backend services and data pipelines in Java, TypeScript/Node.js and Rust, exposing REST and gRPC APIs with strong input validation.",
           "b2": "Automated testing and security scanning so multiple services shipped safely and repeatably.",
-          "b3": "Provisioned and operated databases, message brokers, caches and proxies with infrastructure-as-code and monitoring."
+          "b3": "Provisioned and operated databases, message brokers, caches and proxies using infrastructure-as-code and monitoring."
         }
       },
       "mineplex-dev": {
         "role": "Software Developer",
         "org": "Mineplex",
         "bullets": {
-          "b1": "Implemented and maintained gameplay and backend features for large-scale Minecraft minigames, focused on stability and player impact.",
+          "b1": "Implemented and maintained gameplay and backend features for large-scale Minecraft minigames, focusing on stability and player impact.",
           "b2": "Turned vague production bug reports into reproducible cases and concrete fixes across multiple plugins and services.",
-          "b3": "Worked with product, community and operations teams to plan and ship gameplay features from player feedback."
+          "b3": "Partnered with product, community and operations teams to plan and ship gameplay features driven by player feedback."
         }
       },
       "mineplex-qa": {
         "role": "Quality Assurance",
         "org": "Mineplex",
         "bullets": {
-          "b1": "Reproduced gameplay and backend issues on a large-scale Minecraft network, helping developers find root causes and improve stability.",
-          "b2": "Handled live incident reports from players and monitoring, reproducing issues, assessing impact and escalating critical problems.",
+          "b1": "Reproduced gameplay and backend issues on a large-scale Minecraft network, helping developers pinpoint root causes and improve stability.",
+          "b2": "Triaged live incident reports from players and monitoring — reproducing issues, assessing impact and escalating critical problems.",
           "b3": "Collaborated with developers and community staff to reproduce, triage and verify fixes for critical production issues."
         }
       }
@@ -134,7 +134,7 @@
   },
   "contact": {
     "title": "Contact",
-    "intro": "Say hello.",
+    "intro": "Get in touch.",
     "copy": "Copy",
     "copied": "Copied ✓",
     "write": "Write",
