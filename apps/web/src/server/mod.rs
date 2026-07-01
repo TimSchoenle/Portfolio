@@ -17,7 +17,12 @@ use axum::{
     routing::get,
 };
 use tower_http::{
-    compression::CompressionLayer, set_header::SetResponseHeaderLayer, trace::TraceLayer,
+    compression::{
+        CompressionLayer,
+        predicate::{DefaultPredicate, NotForContentType, Predicate},
+    },
+    set_header::SetResponseHeaderLayer,
+    trace::TraceLayer,
 };
 
 /// Content-Security-Policy. `'unsafe-inline'` covers Dioxus's inline hydration
@@ -74,11 +79,22 @@ fn router() -> Router {
         ))
         // Compress text assets per Accept-Encoding; already-encoded payloads are
         // skipped, so this never double-compresses the SSR HTML.
-        .layer(CompressionLayer::new())
+        .layer(CompressionLayer::new().compress_when(compression_predicate()))
         // Assign a `Cache-Control` TTL per asset class, but only when a handler
         // did not already set one (so the API's own headers win). Runs last.
         .layer(middleware::from_fn(cache::set_cache_control))
         .layer(TraceLayer::new_for_http())
+}
+
+/// The response-compression predicate. Starts from tower-http's default (which
+/// already skips tiny bodies, images, gRPC and server-sent-event streams) and
+/// additionally skips our woff2 fonts and resume PDFs: those are already
+/// compressed, so running br/gzip over them only burns CPU and can grow the
+/// payload rather than shrink it.
+fn compression_predicate() -> impl Predicate {
+    DefaultPredicate::new()
+        .and(NotForContentType::const_new("font/woff2"))
+        .and(NotForContentType::const_new("application/pdf"))
 }
 
 /// The public HTTP API + SEO documents, as a standalone sub-router so it can be
@@ -121,6 +137,29 @@ mod tests {
     async fn json(response: axum::response::Response) -> Value {
         let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
         serde_json::from_slice(&bytes).unwrap()
+    }
+
+    /// Builds a response with the given content type and a body large enough to
+    /// clear the default size threshold.
+    fn typed_response(content_type: &str) -> axum::response::Response {
+        axum::http::Response::builder()
+            .header(header::CONTENT_TYPE, content_type)
+            .header(header::CONTENT_LENGTH, "5000")
+            .body(Body::from(vec![0u8; 5000]))
+            .unwrap()
+    }
+
+    #[test]
+    fn compression_skips_already_compressed_assets() {
+        let predicate = compression_predicate();
+        // Already-compressed payloads must not be re-compressed.
+        assert!(!predicate.should_compress(&typed_response("font/woff2")));
+        assert!(!predicate.should_compress(&typed_response("application/pdf")));
+        // Text assets and JSON are still compressed.
+        assert!(predicate.should_compress(&typed_response("text/html; charset=utf-8")));
+        assert!(predicate.should_compress(&typed_response("text/css")));
+        assert!(predicate.should_compress(&typed_response("application/json")));
+        assert!(predicate.should_compress(&typed_response("application/wasm")));
     }
 
     #[tokio::test]
