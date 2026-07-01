@@ -64,12 +64,51 @@ fn chapter_id(slug: &str) -> String {
     }
 }
 
+/// The furthest chapter whose section has scrolled past the 35%-viewport line;
+/// `0` until the DOM is laid out. Client-only (reads the live layout).
+#[cfg(feature = "web")]
+fn active_chapter() -> usize {
+    let Some(doc) = web_sys::window().and_then(|w| w.document()) else {
+        return 0;
+    };
+    let viewport = crate::hooks::viewport_height();
+    let mut current = 0;
+    for (i, (slug, _)) in CHAPTERS.iter().enumerate() {
+        if let Some(el) = doc.get_element_by_id(&chapter_id(slug))
+            && el.get_bounding_client_rect().top() <= viewport * 0.35
+        {
+            current = i;
+        }
+    }
+    current
+}
+
 #[component]
 pub fn ChapterRail() -> Element {
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
-    let active = 0usize;
+    // First chapter active on the server / no-JS; the client tracks the real
+    // active section on scroll.
+    let active = use_signal(|| 0usize);
 
+    #[cfg(feature = "web")]
+    {
+        use crate::hooks::{ListenerGuard, add_window_listener};
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        let mut active = active;
+        // Set the initial active chapter once mounted (the layout isn't ready at
+        // first render), then keep it in sync on scroll for the rail's lifetime.
+        use_effect(move || active.set(active_chapter()));
+        let _listener: Rc<RefCell<Option<ListenerGuard>>> = use_hook(|| {
+            Rc::new(RefCell::new(add_window_listener("scroll", true, move |_| {
+                active.set(active_chapter());
+            })))
+        });
+    }
+
+    let active = active();
     rsx! {
         nav { class: "chapter-rail", "aria-label": "Section navigation",
             {CHAPTERS.iter().enumerate().map(|(i, (slug, key))| {

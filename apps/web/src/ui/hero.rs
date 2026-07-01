@@ -54,6 +54,78 @@ pub fn Hero() -> Element {
     let identity_num = section_num("identity");
     let about_id = section_id("about");
 
+    // Scroll offset driving the name parallax. Stays `0.0` on the server and
+    // under reduced motion, so the name renders untransformed (SSR-safe).
+    let scroll = use_signal(|| 0.0_f64);
+
+    #[cfg(feature = "web")]
+    {
+        use crate::hooks::{
+            ListenerGuard, add_window_listener, prefers_reduced_motion, scroll_to, scroll_y,
+            viewport_height,
+        };
+        use std::cell::RefCell;
+        use std::rc::Rc;
+        use web_sys::wasm_bindgen::JsCast;
+
+        let mut scroll = scroll;
+        // Parallax: track the capped scroll offset unless reduced motion is on.
+        let _parallax: Rc<RefCell<Option<ListenerGuard>>> = use_hook(move || {
+            if prefers_reduced_motion() {
+                return Rc::new(RefCell::new(None));
+            }
+            Rc::new(RefCell::new(add_window_listener("scroll", true, move |_| {
+                scroll.set(scroll_y().min(500.0));
+            })))
+        });
+
+        // Wheel-hijack: a single wheel notch fully transitions the intro <->
+        // about boundary. CSS scroll-snap can't commit a small scroll across a
+        // whole viewport, so we hijack the wheel there, smooth-scroll to the
+        // target and lock briefly to swallow the momentum. Reduced-motion off.
+        let about_target = about_id.clone();
+        let lock: Rc<RefCell<bool>> = use_hook(|| Rc::new(RefCell::new(false)));
+        let _wheel: Rc<RefCell<Option<ListenerGuard>>> = use_hook(move || {
+            if prefers_reduced_motion() {
+                return Rc::new(RefCell::new(None));
+            }
+            Rc::new(RefCell::new(add_window_listener("wheel", false, move |e| {
+                if *lock.borrow() {
+                    e.prevent_default();
+                    return;
+                }
+                let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {
+                    return;
+                };
+                let y = scroll_y();
+                let vh = viewport_height();
+                let dy = wheel.delta_y();
+                let target = if dy > 0.0 && y < vh * 0.5 {
+                    Some(about_target.clone())
+                } else if dy < 0.0 && y > vh * 0.5 && y < vh * 1.3 {
+                    Some("top".to_string())
+                } else {
+                    None
+                };
+                if let Some(id) = target {
+                    e.prevent_default();
+                    *lock.borrow_mut() = true;
+                    scroll_to(&id);
+                    let lock = lock.clone();
+                    wasm_bindgen_futures::spawn_local(async move {
+                        gloo_timers::future::TimeoutFuture::new(900).await;
+                        *lock.borrow_mut() = false;
+                    });
+                }
+            })))
+        });
+    }
+
+    // Parallax transform; identity (`translateY(0px)`) on the server and under
+    // reduced motion, so it never diverges from the SSR markup. The `+ 0.0`
+    // normalises IEEE negative zero so the resting value renders as `0px`.
+    let name_offset = scroll() * -0.08 + 0.0;
+
     rsx! {
         section { id: "top", class: "hero",
             div { class: "hero-eyebrow",
@@ -81,7 +153,11 @@ pub fn Hero() -> Element {
                 }
             }
 
-            h1 { class: "hero-name", {hero_name_lines()} }
+            h1 {
+                class: "hero-name",
+                style: "transform: translateY({name_offset}px)",
+                {hero_name_lines()}
+            }
 
             div { class: "hero-tagline",
                 div { class: "tagline-label",

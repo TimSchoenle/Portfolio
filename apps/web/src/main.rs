@@ -13,6 +13,9 @@
 
 mod app;
 mod github;
+/// Client-side interaction primitives and DOM helpers (wasm only).
+#[cfg(feature = "web")]
+mod hooks;
 mod i18n;
 mod pages;
 mod routes;

@@ -15,6 +15,10 @@ serde_json.workspace = true
 # never links wasm-bindgen. Feature lists come from the workspace.
 js-sys = { workspace = true, optional = true }
 web-sys = { workspace = true, optional = true }
+wasm-bindgen-futures = { workspace = true, optional = true }
+# Async delays for the reveal stagger and the contact type-in animation, run on
+# the wasm client only.
+gloo-timers = { workspace = true, optional = true }
 
 # Server-only (native SSR). Gated behind the `server` feature via `dep:` so they
 # never enter the wasm client build. Axum unifies with the version dioxus-server
@@ -45,7 +49,13 @@ tokio.workspace = true
 #   cargo check -p web --no-default-features --features server
 #   cargo check -p web --no-default-features --features web --target wasm32-unknown-unknown
 default = []
-web = ["dioxus/web", "dep:js-sys", "dep:web-sys"]
+web = [
+    "dioxus/web",
+    "dep:js-sys",
+    "dep:web-sys",
+    "dep:wasm-bindgen-futures",
+    "dep:gloo-timers",
+]
 server = [
     "dioxus/server",
     # NB: i18nrs's `dio-ssr` feature (its `#[server]` `get_cookie`/`set_cookie`

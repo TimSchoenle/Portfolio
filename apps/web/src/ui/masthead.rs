@@ -16,6 +16,19 @@ pub const SECTIONS: [(&str, &str); 5] = [
     ("contact", "nav.contact"),
 ];
 
+/// Navigates to a home-page section from anywhere in the app: a smooth-scroll
+/// when already on the home page, otherwise a route home first, then a scroll
+/// once the target section has mounted. Shared with the command palette.
+#[cfg(feature = "web")]
+pub fn goto_section(on_home: bool, id: String) {
+    if on_home {
+        crate::hooks::scroll_to(&id);
+    } else {
+        navigator().push(Route::Home {});
+        crate::hooks::scroll_to_soon(id);
+    }
+}
+
 #[component]
 pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
     let ctx = use_i18n();
@@ -38,6 +51,12 @@ pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
             let _ = el.set_attribute("lang", &current);
         }
     });
+
+    // Section links smooth-scroll (routing home first when off the home page)
+    // rather than triggering a full navigation to `/#id`.
+    #[cfg(feature = "web")]
+    let on_home = matches!(use_route::<Route>(), Route::Home {});
+
     let search_label = t("nav.search");
     let lang_aria = t("nav.languageToggle");
 
@@ -55,7 +74,16 @@ pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
                     let num = section_num(slug);
                     let label = t(key);
                     rsx! {
-                        a { key: "{slug}", href: "/#{id}",
+                        a {
+                            key: "{slug}",
+                            href: "/#{id}",
+                            onclick: move |_e| {
+                                #[cfg(feature = "web")]
+                                {
+                                    _e.prevent_default();
+                                    goto_section(on_home, section_id(slug));
+                                }
+                            },
                             span { class: "mono text-muted", "{num}" }
                             span { class: "mono text-fg ml-1.5", "{label}" }
                         }

@@ -59,6 +59,10 @@ web-sys = { version = "0.3", features = [
     "ScrollBehavior",
     "DomTokenList",
     "AddEventListenerOptions",
+    "WheelEvent",
+    # `window.matchMedia("(prefers-reduced-motion: reduce)")` gates the
+    # scroll-driven hero motion and reveal entrance animations.
+    "MediaQueryList",
     # Client-side `lang` cookie read/write for i18n locale persistence
     # (`HtmlDocument::cookie` / `set_cookie`), replacing i18nrs's server round-trip.
     "HtmlDocument",

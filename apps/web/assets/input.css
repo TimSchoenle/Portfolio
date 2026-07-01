@@ -67,6 +67,18 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
   }
 }
 
+/* ============ REVEAL ON SCROLL ============ */
+/* `.reveal` alone is the visible resting state used by the server render, the
+   no-JS view and above-the-fold blocks. The client adds `reveal-pre` to hide
+   a below-the-fold block, then swaps it for `reveal-in` to animate it in. */
+.reveal-pre { opacity: 0; transform: translateY(16px); }
+.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s cubic-bezier(.2, .8, .2, 1),
+              transform 0.7s cubic-bezier(.2, .8, .2, 1);
+}
+
 /* ============ SITE LAYOUT ============ */
 .site { position: relative; min-height: 100vh; }
 .main-container {

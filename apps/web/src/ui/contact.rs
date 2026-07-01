@@ -39,7 +39,47 @@ pub fn Contact() -> Element {
         .url
         .trim_start_matches("https://")
         .trim_start_matches("http://");
-    let typed = format!("ssh {}", CONFIG.email);
+
+    // The typed-in `ssh` command. Rendered in full on the server / no-JS view
+    // and under reduced motion; on the client it is cleared while below the fold
+    // and typed in, with jitter, once the section scrolls into view.
+    let full_command = format!("ssh {}", CONFIG.email);
+    let typed = use_signal(|| full_command.clone());
+
+    #[cfg(feature = "web")]
+    let mut section_el = use_signal(|| None::<web_sys::Element>);
+    #[cfg(feature = "web")]
+    {
+        use crate::hooks::{InViewGuard, element_in_view, observe_once, prefers_reduced_motion};
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
+        let guard: Rc<RefCell<Option<InViewGuard>>> = use_hook(|| Rc::new(RefCell::new(None)));
+        let mut typed = typed;
+        let full_command = full_command.clone();
+        use_effect(move || {
+            let Some(el) = section_el() else { return };
+            // Already on screen or reduced motion: keep the full command.
+            if prefers_reduced_motion() || element_in_view(&el, 0.9) {
+                return;
+            }
+            // Below the fold: clear now (unseen), type in on intersection.
+            typed.set(String::new());
+            let full_command = full_command.clone();
+            *guard.borrow_mut() = observe_once(&el, 0.3, move || {
+                let target: Vec<char> = full_command.chars().collect();
+                let mut typed = typed;
+                wasm_bindgen_futures::spawn_local(async move {
+                    for i in 0..=target.len() {
+                        typed.set(target[..i].iter().collect());
+                        let jitter = (js_sys::Math::random() * 40.0) as u32;
+                        gloo_timers::future::TimeoutFuture::new(40 + jitter).await;
+                    }
+                });
+            });
+        });
+    }
+
     let copy_label = if copied() {
         t("contact.copied")
     } else {
@@ -47,7 +87,18 @@ pub fn Contact() -> Element {
     };
 
     rsx! {
-        section { id: section_id("contact"), class: "sec",
+        section {
+            id: section_id("contact"),
+            class: "sec",
+            onmounted: move |_e| {
+                #[cfg(feature = "web")]
+                {
+                    use dioxus::web::WebEventExt;
+                    if let Some(node) = _e.try_as_web_event() {
+                        section_el.set(Some(node));
+                    }
+                }
+            },
             Reveal {
                 SectionHeader {
                     num: section_label("contact"),
@@ -98,11 +149,19 @@ pub fn Contact() -> Element {
                             button {
                                 class: "btn-accent",
                                 onclick: move |_| {
-                                    #[cfg(feature = "web")]
-                                    if let Some(win) = web_sys::window() {
-                                        let _ = win.navigator().clipboard().write_text(CONFIG.email);
-                                    }
                                     copied.set(true);
+                                    #[cfg(feature = "web")]
+                                    {
+                                        if let Some(win) = web_sys::window() {
+                                            let _ = win.navigator().clipboard().write_text(CONFIG.email);
+                                        }
+                                        // Revert the "copied" label after a beat.
+                                        let mut copied = copied;
+                                        wasm_bindgen_futures::spawn_local(async move {
+                                            gloo_timers::future::TimeoutFuture::new(1600).await;
+                                            copied.set(false);
+                                        });
+                                    }
                                 },
                                 span { class: "mono", "{copy_label}" }
                             }

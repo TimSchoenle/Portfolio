@@ -37,6 +37,8 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
     let set_language = ctx.set_language;
     let t = move |k: &str| i18n.read().t(k);
     let navigator = use_navigator();
+    #[cfg(feature = "web")]
+    let on_home = matches!(use_route::<Route>(), Route::Home {});
 
     let mut q = use_signal(String::new);
     let mut selected = use_signal(|| 0usize);
@@ -125,10 +127,10 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
 
     let activate = use_callback(move |action: Action| {
         match &action {
-            // Smooth-scroll to the section is added in the hydration phase; for
-            // now navigating home is enough.
+            // Smooth-scroll to the section (routing home first if needed).
             Action::Section(_slug) => {
-                navigator.push(Route::Home {});
+                #[cfg(feature = "web")]
+                crate::ui::masthead::goto_section(on_home, crate::sections::section_id(_slug));
             }
             Action::Goto(target) => {
                 navigator.push(target.clone());
