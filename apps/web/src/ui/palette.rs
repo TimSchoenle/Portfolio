@@ -133,9 +133,18 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
             Action::Goto(target) => {
                 navigator.push(target.clone());
             }
-            // window.open / clipboard are wired in the hydration phase.
-            Action::Open(_url) => {}
-            Action::CopyEmail => {}
+            Action::Open(_url) => {
+                #[cfg(feature = "web")]
+                if let Some(win) = web_sys::window() {
+                    let _ = win.open_with_url_and_target(_url, "_blank");
+                }
+            }
+            Action::CopyEmail => {
+                #[cfg(feature = "web")]
+                if let Some(win) = web_sys::window() {
+                    let _ = win.navigator().clipboard().write_text(CONFIG.email);
+                }
+            }
             Action::ToggleLang => {
                 set_language.call(other_language(&lang).to_string());
             }

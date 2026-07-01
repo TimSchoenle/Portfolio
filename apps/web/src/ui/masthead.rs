@@ -25,6 +25,19 @@ pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
 
     let lang = i18n.read().get_current_language().to_string();
     let next_lang = other_language(&lang).to_string();
+
+    // Mirror the active language onto <html lang> for a11y/SEO. Re-runs on
+    // language change (reads the i18n signal); client-only.
+    #[cfg(feature = "web")]
+    use_effect(move || {
+        let current = i18n.read().get_current_language().to_string();
+        if let Some(el) = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.document_element())
+        {
+            let _ = el.set_attribute("lang", &current);
+        }
+    });
     let search_label = t("nav.search");
     let lang_aria = t("nav.languageToggle");
 

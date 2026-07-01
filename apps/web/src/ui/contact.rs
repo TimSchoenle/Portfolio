@@ -95,7 +95,15 @@ pub fn Contact() -> Element {
 
                     Reveal { delay: 260,
                         div { class: "contact-actions",
-                            button { class: "btn-accent", onclick: move |_| copied.set(true),
+                            button {
+                                class: "btn-accent",
+                                onclick: move |_| {
+                                    #[cfg(feature = "web")]
+                                    if let Some(win) = web_sys::window() {
+                                        let _ = win.navigator().clipboard().write_text(CONFIG.email);
+                                    }
+                                    copied.set(true);
+                                },
                                 span { class: "mono", "{copy_label}" }
                             }
                             a { href: "{mailto}", class: "btn-outline",
