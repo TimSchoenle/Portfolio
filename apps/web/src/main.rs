@@ -1,3 +1,8 @@
+// With no platform feature active (a bare `cargo check`/`clippy`), `main` is
+// empty and the component tree is unreferenced; silence the resulting dead-code
+// warnings. Under `web`/`server` everything is used.
+#![cfg_attr(not(any(feature = "web", feature = "server")), allow(dead_code))]
+
 //! Dioxus fullstack entrypoint.
 //!
 //! The same [`app::App`] component tree is compiled twice: once to wasm (the

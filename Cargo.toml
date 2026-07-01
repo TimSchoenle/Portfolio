@@ -5,15 +5,10 @@ members = [
     "apps/resume-generator",
     "apps/update-repos",
 ]
-# apps/frontend, apps/server and apps/site-meta (the Yew stack) are being
-# replaced by apps/web (Dioxus fullstack) and are excluded from the build during
-# the migration so their `i18nrs` yew-feature no longer unifies with web's
-# dio-feature. They are deleted at cutover (Phase 5).
-exclude = ["apps/frontend", "apps/server", "apps/site-meta"]
 resolver = "2"
 
 [workspace.package]
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 publish = false
 
