@@ -1,13 +1,31 @@
-//! Root component. Phase 1 is a minimal placeholder to validate the fullstack
-//! build; the router, i18n provider and real UI are ported in later phases.
+//! Root component: the i18n provider wrapping the router, plus the document
+//! head shared across routes.
+
+use std::collections::HashMap;
 
 use dioxus::prelude::*;
+use i18nrs::dioxus::I18nProvider;
+use portfolio_data::{I18N_DE, I18N_EN};
+
+use crate::i18n::LANG_STORAGE_KEY;
+use crate::routes::Route;
 
 #[component]
 pub fn App() -> Element {
+    let translations = HashMap::from([("en", I18N_EN), ("de", I18N_DE)]);
+
     rsx! {
-        main {
-            h1 { "Portfolio — Dioxus fullstack scaffold" }
+        document::Link {
+            rel: "icon",
+            r#type: "image/svg+xml",
+            href: asset!("/assets/favicon.svg"),
+        }
+
+        I18nProvider {
+            translations: translations,
+            default_language: "en".to_string(),
+            storage_name: LANG_STORAGE_KEY.to_string(),
+            Router::<Route> {}
         }
     }
 }

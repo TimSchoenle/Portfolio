@@ -7,8 +7,14 @@ publish.workspace = true
 [dependencies]
 dioxus.workspace = true
 portfolio-data.workspace = true
+i18nrs.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+
+# Client-only (wasm). Gated behind the `web` feature so the native SSR binary
+# never links wasm-bindgen. Feature lists come from the workspace.
+js-sys = { workspace = true, optional = true }
+web-sys = { workspace = true, optional = true }
 
 # Server-only (native SSR). Gated behind the `server` feature via `dep:` so they
 # never enter the wasm client build. Axum unifies with the version dioxus-server
@@ -35,7 +41,7 @@ tokio.workspace = true
 #   cargo check -p web --no-default-features --features server
 #   cargo check -p web --no-default-features --features web --target wasm32-unknown-unknown
 default = []
-web = ["dioxus/web"]
+web = ["dioxus/web", "dep:js-sys", "dep:web-sys"]
 server = [
     "dioxus/server",
     "portfolio-data/schema",

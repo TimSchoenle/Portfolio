@@ -7,6 +7,13 @@
 //! renderer-agnostic component code is type-checked.
 
 mod app;
+mod github;
+mod i18n;
+mod pages;
+mod routes;
+mod sections;
+mod ui;
+mod util;
 
 /// Native SSR server (Axum router, public API, SEO routes, security headers).
 /// `cfg`-gated so none of its dependencies enter the wasm client build.

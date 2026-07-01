@@ -2,12 +2,14 @@
 members = [
     "crates/data",
     "apps/web",
-    "apps/frontend",
-    "apps/server",
     "apps/resume-generator",
-    "apps/site-meta",
     "apps/update-repos",
 ]
+# apps/frontend, apps/server and apps/site-meta (the Yew stack) are being
+# replaced by apps/web (Dioxus fullstack) and are excluded from the build during
+# the migration so their `i18nrs` yew-feature no longer unifies with web's
+# dio-feature. They are deleted at cutover (Phase 5).
+exclude = ["apps/frontend", "apps/server", "apps/site-meta"]
 resolver = "2"
 
 [workspace.package]
@@ -30,10 +32,9 @@ portfolio-data = { path = "crates/data" }
 # per-build by the `apps/web` crate's own feature flags, never here.
 dioxus = { version = "0.7.9", features = ["fullstack", "router"] }
 
-# i18nrs 0.1.9 requires yew 0.22.x — keep yew/yew-router pinned in lockstep.
-yew = { version = "0.22.0", features = ["csr"] }
-yew-router = "0.19.0"
-i18nrs = { version = "0.1.9", features = ["yew"] }
+# i18nrs Dioxus integration. `dio` is the base component set; `dio-ssr` adds the
+# server-side cookie-based locale negotiation (pulls dioxus/fullstack + http).
+i18nrs = { version = "0.1.9", features = ["dio", "dio-ssr"] }
 
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
