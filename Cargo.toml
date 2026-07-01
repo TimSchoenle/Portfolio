@@ -78,7 +78,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 typst = "0.15"
 typst-layout = "0.15"
 typst-pdf = "0.15"
-sha2 = "0.10"
+sha2 = "0.11"
 time = { version = "0.3", features = ["formatting", "parsing"] }
 
 [profile.release]
