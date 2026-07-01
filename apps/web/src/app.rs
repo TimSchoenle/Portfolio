@@ -14,6 +14,11 @@ use crate::routes::Route;
 pub fn App() -> Element {
     let translations = HashMap::from([("en", I18N_EN), ("de", I18N_DE)]);
 
+    // The embedded repo list, parsed once and shared with the projects section
+    // and the command palette. Identical on the server and client, so it
+    // hydrates without a mismatch.
+    use_context_provider(crate::github::load_repos);
+
     rsx! {
         document::Link {
             rel: "icon",

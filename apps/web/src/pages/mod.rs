@@ -2,6 +2,7 @@
 
 mod home;
 mod imprint;
+mod legal;
 mod not_found;
 mod privacy;
 
