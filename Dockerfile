@@ -17,10 +17,11 @@ ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config libssl-dev curl nodejs npm ca-certificates \
+    pkg-config libssl-dev curl nodejs npm ca-certificates musl-tools \
     && rm -rf /var/lib/apt/lists/*
 
-RUN rustup target add wasm32-unknown-unknown
+# wasm32 for the client; musl for a fully static SSR server (see runtime stage).
+RUN rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl
 
 # Pin the binstalled Dioxus CLI for reproducible builds.
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
@@ -52,15 +53,27 @@ WORKDIR /app/apps/web
 # via manganis `asset!`.
 RUN npm ci && npm run build:css
 # Produces target/dx/web/release/web/{server, public/} — the server binary plus
-# the hashed client assets and the copied /resume PDFs.
-RUN dx bundle --platform web --release
+# the hashed client assets and the copied /resume PDFs. The client stays wasm
+# while `@server --target …-musl` cross-links the SSR server fully static
+# (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
+# explicitly keeps proc-macros/build-scripts on the host toolchain. `musl-gcc`
+# is the C compiler ring's build script uses for the musl target.
+ENV CC_x86_64_unknown_linux_musl=musl-gcc
+RUN dx bundle --release \
+    @client --platform web \
+    @server --platform server --target x86_64-unknown-linux-musl
 
 # ── runtime ───────────────────────────────────────────────────────────────────
-# distroless/cc (glibc + libgcc, no shell/package manager) runs the dynamically
-# linked SSR server. musl+scratch is avoided: the fullstack server links
-# rustls/ring via reqwest, which is fragile to build fully static under musl.
-FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
+# `scratch`: the smallest possible attack surface — no shell, no package
+# manager, no libc, nothing but our own files. This is viable because the SSR
+# server is a fully static musl binary (see web-builder) and serves only
+# compile-time data, so it makes no outbound TLS at runtime and therefore needs
+# no CA bundle, tzdata, or /etc/passwd (a numeric USER needs no passwd entry).
+FROM scratch AS runtime
 
+# Re-declared so the globals above are in scope for the `USER` instruction.
+ARG USER_ID
+ARG GROUP_ID
 ARG VCS_REF=unknown
 ARG VERSION=dev
 ARG CREATED=unknown
