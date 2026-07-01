@@ -1,6 +1,6 @@
 // Vendors the exact self-hosted web fonts the site uses from the Fontsource
-// npm packages into `assets/fonts/`, which Trunk then serves (see
-// `assets/fonts.css` + the `copy-dir` link in `index.html`). The packages are
+// npm packages into `assets/fonts/`, which the server embeds and serves at
+// `/fonts/` (see `assets/fonts.css` + `src/server/assets.rs`). The packages are
 // dev dependencies so Renovate tracks upstream font updates; re-run this script
 // after a bump to refresh the committed woff2 files:
 //
@@ -13,9 +13,9 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:f
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const frontendRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const dest = join(frontendRoot, "assets", "fonts");
-const fontsourceRoot = join(frontendRoot, "node_modules", "@fontsource");
+const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const dest = join(webRoot, "assets", "fonts");
+const fontsourceRoot = join(webRoot, "node_modules", "@fontsource");
 
 // "latin" covers ASCII + Latin-1 (German umlauts/ß and the common Western
 // accents). The heavier "latin-ext" subset is intentionally not vendored: the

@@ -2,9 +2,9 @@
 
 Personal portfolio at [tim-schoenle.de](https://tim-schoenle.de).
 
-A static single-page application written in **Rust + Yew (WebAssembly)** and
-**Tailwind CSS**, compiled to WASM and served by a minimal static **Axum** server
-running from a `scratch` container.
+A **Rust + Dioxus** fullstack application (server-side rendered with WASM
+hydration) styled with **Tailwind CSS**, served by an **Axum** server running from
+a distroless container.
 
 ## Table of Contents
 
@@ -27,29 +27,29 @@ running from a `scratch` container.
 
 ## Architecture
 
-The project is a Cargo workspace composed of one shared library crate and five
+The project is a Cargo workspace composed of one shared library crate and three
 applications.
 
 | Crate | Purpose |
 | --- | --- |
 | `crates/data` | Shared, language-neutral data (config, skills, experience, repos schema) plus embedded `i18n/{en,de}.json` translations |
-| `apps/frontend` | Yew 0.22 client-side-rendered (CSR) application built with Trunk |
-| `apps/server` | Axum static server with SPA fallback, security headers, and health/liveness/readiness probe endpoints |
+| `apps/web` | Dioxus 0.7 fullstack app: a single crate that compiles to both the WASM client (`web` feature) and the native Axum SSR server (`server` feature), with the JSON API, SEO documents, security headers, and probe endpoints |
 | `apps/resume-generator` | Generates `resume/{en,de}.pdf` and `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans) |
-| `apps/site-meta` | Build-time generator for the frontend's static metadata (`head.html`, `robots.txt`, `sitemap.xml`, web manifest) from `CONFIG` |
-| `apps/update-repos` | Builder that fetches the user's active GitHub repositories (skipping archived, blacklisted, and >1-year-stale ones) and refreshes `apps/frontend/repos.json` using the shared `Repo`/`ReposFile` models |
+| `apps/update-repos` | Builder that fetches the user's active GitHub repositories (skipping archived, blacklisted, and >1-year-stale ones) and refreshes `apps/web/repos.json` using the shared `Repo`/`ReposFile` models |
 
 ## Technology Stack
 
-- **Frontend:** Rust, [Yew](https://yew.rs) 0.22 (WASM CSR), [yew-router](https://crates.io/crates/yew-router)
+- **App:** Rust, [Dioxus](https://dioxuslabs.com) 0.7 fullstack (Axum SSR + WASM
+  hydration) with the built-in Dioxus router
 - **Internationalization:** EN/DE via [i18nrs](https://crates.io/crates/i18nrs).
   Translations live in `crates/data/i18n/`; the active language is persisted in
   `localStorage` (`lang`) and detected from the browser language on first visit.
   A unit test in `crates/data` enforces key parity between both languages.
 - **Styling:** Tailwind CSS v4 with custom design tokens
-- **Build:** [Trunk](https://trunkrs.dev)
-- **Data:** `apps/frontend/repos.json` is regenerated at build time by a Trunk
-  hook from the GitHub API (all active repositories — archived, blacklisted
+- **Build:** the [Dioxus CLI](https://dioxuslabs.com) (`dx`)
+- **Data:** `apps/web/repos.json` is regenerated at build time from the GitHub
+  API (all active repositories — archived, blacklisted, and >1-year-stale ones
+  excluded) and embedded into the binary by `apps/web/build.rs`
 
 ## Features
 
@@ -67,9 +67,11 @@ applications.
 - Localized, single-page, ATS-readable resume PDFs with SHA-256 fingerprints on the contact card. The
   generator scales typography down until the content fits one A4 page.
 - Legal pages (imprint, privacy policy) localized and rendered from the translation files
+- Server-side rendering with WASM hydration; per-route `<head>` metadata, JSON-LD,
+  and server-negotiated locale for the first paint
 - SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, and a web manifest
 - Security headers (CSP, HSTS, and others) set by the server
-- WASM binary tuned for size: `opt-level = "z"`, LTO, and a single codegen unit
+- WASM client tuned for size: `opt-level = "z"`, LTO, and a single codegen unit
 
 ## Getting Started
 
@@ -77,31 +79,33 @@ applications.
 
 - Rust (stable) with the `wasm32-unknown-unknown` target:
   `rustup target add wasm32-unknown-unknown`
-- [Trunk](https://trunkrs.dev): `cargo install trunk` (or `cargo binstall trunk`)
+- [Dioxus CLI](https://dioxuslabs.com) (`dx`): `cargo install dioxus-cli`
+  (or `cargo binstall dioxus-cli`)
 - Node.js (required only for the Tailwind CSS build step)
 - Docker (optional, for containerized builds)
 
 ### Development
 
 ```bash
-# Resume PDFs + resume-fingerprint.json. Run BEFORE the frontend build so the
-# fingerprint is embedded and the PDFs are served via index.html's copy-dir.
-cargo run -p resume-generator -- apps/frontend/generated
+# Resume PDFs + resume-fingerprint.json. Run BEFORE the web build so the
+# fingerprint is embedded (build.rs) and the PDFs are served from public/resume/.
+cargo run -p resume-generator -- apps/web/generated
 
-# Frontend dev server (http://localhost:8080)
-cd apps/frontend
-npm install
-trunk serve
+# Web dev server (SSR + hydration, http://localhost:8080)
+cd apps/web
+npm ci && npm run build:css
+dx serve --platform web
 
 # Tests (including i18n key parity)
 cargo test -p portfolio-data
+cargo test -p web --no-default-features --features server
 ```
 
 ### Production Build
 
 ```bash
-cargo run --release -p resume-generator -- apps/frontend/generated
-cd apps/frontend && npm install && trunk build --release
+cargo run --release -p resume-generator -- apps/web/generated
+cd apps/web && npm ci && npm run build:css && dx bundle --platform web --release
 ```
 
 ### Container
@@ -114,11 +118,11 @@ docker build -t portfolio .
 
 ## Deployment
 
-The image is built on a `scratch` base holding a single statically linked (musl)
-`server` binary plus the read-only `/dist` assets — no shell, package manager, or
-writable system paths. The Helm chart lives in a separate repository; the
-application and image here are prepared to run under a hardened pod spec out of
-the box.
+The image is built on a `distroless/cc` base holding the dynamically linked
+`server` binary plus its sibling read-only `public/` assets under `/app` — no
+shell, package manager, or writable system paths. The Helm chart lives in a
+separate repository; the application and image here are prepared to run under a
+hardened pod spec out of the box.
 
 ### Probe Endpoints
 
@@ -126,16 +130,17 @@ the box.
 | --- | --- | --- |
 | `GET /api/health` | — | General health report with the current UTC time |
 | `GET /api/health/live` | `GET /livez` | **Liveness** — process is running; failure restarts the container |
-| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the SPA (`$DIST_DIR/index.html`) is present and servable; failure removes the pod from the Service endpoints |
+| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the client bundle (`$DIST_DIR/index.html`, default `public/index.html`) is present and servable; failure removes the pod from the Service endpoints |
 
 All probe responses are `no-store` (never cached). Readiness returns `503` until
 the assets are present.
 
 ### Read-only and Security Posture
 
-The server only reads from `$DIST_DIR` and writes logs to stdout, so it runs
-unchanged with a fully read-only root filesystem (no writable volume, not even
-`/tmp`). It is built to satisfy the restricted Pod Security Standard:
+The server only reads from `$DIST_DIR` (its sibling `public/` dir) and writes
+logs to stdout, so it runs unchanged with a fully read-only root filesystem (no
+writable volume, not even `/tmp`). It is built to satisfy the restricted Pod
+Security Standard:
 
 - runs as numeric non-root `1001:1001` (so `runAsNonRoot` verifies statically)
 - `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`
@@ -144,18 +149,19 @@ unchanged with a fully read-only root filesystem (no writable volume, not even
   `Referrer-Policy`, `Permissions-Policy`) set on every response
 - listens on `:$PORT` (default `8080`); graceful shutdown on `SIGTERM`
 
-Configuration is provided via environment variables: `DIST_DIR` (default `/dist`),
-`PORT` (default `8080`), and `RUST_LOG` (default `info`).
+Configuration is provided via environment variables: `DIST_DIR` (default
+`public`), `IP` (default `0.0.0.0`), `PORT` (default `8080`), and `RUST_LOG`
+(default `info`).
 
 ### Reproducible Builds
 
 The build is pinned end-to-end so the image is reproducible:
 
 - base images pinned by digest; Rust toolchain pinned via the base image
-- `trunk` and `cargo-chef` pinned to exact versions (build args `TRUNK_VERSION`
-  and `CARGO_CHEF_VERSION`)
-- `cargo build` / `cargo chef cook` run `--locked` against the committed
-  `Cargo.lock`; the frontend uses `npm ci` against `package-lock.json`
+- the Dioxus CLI (`dx`) is pinned to an exact version (build arg
+  `DIOXUS_CLI_VERSION`)
+- `cargo` / `dx bundle` build `--locked` against the committed `Cargo.lock`; the
+  Tailwind toolchain uses `npm ci` against `package-lock.json`
 - pass `SOURCE_DATE_EPOCH` (and the OCI metadata build args `VCS_REF`, `VERSION`,
   `CREATED`, `SOURCE_URL`) for deterministic, self-describing images:
 
@@ -169,14 +175,14 @@ docker build \
 
 ## Project Data (`repos.json`)
 
-The projects section reads `repos.json`, which is embedded into the WASM binary at
-build time via `include_str!`. The file is **generated during the build**: the
-`update-repos` builder runs as a Trunk `pre_build` hook (see
-`apps/frontend/Trunk.toml`) and refreshes `apps/frontend/repos.json` before the
-WASM is compiled. If it cannot be generated, the build fails.
+The projects section reads `repos.json`, which is embedded into the binary at
+build time via `include_str!` (see `apps/web/build.rs`). The file is **generated
+during the build**: the `update-repos` builder runs before the web build and
+refreshes `apps/web/repos.json`. When it is absent (dev builds, `cargo check`),
+`build.rs` substitutes an empty default so the `include_str!` always resolves.
 
-To avoid hitting the GitHub API on every rebuild (and its rate limits), the hook
-reuses the existing file while it is still fresh, deciding from its own
+To avoid hitting the GitHub API on every rebuild (and its rate limits), the
+builder reuses the existing file while it is still fresh, deciding from its own
 `generated_at` timestamp: the fetch is skipped when the file is younger than the
 cache TTL — **10 hours on CI** (when the `CI` environment variable is set) and
 **60 minutes** otherwise. CI additionally persists the file across runs with
@@ -195,8 +201,8 @@ which case each named repository is fetched directly (without filtering):
 ```bash
 # Defaults: user = CONFIG.github_username, repos = all active repos
 #           (archived/blacklisted/>1y-stale excluded),
-#           output = apps/frontend/repos.json
-GH_TOKEN=<token> cargo run --release -p update-repos -- apps/frontend/repos.json
+#           output = apps/web/repos.json
+GH_TOKEN=<token> cargo run --release -p update-repos -- apps/web/repos.json
 
 # Override the repo set for a one-off run
 GITHUB_REPOS=Portfolio,actions cargo run --release -p update-repos

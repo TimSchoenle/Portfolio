@@ -9,5 +9,8 @@
 /repos.json
 /generated/
 
-# dx / Trunk output.
+# dx bundle output.
 /dist/
+
+# Generated resume PDFs (produced by resume-generator at build, served at /resume/).
+/public/resume/*.pdf

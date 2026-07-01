@@ -68,7 +68,11 @@ pub fn detect_locale() -> String {
             .unwrap_or("")
             .trim()
             .to_lowercase();
-        if primary.starts_with("de") { "de" } else { "en" }
+        if primary.starts_with("de") {
+            "de"
+        } else {
+            "en"
+        }
     };
 
     // Persist the negotiated language so the client reads the same value from

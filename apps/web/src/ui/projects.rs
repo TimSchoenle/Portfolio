@@ -66,7 +66,11 @@ pub fn Projects(state: ReposState) -> Element {
     };
 
     let make_filter = move |value: String, label: String, is_active: bool| {
-        let cls = if is_active { "filter-chip active" } else { "filter-chip" };
+        let cls = if is_active {
+            "filter-chip active"
+        } else {
+            "filter-chip"
+        };
         let key = value.clone();
         rsx! {
             button {

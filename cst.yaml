@@ -1,70 +1,56 @@
 schemaVersion: 2.0.0
 
 metadataTest:
-  entrypoint: [ "/server" ]
+  entrypoint: [ "/app/server" ]
   exposedPorts: [ '8080' ]
   user: '1001:1001'
   envVars:
-    - key: DIST_DIR
-      value: /dist
     - key: PORT
       value: '8080'
+    - key: IP
+      value: 0.0.0.0
+    - key: RUST_LOG
+      value: info
 
 fileExistenceTests:
-  # ── server binary (musl, static) copied from the server-builder stage ───────
+  # ── fullstack SSR server binary (the whole `dx bundle` output copied to /app) ─
   - name: server binary present
-    path: /server
+    path: /app/server
     shouldExist: true
 
-  # ── CA certs copied from the certs stage for outbound HTTPS ─────────────────
+  # ── CA certs (from the distroless/cc base) for outbound HTTPS ───────────────
   - name: ca certificates present
     path: /etc/ssl/certs/ca-certificates.crt
     shouldExist: true
 
-  # ── Trunk build output copied from the frontend-builder stage into /dist ────
-  # Stable, un-hashed artifacts emitted by the Trunk pipeline (see
-  # apps/frontend/index.html + Trunk.toml). The content-hashed WASM/JS bundle is
-  # covered indirectly by the index.html content test below.
-  - name: dist directory present
-    path: /dist
+  # ── dx bundle: the sibling public/ asset dir the server resolves relative to
+  # itself. robots.txt, sitemap.xml, site.webmanifest, /favicon.svg and /fonts/
+  # are served dynamically by the server (see server/seo.rs + server/assets.rs),
+  # so they are NOT files here.
+  - name: public directory present
+    path: /app/public
     shouldExist: true
-  - name: dist index.html present
-    path: /dist/index.html
-    shouldExist: true
-  - name: dist robots.txt present (copy-file)
-    path: /dist/robots.txt
-    shouldExist: true
-  - name: dist sitemap.xml present (copy-file)
-    path: /dist/sitemap.xml
-    shouldExist: true
-  - name: dist site.webmanifest present (copy-file)
-    path: /dist/site.webmanifest
-    shouldExist: true
-  - name: dist favicon.svg present (stable, un-hashed copy)
-    path: /dist/favicon.svg
+  - name: public index.html present
+    path: /app/public/index.html
     shouldExist: true
 
-  # Self-hosted fonts copied via `rel="copy-dir"` (assets/fonts).
-  - name: dist fonts directory present (copy-dir)
-    path: /dist/fonts
+  # The wasm client bundle emitted by dx at stable, un-hashed paths.
+  - name: wasm js bundle present
+    path: /app/public/wasm/web.js
     shouldExist: true
-  - name: space grotesk 400 font present
-    path: /dist/fonts/space-grotesk-latin-400-normal.woff2
-    shouldExist: true
-  - name: jetbrains mono 400 font present
-    path: /dist/fonts/jetbrains-mono-latin-400-normal.woff2
+  - name: wasm binary present
+    path: /app/public/wasm/web_bg.wasm
     shouldExist: true
 
-  # Resume PDFs copied via `rel="copy-dir"` (generated/resume) and served.
-  - name: dist resume directory present (copy-dir)
-    path: /dist/resume
+  # Resume PDFs copied into public/resume by the build and served at /resume/.
+  - name: public resume directory present
+    path: /app/public/resume
     shouldExist: true
 
 fileContentTests:
-  # The content-hashed WASM/JS bundle names are not predictable, so assert that
-  # the served index.html actually references the Trunk-injected bundle.
-  - name: index.html references hashed wasm bundle
-    path: /dist/index.html
+  # The content-hashed manganis asset names are not predictable, but the served
+  # index.html always references the dx-injected wasm bundle loader.
+  - name: index.html references the wasm bundle
+    path: /app/public/index.html
     expectedContents:
-      - 'frontend-[0-9a-f]+_bg\.wasm'
-      - 'frontend-[0-9a-f]+\.js'
+      - 'wasm/web\.js'

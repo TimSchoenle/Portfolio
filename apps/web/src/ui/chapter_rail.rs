@@ -48,7 +48,11 @@ fn to_roman(mut n: usize) -> String {
 /// numeral of its section number.
 fn chapter_label(slug: &str) -> String {
     let n = section_index(slug);
-    if n == 0 { "00".to_string() } else { to_roman(n) }
+    if n == 0 {
+        "00".to_string()
+    } else {
+        to_roman(n)
+    }
 }
 
 /// The identity hero lives under `top`; everything else uses [`section_id`].

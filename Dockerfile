@@ -1,129 +1,89 @@
-# syntax=docker/dockerfile:1.25@sha256:0adf442eae370b6087e08edc7c50b552d80ddf261576f4ebd6421006b2461f12
+# syntax=docker/dockerfile:1
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
 
-# Pinned versions of the binstalled build tools. Bumping these (or the base
-# image digests above and the committed Cargo.lock / package-lock.json) is the
-# only thing that changes the produced artifacts — builds are otherwise
-# reproducible.
-ARG TRUNK_VERSION=0.21.14
-ARG CARGO_CHEF_VERSION=0.1.77
+# Pinned build-tool versions. Bump alongside the base image digests and the
+# committed Cargo.lock / package-lock.json.
+ARG DIOXUS_CLI_VERSION=0.7.9
 
 # ── shared build tools ────────────────────────────────────────────────────────
-FROM rust:1.95-slim@sha256:e14e87345b4d5964ddcc3491d27ee046a0f23820f340c3c1e24da6880141f7c0 AS tools
+# Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
+FROM rust:1.95-slim AS tools
 
-ARG TRUNK_VERSION
-ARG CARGO_CHEF_VERSION
-# Honoured by tooling that supports it (and forwarded to the build stages) so
-# embedded timestamps are deterministic across rebuilds. Inject with
-# `--build-arg SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)`.
+ARG DIOXUS_CLI_VERSION
+# Honoured by tooling that supports it so embedded timestamps stay deterministic.
 ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config libssl-dev curl musl-tools nodejs npm \
+    pkg-config libssl-dev curl nodejs npm ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl
+RUN rustup target add wasm32-unknown-unknown
 
-# Pin the binstalled tools to exact versions for reproducible builds; the
-# bootstrap script only fetches cargo-binstall itself, which selects the
-# pinned binaries.
+# Pin the binstalled Dioxus CLI for reproducible builds.
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
     https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash \
-    && cargo binstall --no-confirm --locked \
-        "trunk@${TRUNK_VERSION}" "cargo-chef@${CARGO_CHEF_VERSION}"
+    && cargo binstall --no-confirm --locked "dioxus-cli@${DIOXUS_CLI_VERSION}"
 
 WORKDIR /app
 
-# ── capture dependency graph for whole workspace ──────────────────────────────
-FROM tools AS planner
+# ── generate build-time data: repos.json, resume PDFs + fingerprint ───────────
+FROM tools AS generate
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
-
-# ── pre-build native dependencies (musl, static) ──────────────────────────────
-# Runs in parallel with the frontend build once planner is done.
-FROM tools AS server-deps
-COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --locked --target x86_64-unknown-linux-musl \
-    -p server -p resume-generator --recipe-path recipe.json
-
-# ── build server + resume generator, then generate the resume PDFs ────────────
-FROM server-deps AS server-builder
-COPY . .
-RUN cargo build --release --locked --target x86_64-unknown-linux-musl -p server -p resume-generator
-# Generate the resume PDFs + resume-fingerprint.json.
-RUN ./target/x86_64-unknown-linux-musl/release/resume-generator /app/resume-out
-
-# ── build WASM frontend ───────────────────────────────────────────────────────
-# The resume PDFs + resume-fingerprint.json from the server stage are dropped
-# into the frontend's `generated/` dir before the build, so the fingerprint is
-# embedded into the WASM (build.rs) and the PDFs are served (copy-dir in
-# index.html).
-FROM tools AS frontend-builder
-COPY . .
-COPY --from=server-builder /app/resume-out/ /app/apps/frontend/generated/
-WORKDIR /app/apps/frontend
-# The update-repos Trunk hook regenerates repos.json from the GitHub API during
-# the build and fails the build if it cannot be produced. CI=1 selects the 10h
-# cache TTL so the committed/cached repos.json is reused when fresh; an optional
-# `gh_token` build secret authenticates the call and lifts the API rate limit:
-#   docker build --secret id=gh_token,env=GH_TOKEN .
-# `npm ci` installs exactly the committed package-lock.json (reproducible),
-# unlike `npm install` which may resolve newer compatible versions.
+# repos.json from the GitHub API (build.rs embeds it into the web binary). CI=1
+# selects the long cache TTL so a fresh committed/cached file is reused; an
+# optional `gh_token` build secret lifts the API rate limit.
 RUN --mount=type=secret,id=gh_token,env=GH_TOKEN \
-    CI=1 sh -c 'npm ci && trunk build --release --locked'
+    CI=1 cargo run --release --locked -p update-repos -- apps/web/repos.json
+# Resume PDFs (served at /resume/ from public/) + resume-fingerprint.json
+# (embedded into the web binary by build.rs, shown on the contact card).
+RUN cargo run --release --locked -p resume-generator -- /app/resume-out \
+    && mkdir -p apps/web/public/resume apps/web/generated \
+    && cp /app/resume-out/resume/*.pdf apps/web/public/resume/ \
+    && cp /app/resume-out/resume-fingerprint.json apps/web/generated/
 
-# ── pull CA certs for future outbound HTTPS calls ─────────────────────────────
-FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS certs
-RUN apk add --no-cache ca-certificates
+# ── build the fullstack app (client wasm + native SSR server) ─────────────────
+FROM generate AS web-builder
+WORKDIR /app/apps/web
+# `npm ci` installs exactly the committed package-lock.json; `build:css` compiles
+# Tailwind (scanning the .rs files) into assets/tailwind.css, which the app links
+# via manganis `asset!`.
+RUN npm ci && npm run build:css
+# Produces target/dx/web/release/web/{server, public/} — the server binary plus
+# the hashed client assets and the copied /resume PDFs.
+RUN dx bundle --platform web --release
 
-# ── scratch runtime ───────────────────────────────────────────────────────────
-# A `scratch` base with a single statically-linked (musl) binary and read-only
-# asset directory: the container holds no shell, package manager or writable
-# system paths, so it runs unchanged under a hardened Kubernetes
-# `securityContext` (runAsNonRoot, readOnlyRootFilesystem: true,
-# allowPrivilegeEscalation: false, capabilities drop ALL, seccomp
-# RuntimeDefault). The server only reads from `/dist` and writes logs to stdout,
-# so no writable volume (not even /tmp) is required at runtime.
-FROM scratch AS runtime
+# ── runtime ───────────────────────────────────────────────────────────────────
+# distroless/cc (glibc + libgcc, no shell/package manager) runs the dynamically
+# linked SSR server. musl+scratch is avoided: the fullstack server links
+# rustls/ring via reqwest, which is fragile to build fully static under musl.
+FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
 
-ARG USER_ID
-ARG GROUP_ID
-
-# OCI image metadata for provenance/registry scanning. Concrete values
-# (revision, version, created, source) are injected by the release pipeline via
-# `--build-arg`; sensible defaults keep local builds self-describing.
 ARG VCS_REF=unknown
 ARG VERSION=dev
 ARG CREATED=unknown
 ARG SOURCE_URL
 LABEL org.opencontainers.image.title="portfolio" \
-      org.opencontainers.image.description="Static Yew (WASM) portfolio served by a tiny Axum server on scratch." \
+      org.opencontainers.image.description="Dioxus fullstack (SSR + hydration) portfolio served by Axum." \
       org.opencontainers.image.url="https://tim-schoenle.de" \
       org.opencontainers.image.source="${SOURCE_URL}" \
       org.opencontainers.image.licenses="LicenseRef-Proprietary" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.version="${VERSION}" \
-      org.opencontainers.image.created="${CREATED}" \
-      org.opencontainers.image.base.name="scratch"
+      org.opencontainers.image.created="${CREATED}"
 
-COPY --from=certs \
-    /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# The whole bundle: the `server` binary and its sibling `public/` asset dir. The
+# server resolves `public/` relative to itself, so keep them together and run
+# from that directory.
+COPY --from=web-builder /app/target/dx/web/release/web /app
+WORKDIR /app
 
-COPY --from=server-builder \
-    /app/target/x86_64-unknown-linux-musl/release/server /server
-
-# Includes the resume PDFs (served via the index.html copy-dir link).
-COPY --from=frontend-builder /app/apps/frontend/dist /dist
-
-ENV DIST_DIR=/dist \
-    PORT=8080 \
+ENV PORT=8080 \
+    IP=0.0.0.0 \
     RUST_LOG=info
 
 EXPOSE 8080
-# Numeric uid:gid (not a username) so Kubernetes' `runAsNonRoot` check can
-# statically verify the container does not run as root.
 USER ${USER_ID}:${GROUP_ID}
-ENTRYPOINT ["/server"]
+ENTRYPOINT ["/app/server"]

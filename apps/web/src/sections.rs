@@ -6,7 +6,14 @@
 
 /// Section slugs in the order they appear on the home page. The array index
 /// doubles as the section number rendered in the "§" labels.
-pub const SECTIONS: [&str; 6] = ["identity", "about", "stack", "work", "experience", "contact"];
+pub const SECTIONS: [&str; 6] = [
+    "identity",
+    "about",
+    "stack",
+    "work",
+    "experience",
+    "contact",
+];
 
 /// Zero-based number of the section with the given slug (its index in
 /// [`SECTIONS`]). Unknown slugs fall back to `0`.

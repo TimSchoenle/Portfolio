@@ -116,8 +116,8 @@ jobs:
           push: false
           load: true
           tags: image:test
-          # The update-repos Trunk hook regenerates repos.json from the GitHub
-          # API during the build; the token lifts the API rate limit.
+          # The update-repos step regenerates repos.json from the GitHub API
+          # during the Docker build; the token lifts the API rate limit.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
           cache-from: type=gha
@@ -213,7 +213,7 @@ jobs:
           expect_status /some/client/route 200
           expect_body_contains /some/client/route '<html'
 
-          # ── Static assets emitted by the Trunk build are served ───────────────
+          # ── Server-generated documents and embedded assets are served ─────────
           expect_status /robots.txt 200
           expect_status /favicon.svg 200
 

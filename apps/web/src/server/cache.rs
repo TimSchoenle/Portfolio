@@ -8,10 +8,10 @@
 //! Implemented as a response middleware that only sets `Cache-Control` when a
 //! handler has not already done so, so the API's own headers win.
 //!
-//! NOTE: `is_content_hashed` recognises the Trunk hash format. `dx`/`manganis`
-//! hash asset filenames differently; the detector is revisited in the cutover
-//! phase once the real `dx` asset URLs are known. Until then, unmatched assets
-//! fall through to `no-cache` (correct, just not maximally cacheable).
+//! NOTE: `is_content_hashed` recognises the `dx`/`manganis` hash format, in which
+//! the asset filename stem ends in a `dxh`-prefixed 16-hex segment (e.g.
+//! `tailwind-dxhd165a451a45ed030.css`). The wasm bundle (`/wasm/web.js`,
+//! `/wasm/web_bg.wasm`) is not filename-hashed and so revalidates.
 
 use axum::{
     extract::Request,
@@ -52,17 +52,17 @@ fn cache_control_for(path: &str) -> &'static str {
     REVALIDATE
 }
 
-/// Whether the path's filename carries a content hash: a 16-hex segment in the
-/// stem, e.g. `frontend-87d64e6150ebfbc8.js`.
+/// Whether the path's filename carries a `dx`/manganis content hash: a
+/// `dxh`-prefixed 16-hex segment at the end of the stem, e.g.
+/// `tailwind-dxhd165a451a45ed030.css`.
 fn is_content_hashed(path: &str) -> bool {
     let file = path.rsplit('/').next().unwrap_or(path);
     let stem = file.split('.').next().unwrap_or(file);
-    if !stem.contains('-') {
-        return false;
-    }
     let last = stem.rsplit('-').next().unwrap_or(stem);
-    // wasm-bindgen appends `_bg` to the hash in the WASM filename.
-    let hash = last.strip_suffix("_bg").unwrap_or(last);
+    // manganis (dx) prefixes the 16-hex asset hash with `dxh`.
+    let Some(hash) = last.strip_prefix("dxh") else {
+        return false;
+    };
     hash.len() == 16 && hash.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
@@ -86,15 +86,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn hashed_js_and_wasm_are_immutable_for_a_year() {
+    fn hashed_assets_are_immutable_for_a_year() {
         assert_eq!(
-            cache_control_for("/frontend-87d64e6150ebfbc8.js"),
+            cache_control_for("/assets/tailwind-dxhd165a451a45ed030.css"),
             IMMUTABLE_ONE_YEAR
         );
         assert_eq!(
-            cache_control_for("/frontend-87d64e6150ebfbc8_bg.wasm"),
+            cache_control_for("/assets/favicon-dxhc8f7fbe218189b6d.svg"),
             IMMUTABLE_ONE_YEAR
         );
+        assert_eq!(
+            cache_control_for("/assets/fonts-dxh55766d8d82c28550.css"),
+            IMMUTABLE_ONE_YEAR
+        );
+    }
+
+    #[test]
+    fn unhashed_wasm_bundle_revalidates() {
+        // dx emits the wasm bundle at stable, unhashed paths.
+        assert_eq!(cache_control_for("/wasm/web.js"), REVALIDATE);
+        assert_eq!(cache_control_for("/wasm/web_bg.wasm"), REVALIDATE);
     }
 
     #[test]
@@ -127,6 +138,10 @@ mod tests {
         assert!(!is_content_hashed(
             "/fonts/jetbrains-mono-latin-400-normal.woff2"
         ));
-        assert!(!is_content_hashed("/frontend-zzzzzzzzzzzzzzzz.js"));
+        assert!(!is_content_hashed(
+            "/assets/tailwind-dxhzzzzzzzzzzzzzzzz.css"
+        ));
+        // A bare 16-hex stem without the `dxh` prefix is Trunk-era, not dx.
+        assert!(!is_content_hashed("/frontend-87d64e6150ebfbc8.js"));
     }
 }

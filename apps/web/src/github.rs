@@ -50,5 +50,9 @@ pub fn load_repos() -> ReposState {
 /// generated (the embedded manifest is empty) or the manifest is malformed.
 pub fn load_resume_fingerprints() -> Option<ResumeFingerprints> {
     let parsed = serde_json::from_str::<ResumeFingerprints>(RESUME_FINGERPRINT_JSON).ok()?;
-    if parsed.is_empty() { None } else { Some(parsed) }
+    if parsed.is_empty() {
+        None
+    } else {
+        Some(parsed)
+    }
 }

@@ -24,6 +24,17 @@ fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR set by cargo");
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR set by cargo");
 
+    // Ensure the Tailwind output exists so `asset!("/assets/tailwind.css")`
+    // resolves even when `npm run build:css` has not been run (e.g. a bare
+    // `cargo check`/`clippy`/`test` in CI). The real stylesheet is produced by
+    // `npm run build:css` before `dx bundle`; this only writes an empty
+    // placeholder when the file is absent and never overwrites a real one.
+    let tailwind = Path::new(&manifest_dir).join("assets").join("tailwind.css");
+    if !tailwind.exists() {
+        fs::write(&tailwind, "/* placeholder — run `npm run build:css` */\n")
+            .expect("write tailwind.css placeholder");
+    }
+
     let fingerprint_source = Path::new(&manifest_dir)
         .join("generated")
         .join("resume-fingerprint.json");

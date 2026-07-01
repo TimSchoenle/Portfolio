@@ -183,7 +183,10 @@ mod tests {
 
     #[tokio::test]
     async fn unknown_api_path_is_not_found() {
-        assert_eq!(get_("/api/does-not-exist").await.status(), StatusCode::NOT_FOUND);
+        assert_eq!(
+            get_("/api/does-not-exist").await.status(),
+            StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]

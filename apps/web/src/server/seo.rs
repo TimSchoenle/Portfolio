@@ -26,7 +26,10 @@ pub async fn sitemap() -> impl IntoResponse {
 /// `GET /site.webmanifest`.
 pub async fn webmanifest() -> impl IntoResponse {
     (
-        [(header::CONTENT_TYPE, "application/manifest+json; charset=utf-8")],
+        [(
+            header::CONTENT_TYPE,
+            "application/manifest+json; charset=utf-8",
+        )],
         webmanifest_json(),
     )
 }

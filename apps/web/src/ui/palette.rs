@@ -133,13 +133,15 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
             Action::Goto(target) => {
                 navigator.push(target.clone());
             }
-            Action::Open(_url) => {
+            Action::Open(_url) =>
+            {
                 #[cfg(feature = "web")]
                 if let Some(win) = web_sys::window() {
                     let _ = win.open_with_url_and_target(_url, "_blank");
                 }
             }
-            Action::CopyEmail => {
+            Action::CopyEmail =>
+            {
                 #[cfg(feature = "web")]
                 if let Some(win) = web_sys::window() {
                     let _ = win.navigator().clipboard().write_text(CONFIG.email);

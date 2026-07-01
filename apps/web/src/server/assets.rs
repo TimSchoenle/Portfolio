@@ -58,19 +58,12 @@ pub fn router() -> Router {
 }
 
 async fn favicon() -> impl IntoResponse {
-    (
-        [(header::CONTENT_TYPE, "image/svg+xml")],
-        FAVICON,
-    )
+    ([(header::CONTENT_TYPE, "image/svg+xml")], FAVICON)
 }
 
 async fn font(Path(file): Path<String>) -> impl IntoResponse {
     match FONTS.iter().find(|(name, _)| *name == file) {
-        Some((_, bytes)) => (
-            [(header::CONTENT_TYPE, "font/woff2")],
-            *bytes,
-        )
-            .into_response(),
+        Some((_, bytes)) => ([(header::CONTENT_TYPE, "font/woff2")], *bytes).into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
 }
