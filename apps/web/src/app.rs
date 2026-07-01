@@ -20,11 +20,11 @@ pub fn App() -> Element {
     use_context_provider(crate::github::load_repos);
 
     rsx! {
-        document::Link {
-            rel: "icon",
-            r#type: "image/svg+xml",
-            href: asset!("/assets/favicon.svg"),
-        }
+        document::Stylesheet { href: asset!("/assets/tailwind.css") }
+        document::Stylesheet { href: asset!("/assets/fonts.css") }
+        // Stable path served by the server (see server::assets), matching the
+        // masthead logo and the web manifest icon.
+        document::Link { rel: "icon", r#type: "image/svg+xml", href: "/favicon.svg" }
 
         I18nProvider {
             translations: translations,

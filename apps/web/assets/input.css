@@ -1,6 +1,5 @@
 @import "tailwindcss" source(none);
 
-@source "../index.html";
 @source "../src/**/*.rs";
 
 /* Design tokens exposed to Tailwind as theme utilities. The values point at

@@ -6,6 +6,7 @@
 //! cache-control layers that used to live in the standalone `apps/server` crate.
 
 mod api;
+mod assets;
 mod cache;
 mod seo;
 
@@ -52,6 +53,7 @@ fn router() -> Router {
 
     dioxus::server::router(crate::app::App)
         .merge(api_router())
+        .merge(assets::router())
         .layer(static_header(header::CONTENT_SECURITY_POLICY, CSP))
         .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
         .layer(static_header(header::X_FRAME_OPTIONS, "DENY"))
