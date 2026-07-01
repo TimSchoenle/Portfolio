@@ -84,3 +84,52 @@ pub fn detect_locale() -> String {
     }
     accept_lang.to_string()
 }
+
+/// Client-side initial language, read synchronously from the `lang` cookie the
+/// server set during negotiation. Because the SSR HTML was rendered with the
+/// same value (see the `server` variant above), the wasm client hydrates with
+/// the matching language — no i18nrs `get_cookie` server round-trip required.
+#[cfg(feature = "web")]
+pub fn detect_locale() -> String {
+    use portfolio_data::LANGUAGES;
+    use web_sys::wasm_bindgen::JsCast;
+
+    let cookie_lang = web_sys::window()
+        .and_then(|w| w.document())
+        .and_then(|d| d.dyn_into::<web_sys::HtmlDocument>().ok())
+        .and_then(|d| d.cookie().ok())
+        .and_then(|c| {
+            c.split(';')
+                .map(str::trim)
+                .find_map(|c| c.strip_prefix(&format!("{LANG_STORAGE_KEY}=")))
+                .map(str::to_owned)
+        });
+
+    match cookie_lang {
+        Some(lang) if LANGUAGES.iter().any(|l| *l == lang) => lang,
+        _ => "en".to_string(),
+    }
+}
+
+/// Persists the selected language in the `lang` cookie on the client, replacing
+/// i18nrs's `set_cookie` server function. Call it on every language switch so a
+/// subsequent full page load reads the same value from the request cookie and
+/// the SSR renders the chosen language.
+#[cfg(feature = "web")]
+pub fn persist_locale(lang: &str) {
+    use web_sys::wasm_bindgen::JsCast;
+
+    if let Some(doc) = web_sys::window()
+        .and_then(|w| w.document())
+        .and_then(|d| d.dyn_into::<web_sys::HtmlDocument>().ok())
+    {
+        let _ = doc.set_cookie(&format!(
+            "{LANG_STORAGE_KEY}={lang}; Path=/; Max-Age=31536000; SameSite=Lax"
+        ));
+    }
+}
+
+/// No-op off the wasm client (the SSR binary and feature-less checks never touch
+/// `document.cookie`), so language-switch call sites can call it unconditionally.
+#[cfg(not(feature = "web"))]
+pub fn persist_locale(_lang: &str) {}

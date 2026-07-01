@@ -8,7 +8,7 @@
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, Repo, resume_file};
 
-use crate::i18n::{other_language, use_i18n};
+use crate::i18n::{other_language, persist_locale, use_i18n};
 use crate::routes::Route;
 use crate::sections::section_num;
 use crate::ui::masthead::SECTIONS;
@@ -148,7 +148,9 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
                 }
             }
             Action::ToggleLang => {
-                set_language.call(other_language(&lang).to_string());
+                let target = other_language(&lang).to_string();
+                persist_locale(&target);
+                set_language.call(target);
             }
         }
         if !matches!(action, Action::ToggleLang) {

@@ -48,13 +48,10 @@ default = []
 web = ["dioxus/web", "dep:js-sys", "dep:web-sys"]
 server = [
     "dioxus/server",
-    # i18nrs gates its `#[server]` cookie functions (`get_cookie`/`set_cookie`,
-    # used for SSR locale negotiation) behind its own `server` feature. Without
-    # it, the server-side handlers are never registered, so the wasm client's
-    # `get_cookie` call hits the SSR catch-all (405) and panics — which, under
-    # the release `panic = "abort"`, aborts the client and freezes client-side
-    # navigation until a full reload.
-    "i18nrs/server",
+    # NB: i18nrs's `dio-ssr` feature (its `#[server]` `get_cookie`/`set_cookie`
+    # round-trip) is intentionally not enabled anywhere — locale negotiation is
+    # done in `crate::i18n::detect_locale` (server) and `document.cookie`
+    # (client), so no i18nrs server endpoint exists to register here.
     "portfolio-data/schema",
     "dep:axum",
     "dep:tower-http",

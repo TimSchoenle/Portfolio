@@ -2,7 +2,7 @@
 
 use dioxus::prelude::*;
 
-use crate::i18n::{other_language, use_i18n};
+use crate::i18n::{other_language, persist_locale, use_i18n};
 use crate::routes::Route;
 use crate::sections::{section_id, section_num};
 
@@ -73,7 +73,10 @@ pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
                 }
                 button {
                     class: "lang-toggle",
-                    onclick: move |_| set_language.call(next_lang.clone()),
+                    onclick: move |_| {
+                        persist_locale(&next_lang);
+                        set_language.call(next_lang.clone());
+                    },
                     "aria-label": "{lang_aria}",
                     span { class: "mono",
                         if lang == "de" {

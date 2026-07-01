@@ -20,14 +20,19 @@ pub fn App() -> Element {
     use_context_provider(crate::github::load_repos);
 
     // Initial language. On the server it is negotiated from the request (cookie
-    // / Accept-Language); on the client i18nrs reads the `lang` cookie itself, so
-    // this is only the fallback when none is set.
+    // / Accept-Language) and written back as a cookie; on the client it is read
+    // synchronously from that same `lang` cookie, so SSR and hydration agree
+    // without any server round-trip.
     let default_language: String = {
         #[cfg(feature = "server")]
         {
             crate::i18n::detect_locale()
         }
-        #[cfg(not(feature = "server"))]
+        #[cfg(all(not(feature = "server"), feature = "web"))]
+        {
+            crate::i18n::detect_locale()
+        }
+        #[cfg(not(any(feature = "server", feature = "web")))]
         {
             "en".to_string()
         }

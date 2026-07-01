@@ -2395,7 +2395,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9cd49c0f70832d82c0c51be6e85042844784d31fea9cb5e7792bd8f779e11f0f"
 dependencies = [
  "dioxus",
- "http",
  "serde_json",
  "web-sys",
 ]
