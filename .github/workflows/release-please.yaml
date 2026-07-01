@@ -12,6 +12,8 @@ permissions: { }
 
 env:
   DOCKER_REPO: timschoenle/portfolio
+  HELM_REPO: TimSchoenle/helm-charts
+  CHART_PATH: charts/portfolio
 
 jobs:
   release-please:
@@ -117,3 +119,28 @@ jobs:
             images+="${tag}@${DIGEST} "
           done
           cosign sign --yes ${images}
+
+  helm-release:
+    name: Helm Release
+    environment:
+      name: release
+      deployment: false
+    needs: [ release-please, docker-release ]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the code
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - uses: TimSchoenle/actions/actions/helm/update-chart-version@1d65c7444f9eb9636c85346f388e51c2a9cdf4c3 # tag=actions-helm-update-chart-version-v1.5.15
+        with:
+          app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          helm-repo: ${{ env.HELM_REPO }}
+          chart-path: ${{ env.CHART_PATH }}
+          new-tag: ${{ needs.release-please.outputs.tag_name }}
+          image-digest: ${{ needs.docker-release.outputs.image_digest }}
