@@ -22,10 +22,16 @@ use tower_http::{
 
 /// Content-Security-Policy. `'unsafe-inline'` covers Dioxus's inline hydration
 /// bootstrap and the serialized-state `<script>`; `'wasm-unsafe-eval'`
-/// instantiates the WASM module. Server-function calls are same-origin `fetch`,
-/// so `connect-src 'self'` suffices.
+/// instantiates the WASM module. `'unsafe-eval'` is required because
+/// `dioxus-web`'s document provider evaluates JavaScript via `new Function(...)`
+/// (`js_sys::Function::new_with_args`) — this is how `document::Title`,
+/// `document::Stylesheet`, `document::Link`, `document::Meta`, etc. are applied
+/// on the client during hydration. Without it, `new Function` throws an
+/// (uncaught) `EvalError` that aborts the wasm client and freezes client-side
+/// navigation. Server-function calls are same-origin `fetch`, so
+/// `connect-src 'self'` suffices.
 const CSP: &str = "default-src 'self'; \
-     script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; \
+     script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; \
      style-src 'self' 'unsafe-inline'; \
      font-src 'self'; \
      img-src 'self' data:; \
