@@ -1,0 +1,22 @@
+[package]
+name = "web"
+version = "2.1.0"
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+dioxus.workspace = true
+portfolio-data.workspace = true
+
+[features]
+# No platform is enabled by default so a bare `cargo check`/`clippy`/`test`
+# over the workspace compiles only the shared (renderer-agnostic) code — it
+# never tries to build the wasm-only `dioxus/web` renderer on the host. The
+# `dx` CLI enables the right feature per platform; manual checks pass the
+# feature + target explicitly (see below).
+#
+#   cargo check -p web --no-default-features --features server
+#   cargo check -p web --no-default-features --features web --target wasm32-unknown-unknown
+default = []
+web = ["dioxus/web"]
+server = ["dioxus/server"]
