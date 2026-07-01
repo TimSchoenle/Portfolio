@@ -5874,6 +5874,8 @@ version = "2.1.0"
 dependencies = [
  "axum",
  "dioxus",
+ "dioxus-fullstack-core",
+ "http",
  "i18nrs",
  "js-sys",
  "portfolio-data",

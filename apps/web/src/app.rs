@@ -19,6 +19,20 @@ pub fn App() -> Element {
     // hydrates without a mismatch.
     use_context_provider(crate::github::load_repos);
 
+    // Initial language. On the server it is negotiated from the request (cookie
+    // / Accept-Language); on the client i18nrs reads the `lang` cookie itself, so
+    // this is only the fallback when none is set.
+    let default_language: String = {
+        #[cfg(feature = "server")]
+        {
+            crate::i18n::detect_locale()
+        }
+        #[cfg(not(feature = "server"))]
+        {
+            "en".to_string()
+        }
+    };
+
     rsx! {
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
         document::Stylesheet { href: asset!("/assets/fonts.css") }
@@ -28,7 +42,7 @@ pub fn App() -> Element {
 
         I18nProvider {
             translations: translations,
-            default_language: "en".to_string(),
+            default_language: default_language,
             storage_name: LANG_STORAGE_KEY.to_string(),
             Router::<Route> {}
         }
