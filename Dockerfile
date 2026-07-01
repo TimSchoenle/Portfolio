@@ -59,8 +59,12 @@ RUN npm ci && npm run build:css
 # explicitly keeps proc-macros/build-scripts on the host toolchain. `musl-gcc`
 # is the C compiler ring's build script uses for the musl target.
 ENV CC_x86_64_unknown_linux_musl=musl-gcc
+# `--debug-symbols=false` strips the client wasm's DWARF debug info and `name`
+# section for production: it shrinks the payload substantially and avoids the
+# malformed `name` custom section that Firefox rejects at validation. We already
+# don't `--keep-names`, so no readable backtraces are lost.
 RUN dx bundle --release \
-    @client --platform web \
+    @client --platform web --debug-symbols=false \
     @server --platform server --target x86_64-unknown-linux-musl
 
 # ── runtime ───────────────────────────────────────────────────────────────────
