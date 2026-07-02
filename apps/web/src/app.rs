@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use i18nrs::dioxus::I18nProvider;
-use portfolio_data::{I18N_DE, I18N_EN};
+use portfolio_data::{CONFIG, I18N_DE, I18N_EN};
 
 use crate::i18n::LANG_STORAGE_KEY;
 use crate::routes::Route;
@@ -45,11 +45,56 @@ pub fn App() -> Element {
         // masthead logo and the web manifest icon.
         document::Link { rel: "icon", r#type: "image/svg+xml", href: "/favicon.svg" }
 
+        SiteHead { lang: default_language.clone() }
+
         I18nProvider {
             translations: translations,
             default_language: default_language,
             storage_name: LANG_STORAGE_KEY.to_string(),
             Router::<Route> {}
         }
+    }
+}
+
+/// Site-wide document metadata rendered into the `<head>` on both the server
+/// (so crawlers and link-unfurlers see it in the initial HTML) and the client
+/// (where `dioxus-web`'s document provider re-applies it during hydration).
+///
+/// The per-page `<title>` lives with each page (`document::Title`); everything
+/// here is route-independent and derived from [`CONFIG`], the single source of
+/// truth. `lang` is the request-negotiated locale, used only for `og:locale`.
+#[component]
+fn SiteHead(lang: String) -> Element {
+    let keywords = CONFIG.keywords.join(", ");
+    let image = format!("{}/favicon.svg", CONFIG.url);
+    let og_locale = match lang.as_str() {
+        "de" => "de_DE",
+        _ => "en_US",
+    };
+
+    rsx! {
+        // Core description / indexing hints.
+        Meta { name: "description", content: CONFIG.description }
+        Meta { name: "keywords", content: keywords }
+        Meta { name: "author", content: CONFIG.full_name }
+        Meta { name: "theme-color", content: "#0a0d14" }
+
+        // Canonical URL so query strings / alternate hosts don't fragment SEO.
+        document::Link { rel: "canonical", href: CONFIG.url }
+
+        // Open Graph (Facebook, LinkedIn, Slack, …).
+        Meta { property: "og:type", content: "website" }
+        Meta { property: "og:site_name", content: CONFIG.full_name }
+        Meta { property: "og:title", content: CONFIG.title }
+        Meta { property: "og:description", content: CONFIG.description }
+        Meta { property: "og:url", content: CONFIG.url }
+        Meta { property: "og:image", content: image.clone() }
+        Meta { property: "og:locale", content: og_locale }
+
+        // Twitter / X card.
+        Meta { name: "twitter:card", content: "summary" }
+        Meta { name: "twitter:title", content: CONFIG.title }
+        Meta { name: "twitter:description", content: CONFIG.description }
+        Meta { name: "twitter:image", content: image }
     }
 }
