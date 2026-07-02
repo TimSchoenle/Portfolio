@@ -114,7 +114,7 @@ fn accept_language_locale(accept_language: Option<&str>) -> &'static str {
 /// server set during negotiation. Because the SSR HTML was rendered with the
 /// same value (see the `server` variant above), the wasm client hydrates with
 /// the matching language — no i18nrs `get_cookie` server round-trip required.
-#[cfg(feature = "web")]
+#[cfg(all(feature = "web", not(feature = "server")))]
 pub fn detect_locale() -> String {
     use portfolio_data::LANGUAGES;
     use web_sys::wasm_bindgen::JsCast;
