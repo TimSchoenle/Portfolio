@@ -7,7 +7,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 ### Prerequisites
 
 - Rust (stable) with the `wasm32-unknown-unknown` target: `rustup target add wasm32-unknown-unknown`
-- [Trunk](https://trunkrs.dev): `cargo install trunk` (or `cargo binstall trunk`)
+- [Dioxus CLI](https://dioxuslabs.com) (`dx`): `cargo install dioxus-cli` (or `cargo binstall dioxus-cli`)
 - Node.js (only for the Tailwind CSS build step)
 - Docker (optional, for containerized builds)
 
@@ -20,12 +20,12 @@ Thank you for your interest in contributing! This document provides guidelines a
    cd Portfolio
    ```
 
-2. Run the frontend dev server:
+2. Run the web dev server (SSR + hydration):
 
    ```bash
-   cd apps/frontend
-   npm install
-   trunk serve
+   cd apps/web
+   npm ci && npm run build:css
+   dx serve --platform web
    ```
 
 3. Open [http://localhost:8080](http://localhost:8080) in your browser.
@@ -37,8 +37,10 @@ Before opening a pull request, make sure the following pass:
 ```bash
 cargo fmt --check
 cargo test -p portfolio-data
-cargo clippy -p frontend --target wasm32-unknown-unknown -- -D warnings
-cargo clippy -p portfolio-data -p server -p resume-generator -- -D warnings
+cargo test -p web --no-default-features --features server
+cargo clippy -p web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
+cargo clippy -p web --no-default-features --features server -- -D warnings
+cargo clippy -p portfolio-data -p resume-generator -p update-repos -- -D warnings
 ```
 
 ## Translations

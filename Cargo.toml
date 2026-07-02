@@ -1,16 +1,14 @@
 [workspace]
 members = [
     "crates/data",
-    "apps/frontend",
-    "apps/server",
+    "apps/web",
     "apps/resume-generator",
-    "apps/site-meta",
     "apps/update-repos",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 publish = false
 
@@ -23,10 +21,20 @@ edition = "2024"
 [workspace.dependencies]
 portfolio-data = { path = "crates/data" }
 
-# i18nrs 0.1.9 requires yew 0.22.x — keep yew/yew-router pinned in lockstep.
-yew = { version = "0.22.0", features = ["csr"] }
-yew-router = "0.19.0"
-i18nrs = { version = "0.1.9", features = ["yew"] }
+# Dioxus 0.7 fullstack. `fullstack` enables server functions + hydration
+# serialization on both targets; `router` re-exports dioxus-router. The
+# `web` (wasm client) and `server` (native SSR) renderers are selected
+# per-build by the `apps/web` crate's own feature flags, never here.
+dioxus = { version = "0.7.9", features = ["fullstack", "router"] }
+
+# i18nrs Dioxus integration. Only the base component set (`dio`) is enabled.
+# `dio-ssr` is deliberately omitted: it wires i18nrs's own cookie negotiation via
+# a `#[server]` round-trip (`get_cookie`/`set_cookie`) whose `get_cookie` result
+# is discarded upstream. We negotiate the locale ourselves instead —
+# synchronously on the server (`crate::i18n::detect_locale`, from request
+# headers) and directly from `document.cookie` on the client — so no server
+# endpoint is needed for proper SSR i18n.
+i18nrs = { version = "0.1.9", features = ["dio"] }
 
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
@@ -51,6 +59,13 @@ web-sys = { version = "0.3", features = [
     "ScrollBehavior",
     "DomTokenList",
     "AddEventListenerOptions",
+    "WheelEvent",
+    # `window.matchMedia("(prefers-reduced-motion: reduce)")` gates the
+    # scroll-driven hero motion and reveal entrance animations.
+    "MediaQueryList",
+    # Client-side `lang` cookie read/write for i18n locale persistence
+    # (`HtmlDocument::cookie` / `set_cookie`), replacing i18nrs's server round-trip.
+    "HtmlDocument",
 ] }
 gloo-timers = { version = "0.4.0", features = ["futures"] }
 gloo-net = "0.7.0"
@@ -85,7 +100,10 @@ typst = "0.15"
 typst-layout = "0.15"
 typst-pdf = "0.15"
 sha2 = "0.11"
-time = { version = "0.3", features = ["formatting", "parsing"] }
+# Pinned to 0.3.51: 0.3.52 changed `Parsable::parse`'s signature and breaks
+# `cookie 0.18.1` (pulled transitively via dioxus-fullstack → reqwest →
+# cookie_store). Unpin once cookie ships a 0.3.52-compatible release.
+time = { version = "=0.3.51", features = ["formatting", "parsing"] }
 
 [profile.release]
 opt-level = "z"

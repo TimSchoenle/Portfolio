@@ -1,12 +1,13 @@
-//! Generates `apps/frontend/repos.json` from the GitHub REST API at build time.
+//! Generates `apps/web/repos.json` from the GitHub REST API at build time.
 //!
-//! Run as a Trunk `pre_build` hook, this lists every repository the user owns
-//! and keeps only the active ones (not archived, not blacklisted via
-//! `CONFIG.blacklisted_repos` and updated within the last year), maps each onto
-//! the shared [`portfolio_data::Repo`]/[`portfolio_data::ReposFile`] models (the
-//! very same types the frontend embeds and the server's schema describes) and
-//! writes the pretty-printed JSON to disk. A specific set of repositories can
-//! still be requested explicitly via `GITHUB_REPOS`.
+//! Run before the `web` build (its `build.rs` embeds the result), this lists
+//! every repository the user owns and keeps only the active ones (not archived,
+//! not blacklisted via `CONFIG.blacklisted_repos` and updated within the last
+//! year), maps each onto the shared
+//! [`portfolio_data::Repo`]/[`portfolio_data::ReposFile`] models (the very same
+//! types the web client embeds and the server's schema describes) and writes the
+//! pretty-printed JSON to disk. A specific set of repositories can still be
+//! requested explicitly via `GITHUB_REPOS`.
 //!
 //! To avoid hitting the GitHub API on every rebuild (and its rate limits), the
 //! existing output is reused while it is still fresh: the network fetch is
@@ -16,7 +17,7 @@
 //!
 //! Usage:
 //! ```text
-//! update-repos [OUTPUT_PATH]      # default: apps/frontend/repos.json
+//! update-repos [OUTPUT_PATH]      # default: apps/web/repos.json
 //! ```
 //!
 //! Environment:
@@ -41,7 +42,7 @@ use crate::builder::ReposBuilder;
 use crate::error::UpdateReposError;
 
 /// Where `repos.json` is committed, relative to the workspace root.
-const DEFAULT_OUTPUT: &str = "apps/frontend/repos.json";
+const DEFAULT_OUTPUT: &str = "apps/web/repos.json";
 
 fn main() -> ExitCode {
     match run() {

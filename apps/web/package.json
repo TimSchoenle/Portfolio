@@ -1,0 +1,16 @@
+{
+  "name": "portfolio-web-styles",
+  "private": true,
+  "description": "Tailwind CSS + font toolchain for the Dioxus web app (build-time only)",
+  "scripts": {
+    "build:css": "tailwindcss -i assets/input.css -o assets/tailwind.css --minify",
+    "watch:css": "tailwindcss -i assets/input.css -o assets/tailwind.css --watch",
+    "vendor:fonts": "node scripts/vendor-fonts.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/jetbrains-mono": "5.2.8",
+    "@fontsource/space-grotesk": "5.2.10",
+    "@tailwindcss/cli": "4.3.2",
+    "tailwindcss": "4.3.2"
+  }
+}

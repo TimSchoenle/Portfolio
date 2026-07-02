@@ -116,8 +116,8 @@ jobs:
           push: false
           load: true
           tags: image:test
-          # The update-repos Trunk hook regenerates repos.json from the GitHub
-          # API during the build; the token lifts the API rate limit.
+          # The update-repos step regenerates repos.json from the GitHub API
+          # during the Docker build; the token lifts the API rate limit.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
           cache-from: type=gha
@@ -168,10 +168,18 @@ jobs:
           }
 
           # Assert the response body for a GET contains a substring.
+          #
+          # Matches with a here-string rather than `printf … | grep` on purpose:
+          # under `set -o pipefail`, `grep -q` exits as soon as it finds the
+          # needle, and the still-writing `printf` then takes a SIGPIPE whose
+          # non-zero status would poison the pipeline and turn a real match into
+          # a spurious "did not contain" (larger bodies like the home page hit
+          # this every time). A here-string feeds grep directly, so the exit
+          # status is grep's alone.
           expect_body_contains() {
             local path="$1" needle="$2" body
             body=$(curl -fsS "$base$path" 2>/dev/null || true)
-            if printf '%s' "$body" | grep -qF -- "$needle"; then
+            if grep -qF -- "$needle" <<<"$body"; then
               echo "ok: GET $path body contains '$needle'"
             else
               echo "::error::GET $path body did not contain '$needle'"
@@ -213,7 +221,7 @@ jobs:
           expect_status /some/client/route 200
           expect_body_contains /some/client/route '<html'
 
-          # ── Static assets emitted by the Trunk build are served ───────────────
+          # ── Server-generated documents and embedded assets are served ─────────
           expect_status /robots.txt 200
           expect_status /favicon.svg 200
 
