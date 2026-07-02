@@ -103,7 +103,11 @@ fn accept_language_locale(accept_language: Option<&str>) -> &'static str {
         .unwrap_or("")
         .trim()
         .to_lowercase();
-    if primary.starts_with("de") { "de" } else { "en" }
+    if primary.starts_with("de") {
+        "de"
+    } else {
+        "en"
+    }
 }
 
 /// Client-side initial language, read synchronously from the `lang` cookie the

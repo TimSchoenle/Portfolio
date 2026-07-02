@@ -102,9 +102,13 @@ pub fn ChapterRail() -> Element {
         // first render), then keep it in sync on scroll for the rail's lifetime.
         use_effect(move || active.set(active_chapter()));
         let _listener: Rc<RefCell<Option<ListenerGuard>>> = use_hook(|| {
-            Rc::new(RefCell::new(add_window_listener("scroll", true, move |_| {
-                active.set(active_chapter());
-            })))
+            Rc::new(RefCell::new(add_window_listener(
+                "scroll",
+                true,
+                move |_| {
+                    active.set(active_chapter());
+                },
+            )))
         });
     }
 

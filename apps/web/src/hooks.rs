@@ -107,9 +107,11 @@ pub fn observe_once(
 
     let init = web_sys::IntersectionObserverInit::new();
     init.set_threshold(&JsValue::from_f64(threshold));
-    let observer =
-        web_sys::IntersectionObserver::new_with_options(on_intersect.as_ref().unchecked_ref(), &init)
-            .ok()?;
+    let observer = web_sys::IntersectionObserver::new_with_options(
+        on_intersect.as_ref().unchecked_ref(),
+        &init,
+    )
+    .ok()?;
     observer.observe(el);
     *slot.borrow_mut() = Some(observer.clone());
     Some(InViewGuard {

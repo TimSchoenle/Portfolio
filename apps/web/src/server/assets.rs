@@ -127,14 +127,23 @@ mod tests {
 
     #[tokio::test]
     async fn unknown_font_is_not_found() {
-        assert_eq!(status("/fonts/not-a-font.woff2").await, StatusCode::NOT_FOUND);
+        assert_eq!(
+            status("/fonts/not-a-font.woff2").await,
+            StatusCode::NOT_FOUND
+        );
     }
 
     #[tokio::test]
     async fn resume_rejects_names_outside_the_allowlist() {
         // Only the published `RESUME_FILES` names are accepted; anything else —
         // including path-traversal attempts — is refused before any disk access.
-        assert_eq!(status("/resume/anything-else.pdf").await, StatusCode::NOT_FOUND);
-        assert_eq!(status("/resume/..%2f..%2fCargo.toml").await, StatusCode::NOT_FOUND);
+        assert_eq!(
+            status("/resume/anything-else.pdf").await,
+            StatusCode::NOT_FOUND
+        );
+        assert_eq!(
+            status("/resume/..%2f..%2fCargo.toml").await,
+            StatusCode::NOT_FOUND
+        );
     }
 }

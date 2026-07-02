@@ -74,9 +74,13 @@ pub fn Hero() -> Element {
             if prefers_reduced_motion() {
                 return Rc::new(RefCell::new(None));
             }
-            Rc::new(RefCell::new(add_window_listener("scroll", true, move |_| {
-                scroll.set(scroll_y().min(500.0));
-            })))
+            Rc::new(RefCell::new(add_window_listener(
+                "scroll",
+                true,
+                move |_| {
+                    scroll.set(scroll_y().min(500.0));
+                },
+            )))
         });
 
         // Wheel-hijack: a single wheel notch fully transitions the intro <->
@@ -89,35 +93,39 @@ pub fn Hero() -> Element {
             if prefers_reduced_motion() {
                 return Rc::new(RefCell::new(None));
             }
-            Rc::new(RefCell::new(add_window_listener("wheel", false, move |e| {
-                if *lock.borrow() {
-                    e.prevent_default();
-                    return;
-                }
-                let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {
-                    return;
-                };
-                let y = scroll_y();
-                let vh = viewport_height();
-                let dy = wheel.delta_y();
-                let target = if dy > 0.0 && y < vh * 0.5 {
-                    Some(about_target.clone())
-                } else if dy < 0.0 && y > vh * 0.5 && y < vh * 1.3 {
-                    Some("top".to_string())
-                } else {
-                    None
-                };
-                if let Some(id) = target {
-                    e.prevent_default();
-                    *lock.borrow_mut() = true;
-                    scroll_to(&id);
-                    let lock = lock.clone();
-                    wasm_bindgen_futures::spawn_local(async move {
-                        gloo_timers::future::TimeoutFuture::new(900).await;
-                        *lock.borrow_mut() = false;
-                    });
-                }
-            })))
+            Rc::new(RefCell::new(add_window_listener(
+                "wheel",
+                false,
+                move |e| {
+                    if *lock.borrow() {
+                        e.prevent_default();
+                        return;
+                    }
+                    let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {
+                        return;
+                    };
+                    let y = scroll_y();
+                    let vh = viewport_height();
+                    let dy = wheel.delta_y();
+                    let target = if dy > 0.0 && y < vh * 0.5 {
+                        Some(about_target.clone())
+                    } else if dy < 0.0 && y > vh * 0.5 && y < vh * 1.3 {
+                        Some("top".to_string())
+                    } else {
+                        None
+                    };
+                    if let Some(id) = target {
+                        e.prevent_default();
+                        *lock.borrow_mut() = true;
+                        scroll_to(&id);
+                        let lock = lock.clone();
+                        wasm_bindgen_futures::spawn_local(async move {
+                            gloo_timers::future::TimeoutFuture::new(900).await;
+                            *lock.borrow_mut() = false;
+                        });
+                    }
+                },
+            )))
         });
     }
 
