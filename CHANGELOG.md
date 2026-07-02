@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.1.1](https://github.com/TimSchoenle/Portfolio/compare/v2.1.0...v2.1.1) (2026-07-02)
+
+
+### Code Refactoring
+
+* replace yew with dioxus ([#1002](https://github.com/TimSchoenle/Portfolio/issues/1002)) ([334b1f4](https://github.com/TimSchoenle/Portfolio/commit/334b1f498e5fa3906a4dc34c43ca50191e9aa50e))
+
+
+### CI
+
+* re-add missing helm chart sub action ([b0e1b6f](https://github.com/TimSchoenle/Portfolio/commit/b0e1b6fa03e6aa0c6d4386528eeccab00b9b53bc))
+
+
+### Miscellaneous
+
+* **deps:** pin dependencies ([#1003](https://github.com/TimSchoenle/Portfolio/issues/1003)) ([e4dc26f](https://github.com/TimSchoenle/Portfolio/commit/e4dc26fc96b9c7b1456c9a96d518e98353abbd8b))
+* **deps:** update docker/build-push-action digest to 53b7df9 ([#997](https://github.com/TimSchoenle/Portfolio/issues/997)) ([78f2209](https://github.com/TimSchoenle/Portfolio/commit/78f220939ab64169a3a40bf7acb5c4c8d8b486b2))
+* **deps:** update docker/login-action digest to c99871d ([#999](https://github.com/TimSchoenle/Portfolio/issues/999)) ([0b34a0e](https://github.com/TimSchoenle/Portfolio/commit/0b34a0e497f44b00207f1f796e942d585e8112aa))
+* **deps:** update docker/metadata-action digest to dc80280 ([#1000](https://github.com/TimSchoenle/Portfolio/issues/1000)) ([f414217](https://github.com/TimSchoenle/Portfolio/commit/f414217562d298bbf5beca2b1f93d3bc793cdc4a))
+* **deps:** update docker/setup-buildx-action digest to bb05f3f ([#1001](https://github.com/TimSchoenle/Portfolio/issues/1001)) ([48d452f](https://github.com/TimSchoenle/Portfolio/commit/48d452f4ab53a22308ac528e4601fef04c0fc303))
+* **deps:** update docker/setup-qemu-action digest to 96fe6ef ([#998](https://github.com/TimSchoenle/Portfolio/issues/998)) ([f77e0b8](https://github.com/TimSchoenle/Portfolio/commit/f77e0b8a42566b0be56ba03374fce4c5cf7a0b82))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.16 ([#961](https://github.com/TimSchoenle/Portfolio/issues/961)) ([b2b3779](https://github.com/TimSchoenle/Portfolio/commit/b2b37795e8d7eeb3c6adf4d03751f30d6e551b2f))
+
 ## [2.1.0](https://github.com/TimSchoenle/Portfolio/compare/v2.0.0...v2.1.0) (2026-07-01)
 
 
