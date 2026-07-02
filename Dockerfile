@@ -40,9 +40,13 @@ RUN --mount=type=secret,id=gh_token,env=GH_TOKEN \
     CI=1 cargo run --release --locked -p update-repos -- apps/web/repos.json
 # Resume PDFs (served at /resume/ from public/) + resume-fingerprint.json
 # (embedded into the web binary by build.rs, shown on the contact card).
+# Resume PDFs + resume-fingerprint.json, both embedded into the web binary by
+# build.rs (the PDFs are served at /resume/ from memory; the fingerprint is shown
+# on the contact card). Embedding keeps the runtime a single self-contained
+# binary with no on-disk asset tree.
 RUN cargo run --release --locked -p resume-generator -- /app/resume-out \
-    && mkdir -p apps/web/public/resume apps/web/generated \
-    && cp /app/resume-out/resume/*.pdf apps/web/public/resume/ \
+    && mkdir -p apps/web/generated/resume \
+    && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
     && cp /app/resume-out/resume-fingerprint.json apps/web/generated/
 
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
@@ -53,7 +57,7 @@ WORKDIR /app/apps/web
 # via manganis `asset!`.
 RUN npm ci && npm run build:css
 # Produces target/dx/web/release/web/{server, public/} — the server binary plus
-# the hashed client assets and the copied /resume PDFs. The client stays wasm
+# the hashed client assets (the /resume PDFs are embedded, not bundled). The client stays wasm
 # while `@server --target …-musl` cross-links the SSR server fully static
 # (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
 # explicitly keeps proc-macros/build-scripts on the host toolchain. `musl-gcc`

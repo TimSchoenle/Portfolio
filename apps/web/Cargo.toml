@@ -32,9 +32,11 @@ time = { workspace = true, features = ["macros"], optional = true }
 # Pinned to the version dioxus-fullstack re-exports.
 dioxus-fullstack-core = { version = "=0.7.9", optional = true }
 http = { version = "1", optional = true }
-# Async file reads for the resume PDF route. Already in the tree via
-# dioxus-server; the `fs` feature is all this route needs.
-tokio = { workspace = true, optional = true }
+
+[build-dependencies]
+# Read at build time so `build.rs` embeds the resume PDFs under their canonical
+# `RESUME_FILES` names, keeping the served files in sync with the data crate.
+portfolio-data.workspace = true
 
 [dev-dependencies]
 # `ServiceExt::oneshot` drives the API router in the server-side integration
@@ -73,5 +75,4 @@ server = [
     "dep:time",
     "dep:dioxus-fullstack-core",
     "dep:http",
-    "dep:tokio",
 ]

@@ -5,12 +5,10 @@
 /assets/tailwind.css
 
 # Build-time embedded data (see build.rs) produced by update-repos / the resume
-# generator; substituted with empty defaults when absent.
+# generator; substituted with empty defaults when absent. `generated/` also holds
+# the resume PDFs (`generated/resume/*.pdf`) embedded into the binary.
 /repos.json
 /generated/
 
 # dx bundle output.
 /dist/
-
-# Generated resume PDFs (produced by resume-generator at build, served at /resume/).
-/public/resume/*.pdf

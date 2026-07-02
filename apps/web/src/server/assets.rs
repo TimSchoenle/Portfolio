@@ -7,8 +7,6 @@
 //! self-contained binary (no asset directory to ship alongside it). Their
 //! `Cache-Control` is filled in by the cache middleware (see `cache.rs`).
 
-use std::path::PathBuf;
-
 use axum::{
     Router,
     extract::Path,
@@ -72,34 +70,37 @@ async fn font(Path(file): Path<String>) -> impl IntoResponse {
     }
 }
 
-/// Directory holding the build-generated resume PDFs, resolved next to the
-/// server binary. The bundle ships `public/` as a sibling of `server`, so this
-/// resolves correctly regardless of the process's working directory.
-fn resume_dir() -> Option<PathBuf> {
-    let exe = std::env::current_exe().ok()?;
-    Some(exe.parent()?.join("public").join("resume"))
+/// Build-generated resume PDFs, embedded at compile time by `build.rs` under
+/// stable ASCII names. Empty when the resume generator has not run (dev builds),
+/// in which case the route replies 404 — mirroring the empty fingerprint
+/// manifest. Embedding keeps the SSR server a single self-contained binary and
+/// sidesteps the non-ASCII file names (e.g. `Tim-Schönle-Lebenslauf.pdf`) that
+/// Dioxus's on-disk `public/` static serving failed to resolve.
+const RESUME_EN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/resume-en.pdf"));
+const RESUME_DE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/resume-de.pdf"));
+
+/// The embedded PDF bytes for a resume language code.
+fn resume_bytes(lang: &str) -> &'static [u8] {
+    match lang {
+        "de" => RESUME_DE,
+        _ => RESUME_EN,
+    }
 }
 
-/// Serves a build-generated resume PDF by its exact published file name.
+/// Serves an embedded resume PDF by its exact published file name.
 ///
-/// The resume file names are non-ASCII (e.g. `Tim-Schönle-Lebenslauf.pdf`), and
-/// Dioxus's built-in `public/` static serving fails to resolve them — requests
-/// fall through to the SSR 404 page even though the file is present. We serve
-/// them from an explicit route instead. Accepting only the known `RESUME_FILES`
-/// names keeps the handler total and rules out path traversal. Missing files
-/// (dev builds where the generator has not run) yield 404, mirroring the empty
-/// fingerprint manifest.
+/// Accepting only the known `RESUME_FILES` names keeps the handler total and
+/// rules out path traversal. A language whose PDF was not generated (empty embed)
+/// yields 404.
 async fn resume(Path(file): Path<String>) -> impl IntoResponse {
-    if !RESUME_FILES.iter().any(|(_, name)| *name == file) {
-        return StatusCode::NOT_FOUND.into_response();
-    }
-    let Some(path) = resume_dir().map(|dir| dir.join(&file)) else {
+    let Some((lang, _)) = RESUME_FILES.iter().find(|(_, name)| *name == file) else {
         return StatusCode::NOT_FOUND.into_response();
     };
-    match tokio::fs::read(&path).await {
-        Ok(bytes) => ([(header::CONTENT_TYPE, "application/pdf")], bytes).into_response(),
-        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    let bytes = resume_bytes(lang);
+    if bytes.is_empty() {
+        return StatusCode::NOT_FOUND.into_response();
     }
+    ([(header::CONTENT_TYPE, "application/pdf")], bytes).into_response()
 }
 
 #[cfg(test)]
