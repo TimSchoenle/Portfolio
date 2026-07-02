@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1@sha256:87999aa3d42bdc6bea60565083ee17e86d1f3339802f543c0d03998580f9cb89
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
@@ -9,7 +9,7 @@ ARG DIOXUS_CLI_VERSION=0.7.9
 
 # ── shared build tools ────────────────────────────────────────────────────────
 # Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
-FROM rust:1.95-slim AS tools
+FROM rust:1.95-slim@sha256:e14e87345b4d5964ddcc3491d27ee046a0f23820f340c3c1e24da6880141f7c0 AS tools
 
 ARG DIOXUS_CLI_VERSION
 # Honoured by tooling that supports it so embedded timestamps stay deterministic.
