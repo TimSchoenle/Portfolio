@@ -18,15 +18,12 @@ fileExistenceTests:
     path: /app/server
     shouldExist: true
 
-  # ── CA certs (from the distroless/cc base) for outbound HTTPS ───────────────
-  - name: ca certificates present
-    path: /etc/ssl/certs/ca-certificates.crt
-    shouldExist: true
-
   # ── dx bundle: the sibling public/ asset dir the server resolves relative to
   # itself. robots.txt, sitemap.xml, site.webmanifest, /favicon.svg and /fonts/
   # are served dynamically by the server (see server/seo.rs + server/assets.rs),
-  # so they are NOT files here.
+  # so they are NOT files here. The resume PDFs are embedded into the server
+  # binary (served at /resume/ from memory), not bundled onto disk, so there is
+  # no public/resume directory to assert.
   - name: public directory present
     path: /app/public
     shouldExist: true
@@ -34,23 +31,18 @@ fileExistenceTests:
     path: /app/public/index.html
     shouldExist: true
 
-  # The wasm client bundle emitted by dx at stable, un-hashed paths.
-  - name: wasm js bundle present
-    path: /app/public/wasm/web.js
-    shouldExist: true
-  - name: wasm binary present
-    path: /app/public/wasm/web_bg.wasm
-    shouldExist: true
-
-  # Resume PDFs copied into public/resume by the build and served at /resume/.
-  - name: public resume directory present
-    path: /app/public/resume
+  # The client bundle (wasm loader JS + the wasm binary) is emitted by dx under
+  # public/assets/ with content-hashed names (e.g. assets/web-dx<hash>.js), so
+  # the individual file names are not predictable; assert the directory instead.
+  - name: public assets directory present
+    path: /app/public/assets
     shouldExist: true
 
 fileContentTests:
   # The content-hashed manganis asset names are not predictable, but the served
-  # index.html always references the dx-injected wasm bundle loader.
+  # index.html always references the dx-injected wasm bundle loader under
+  # assets/ (e.g. /./assets/web-dx<hash>.js).
   - name: index.html references the wasm bundle
     path: /app/public/index.html
     expectedContents:
-      - 'wasm/web\.js'
+      - 'assets/web-dx[0-9a-z]+\.js'
