@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.1.2](https://github.com/TimSchoenle/Portfolio/compare/v2.1.1...v2.1.2) (2026-07-10)
+
+
+### Miscellaneous
+
+* **deps:** update docker/login-action digest to af1e73f ([#1005](https://github.com/TimSchoenle/Portfolio/issues/1005)) ([0b5a750](https://github.com/TimSchoenle/Portfolio/commit/0b5a7501bb74c09aa78cbcdd2b09e5647344b0ce))
+* **deps:** update github/codeql-action action to v4.36.3 ([#962](https://github.com/TimSchoenle/Portfolio/issues/962)) ([64ce623](https://github.com/TimSchoenle/Portfolio/commit/64ce62305671656d94501193068459bdcbff8a5a))
+* **deps:** update rust crate time to v0.3.52 ([#1004](https://github.com/TimSchoenle/Portfolio/issues/1004)) ([9a6d16e](https://github.com/TimSchoenle/Portfolio/commit/9a6d16ecb4b84c62c44c92be78f4403179661e7d))
+* **deps:** update rust docker tag to v1.96 ([#1007](https://github.com/TimSchoenle/Portfolio/issues/1007)) ([20c400c](https://github.com/TimSchoenle/Portfolio/commit/20c400c4e30d4086325d755bec715508b3575102))
+* **deps:** update step-security/harden-runner action to v2.20.0 ([#1017](https://github.com/TimSchoenle/Portfolio/issues/1017)) ([fef8931](https://github.com/TimSchoenle/Portfolio/commit/fef8931576d2b80ff51c758b2154971ba99594f2))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.12 ([#1011](https://github.com/TimSchoenle/Portfolio/issues/1011)) ([49bceee](https://github.com/TimSchoenle/Portfolio/commit/49bceee090e6e3e24e08b681da2838937de5fc84))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.13 ([#1015](https://github.com/TimSchoenle/Portfolio/issues/1015)) ([9ba1fae](https://github.com/TimSchoenle/Portfolio/commit/9ba1faea739285ecb433ab5482b503db95334f09))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.23 ([#960](https://github.com/TimSchoenle/Portfolio/issues/960)) ([bded14a](https://github.com/TimSchoenle/Portfolio/commit/bded14a3d63ed2f56479ae1e88c3f0da8873b604))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.24 ([#1014](https://github.com/TimSchoenle/Portfolio/issues/1014)) ([6c35dd0](https://github.com/TimSchoenle/Portfolio/commit/6c35dd02bf632ba3e73597c91bb839976ed4f9f7))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.17 ([#1009](https://github.com/TimSchoenle/Portfolio/issues/1009)) ([31d963f](https://github.com/TimSchoenle/Portfolio/commit/31d963fdd1519a4463545d6d67c05999bf901757))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.18 ([#1016](https://github.com/TimSchoenle/Portfolio/issues/1016)) ([801ea8a](https://github.com/TimSchoenle/Portfolio/commit/801ea8a044972f0b43ee762eed213d35b265869c))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.6 ([#1010](https://github.com/TimSchoenle/Portfolio/issues/1010)) ([08a5f4a](https://github.com/TimSchoenle/Portfolio/commit/08a5f4af8ae73f53844a49357f0237de7edd4a75))
+* **deps:** update timschoenle/actions/actions/rust/cargo-check to vactions-rust-cargo-check-v1.1.4 ([#1012](https://github.com/TimSchoenle/Portfolio/issues/1012)) ([47b9757](https://github.com/TimSchoenle/Portfolio/commit/47b975753ae0872f384a5f8ef13afd743f7d86f7))
+* **deps:** update timschoenle/actions/actions/rust/clippy to vactions-rust-clippy-v1.1.7 ([#1013](https://github.com/TimSchoenle/Portfolio/issues/1013)) ([9d3c2c2](https://github.com/TimSchoenle/Portfolio/commit/9d3c2c2874ab64f0739ba3cb23465effa1539392))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1008](https://github.com/TimSchoenle/Portfolio/issues/1008)) ([82e9878](https://github.com/TimSchoenle/Portfolio/commit/82e98789ac614e202943cfb3231296d44a986178))
+
 ## [2.1.1](https://github.com/TimSchoenle/Portfolio/compare/v2.1.0...v2.1.1) (2026-07-02)
 
 
