@@ -9,7 +9,7 @@ ARG DIOXUS_CLI_VERSION=0.7.9
 
 # ── shared build tools ────────────────────────────────────────────────────────
 # Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
-FROM rust:1.97-slim@sha256:14c4fe50ea427dc42381a1a09a9a839c1d2346a2e508cd491bf02c659dbc0ed7 AS tools
+FROM rust:1.97-slim@sha256:41a5647cbdc067365b49e71f6a416789ab2ff884e501577643de6e99cb11b61d AS tools
 
 ARG DIOXUS_CLI_VERSION
 # Honoured by tooling that supports it so embedded timestamps stay deterministic.
