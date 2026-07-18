@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.1.3](https://github.com/TimSchoenle/Portfolio/compare/v2.1.2...v2.1.3) (2026-07-18)
+
+
+### Miscellaneous
+
+* **deps:** update github/codeql-action action to v4.37.0 ([#1018](https://github.com/TimSchoenle/Portfolio/issues/1018)) ([c107031](https://github.com/TimSchoenle/Portfolio/commit/c10703181f9cc9fe023678a0b79e26ec129a2bf6))
+* **deps:** update rust docker tag to v1.97 ([#1020](https://github.com/TimSchoenle/Portfolio/issues/1020)) ([d4ffd61](https://github.com/TimSchoenle/Portfolio/commit/d4ffd61a00d01bef50485e7eaf0465a603f2bd98))
+* **deps:** update rust:1.97-slim docker digest to 34fb2f1 ([#1031](https://github.com/TimSchoenle/Portfolio/issues/1031)) ([65b33e8](https://github.com/TimSchoenle/Portfolio/commit/65b33e8ca8a2a58c55bf79815ef5d922f6ebb475))
+* **deps:** update rust:1.97-slim docker digest to 41a5647 ([#1025](https://github.com/TimSchoenle/Portfolio/issues/1025)) ([152ecd1](https://github.com/TimSchoenle/Portfolio/commit/152ecd1ce3d8d206ed268fbd3ab318ad02b261e5))
+* **deps:** update rust:1.97-slim docker digest to 466074e ([#1026](https://github.com/TimSchoenle/Portfolio/issues/1026)) ([fe42b52](https://github.com/TimSchoenle/Portfolio/commit/fe42b528c2aa76eb932a76af8d1e3b788d34556a))
+* **deps:** update rust:1.97-slim docker digest to 686a437 ([#1030](https://github.com/TimSchoenle/Portfolio/issues/1030)) ([e5860cc](https://github.com/TimSchoenle/Portfolio/commit/e5860ccc26c929ee3c2101714ef178dd1853bd56))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.14 ([#1022](https://github.com/TimSchoenle/Portfolio/issues/1022)) ([9524401](https://github.com/TimSchoenle/Portfolio/commit/9524401693181286e82b85f857605c36b9788524))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.15 ([#1027](https://github.com/TimSchoenle/Portfolio/issues/1027)) ([ab6cb24](https://github.com/TimSchoenle/Portfolio/commit/ab6cb24867f67473740872a79577c1131fa0a7e4))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.25 ([#1023](https://github.com/TimSchoenle/Portfolio/issues/1023)) ([76f0206](https://github.com/TimSchoenle/Portfolio/commit/76f02066686b34ceabcc31677039689284366e8d))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.26 ([#1028](https://github.com/TimSchoenle/Portfolio/issues/1028)) ([86b4016](https://github.com/TimSchoenle/Portfolio/commit/86b401668ed060d305dd93d74651f85fb3ee0ea5))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.2.0 ([#1032](https://github.com/TimSchoenle/Portfolio/issues/1032)) ([c46a632](https://github.com/TimSchoenle/Portfolio/commit/c46a6326be315196d4cf25f6b4bf8a04be2b8cd0))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.19 ([#1024](https://github.com/TimSchoenle/Portfolio/issues/1024)) ([b2cd24d](https://github.com/TimSchoenle/Portfolio/commit/b2cd24ded3f2031ee915dfd71fa0cdfffe3a4736))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.20 ([#1029](https://github.com/TimSchoenle/Portfolio/issues/1029)) ([6833f8d](https://github.com/TimSchoenle/Portfolio/commit/6833f8de73399bc1f73ab351e81f57fd1d16bbb1))
+* **deps:** update zizmorcore/zizmor-action action to v0.6.0 ([#1033](https://github.com/TimSchoenle/Portfolio/issues/1033)) ([be9e253](https://github.com/TimSchoenle/Portfolio/commit/be9e2532cd03246bf1f3f93495c052fbd70dc93f))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1021](https://github.com/TimSchoenle/Portfolio/issues/1021)) ([747e174](https://github.com/TimSchoenle/Portfolio/commit/747e1747721b65f348163c14e941b41a83946b9d))
+
 ## [2.1.2](https://github.com/TimSchoenle/Portfolio/compare/v2.1.1...v2.1.2) (2026-07-10)
 
 
