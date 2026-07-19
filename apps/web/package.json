@@ -10,7 +10,7 @@
   "devDependencies": {
     "@fontsource/jetbrains-mono": "5.2.8",
     "@fontsource/space-grotesk": "5.2.10",
-    "@tailwindcss/cli": "4.3.2",
-    "tailwindcss": "4.3.2"
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
   }
 }
