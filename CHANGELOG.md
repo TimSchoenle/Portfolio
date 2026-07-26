@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.1.4](https://github.com/TimSchoenle/Portfolio/compare/v2.1.3...v2.1.4) (2026-07-25)
+
+
+### Miscellaneous
+
+* **deps:** update actions/checkout digest to 3d3c42e ([#1041](https://github.com/TimSchoenle/Portfolio/issues/1041)) ([22456be](https://github.com/TimSchoenle/Portfolio/commit/22456beb0b808467aa26e4b569a355f0d14bde9a))
+* **deps:** update docker/login-action digest to abd2ef4 ([#1042](https://github.com/TimSchoenle/Portfolio/issues/1042)) ([d445105](https://github.com/TimSchoenle/Portfolio/commit/d445105f88efac32990184b1cf841b78b3e5f78a))
+* **deps:** update github/codeql-action action to v4.37.1 ([#1039](https://github.com/TimSchoenle/Portfolio/issues/1039)) ([1d509ea](https://github.com/TimSchoenle/Portfolio/commit/1d509ea72f5ad29e7b509674417e1e75b9699530))
+* **deps:** update github/codeql-action action to v4.37.3 ([#1044](https://github.com/TimSchoenle/Portfolio/issues/1044)) ([9a1f864](https://github.com/TimSchoenle/Portfolio/commit/9a1f86495c6997a96290ea1c859d2830c142bf5c))
+* **deps:** update rust crate serde to v1.0.229 ([#1045](https://github.com/TimSchoenle/Portfolio/issues/1045)) ([548ebe4](https://github.com/TimSchoenle/Portfolio/commit/548ebe4a07af346e1e9dbf005b9cc6badd6a5248))
+* **deps:** update rust crate serde_json to v1.0.151 ([#1046](https://github.com/TimSchoenle/Portfolio/issues/1046)) ([0c229e8](https://github.com/TimSchoenle/Portfolio/commit/0c229e8df8695694287d5466505e5eacc2a5d2e5))
+* **deps:** update rust crate tokio to v1.52.4 ([#1040](https://github.com/TimSchoenle/Portfolio/issues/1040)) ([0b3a2fa](https://github.com/TimSchoenle/Portfolio/commit/0b3a2fa3f6c15907a8d577eb57542bfd48ac93f6))
+* **deps:** update rust:1.97-slim docker digest to 5c6f46a ([#1043](https://github.com/TimSchoenle/Portfolio/issues/1043)) ([3653fcf](https://github.com/TimSchoenle/Portfolio/commit/3653fcf79744fb5d57aa665e8a812003beb9afff))
+* **deps:** update tailwindcss monorepo to v4.3.3 ([#1037](https://github.com/TimSchoenle/Portfolio/issues/1037)) ([6e0ba8d](https://github.com/TimSchoenle/Portfolio/commit/6e0ba8d1899e8ef466276c5f3b49b2a173153fb3))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.16 ([#1034](https://github.com/TimSchoenle/Portfolio/issues/1034)) ([fd968e7](https://github.com/TimSchoenle/Portfolio/commit/fd968e7329b08365f9a3d2fbb3d0c3f18f01c693))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.27 ([#1036](https://github.com/TimSchoenle/Portfolio/issues/1036)) ([5a1612f](https://github.com/TimSchoenle/Portfolio/commit/5a1612f715ce5cb524a36a5c96bb1d3bd1f2cc8b))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.21 ([#1038](https://github.com/TimSchoenle/Portfolio/issues/1038)) ([1cdd674](https://github.com/TimSchoenle/Portfolio/commit/1cdd674583f2952ca87a67717eb33184360a5993))
+
 ## [2.1.3](https://github.com/TimSchoenle/Portfolio/compare/v2.1.2...v2.1.3) (2026-07-18)
 
 
