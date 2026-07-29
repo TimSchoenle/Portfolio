@@ -81,11 +81,21 @@ jobs:
         uses: TimSchoenle/actions/actions/rust/clippy@6c2de060fd060b2e3356dcfa7d7358898a51f17f # tag=actions-rust-clippy-v1.1.8
 
   docker-build-test:
-    name: Docker Build and Test
+    name: Docker Build and Test (${{ matrix.platform }})
     runs-on: ubuntu-latest
     needs: check
+    strategy:
+      # Report every architecture's failures in one run rather than cancelling
+      # the sibling leg on the first error.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+          - platform: linux/arm64
+            arch: arm64
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-docker
+      group: ${{ github.workflow }}-${{ github.ref }}-docker-${{ matrix.arch }}
       cancel-in-progress: true
     permissions:
       contents: read # Required to checkout the code
@@ -102,6 +112,9 @@ jobs:
         with:
           persist-credentials: false
 
+      # Not needed to *build* the foreign image — the Dockerfile cross-compiles
+      # from $BUILDPLATFORM — but the smoke test below actually boots it, and
+      # running an aarch64 binary on an x86_64 runner needs binfmt_misc.
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
 
@@ -113,6 +126,11 @@ jobs:
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: .
+          # Single platform per matrix leg: the docker exporter (`load: true`)
+          # cannot load a multi-platform result, and one image per leg is what
+          # the smoke/structure tests operate on. The release workflow builds
+          # the same platforms together into one manifest list.
+          platforms: ${{ matrix.platform }}
           push: false
           load: true
           tags: image:test
@@ -120,8 +138,26 @@ jobs:
           # during the Docker build; the token lifts the API rate limit.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Scoped per architecture so the two legs do not evict each other's
+          # cache — most layers are $BUILDPLATFORM-native and identical, but the
+          # target-specific compile steps are not.
+          cache-from: type=gha,scope=docker-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=docker-${{ matrix.arch }}
+
+      # Guards against the cross-compile silently degrading into a native build:
+      # without this, an image whose binary is x86_64 would still pass every
+      # test below on an x86_64 runner and only fail on real arm64 hardware.
+      - name: Verify image architecture
+        env:
+          WANT_ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          got=$(docker image inspect image:test --format '{{.Architecture}}')
+          if [ "$got" != "$WANT_ARCH" ]; then
+            echo "::error::image architecture is '$got', expected '$WANT_ARCH'"
+            exit 1
+          fi
+          echo "ok: image architecture is $got"
 
       - name: Test Docker image serves expected endpoints
         run: |
@@ -143,13 +179,17 @@ jobs:
           base="http://localhost:8080"
 
           # ── Readiness gate: wait until the server answers its health probe ────
+          # Generous enough for the foreign-architecture leg, where the whole
+          # server runs under QEMU user-mode emulation and starts noticeably
+          # slower than the native one.
+          timeout=60
           ready=0
-          for _ in $(seq 1 30); do
+          for _ in $(seq 1 "$timeout"); do
             if curl -fsS "$base/api/health" >/dev/null 2>&1; then ready=1; break; fi
             sleep 1
           done
           if [ "$ready" != "1" ]; then
-            echo "::error::container did not become healthy within 30s"
+            echo "::error::container did not become healthy within ${timeout}s"
             exit 1
           fi
 
@@ -260,29 +300,53 @@ jobs:
         with:
           image-ref: image:test
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: 'trivy-results-${{ matrix.arch }}.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy-results-${{ matrix.arch }}.sarif'
+          # Distinct category per architecture; code scanning treats each upload
+          # for the same category as a full replacement, so sharing one would
+          # make the two legs erase each other's findings.
+          category: trivy-${{ matrix.arch }}
 
+      # One comment per architecture, updated in place on every push instead of
+      # appending a new one. The marker is what makes it findable again; the
+      # matrix leg owns only its own comment, so the parallel legs never race.
       - name: Comment image size on PR
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         if: github.event_name == 'pull_request'
         env:
           SIZE: ${{ steps.size-check.outputs.size }}
+          ARCH: ${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
         with:
           script: |
-            const size = process.env.SIZE;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🐳 Docker image size: **${size}MB**`
-            });
+            const { SIZE, ARCH, PLATFORM } = process.env;
+            const marker = `<!-- docker-image-size:${ARCH} -->`;
+            const body = `${marker}\n🐳 Docker image size (\`${PLATFORM}\`): **${SIZE}MB**`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number },
+            );
+            const existing = comments.find((c) => c.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body,
+              });
+            }
 
   dependency-review:
     name: Dependency Review
