@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.2.0](https://github.com/TimSchoenle/Portfolio/compare/v2.1.4...v2.2.0) (2026-07-29)
+
+
+### Features
+
+* add arm64 docker support ([#1060](https://github.com/TimSchoenle/Portfolio/issues/1060)) ([0fc3df7](https://github.com/TimSchoenle/Portfolio/commit/0fc3df7734c3f45702b2bdc4792ab30cf822ea96))
+
+
+### Miscellaneous
+
+* **deps:** update docker/login-action digest to 371161b ([#1058](https://github.com/TimSchoenle/Portfolio/issues/1058)) ([27fc85b](https://github.com/TimSchoenle/Portfolio/commit/27fc85b31d28e94ea3e8dae84aa803ec71398dfc))
+* **deps:** update docker/login-action digest to dbcb813 ([#1059](https://github.com/TimSchoenle/Portfolio/issues/1059)) ([260e63a](https://github.com/TimSchoenle/Portfolio/commit/260e63a307cd30d5ae7681ba16e325890da9763c))
+* **deps:** update fontsource monorepo to v5.3.0 ([#1055](https://github.com/TimSchoenle/Portfolio/issues/1055)) ([2701469](https://github.com/TimSchoenle/Portfolio/commit/27014694e2f99f2246f15c7043a6978db6f4da27))
+* **deps:** update rust crate time to v0.3.54 ([#1047](https://github.com/TimSchoenle/Portfolio/issues/1047)) ([3b8b29f](https://github.com/TimSchoenle/Portfolio/commit/3b8b29f4521462ba64c89612fa960c58507d2f54))
+* **deps:** update rust crate tokio to v1.53.1 ([#1056](https://github.com/TimSchoenle/Portfolio/issues/1056)) ([716c26e](https://github.com/TimSchoenle/Portfolio/commit/716c26e28b4112dcdff2102f3814b39d915e3907))
+* **deps:** update rust crate typst to v0.15.1 ([#1048](https://github.com/TimSchoenle/Portfolio/issues/1048)) ([e0f7a5a](https://github.com/TimSchoenle/Portfolio/commit/e0f7a5a3e81f5beb76da308ae2c9f5c1a7997710))
+* **deps:** update rust crate typst-pdf to v0.15.1 ([#1050](https://github.com/TimSchoenle/Portfolio/issues/1050)) ([d5c3dbe](https://github.com/TimSchoenle/Portfolio/commit/d5c3dbe55ad90840b1356b9eb867508d95d9da53))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.22 ([#1051](https://github.com/TimSchoenle/Portfolio/issues/1051)) ([cc6d991](https://github.com/TimSchoenle/Portfolio/commit/cc6d991cf70ed6abe1709c232c3364c7728d06fc))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.7 ([#1052](https://github.com/TimSchoenle/Portfolio/issues/1052)) ([a3d8cb2](https://github.com/TimSchoenle/Portfolio/commit/a3d8cb2ae23b2caf99504933d34fe1d2c46f8dc0))
+* **deps:** update timschoenle/actions/actions/rust/cargo-check to vactions-rust-cargo-check-v1.1.5 ([#1053](https://github.com/TimSchoenle/Portfolio/issues/1053)) ([9c91044](https://github.com/TimSchoenle/Portfolio/commit/9c910446c1cf7e7b23e13c26c5bedd487db0a179))
+* **deps:** update timschoenle/actions/actions/rust/clippy to vactions-rust-clippy-v1.1.8 ([#1054](https://github.com/TimSchoenle/Portfolio/issues/1054)) ([8063f00](https://github.com/TimSchoenle/Portfolio/commit/8063f00ddee999b3f4a239a6f56c2256d73c6554))
+* **deps:** update zizmorcore/zizmor-action action to v0.6.1 ([#1057](https://github.com/TimSchoenle/Portfolio/issues/1057)) ([9be7138](https://github.com/TimSchoenle/Portfolio/commit/9be713815f2c8bc7a44e9bd04f8a5c8c5508a0db))
+
 ## [2.1.4](https://github.com/TimSchoenle/Portfolio/compare/v2.1.3...v2.1.4) (2026-07-25)
 
 
