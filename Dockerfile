@@ -9,19 +9,52 @@ ARG DIOXUS_CLI_VERSION=0.7.9
 
 # ── shared build tools ────────────────────────────────────────────────────────
 # Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
-FROM rust:1.97-slim@sha256:5c6f46a6e4472ab1ca7ba7d494e6677f2f219ebc02f32025d3986f057635ec9c AS tools
+#
+# Pinned to $BUILDPLATFORM: every build stage runs natively on the builder and
+# *cross-compiles* the SSR server to $TARGETPLATFORM. Running the whole Rust +
+# wasm + npm build under QEMU for a foreign arch would be an order of magnitude
+# slower, and nothing here but the final server binary is arch-dependent (the
+# client is wasm; repos.json, the resume PDFs and the Tailwind CSS are data).
+FROM --platform=$BUILDPLATFORM rust:1.97-slim@sha256:5c6f46a6e4472ab1ca7ba7d494e6677f2f219ebc02f32025d3986f057635ec9c AS tools
 
 ARG DIOXUS_CLI_VERSION
+ARG TARGETARCH
 # Honoured by tooling that supports it so embedded timestamps stay deterministic.
 ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
+# Docker's TARGETARCH → Rust musl triple, resolved once and recorded so the
+# mapping (and the list of supported architectures) lives in exactly one place.
+# Unknown architectures fail loudly here rather than silently building the wrong
+# thing further down.
+RUN case "${TARGETARCH}" in \
+      amd64) echo 'x86_64-unknown-linux-musl' ;; \
+      arm64) echo 'aarch64-unknown-linux-musl' ;; \
+      *) echo "unsupported TARGETARCH: '${TARGETARCH}'" >&2; exit 1 ;; \
+    esac > /etc/rust-target
+
+# `musl-tools` provides musl-gcc for the native x86_64 musl target;
+# `gcc-aarch64-linux-gnu` is the cross toolchain for the arm64 target. Both are
+# only ever used to compile ring's C and to drive the link — rustc supplies its
+# own bundled musl libc.a and crt objects for the musl targets
+# (`self-contained` linking), so the glibc-flavoured cross gcc never contributes
+# a libc and the result stays fully static.
+#
+# `libc6-dev-arm64-cross` is required and easy to miss: gcc-aarch64-linux-gnu
+# only *recommends* it, so under --no-install-recommends the cross compiler ends
+# up with no target headers at all and ring's first .c file fails on <stdlib.h>.
+# Its headers are glibc's, but they are only ever preprocessed — nothing from
+# this package reaches the linked binary.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config libssl-dev curl nodejs npm ca-certificates musl-tools \
+    && if [ "${TARGETARCH}" = "arm64" ]; then \
+         apt-get install -y --no-install-recommends \
+           gcc-aarch64-linux-gnu libc6-dev-arm64-cross; \
+       fi \
     && rm -rf /var/lib/apt/lists/*
 
 # wasm32 for the client; musl for a fully static SSR server (see runtime stage).
-RUN rustup target add wasm32-unknown-unknown x86_64-unknown-linux-musl
+RUN rustup target add wasm32-unknown-unknown "$(cat /etc/rust-target)"
 
 # Pin the binstalled Dioxus CLI for reproducible builds.
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
@@ -58,16 +91,23 @@ RUN npm ci && npm run build:css
 # the hashed client assets (the /resume PDFs are embedded, not bundled). The client stays wasm
 # while `@server --target …-musl` cross-links the SSR server fully static
 # (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
-# explicitly keeps proc-macros/build-scripts on the host toolchain. `musl-gcc`
-# is the C compiler ring's build script uses for the musl target.
-ENV CC_x86_64_unknown_linux_musl=musl-gcc
+# explicitly keeps proc-macros/build-scripts on the host toolchain.
+#
+# Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
+# step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
+# consulted, so declaring both architectures unconditionally is harmless; the
+# x86_64 target keeps rustc's default `cc` linker driver.
+ENV CC_x86_64_unknown_linux_musl=musl-gcc \
+    CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
+    AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
 # `--debug-symbols=false` strips the client wasm's DWARF debug info and `name`
 # section for production: it shrinks the payload substantially and avoids the
 # malformed `name` custom section that Firefox rejects at validation. We already
 # don't `--keep-names`, so no readable backtraces are lost.
 RUN dx bundle --release \
     @client --platform web --debug-symbols=false \
-    @server --platform server --target x86_64-unknown-linux-musl
+    @server --platform server --target "$(cat /etc/rust-target)"
 # An empty, staged ISR cache directory. The `scratch` runtime has no shell to
 # `mkdir` with and its non-root user cannot create directories under `/`, so the
 # directory (and its ownership) has to be baked in here and COPYed across to
@@ -80,6 +120,12 @@ RUN mkdir -p /isr-cache
 # server is a fully static musl binary (see web-builder) and serves only
 # compile-time data, so it makes no outbound TLS at runtime and therefore needs
 # no CA bundle, tzdata, or /etc/passwd (a numeric USER needs no passwd entry).
+#
+# Unlike every stage above — which deliberately pins itself to $BUILDPLATFORM —
+# this stage takes the default, $TARGETPLATFORM (stating it explicitly trips
+# BuildKit's RedundantTargetPlatform check). It is the one stage that must carry
+# the requested architecture, and the binary COPYed into it was cross-compiled
+# to match.
 FROM scratch AS runtime
 
 # Re-declared so the globals above are in scope for the `USER` instruction.
