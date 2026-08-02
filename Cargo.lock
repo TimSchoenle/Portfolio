@@ -1226,9 +1226,9 @@ dependencies = [
 
 [[package]]
 name = "dioxus-fullstack-core"
-version = "0.7.9"
+version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc634b28b4b1e3eab1e8df4f98510e2d2fa39d686321467f977213155e86ed2b"
+checksum = "0011e9bca8da2ae6bf02ba9ef93ba6c5fa539e402de3aeb316ad86ca77c59079"
 dependencies = [
  "anyhow",
  "axum-core",
