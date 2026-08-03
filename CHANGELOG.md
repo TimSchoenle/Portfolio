@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.2.1](https://github.com/TimSchoenle/Portfolio/compare/v2.2.0...v2.2.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate dioxus-fullstack-core to v0.7.10 ([#1071](https://github.com/TimSchoenle/Portfolio/issues/1071)) ([b0ddf54](https://github.com/TimSchoenle/Portfolio/commit/b0ddf54566f116430147bad0907a318915bfb898))
+
+
+### CI
+
+* update helm chart update action ([58a3b0a](https://github.com/TimSchoenle/Portfolio/commit/58a3b0a50bffea992578e09e3effda653eec92d6))
+
+
+### Miscellaneous
+
+* **deps:** update github/codeql-action action to v4.37.4 ([#1067](https://github.com/TimSchoenle/Portfolio/issues/1067)) ([1189579](https://github.com/TimSchoenle/Portfolio/commit/118957988e9c6d57d513be878c30f532feaa87ae))
+* **deps:** update rust crate dioxus to v0.7.10 ([#1072](https://github.com/TimSchoenle/Portfolio/issues/1072)) ([5b1074b](https://github.com/TimSchoenle/Portfolio/commit/5b1074bce68e65f474c657913893826295baba8f))
+* **deps:** update rust crate http to v1.5.0 ([#1065](https://github.com/TimSchoenle/Portfolio/issues/1065)) ([1dfe934](https://github.com/TimSchoenle/Portfolio/commit/1dfe934293e3dd705d8b38157bbc156c112967b4))
+* **deps:** update rust crate schemars to v1.2.2 ([#1061](https://github.com/TimSchoenle/Portfolio/issues/1061)) ([8ebc6d8](https://github.com/TimSchoenle/Portfolio/commit/8ebc6d8dbf3a704d94bcc3a618ceaefe1d70a245))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.17 ([#1069](https://github.com/TimSchoenle/Portfolio/issues/1069)) ([d4f4b8f](https://github.com/TimSchoenle/Portfolio/commit/d4f4b8f3c7f27fc01ca8bfe67818e8862de1166e))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.28 ([#1073](https://github.com/TimSchoenle/Portfolio/issues/1073)) ([a553eff](https://github.com/TimSchoenle/Portfolio/commit/a553eff517369b7831939ca0900fa4f391060e8f))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.2.1 ([#1063](https://github.com/TimSchoenle/Portfolio/issues/1063)) ([ece0061](https://github.com/TimSchoenle/Portfolio/commit/ece0061c8e834547cb07bbd8532963cda94fe920))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.5.23 ([#1066](https://github.com/TimSchoenle/Portfolio/issues/1066)) ([3f5cbbe](https://github.com/TimSchoenle/Portfolio/commit/3f5cbbec3b2c5513c35291487a54f492ab954a87))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.8 ([#1068](https://github.com/TimSchoenle/Portfolio/issues/1068)) ([16b50ca](https://github.com/TimSchoenle/Portfolio/commit/16b50caf4710bbcf6a040e8f685573d6427f8beb))
+* **deps:** update timschoenle/actions/actions/rust/clippy to vactions-rust-clippy-v1.1.9 ([#1064](https://github.com/TimSchoenle/Portfolio/issues/1064)) ([84b4b6c](https://github.com/TimSchoenle/Portfolio/commit/84b4b6c9b4e7d8dc889f40b362a2fc58bb423314))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1070](https://github.com/TimSchoenle/Portfolio/issues/1070)) ([cabff10](https://github.com/TimSchoenle/Portfolio/commit/cabff1094e82356f14cc051c4fac0f9c7b0cb796))
+
 ## [2.2.0](https://github.com/TimSchoenle/Portfolio/compare/v2.1.4...v2.2.0) (2026-07-29)
 
 
