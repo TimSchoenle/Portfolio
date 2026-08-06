@@ -57,8 +57,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN rustup target add wasm32-unknown-unknown "$(cat /etc/rust-target)"
 
 # Pin the binstalled Dioxus CLI for reproducible builds.
+#
+# The bootstrap script is pinned to a commit, not to `main`: it is piped
+# straight into a shell, so fetching whatever `main` happens to hold would make
+# every build depend on the current state of a repository we do not control —
+# the one unpinned input in a file where the base images, actions and CLI
+# version are all pinned. Renovate tracks the SHA via the annotation below.
+# renovate: datasource=github-tags depName=cargo-bins/cargo-binstall
+ARG CARGO_BINSTALL_REF=e00d2c94cc0067b77737821097a62d91c0301baa # tag=v1.21.1
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
-    https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash \
+    "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${CARGO_BINSTALL_REF}/install-from-binstall-release.sh" | bash \
     && cargo binstall --no-confirm --locked "dioxus-cli@${DIOXUS_CLI_VERSION}"
 
 WORKDIR /app
@@ -95,8 +103,12 @@ RUN npm ci && npm run build:css
 #
 # Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
 # step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
-# consulted, so declaring both architectures unconditionally is harmless; the
-# x86_64 target keeps rustc's default `cc` linker driver.
+# consulted, so declaring both architectures unconditionally is harmless.
+#
+# The x86_64 target deliberately sets no linker here: the repository's
+# `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
+# with `musl-tools` above), and cargo picks that up from the workspace root. Keep
+# the two in sync — a linker named in only one of them is a silent build break.
 ENV CC_x86_64_unknown_linux_musl=musl-gcc \
     CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
     AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \

@@ -80,6 +80,12 @@ designs
 public/resume/**
 
 # -------- Secrets / env / credentials
+# `.env` and `.env.<stage>` are matched too, not just the `.local` variants:
+# `COPY . .` in the build stage would otherwise pull them into an intermediate
+# layer, which is pushed to the GitHub Actions build cache even though the final
+# `scratch` image never sees them. Mirrors .gitignore.
+.env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
