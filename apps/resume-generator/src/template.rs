@@ -290,10 +290,15 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
         )
     };
     // The display value is wrapped in a `#box` so a handle never breaks
-    // mid-word across lines.
+    // mid-word across lines. The URI is emitted with `{:?}`, which quotes and
+    // escapes it as a Rust string literal — the same syntax Typst uses — so a
+    // quote or backslash in it cannot terminate the literal and have the rest
+    // parsed as Typst code. `esc` is content-mode escaping and would be wrong
+    // here; the same reasoning is why `build_typ` formats `title`/`author` this
+    // way.
     let link = |uri: &str, display: &str| {
         format!(
-            "#link(\"{uri}\")[#box[#text(size: {fs})[{d}]]]",
+            "#link({uri:?})[#box[#text(size: {fs})[{d}]]]",
             uri = uri,
             fs = l.fs_contact(),
             d = esc(display),
