@@ -1,8 +1,13 @@
 //! Small cross-target helpers.
 //!
-//! The "current date" is read from the JS `Date` on the wasm client and from
-//! the system clock (`time`) on the server. Both resolve to the same real
-//! calendar date, so values derived from them match across hydration.
+//! The "current date" is read from the JS `Date` on the wasm client and from the
+//! system clock (`time`) on the server. The two use different zones — the client
+//! reports local time, the server UTC — so around midnight, and for a few hours
+//! either side of New Year, they can disagree by a day or a year. Only the
+//! footer's copyright year and the hero's "years of experience" are derived from
+//! them; both are cosmetic, and the worst case is that a freshly hydrated page
+//! corrects itself by one. Anything where the exact date matters must not be
+//! built on these.
 
 /// The current calendar year (e.g. `2026`).
 pub fn current_year() -> i32 {

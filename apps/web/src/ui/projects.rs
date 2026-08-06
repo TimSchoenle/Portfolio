@@ -13,11 +13,40 @@ use crate::ui::section_header::SectionHeader;
 /// Cards shown per slide window: 2 rows of the 3-column grid.
 const PAGE_SIZE: usize = 6;
 
+/// The active filter chip.
+///
+/// Modelled as a type rather than a bare string so the two pseudo-filters cannot
+/// collide with a real language: the previous `String` state compared the
+/// selection against the sentinels `"Favorites"` and `"All"` *and* against
+/// `Repo::language`, so a repository whose language was literally named "All"
+/// would have silently taken over that chip.
+#[derive(Clone, PartialEq)]
+enum Filter {
+    /// The hand-picked `CONFIG.featured_repos`.
+    Favorites,
+    /// Every non-fork, non-archived repository.
+    All,
+    /// Repositories whose primary language is this one.
+    Language(String),
+}
+
+impl Filter {
+    /// A key that is unique across both pseudo-filters and every language name,
+    /// for the rendered chip's `key`.
+    fn key(&self) -> String {
+        match self {
+            Filter::Favorites => "favorites".to_string(),
+            Filter::All => "all".to_string(),
+            Filter::Language(lang) => format!("lang:{lang}"),
+        }
+    }
+}
+
 #[component]
 pub fn Projects(state: ReposState) -> Element {
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
-    let mut filter = use_signal(|| "Favorites".to_string());
+    let mut filter = use_signal(|| Filter::Favorites);
     let mut page = use_signal(|| 0usize);
 
     let offline = matches!(state, ReposState::Failed);
@@ -38,15 +67,19 @@ pub fn Projects(state: ReposState) -> Element {
     langs.dedup();
 
     let current = filter();
-    let filtered: Vec<Repo> = if current == "Favorites" {
-        let favs: Vec<Repo> = repos.iter().filter(|r| r.is_featured()).cloned().collect();
-        if favs.is_empty() { repos.clone() } else { favs }
-    } else {
-        repos
+    let filtered: Vec<Repo> = match &current {
+        Filter::Favorites => {
+            let favs: Vec<Repo> = repos.iter().filter(|r| r.is_featured()).cloned().collect();
+            // Fall back to the full list rather than showing an empty section
+            // when none of the featured repositories survived the fetch.
+            if favs.is_empty() { repos.clone() } else { favs }
+        }
+        Filter::All => repos.clone(),
+        Filter::Language(lang) => repos
             .iter()
-            .filter(|r| current == "All" || r.language.as_deref() == Some(current.as_str()))
+            .filter(|r| r.language.as_deref() == Some(lang.as_str()))
             .cloned()
-            .collect()
+            .collect(),
     };
 
     let pages = filtered.len().div_ceil(PAGE_SIZE).max(1);
@@ -65,17 +98,21 @@ pub fn Projects(state: ReposState) -> Element {
         line
     };
 
-    let make_filter = move |value: String, label: String, is_active: bool| {
+    let make_filter = move |value: Filter, label: String, is_active: bool| {
         let cls = if is_active {
             "filter-chip active"
         } else {
             "filter-chip"
         };
-        let key = value.clone();
+        let key = value.key();
         rsx! {
             button {
                 key: "{key}",
                 class: "{cls}",
+                // The chips form a single-choice group, so each one reports
+                // whether it is the current selection instead of leaving that
+                // information in the styling alone.
+                "aria-pressed": "{is_active}",
                 onclick: move |_| {
                     filter.set(value.clone());
                     page.set(0);
@@ -101,9 +138,13 @@ pub fn Projects(state: ReposState) -> Element {
                     Reveal { delay: 120,
                         div { class: "work-filter",
                             span { class: "mono text-muted", {t("common.filter")} }
-                            {make_filter("Favorites".to_string(), t("projects.favorites"), current == "Favorites")}
-                            {make_filter("All".to_string(), t("common.all"), current == "All")}
-                            {langs.iter().map(|l| make_filter(l.clone(), l.clone(), current == *l))}
+                            {make_filter(Filter::Favorites, t("projects.favorites"), current == Filter::Favorites)}
+                            {make_filter(Filter::All, t("common.all"), current == Filter::All)}
+                            {langs.iter().map(|l| {
+                                let value = Filter::Language(l.clone());
+                                let is_active = current == value;
+                                make_filter(value, l.clone(), is_active)
+                            })}
                             span { class: "flex-1" }
                             span { class: "mono text-muted", "{count_line}" }
                         }

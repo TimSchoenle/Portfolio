@@ -27,10 +27,14 @@ fn years_of_experience() -> u32 {
 }
 
 /// The full name split into hero lines, coloring "ö" and the trailing dot.
+///
+/// The first whitespace-separated token is the given name; everything after it
+/// forms the second line, so a middle name or a multi-word family name is
+/// rendered rather than silently dropped.
 fn hero_name_lines() -> Element {
     let mut parts = CONFIG.full_name.split_whitespace();
     let first = parts.next().unwrap_or_default();
-    let last = parts.next().unwrap_or_default();
+    let last = parts.collect::<Vec<_>>().join(" ");
     rsx! {
         span { class: "hero-name-line", "{first}" }
         span { class: "hero-name-line",
@@ -61,8 +65,8 @@ pub fn Hero() -> Element {
     #[cfg(feature = "web")]
     {
         use crate::hooks::{
-            ListenerGuard, add_window_listener, prefers_reduced_motion, scroll_to, scroll_y,
-            viewport_height,
+            FrameListenerGuard, ListenerGuard, add_window_listener, add_window_listener_per_frame,
+            prefers_reduced_motion, scroll_to, scroll_y, viewport_height,
         };
         use std::cell::RefCell;
         use std::rc::Rc;
@@ -70,14 +74,16 @@ pub fn Hero() -> Element {
 
         let mut scroll = scroll;
         // Parallax: track the capped scroll offset unless reduced motion is on.
-        let _parallax: Rc<RefCell<Option<ListenerGuard>>> = use_hook(move || {
+        // Coalesced onto the animation frame — the signal drives a transform
+        // that can only change once per painted frame, so writing it per scroll
+        // event just re-rendered the hero for output nobody could see.
+        let _parallax: Rc<RefCell<Option<FrameListenerGuard>>> = use_hook(move || {
             if prefers_reduced_motion() {
                 return Rc::new(RefCell::new(None));
             }
-            Rc::new(RefCell::new(add_window_listener(
+            Rc::new(RefCell::new(add_window_listener_per_frame(
                 "scroll",
-                true,
-                move |_| {
+                move || {
                     scroll.set(scroll_y().min(500.0));
                 },
             )))
@@ -86,7 +92,13 @@ pub fn Hero() -> Element {
         // Wheel-hijack: a single wheel notch fully transitions the intro <->
         // about boundary. CSS scroll-snap can't commit a small scroll across a
         // whole viewport, so we hijack the wheel there, smooth-scroll to the
-        // target and lock briefly to swallow the momentum. Reduced-motion off.
+        // target and lock briefly so the trailing momentum does not immediately
+        // re-trigger it. Reduced-motion off.
+        //
+        // While locked the event is deliberately *not* cancelled: doing so froze
+        // the page for the whole 900 ms, so a reader who wanted to keep going —
+        // or turn straight back — found their input silently dropped. The lock
+        // now only suppresses another snap; ordinary scrolling continues.
         let about_target = about_id.clone();
         let lock: Rc<RefCell<bool>> = use_hook(|| Rc::new(RefCell::new(false)));
         let _wheel: Rc<RefCell<Option<ListenerGuard>>> = use_hook(move || {
@@ -98,7 +110,6 @@ pub fn Hero() -> Element {
                 false,
                 move |e| {
                     if *lock.borrow() {
-                        e.prevent_default();
                         return;
                     }
                     let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {

@@ -73,7 +73,8 @@
     "build": "Build & Tools",
     "infrastructure": "Infrastruktur",
     "confidenceLabel": "Sicherheit",
-    "hoverHint": "Auf einen Punkt zeigen"
+    "hoverHint": "Auf einen Punkt zeigen",
+    "radarLabel": "Skill-Radar: Technologien nach Kategorie aufgetragen, je sicherer ich mich damit fühle, desto weiter außen."
   },
   "projects": {
     "title": "Ausgewählte Projekte",
@@ -167,7 +168,8 @@
     "openLinkedin": "LinkedIn öffnen",
     "downloadResume": "Lebenslauf herunterladen (PDF)",
     "imprint": "Impressum",
-    "privacy": "Datenschutzerklärung"
+    "privacy": "Datenschutzerklärung",
+    "dialogLabel": "Befehlspalette"
   },
   "footer": {
     "credit": "Entworfen und gebaut von Tim Schönle.",
