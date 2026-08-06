@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.2.3](https://github.com/TimSchoenle/Portfolio/compare/v2.2.2...v2.2.3) (2026-08-06)
+
+
+### Miscellaneous
+
+* **deps:** update all non-major action updates ([#1082](https://github.com/TimSchoenle/Portfolio/issues/1082)) ([6847f62](https://github.com/TimSchoenle/Portfolio/commit/6847f62f291dd3e38364de510c5d64300f9cb764))
+* **deps:** update rust:1.97-slim docker digest to 3b28790 ([#1081](https://github.com/TimSchoenle/Portfolio/issues/1081)) ([a8bc63d](https://github.com/TimSchoenle/Portfolio/commit/a8bc63d8663404260fe4000860ffdb9a7a1af08a))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1083](https://github.com/TimSchoenle/Portfolio/issues/1083)) ([60c0613](https://github.com/TimSchoenle/Portfolio/commit/60c0613208fedef9400d61872c9010f80ad33fdf))
+
 ## [2.2.2](https://github.com/TimSchoenle/Portfolio/compare/v2.2.1...v2.2.2) (2026-08-06)
 
 
