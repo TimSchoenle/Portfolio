@@ -10,7 +10,10 @@ pub fn Imprint() -> Element {
     let t = move |k: &str| i18n.read().t(k);
 
     rsx! {
-        LegalPage { title: t("imprint.title"), last_updated: CONFIG.legal.imprint_last_change,
+        LegalPage {
+            title: t("imprint.title"),
+            last_updated: CONFIG.legal.imprint_last_change,
+            canonical_path: "/imprint",
             LegalSection { heading: t("imprint.tmgHeading"),
                 AddressBlock {}
             }

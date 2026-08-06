@@ -60,9 +60,10 @@ pub fn App() -> Element {
 /// (so crawlers and link-unfurlers see it in the initial HTML) and the client
 /// (where `dioxus-web`'s document provider re-applies it during hydration).
 ///
-/// The per-page `<title>` lives with each page (`document::Title`); everything
-/// here is route-independent and derived from [`CONFIG`], the single source of
-/// truth. `lang` is the request-negotiated locale, used only for `og:locale`.
+/// The per-page `<title>` and `rel="canonical"` live with each page
+/// (`document::Title`, [`crate::ui::canonical::Canonical`]); everything here is
+/// route-independent and derived from [`CONFIG`], the single source of truth.
+/// `lang` is the request-negotiated locale, used only for `og:locale`.
 #[component]
 fn SiteHead(lang: String) -> Element {
     let keywords = CONFIG.keywords.join(", ");
@@ -78,9 +79,6 @@ fn SiteHead(lang: String) -> Element {
         Meta { name: "keywords", content: keywords }
         Meta { name: "author", content: CONFIG.full_name }
         Meta { name: "theme-color", content: "#0a0d14" }
-
-        // Canonical URL so query strings / alternate hosts don't fragment SEO.
-        document::Link { rel: "canonical", href: CONFIG.url }
 
         // Open Graph (Facebook, LinkedIn, Slack, …).
         Meta { property: "og:type", content: "website" }

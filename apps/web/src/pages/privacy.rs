@@ -23,7 +23,10 @@ pub fn Privacy() -> Element {
     let t = move |k: &str| i18n.read().t(k);
 
     rsx! {
-        LegalPage { title: t("privacy.title"), last_updated: CONFIG.legal.privacy_last_change,
+        LegalPage {
+            title: t("privacy.title"),
+            last_updated: CONFIG.legal.privacy_last_change,
+            canonical_path: "/privacy",
             p { class: "text-fg/85 leading-relaxed", {t("privacy.intro")} }
 
             LegalSection { heading: t("privacy.controllerHeading"), body: Some(t("privacy.controllerBody")),

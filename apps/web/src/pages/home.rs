@@ -3,6 +3,7 @@ use portfolio_data::CONFIG;
 
 use crate::github::ReposState;
 use crate::ui::about::About;
+use crate::ui::canonical::Canonical;
 use crate::ui::chapter_rail::ChapterRail;
 use crate::ui::contact::Contact;
 use crate::ui::experience::Experience;
@@ -16,6 +17,7 @@ pub fn Home() -> Element {
 
     rsx! {
         document::Title { "{CONFIG.title}" }
+        Canonical { path: "/" }
         ChapterRail {}
         main { class: "main-container",
             Hero {}
