@@ -17,11 +17,14 @@ use std::time::Duration;
 
 use axum::{
     Router,
-    http::{HeaderName, HeaderValue, header},
+    body::Body,
+    http::{HeaderName, HeaderValue, StatusCode, header},
     middleware,
+    response::IntoResponse,
     routing::get,
 };
 use dioxus::server::{DioxusRouterExt, IncrementalRendererConfig, ServeConfig};
+use portfolio_data::LANGUAGES;
 use tower_http::{
     compression::{
         CompressionLayer,
@@ -70,13 +73,12 @@ fn router() -> Router {
 
     let (dioxus_app, isr_enabled) = dioxus_app_router();
     let app = dioxus_app.merge(api_router()).merge(assets::router());
-    // Only when ISR is active: tag page navigations with the negotiated locale so
+    // Locale handling for page navigations, innermost so it sees the request
+    // before the router and the response before compression: it stamps the
+    // negotiated language onto `<html lang>`, declares the `Vary` axes the
+    // response actually depends on, and — when ISR is active — tags the URI so
     // the per-path incremental cache keeps a separate entry per language.
-    let app = if isr_enabled {
-        app.layer(middleware::from_fn(tag_locale_for_isr))
-    } else {
-        app
-    };
+    let app = app.layer(middleware::from_fn_with_state(isr_enabled, localize_page));
 
     app.layer(static_header(header::CONTENT_SECURITY_POLICY, CSP))
         .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
@@ -126,12 +128,49 @@ const ISR_CACHE_DIR_ENV: &str = "ISR_CACHE_DIR";
 /// useful only when a *persistent* cache volume is shared across deploys.
 const ISR_TTL_SECS_ENV: &str = "ISR_TTL_SECS";
 
-/// Query-string marker [`tag_locale_for_isr`] appends to page requests so the
+/// Query-string marker [`localize_page`] appends to page requests so the
 /// otherwise language-blind, path-keyed incremental cache stores one entry per
 /// negotiated locale. It is server-internal: the router matches on the path and
 /// ignores it, and every link is built from the router / site config, so it
 /// never leaks into the rendered HTML or the browser's address bar.
+///
+/// Because the marker travels in a *client-supplied* URI, it is never trusted on
+/// the way in: [`with_locale_query`] strips any copy the request already carried
+/// before appending ours, and [`locale_from_query`] only ever returns a value
+/// that is a known [`LANGUAGES`] entry. Without both, a request could choose
+/// which cache entry its render lands in (serving one visitor's language to
+/// another) and, since the value becomes a path component, where on disk it is
+/// written.
 const ISR_LOCALE_PARAM: &str = "__isr_locale";
+
+/// Page paths whose rendered HTML is worth persisting. These mirror the concrete
+/// variants of `crate::routes::Route`; the catch-all `NotFound` route is
+/// deliberately absent.
+///
+/// The incremental cache is keyed by path, and the catch-all matches every URL
+/// that exists — so without this allowlist an unauthenticated client could mint
+/// an unbounded number of cache entries (one directory and one HTML file each)
+/// simply by requesting `/1`, `/2`, … until the cache volume filled up. Routes
+/// outside the list still render normally; their output is just never stored
+/// (see [`isr_map_path`]).
+const CACHEABLE_PATHS: [&str; 3] = ["/", "/imprint", "/privacy"];
+
+/// Whether a request path is one of the [`CACHEABLE_PATHS`].
+fn is_cacheable_path(path: &str) -> bool {
+    CACHEABLE_PATHS.contains(&path)
+}
+
+/// Name of the sentinel that [`isr_map_path`] maps every non-cacheable route to.
+///
+/// [`ensure_uncacheable_sentinel`] creates it as a regular **file** inside the
+/// cache directory, which is what makes the opt-out work: the renderer persists
+/// a page by `create_dir_all`-ing the mapped folder and writing `index.html`
+/// into it, and neither can succeed underneath a plain file. Lookups miss for
+/// the same reason, so non-cacheable routes render fresh every time and leave
+/// nothing behind. Collapsing them onto one path rather than giving each its own
+/// is deliberate: a shared *cache entry* would serve one unknown URL's render
+/// (including its serialized hydration route) for a different unknown URL.
+const ISR_UNCACHEABLE_SENTINEL: &str = ".uncacheable";
 
 /// The Dioxus SSR/asset router, with incremental static regeneration enabled
 /// when [`ISR_CACHE_DIR_ENV`] names a writable directory.
@@ -180,6 +219,15 @@ fn incremental_config() -> Option<IncrementalRendererConfig> {
         );
         return None;
     }
+    // The opt-out for non-cacheable routes is a file the renderer cannot write
+    // underneath; without it every unknown URL would persist a cache entry.
+    if let Err(err) = ensure_uncacheable_sentinel(&dir) {
+        tracing::warn!(
+            "ISR disabled: cannot create the uncacheable-route sentinel in {}: {err}",
+            dir.display()
+        );
+        return None;
+    }
 
     let invalidate_after = parse_isr_ttl(std::env::var(ISR_TTL_SECS_ENV).ok().as_deref());
     match invalidate_after {
@@ -204,7 +252,10 @@ fn incremental_config() -> Option<IncrementalRendererConfig> {
         // drops the query string, collapsing every language onto one file.
         .map_path(move |route| {
             let mapped = isr_map_path(&map_dir, route);
-            if is_new_cache_entry(&announced, &mapped) {
+            // Non-cacheable routes all share the sentinel path and never produce
+            // an entry, so announcing them would be noise about a write that is
+            // guaranteed not to happen.
+            if is_cacheable_route(route) && is_new_cache_entry(&announced, &mapped) {
                 log_cache_entry_created(route, &mapped);
             }
             mapped
@@ -249,19 +300,56 @@ fn ensure_writable_dir(dir: &std::path::Path) -> std::io::Result<()> {
     Ok(())
 }
 
-/// Middleware that folds the request's negotiated locale into the URI query for
-/// page navigations (`GET` with `Accept: text/html`), so the incremental
-/// renderer — which keys its cache by path-and-query only — stores a distinct
-/// entry per language instead of serving whichever locale rendered a path first.
+/// Creates the [`ISR_UNCACHEABLE_SENTINEL`] as a regular file inside `dir`, so
+/// the renderer cannot create directories or write pages beneath it.
+///
+/// A directory left at that path by an older build (only possible when a
+/// persistent cache volume is shared across deploys) is removed first: left in
+/// place it would turn the opt-out into a single shared cache entry, which is
+/// exactly what the sentinel exists to prevent.
+fn ensure_uncacheable_sentinel(dir: &std::path::Path) -> std::io::Result<()> {
+    let sentinel = dir.join(ISR_UNCACHEABLE_SENTINEL);
+    if sentinel.is_dir() {
+        std::fs::remove_dir_all(&sentinel)?;
+    }
+    std::fs::write(
+        &sentinel,
+        b"Routes mapped here are deliberately never cached.\n",
+    )
+}
+
+/// Middleware applying the request's negotiated locale to a page navigation
+/// (`GET` with `Accept: text/html`), in three ways:
+///
+/// 1. When `isr_enabled`, the locale is folded into the URI query so the
+///    incremental renderer — which keys its cache by path-and-query only —
+///    stores a distinct entry per language instead of serving whichever locale
+///    rendered a path first.
+/// 2. The response declares `Vary: Accept-Language, Cookie`, the two request
+///    headers its content actually depends on. Without it any shared cache in
+///    front of the origin (a CDN, a corporate proxy) keys on the URL alone and
+///    happily hands a German render to an English visitor — the same bug the
+///    per-locale cache key fixes on our side of the wire.
+/// 3. The opening `<html>` tag is stamped with `lang`, so the language is
+///    declared in the very first bytes a crawler or a JavaScript-less reader
+///    receives rather than only after the client has hydrated.
+///
 /// The decision mirrors `crate::i18n::detect_locale` exactly (both go through
-/// `negotiate_locale`), so the cache key and the HTML rendered into it always
-/// agree on the language. Sub-resource and server-function requests are left
-/// untouched (they never hit the incremental cache).
-async fn tag_locale_for_isr(
+/// `negotiate_locale`), so the cache key, the `<html lang>` and the HTML
+/// rendered into them always agree. Sub-resource and server-function requests
+/// are left untouched (they never hit the incremental cache and carry no
+/// language).
+async fn localize_page(
+    axum::extract::State(isr_enabled): axum::extract::State<bool>,
     mut request: axum::extract::Request,
     next: middleware::Next,
 ) -> axum::response::Response {
-    if is_html_navigation(&request) {
+    // Only `GET` can produce a cacheable page; server-function calls are POSTs.
+    if request.method() != axum::http::Method::GET {
+        return next.run(request).await;
+    }
+
+    let locale = {
         let read_header = |name| {
             request
                 .headers()
@@ -271,35 +359,146 @@ async fn tag_locale_for_isr(
         };
         let cookie = read_header(header::COOKIE);
         let accept_language = read_header(header::ACCEPT_LANGUAGE);
-        let locale = crate::i18n::negotiate_locale(cookie.as_deref(), accept_language.as_deref());
+        crate::i18n::negotiate_locale(cookie.as_deref(), accept_language.as_deref())
+    };
+
+    // Tag only what the cache will actually store. Notably this does *not* also
+    // require an `Accept: text/html` header: a client that omits one still gets
+    // a rendered page, so gating on it left every such request sharing a single
+    // untagged, language-blind cache entry — whichever locale happened to fill
+    // it first. Requests that are not pages map to the sentinel anyway, so
+    // tagging them would change nothing.
+    if isr_enabled && is_cacheable_path(request.uri().path()) {
         *request.uri_mut() = with_locale_query(request.uri(), &locale);
     }
-    next.run(request).await
+
+    // Whether the response is a page at all is decided by its content type, not
+    // by what the request asked for, so the 404 page is localized too.
+    localize_html_response(next.run(request).await, locale).await
 }
 
-/// True for top-level page loads: a `GET` whose `Accept` header includes
-/// `text/html`. Sub-resource requests (JS/wasm/CSS/images) and server-function
-/// calls advertise other `Accept` values, so they are left un-tagged.
-fn is_html_navigation(request: &axum::extract::Request) -> bool {
-    request.method() == axum::http::Method::GET
-        && request
-            .headers()
-            .get(header::ACCEPT)
-            .and_then(|v| v.to_str().ok())
-            .is_some_and(|accept| accept.contains("text/html"))
+/// Largest HTML page body this server will buffer in order to stamp `<html
+/// lang>` on it. Rendered pages are a few tens of kilobytes, so the limit exists
+/// only to bound memory if something upstream ever produces an unexpectedly
+/// large `text/html` response.
+const MAX_HTML_REWRITE_BYTES: usize = 4 * 1024 * 1024;
+
+/// Marks `response` as language-dependent (`Vary`) and stamps `lang="<locale>"`
+/// onto its opening `<html>` tag.
+///
+/// Only `text/html` responses are touched: a request that merely *accepts* HTML
+/// may still be answered with JSON or an asset (a browser navigating straight to
+/// `/api/v1/profile`, say), and those neither vary by language nor have a tag to
+/// annotate. Everything else passes straight through.
+///
+/// The tag sits in the first bytes of the document, but the SSR body arrives as
+/// a stream whose chunk boundaries are not ours to rely on, so the page is
+/// buffered to rewrite it. That is affordable because rendering is not streamed
+/// out of order (`StreamingMode::Disabled`, the default) and pages are tens of
+/// kilobytes; enabling out-of-order streaming would mean revisiting this. A body
+/// that is unreadable or larger than [`MAX_HTML_REWRITE_BYTES`] fails the
+/// request rather than silently serving a truncated page.
+async fn localize_html_response(
+    mut response: axum::response::Response,
+    locale: String,
+) -> axum::response::Response {
+    let is_html = response
+        .headers()
+        .get(header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .is_some_and(|value| value.starts_with("text/html"));
+    if !is_html {
+        return response;
+    }
+
+    // Declared before the body work so it survives every early return below.
+    response.headers_mut().insert(
+        header::VARY,
+        HeaderValue::from_static("accept-language, cookie"),
+    );
+
+    let (mut parts, body) = response.into_parts();
+    let Ok(bytes) = axum::body::to_bytes(body, MAX_HTML_REWRITE_BYTES).await else {
+        tracing::error!("page body was unreadable or exceeded {MAX_HTML_REWRITE_BYTES} bytes");
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    };
+    let Ok(html) = std::str::from_utf8(&bytes) else {
+        tracing::error!("page body was not valid UTF-8; serving it unmodified");
+        return axum::response::Response::from_parts(parts, Body::from(bytes));
+    };
+
+    let localized = with_html_lang(html, &locale);
+    // The rewrite changes the body length, so any `Content-Length` computed
+    // before it is now a lie. Drop it and let the new body's known size speak.
+    parts.headers.remove(header::CONTENT_LENGTH);
+    axum::response::Response::from_parts(parts, Body::from(localized))
+}
+
+/// Rewrites the opening `<html …>` tag of `html` to carry `lang="<locale>"`,
+/// replacing any `lang` already present. Returns the document unchanged when it
+/// has no `<html>` tag (nothing to annotate) — the page is still served.
+fn with_html_lang(html: &str, locale: &str) -> String {
+    let Some(open) = html.find("<html") else {
+        return html.to_string();
+    };
+    // The tag is plain server-generated markup, so the first `>` after `<html`
+    // ends it; there is no attribute value in between that could contain one.
+    let Some(close) = html[open..].find('>').map(|i| open + i) else {
+        return html.to_string();
+    };
+
+    let attrs = &html[open + "<html".len()..close];
+    let mut kept: Vec<&str> = Vec::new();
+    for attr in attrs.split_whitespace() {
+        let name = attr.split('=').next().unwrap_or(attr);
+        if !name.eq_ignore_ascii_case("lang") {
+            kept.push(attr);
+        }
+    }
+
+    let mut out = String::with_capacity(html.len() + 16);
+    out.push_str(&html[..open]);
+    out.push_str("<html");
+    for attr in kept {
+        out.push(' ');
+        out.push_str(attr);
+    }
+    // `locale` is a `LANGUAGES` entry, never request text, so it needs no
+    // escaping to sit safely inside the attribute.
+    out.push_str(&format!(" lang=\"{locale}\""));
+    out.push_str(&html[close..]);
+    out
 }
 
 /// Returns `uri` with `ISR_LOCALE_PARAM=<locale>` appended to its query string,
-/// preserving any query already present. On the unlikely chance the rewrite does
-/// not parse, the original URI is returned unchanged so the page still renders.
+/// preserving any query already present *except* a copy of the marker itself.
+///
+/// Stripping the incoming marker is what keeps the cache key ours. The value
+/// becomes both the cache bucket and an on-disk path component, so a request
+/// allowed to supply its own would be able to file a render under a language it
+/// is not written in (serving German to the next English visitor) and to escape
+/// the cache directory entirely with `../` or a leading `/`. On the unlikely
+/// chance the rewrite does not parse, the original URI is returned unchanged so
+/// the page still renders.
 fn with_locale_query(uri: &axum::http::Uri, locale: &str) -> axum::http::Uri {
     let path = uri.path();
-    let combined = match uri.query() {
-        Some(query) if !query.is_empty() => {
-            format!("{path}?{query}&{ISR_LOCALE_PARAM}={locale}")
-        }
-        _ => format!("{path}?{ISR_LOCALE_PARAM}={locale}"),
-    };
+    let retained: Vec<&str> = uri
+        .query()
+        .unwrap_or("")
+        .split('&')
+        .filter(|pair| !pair.is_empty() && !is_locale_marker(pair))
+        .collect();
+
+    let mut combined = String::from(path);
+    combined.push('?');
+    for pair in retained {
+        combined.push_str(pair);
+        combined.push('&');
+    }
+    combined.push_str(ISR_LOCALE_PARAM);
+    combined.push('=');
+    combined.push_str(locale);
+
     let Ok(path_and_query) = combined.parse::<axum::http::uri::PathAndQuery>() else {
         return uri.clone();
     };
@@ -308,16 +507,31 @@ fn with_locale_query(uri: &axum::http::Uri, locale: &str) -> axum::http::Uri {
     axum::http::Uri::from_parts(parts).unwrap_or_else(|_| uri.clone())
 }
 
+/// Whether a raw `key=value` query pair carries the server-internal locale
+/// marker, whatever its value (including no value at all).
+fn is_locale_marker(pair: &str) -> bool {
+    pair.split('=').next() == Some(ISR_LOCALE_PARAM)
+}
+
 /// Maps an incremental-cache route to its on-disk folder, mirroring Dioxus's
 /// default layout but nesting each render under its locale sub-directory. The
 /// framework's default mapping discards the query string, which would collapse
 /// every language onto a single file; keying off the [`ISR_LOCALE_PARAM`] marker
 /// keeps the languages separate (and stable across restarts). A route without
 /// the marker maps straight under `static_dir`, matching the default.
+///
+/// Routes outside [`CACHEABLE_PATHS`] map to the [`ISR_UNCACHEABLE_SENTINEL`]
+/// instead, which the renderer can neither read a page from nor write one to.
 fn isr_map_path(static_dir: &std::path::Path, route: &str) -> PathBuf {
     let (path, query) = route.split_once('?').unwrap_or((route, ""));
+    if !is_cacheable_path(path) {
+        return static_dir.join(ISR_UNCACHEABLE_SENTINEL).join("route");
+    }
+
     let mut mapped = static_dir.to_path_buf();
     if let Some(locale) = locale_from_query(query) {
+        // Safe as a path component only because `locale_from_query` rejects
+        // anything that is not a known language code.
         mapped.push(locale);
     }
     for segment in path.split('/') {
@@ -326,10 +540,27 @@ fn isr_map_path(static_dir: &std::path::Path, route: &str) -> PathBuf {
     mapped
 }
 
-/// Extracts the [`ISR_LOCALE_PARAM`] value from a raw query string, if present.
+/// Whether a full incremental-cache route (path plus query) addresses a page
+/// whose render may be persisted.
+fn is_cacheable_route(route: &str) -> bool {
+    let (path, _) = route.split_once('?').unwrap_or((route, ""));
+    is_cacheable_path(path)
+}
+
+/// Extracts the [`ISR_LOCALE_PARAM`] value from a raw query string, if it names
+/// a language the site actually supports.
+///
+/// The validation is the load-bearing part: the marker is server-internal, but
+/// it rides in on a client-supplied URI, so anything that is not a [`LANGUAGES`]
+/// entry is a forged value rather than a locale — and this value goes on to
+/// become a directory name. Rejecting it here means the only strings that ever
+/// reach [`isr_map_path`] are the compile-time language codes.
 fn locale_from_query(query: &str) -> Option<&str> {
     let prefix = format!("{ISR_LOCALE_PARAM}=");
-    query.split('&').find_map(|pair| pair.strip_prefix(&prefix))
+    query
+        .split('&')
+        .filter_map(|pair| pair.strip_prefix(&prefix))
+        .find(|locale| LANGUAGES.contains(locale))
 }
 
 /// Decides whether `mapped` (the on-disk folder Dioxus maps a route to) is about
@@ -356,10 +587,20 @@ fn is_new_cache_entry(announced: &Mutex<HashSet<PathBuf>>, mapped: &Path) -> boo
     }
 }
 
-/// Whether `mapped` already holds a rendered page, i.e. its `index` sub-directory
-/// contains at least one `.html` file (the layout [`isr_map_path`] and Dioxus's
-/// `FileSystemCache` write into). Missing directory or no HTML means not cached.
+/// Whether `mapped` already holds a rendered page.
+///
+/// Dioxus's `FileSystemCache` uses two different on-disk layouts depending on
+/// whether a TTL is configured, and both have to be recognised here — checking
+/// only the timestamped one made this always report "not cached" under the
+/// default (permanent) configuration, which in turn kept every announced path
+/// in memory forever:
+/// * permanent cache (no TTL): the page is `<mapped>/index.html`;
+/// * finite TTL: the page is `<mapped>/index/<timestamp>.html`, so any `.html`
+///   in that sub-directory counts.
 fn has_cached_render(mapped: &Path) -> bool {
+    if mapped.join("index.html").is_file() {
+        return true;
+    }
     std::fs::read_dir(mapped.join("index"))
         .into_iter()
         .flatten()
@@ -582,6 +823,134 @@ mod tests {
     }
 
     #[test]
+    fn a_client_supplied_locale_marker_is_stripped_before_ours_is_appended() {
+        // The marker decides the cache bucket, so a request must never be able
+        // to bring its own: the negotiated value has to be the only one left.
+        let tagged = with_locale_query(&"/?__isr_locale=de".parse().unwrap(), "en");
+        assert_eq!(
+            tagged.path_and_query().unwrap().as_str(),
+            "/?__isr_locale=en"
+        );
+
+        // Including when it is smuggled among real parameters, repeated, or
+        // valueless — and unrelated parameters still survive.
+        let tagged = with_locale_query(
+            &"/imprint?__isr_locale=de&ref=x&__isr_locale&__isr_locale=fr"
+                .parse()
+                .unwrap(),
+            "en",
+        );
+        assert_eq!(
+            tagged.path_and_query().unwrap().as_str(),
+            "/imprint?ref=x&__isr_locale=en"
+        );
+    }
+
+    #[test]
+    fn a_forged_locale_never_becomes_a_path_component() {
+        let base = std::path::Path::new("/cache");
+        let untagged = isr_map_path(base, "/");
+
+        // Traversal, absolute paths and unknown languages are all rejected by
+        // `locale_from_query`, so the route maps exactly as if no marker were
+        // present rather than escaping the cache directory.
+        for forged in [
+            "/?__isr_locale=../../../../etc/evil",
+            "/?__isr_locale=/var/www/html",
+            "/?__isr_locale=fr",
+            "/?__isr_locale=",
+        ] {
+            let mapped = isr_map_path(base, forged);
+            assert_eq!(mapped, untagged, "{forged} was not neutralised");
+            assert!(
+                mapped.starts_with(base),
+                "{forged} escaped the cache directory"
+            );
+        }
+    }
+
+    #[test]
+    fn only_allowlisted_pages_are_cacheable() {
+        for path in ["/", "/imprint", "/privacy"] {
+            assert!(is_cacheable_path(path), "{path} should be cacheable");
+        }
+        // The catch-all 404 route matches unboundedly many URLs; caching them
+        // would let any client fill the cache volume.
+        for path in ["/nope", "/1", "/imprint/x", "/robots.txt", ""] {
+            assert!(!is_cacheable_path(path), "{path} should not be cacheable");
+        }
+    }
+
+    #[test]
+    fn uncacheable_routes_collapse_onto_an_unwritable_sentinel() {
+        let dir = scratch_path("sentinel");
+        std::fs::create_dir_all(&dir).unwrap();
+        ensure_uncacheable_sentinel(&dir).unwrap();
+
+        // Every non-cacheable route maps to the same place, so their number
+        // cannot grow the cache...
+        let a = isr_map_path(&dir, "/nope?__isr_locale=en");
+        let b = isr_map_path(&dir, "/other?__isr_locale=de");
+        assert_eq!(a, b);
+        assert_ne!(a, isr_map_path(&dir, "/?__isr_locale=en"));
+
+        // ...and that place cannot hold a render, because a regular file sits
+        // where the renderer would need a directory.
+        assert!(dir.join(ISR_UNCACHEABLE_SENTINEL).is_file());
+        assert!(std::fs::create_dir_all(&a).is_err());
+        assert!(!has_cached_render(&a));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_sentinel_replaces_a_directory_left_by_an_older_deploy() {
+        let dir = scratch_path("sentinel-dir");
+        let stale = dir
+            .join(ISR_UNCACHEABLE_SENTINEL)
+            .join("route")
+            .join("index");
+        std::fs::create_dir_all(&stale).unwrap();
+        std::fs::write(stale.join("old.html"), b"<html></html>").unwrap();
+
+        ensure_uncacheable_sentinel(&dir).unwrap();
+        assert!(dir.join(ISR_UNCACHEABLE_SENTINEL).is_file());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_permanent_cache_entry_is_recognised_as_rendered() {
+        // Without a TTL the renderer writes `<mapped>/index.html` rather than a
+        // timestamped file under `<mapped>/index/`; both layouts must count as
+        // cached, or the announcement bookkeeping never releases the path.
+        let mapped = scratch_path("permanent");
+        std::fs::create_dir_all(&mapped).unwrap();
+        assert!(!has_cached_render(&mapped));
+
+        std::fs::write(mapped.join("index.html"), b"<html></html>").unwrap();
+        assert!(has_cached_render(&mapped));
+
+        let _ = std::fs::remove_dir_all(&mapped);
+    }
+
+    #[test]
+    fn html_lang_is_stamped_onto_the_opening_tag() {
+        assert_eq!(
+            with_html_lang("<!DOCTYPE html><html><head></head></html>", "de"),
+            "<!DOCTYPE html><html lang=\"de\"><head></head></html>"
+        );
+        // An existing `lang` is replaced, not duplicated, and sibling attributes
+        // are preserved.
+        assert_eq!(
+            with_html_lang("<html lang=\"en\" data-x=\"1\">", "de"),
+            "<html data-x=\"1\" lang=\"de\">"
+        );
+        // A document without an `<html>` tag is served through untouched.
+        assert_eq!(with_html_lang("<p>fragment</p>", "de"), "<p>fragment</p>");
+    }
+
+    #[test]
     fn map_path_separates_locales_and_falls_back_without_a_marker() {
         let base = std::path::Path::new("/cache");
         let has = |p: &std::path::Path, name: &str| {
@@ -646,31 +1015,65 @@ mod tests {
         let _ = std::fs::remove_dir_all(&mapped);
     }
 
-    #[test]
-    fn only_html_get_navigations_are_tagged() {
-        let build = |method: &str, accept: &str| {
-            Request::builder()
-                .method(method)
-                .uri("/")
-                .header(header::ACCEPT, accept)
-                .body(Body::empty())
-                .unwrap()
+    #[tokio::test]
+    async fn every_page_request_is_tagged_regardless_of_its_accept_header() {
+        // Tagging must not depend on the client advertising `text/html`: a
+        // request that omits it still gets a rendered page, and gating on the
+        // header used to funnel all such requests into one shared, language-
+        // blind cache entry. The middleware is exercised through a stub that
+        // echoes the URI the router finally saw.
+        async fn echo_uri(request: axum::extract::Request) -> String {
+            request.uri().to_string()
+        }
+
+        let app = Router::new()
+            .route("/", get(echo_uri))
+            .layer(middleware::from_fn_with_state(true, localize_page));
+
+        let seen = |accept: Option<&'static str>| {
+            let app = app.clone();
+            async move {
+                let mut builder = Request::builder()
+                    .uri("/")
+                    .header(header::COOKIE, "lang=de");
+                if let Some(accept) = accept {
+                    builder = builder.header(header::ACCEPT, accept);
+                }
+                let response = app
+                    .oneshot(builder.body(Body::empty()).unwrap())
+                    .await
+                    .unwrap();
+                let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+                String::from_utf8(bytes.to_vec()).unwrap()
+            }
         };
 
-        assert!(is_html_navigation(&build(
-            "GET",
-            "text/html,application/xhtml+xml"
-        )));
-        // Sub-resource fetches and non-GET methods must not be tagged.
-        assert!(!is_html_navigation(&build("GET", "*/*")));
-        assert!(!is_html_navigation(&build("POST", "text/html")));
+        for accept in [Some("text/html,application/xhtml+xml"), Some("*/*"), None] {
+            assert_eq!(
+                seen(accept).await,
+                "/?__isr_locale=de",
+                "Accept: {accept:?} was not tagged"
+            );
+        }
+    }
 
-        // A request without an Accept header is treated as a non-navigation.
-        let no_accept = Request::builder()
-            .method("GET")
-            .uri("/")
-            .body(Body::empty())
+    #[tokio::test]
+    async fn non_page_responses_are_left_alone() {
+        // A request may accept HTML and still be answered with JSON; those do
+        // not vary by language and have no tag to stamp.
+        let response = api_router()
+            .layer(middleware::from_fn_with_state(false, localize_page))
+            .oneshot(
+                Request::builder()
+                    .uri("/api/v1/profile")
+                    .header(header::ACCEPT, "text/html")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
             .unwrap();
-        assert!(!is_html_navigation(&no_accept));
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(!response.headers().contains_key(header::VARY));
     }
 }

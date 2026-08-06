@@ -261,6 +261,26 @@ jobs:
           expect_status /some/client/route 200
           expect_body_contains /some/client/route '<html'
 
+          # ── Pages declare their language server-side ──────────────────────────
+          # The `lang` attribute is stamped onto the SSR response, so it must be
+          # in the bytes a crawler receives — not applied after hydration. Sent
+          # without an Accept header on purpose: the negotiation must not depend
+          # on the client advertising text/html.
+          expect_body_contains / '<html lang="en"'
+          expect_body_contains /some/client/route '<html lang="en"'
+
+          # German is negotiated from Accept-Language, and the response says so.
+          de_page=$(curl -fsS -H 'Accept-Language: de-DE,de' "$base/" || true)
+          if grep -qF -- '<html lang="de"' <<<"$de_page"; then
+            echo "ok: Accept-Language: de renders <html lang=\"de\">"
+          else
+            echo '::error::Accept-Language: de did not render <html lang="de">'
+            fail=1
+          fi
+
+          # ── Language-dependent pages tell shared caches what they vary on ─────
+          expect_header / vary 'accept-language, cookie'
+
           # ── Server-generated documents and embedded assets are served ─────────
           expect_status /robots.txt 200
           expect_status /favicon.svg 200
