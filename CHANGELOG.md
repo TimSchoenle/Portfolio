@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.2.2](https://github.com/TimSchoenle/Portfolio/compare/v2.2.1...v2.2.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* repo audit remediation - ISR cache key injection, unbounded cache growth, and 14 further findings ([#1080](https://github.com/TimSchoenle/Portfolio/issues/1080)) ([4f9671b](https://github.com/TimSchoenle/Portfolio/commit/4f9671b5f26df2533194adebcd0c0de8e311279b))
+
+
+### Miscellaneous
+
+* **deps:** update rust crate time to v0.3.55 ([#1077](https://github.com/TimSchoenle/Portfolio/issues/1077)) ([e489fa3](https://github.com/TimSchoenle/Portfolio/commit/e489fa38d67b28aa69b761aaf0daca11ba35aa59))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.3.0 ([#1076](https://github.com/TimSchoenle/Portfolio/issues/1076)) ([5325002](https://github.com/TimSchoenle/Portfolio/commit/5325002d691285b25bc9388f4f2f74c42b7abbad))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.9 ([#1078](https://github.com/TimSchoenle/Portfolio/issues/1078)) ([1d2cd8e](https://github.com/TimSchoenle/Portfolio/commit/1d2cd8ed0bae1f0083bdf44ed90ae59548d7c77f))
+* **deps:** update zizmorcore/zizmor-action action to v0.6.2 ([#1079](https://github.com/TimSchoenle/Portfolio/issues/1079)) ([74ab083](https://github.com/TimSchoenle/Portfolio/commit/74ab0830881985bb09a24ff933d0a7712c089db8))
+
 ## [2.2.1](https://github.com/TimSchoenle/Portfolio/compare/v2.2.0...v2.2.1) (2026-08-03)
 
 
