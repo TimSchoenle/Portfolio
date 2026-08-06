@@ -15,7 +15,7 @@ ARG DIOXUS_CLI_VERSION=0.7.9
 # wasm + npm build under QEMU for a foreign arch would be an order of magnitude
 # slower, and nothing here but the final server binary is arch-dependent (the
 # client is wasm; repos.json, the resume PDFs and the Tailwind CSS are data).
-FROM --platform=$BUILDPLATFORM rust:1.97-slim@sha256:5c6f46a6e4472ab1ca7ba7d494e6677f2f219ebc02f32025d3986f057635ec9c AS tools
+FROM --platform=$BUILDPLATFORM rust:1.97-slim@sha256:3b2879047d42784ca9403ad20c51ed3df361a50f1df96f5777d39b4e33aa65cd AS tools
 
 ARG DIOXUS_CLI_VERSION
 ARG TARGETARCH
