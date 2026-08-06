@@ -1,0 +1,33 @@
+# cargo-audit configuration.
+#
+# An entry here suppresses the advisory from the report entirely — cargo-audit
+# does not list what it ignored — so the workflow echoes this list before it
+# runs and the CI log always shows what is being held back. Only add an entry
+# when the finding cannot be acted on, and say why and what would change that.
+
+[advisories]
+ignore = [
+    # quick-xml 0.38.4 — both are denial-of-service classes in the XML parser:
+    # quadratic run time on duplicate attribute names, and unbounded
+    # namespace-declaration allocation. Fixed in quick-xml >= 0.41.0.
+    #
+    # Not upgradable and not reachable:
+    #   * The dependency path is resume-generator -> typst 0.15.1 ->
+    #     typst-library -> hayagriva 0.10.1 -> citationberg 0.7.0, and
+    #     citationberg pins `quick-xml = "^0.38.1"`. typst, hayagriva and
+    #     citationberg are all already at their latest published versions, so
+    #     there is no version combination that resolves to 0.41.
+    #   * citationberg parses Citation Style Language files for typst's
+    #     bibliography support. The resume document declares no bibliography,
+    #     and `world.rs` answers every `file()`/`source()` other than the single
+    #     in-memory main source with `FileError::NotFound`, so no XML from any
+    #     source reaches the parser.
+    #   * resume-generator is a build-time tool run over our own compile-time
+    #     data. It is not part of the runtime image, and typst does not appear
+    #     in the SSR server's dependency tree at all.
+    #
+    # Drop these entries once a typst release pulls in citationberg with
+    # quick-xml >= 0.41 (Renovate will open that bump).
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
+]
