@@ -5,6 +5,11 @@ on:
     branches: [ 'main' ]
   pull_request:
     branches: [ '**' ]
+  # Advisories are published against dependencies we already ship, so the scan
+  # has to run on a clock as well as on changes — otherwise a crate that was
+  # clean at merge time is never re-checked.
+  schedule:
+    - cron: '0 6 * * 1'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -35,3 +40,32 @@ jobs:
         uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
         with:
           persona: pedantic
+
+  # RustSec advisories against the committed Cargo.lock. Nothing else covers
+  # this: `dependency-review` only inspects dependencies a PR changes, and the
+  # Trivy image scan sees a `scratch` image holding one stripped static binary —
+  # no OS packages and no embedded dependency manifest to match advisories
+  # against — so without this job the Rust tree is effectively unscanned.
+  audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to fetch code
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@cb33e69fad06166ca28a42b2575e4dadabf62ee8 # v2.85.8
+        with:
+          tool: cargo-audit
+
+      - name: Audit dependencies
+        run: cargo audit --deny warnings
