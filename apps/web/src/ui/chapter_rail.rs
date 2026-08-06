@@ -93,19 +93,22 @@ pub fn ChapterRail() -> Element {
 
     #[cfg(feature = "web")]
     {
-        use crate::hooks::{ListenerGuard, add_window_listener};
+        use crate::hooks::{FrameListenerGuard, add_window_listener_per_frame};
         use std::cell::RefCell;
         use std::rc::Rc;
 
         let mut active = active;
         // Set the initial active chapter once mounted (the layout isn't ready at
         // first render), then keep it in sync on scroll for the rail's lifetime.
+        //
+        // Coalesced onto the animation frame: `active_chapter` measures all six
+        // sections with `getBoundingClientRect`, and running that per scroll
+        // event forced a synchronous reflow many times per frame.
         use_effect(move || active.set(active_chapter()));
-        let _listener: Rc<RefCell<Option<ListenerGuard>>> = use_hook(|| {
-            Rc::new(RefCell::new(add_window_listener(
+        let _listener: Rc<RefCell<Option<FrameListenerGuard>>> = use_hook(|| {
+            Rc::new(RefCell::new(add_window_listener_per_frame(
                 "scroll",
-                true,
-                move |_| {
+                move || {
                     active.set(active_chapter());
                 },
             )))

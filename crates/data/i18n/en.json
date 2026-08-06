@@ -61,7 +61,8 @@
     "build": "Build & Tools",
     "infrastructure": "Infrastructure",
     "confidenceLabel": "Confidence",
-    "hoverHint": "Hover a dot"
+    "hoverHint": "Hover a dot",
+    "radarLabel": "Skill radar: technologies plotted by category, positioned further from the centre the more confident I am with them."
   },
   "projects": {
     "title": "Selected Work",
@@ -155,7 +156,8 @@
     "openLinkedin": "Open LinkedIn",
     "downloadResume": "Download resume (PDF)",
     "imprint": "Imprint",
-    "privacy": "Privacy policy"
+    "privacy": "Privacy policy",
+    "dialogLabel": "Command palette"
   },
   "footer": {
     "credit": "Designed and built by Tim Schönle.",

@@ -11,6 +11,11 @@ pub fn NotFound(segments: Vec<String>) -> Element {
 
     rsx! {
         document::Title { "404" }
+        // The catch-all route answers every unknown URL with this page, so it
+        // must not be indexed: without it each mistyped or stale link becomes a
+        // separate thin page competing with the real ones. Deliberately carries
+        // no `rel="canonical"` — there is no canonical URL for "not found".
+        Meta { name: "robots", content: "noindex, follow" }
         section { class: "notfound",
             div {
                 span { class: "mono text-muted", "// signal_lost.404" }

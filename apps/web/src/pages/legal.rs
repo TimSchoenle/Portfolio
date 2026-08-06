@@ -9,9 +9,17 @@ use portfolio_data::CONFIG;
 
 use crate::i18n::use_i18n;
 use crate::routes::Route;
+use crate::ui::canonical::Canonical;
 
 #[component]
-pub fn LegalPage(title: String, last_updated: &'static str, children: Element) -> Element {
+pub fn LegalPage(
+    title: String,
+    last_updated: &'static str,
+    /// This page's own route path, so it declares itself canonical rather than
+    /// inheriting a site-wide one that would point at the homepage.
+    canonical_path: &'static str,
+    children: Element,
+) -> Element {
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
 
@@ -20,6 +28,7 @@ pub fn LegalPage(title: String, last_updated: &'static str, children: Element) -
 
     rsx! {
         document::Title { "{full_title}" }
+        Canonical { path: canonical_path }
         section { class: "legal-page",
             Link { to: Route::Home {}, class: "legal-back mono",
                 "← "

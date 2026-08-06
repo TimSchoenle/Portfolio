@@ -1,6 +1,8 @@
 //! Skill radar (radar-v3): four quadrants with named, hoverable dots plus
 //! seeded filler dots, concentric rings and a rotating sweep wedge.
 
+use std::rc::Rc;
+
 use dioxus::prelude::*;
 use portfolio_data::{Quadrant, SKILLS, Skill, matrix_skills};
 
@@ -130,7 +132,14 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
     let i18n = use_i18n().i18n;
     let mut hovered = use_signal(|| None::<usize>);
     let mut hovered_filler = use_signal(|| None::<usize>);
-    let (named, filler) = build_dots();
+
+    // The dot layout is a pure function of compile-time data, so it is computed
+    // once per mounted radar rather than on every render. It used to be rebuilt
+    // inline, which meant re-running `matrix_skills()` (allocate + sort), laying
+    // out ~120 dots and an O(named x filler) proximity pass on *every* pointer
+    // move in or out of a dot, since those write the hover signals below.
+    let dots = use_hook(|| Rc::new(build_dots()));
+    let (named, filler) = (&dots.0, &dots.1);
 
     let label = move |q: Quadrant| i18n.read().t(q.i18n_key()).to_uppercase();
     let label_opacity = move |q: Quadrant| {
@@ -150,9 +159,18 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
         wedge_end.1
     );
 
+    let radar_label = i18n.read().t("skills.radarLabel");
+
     rsx! {
         div { class: "radar-wrap",
-            svg { "viewBox": "{view_box}", class: "radar-svg",
+            svg {
+                "viewBox": "{view_box}",
+                class: "radar-svg",
+                // Announced as a single labelled image: the rings, sweep and
+                // scatter carry no information on their own, and every skill
+                // plotted here is also reachable as text in the adjacent list.
+                role: "img",
+                "aria-label": "{radar_label}",
                 defs {
                     radialGradient { id: "radarGlow", cx: "50%", cy: "50%", r: "50%",
                         stop { offset: "0%", "stop-color": "rgba(96,165,250,0.06)" }
@@ -234,6 +252,11 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
                             key: "f{i}",
                             cx: "{d.x}", cy: "{d.y}", r: "{r}", fill: "{color}",
                             opacity: "{opacity:.2}", style: "{style}",
+                            // Decorative scatter: hovering one is a sighted-only
+                            // affordance, and turning 80-odd dots into tab stops
+                            // would bury the rest of the page. The labelled
+                            // `role="img"` on the svg covers them.
+                            "aria-hidden": "true",
                             onmouseenter: move |_| { hovered_filler.set(Some(i)); on_hover.call(Some(skill)); },
                             onmouseleave: move |_| { hovered_filler.set(None); on_hover.call(None); },
                         }
@@ -248,14 +271,21 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
                     let r = if is_hover { d.size + 3.0 } else { d.size };
                     let stroke = if is_hover { "var(--fg)" } else { "none" };
                     let g_opacity = if dim { "0.15" } else { "1" };
-                    let ring = MAX_R; // unused placeholder to keep layout parity
-                    let _ = ring;
+                    // Named dots are the radar's interactive layer, so they are
+                    // reachable by keyboard: focusing one announces its label
+                    // and drives the same live-region readout as hovering.
+                    let dot_label = format!("{} — {}%", skill.name, (skill.confidence * 100.0).round());
                     rsx! {
                         g {
                             key: "n{i}",
                             style: "cursor: pointer", opacity: "{g_opacity}",
+                            tabindex: "0",
+                            role: "img",
+                            "aria-label": "{dot_label}",
                             onmouseenter: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
                             onmouseleave: move |_| { hovered.set(None); on_hover.call(None); },
+                            onfocus: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
+                            onblur: move |_| { hovered.set(None); on_hover.call(None); },
                             circle {
                                 cx: "{d.x}", cy: "{d.y}", r: "{r}", fill: "{color}",
                                 stroke: "{stroke}", "stroke-width": "1.3",

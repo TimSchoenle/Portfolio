@@ -135,11 +135,19 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
             Action::Goto(target) => {
                 navigator.push(target.clone());
             }
-            Action::Open(_url) =>
-            {
+            Action::Open(_url) => {
+                // `window.open` — unlike `<a target="_blank">` — does not imply
+                // `noopener`, so without the feature string the opened page
+                // could reach back through `window.opener` and navigate this
+                // tab (reverse tabnabbing). Every anchor elsewhere in the app
+                // sets the same pair.
                 #[cfg(feature = "web")]
                 if let Some(win) = web_sys::window() {
-                    let _ = win.open_with_url_and_target(_url, "_blank");
+                    let _ = win.open_with_url_and_target_and_features(
+                        _url,
+                        "_blank",
+                        "noopener,noreferrer",
+                    );
                 }
             }
             Action::CopyEmail =>
@@ -175,13 +183,44 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
     let placeholder = t("palette.placeholder");
     let no_matches = t("palette.noMatches");
     let hint = t("palette.hint");
+    let dialog_label = t("palette.dialogLabel");
     let is_empty = filtered.is_empty();
+
+    // The modal element, so Tab can be kept inside it (client only).
+    #[cfg(feature = "web")]
+    let mut modal_el = use_signal(|| None::<web_sys::Element>);
 
     rsx! {
         div { class: "cmdk-overlay", onclick: move |_| on_close.call(()),
             div {
                 class: "cmdk-modal",
                 onclick: move |e| e.stop_propagation(),
+                // Announced as a modal dialog, so assistive technology conveys
+                // that the page behind it is inert and reads the label instead
+                // of dropping the user into unlabelled content.
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "{dialog_label}",
+                onmounted: move |_e| {
+                    #[cfg(feature = "web")]
+                    {
+                        use dioxus::web::WebEventExt;
+                        if let Some(node) = _e.try_as_web_event() {
+                            modal_el.set(Some(node));
+                        }
+                    }
+                },
+                // Tab must not walk out of an open dialog into the page behind
+                // it; wrap at both ends instead.
+                onkeydown: move |_e| {
+                    #[cfg(feature = "web")]
+                    if _e.key() == Key::Tab
+                        && let Some(el) = modal_el()
+                        && crate::hooks::trap_tab_focus(&el, _e.modifiers().shift())
+                    {
+                        _e.prevent_default();
+                    }
+                },
                 div { class: "cmdk-search",
                     span { class: "mono text-accent", ">_" }
                     input {

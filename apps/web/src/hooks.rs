@@ -8,7 +8,7 @@
 //! view) always shows complete content and hydration never mismatches — the
 //! entrance animations are armed only after the client has hydrated.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use web_sys::wasm_bindgen::closure::Closure;
@@ -158,4 +158,97 @@ pub fn add_window_listener(
     )
     .ok()?;
     Some(ListenerGuard { event, closure })
+}
+
+/// Guard returned by [`add_window_listener_per_frame`]; removes the listener and
+/// releases the frame callback on drop.
+pub struct FrameListenerGuard {
+    _listener: ListenerGuard,
+    _frame: Rc<Closure<dyn FnMut()>>,
+}
+
+/// Registers a passive `window` listener for `event` that runs `handler` at most
+/// once per animation frame, no matter how many events arrive in between.
+///
+/// Scroll fires far faster than the screen refreshes, and handlers that read
+/// layout (`getBoundingClientRect`, `scrollY`) or write signals force a
+/// synchronous reflow and a re-render each time they do. Coalescing onto the
+/// frame means at most one such pass per painted frame, which is the most the
+/// user can perceive anyway. The frame callback is created once and reused, so
+/// scrolling allocates nothing.
+///
+/// Only for handlers that observe; anything calling `prevent_default` must stay
+/// on [`add_window_listener`], since a deferred handler runs too late to cancel
+/// the event.
+pub fn add_window_listener_per_frame(
+    event: &'static str,
+    handler: impl FnMut() + 'static,
+) -> Option<FrameListenerGuard> {
+    let scheduled = Rc::new(Cell::new(false));
+    let handler = Rc::new(RefCell::new(handler));
+
+    let frame: Rc<Closure<dyn FnMut()>> = Rc::new(Closure::new({
+        let scheduled = scheduled.clone();
+        let handler = handler.clone();
+        move || {
+            scheduled.set(false);
+            (handler.borrow_mut())();
+        }
+    }));
+
+    let listener = add_window_listener(event, true, {
+        let frame = frame.clone();
+        move |_| {
+            // `replace` returns the previous value, so a frame is requested only
+            // by the first event after each callback ran.
+            if scheduled.replace(true) {
+                return;
+            }
+            if let Some(win) = web_sys::window() {
+                let _ = win.request_animation_frame(frame.as_ref().as_ref().unchecked_ref());
+            }
+        }
+    })?;
+
+    Some(FrameListenerGuard {
+        _listener: listener,
+        _frame: frame,
+    })
+}
+
+/// CSS selector matching the elements a user can Tab to. Mirrors the interactive
+/// content the command palette renders (its search field, the result buttons)
+/// plus anything explicitly made focusable.
+const FOCUSABLE: &str = "a[href], button:not([disabled]), input:not([disabled]), \
+                         select:not([disabled]), textarea:not([disabled]), \
+                         [tabindex]:not([tabindex='-1'])";
+
+/// Keeps Tab focus inside `container` for a keydown that is already known to be
+/// a Tab press, wrapping from the last focusable element to the first (and back
+/// with Shift). Call it from a modal's key handler: a dialog that lets focus
+/// escape into the page behind it strands keyboard and screen-reader users, who
+/// have no way to see that they have left it.
+pub fn trap_tab_focus(container: &web_sys::Element, shift: bool) -> bool {
+    let Ok(nodes) = container.query_selector_all(FOCUSABLE) else {
+        return false;
+    };
+    let focusable: Vec<web_sys::HtmlElement> = (0..nodes.length())
+        .filter_map(|i| nodes.get(i))
+        .filter_map(|node| node.dyn_into::<web_sys::HtmlElement>().ok())
+        .collect();
+
+    let (Some(first), Some(last)) = (focusable.first(), focusable.last()) else {
+        return false;
+    };
+    let active = web_sys::window()
+        .and_then(|w| w.document())
+        .and_then(|d| d.active_element());
+
+    // Wrap only at the ends; in between, the browser's own order is correct.
+    let target = match active {
+        Some(active) if shift && active == **first => last,
+        Some(active) if !shift && active == **last => first,
+        _ => return false,
+    };
+    target.focus().is_ok()
 }

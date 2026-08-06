@@ -1,6 +1,7 @@
 //! UI components (ported from the v4 Yew design to Dioxus rsx).
 
 pub mod about;
+pub mod canonical;
 pub mod chapter_rail;
 pub mod contact;
 pub mod experience;
