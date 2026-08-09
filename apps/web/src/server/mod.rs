@@ -8,6 +8,7 @@
 mod api;
 mod assets;
 mod cache;
+mod csp;
 mod seo;
 
 use std::collections::HashSet;
@@ -23,7 +24,7 @@ use axum::{
     routing::get,
 };
 use dioxus::server::{DioxusRouterExt, IncrementalRendererConfig, ServeConfig};
-use portfolio_config::{AssetsConfig, IsrConfig};
+use portfolio_config::{AssetsConfig, CspConfig, IsrConfig};
 use portfolio_data::LANGUAGES;
 use serde::Deserialize;
 use tower_http::{
@@ -34,28 +35,6 @@ use tower_http::{
     set_header::SetResponseHeaderLayer,
     trace::TraceLayer,
 };
-
-/// Content-Security-Policy. `'unsafe-inline'` covers Dioxus's inline hydration
-/// bootstrap and the serialized-state `<script>`; `'wasm-unsafe-eval'`
-/// instantiates the WASM module. `'unsafe-eval'` is required because
-/// `dioxus-web`'s document provider evaluates JavaScript via `new Function(...)`
-/// (`js_sys::Function::new_with_args`) — this is how `document::Title`,
-/// `document::Stylesheet`, `document::Link`, `document::Meta`, etc. are applied
-/// on the client during hydration. Without it, `new Function` throws an
-/// (uncaught) `EvalError` that aborts the wasm client and freezes client-side
-/// navigation. Server-function calls are same-origin `fetch`, so
-/// `connect-src 'self'` suffices.
-const CSP: &str = "default-src 'self'; \
-     script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; \
-     style-src 'self' 'unsafe-inline'; \
-     font-src 'self'; \
-     img-src 'self' data:; \
-     connect-src 'self'; \
-     object-src 'none'; \
-     base-uri 'self'; \
-     form-action 'self'; \
-     frame-ancestors 'none'; \
-     upgrade-insecure-requests";
 
 /// Everything this server reads from its configuration.
 ///
@@ -73,6 +52,8 @@ struct ServerConfig {
     #[serde(default)]
     assets: AssetsConfig,
     #[serde(default)]
+    csp: CspConfig,
+    #[serde(default)]
     isr: IsrConfig,
 }
 
@@ -89,20 +70,36 @@ const EX_CONFIG: i32 = 78;
 /// be loaded is a start-up failure, not a per-request one, and failing here
 /// means the container never reports ready rather than serving a degraded site.
 pub fn serve() {
-    let config = match portfolio_config::load::<ServerConfig>() {
-        Ok(config) => Arc::new(config),
-        Err(err) => {
-            // Before `dioxus::serve` installs the logger, so `tracing` would
-            // discard this.
-            eprintln!("portfolio: cannot start, the configuration is not usable: {err}");
-            std::process::exit(EX_CONFIG);
-        }
-    };
+    let config = Arc::new(load_config());
 
     dioxus::serve(move || {
         let config = Arc::clone(&config);
         async move { Ok(router(&config)) }
     });
+}
+
+/// Reads the configuration, or ends the process with [`EX_CONFIG`].
+///
+/// Two ways to be unusable, and both are start-up failures: a value that cannot be *loaded* (a
+/// missing file, an unparseable number, one key supplied by two layers), and a set of values that
+/// load individually but cannot be *served* together — see
+/// [`CspConfig::validate`](portfolio_config::CspConfig::validate). Failing here means the
+/// container never reports ready, rather than serving every visitor a blank page.
+fn load_config() -> ServerConfig {
+    // Runs before `dioxus::serve` installs the logger, so `tracing` would discard this.
+    let refuse = |err: &dyn std::fmt::Display| -> ! {
+        eprintln!("portfolio: cannot start, the configuration is not usable: {err}");
+        std::process::exit(EX_CONFIG)
+    };
+
+    let config = match portfolio_config::load::<ServerConfig>() {
+        Ok(config) => config,
+        Err(err) => refuse(&err),
+    };
+    if let Err(err) = config.csp.validate() {
+        refuse(&err);
+    }
+    config
 }
 
 /// The full application router: the Dioxus SSR/asset router with our routes and
@@ -113,36 +110,64 @@ fn router(config: &ServerConfig) -> Router {
         SetResponseHeaderLayer::overriding(name, HeaderValue::from_static(value))
     };
 
+    let policy = Arc::new(csp::SitePolicy::new(&config.csp));
     let (dioxus_app, isr_enabled) = dioxus_app_router(&config.isr);
     let app = dioxus_app
         .merge(api_router(config.assets.clone()))
         .merge(assets::router());
-    // Locale handling for page navigations, innermost so it sees the request
-    // before the router and the response before compression: it stamps the
-    // negotiated language onto `<html lang>`, declares the `Vary` axes the
-    // response actually depends on, and — when ISR is active — tags the URI so
+    // Page handling for navigations, innermost so it sees the request before the
+    // router and the response before compression: it stamps the negotiated
+    // language onto `<html lang>`, declares the `Vary` axes the response actually
+    // depends on, gives the document the Content-Security-Policy derived from the
+    // very bytes it is about to send, and — when ISR is active — tags the URI so
     // the per-path incremental cache keeps a separate entry per language.
-    let app = app.layer(middleware::from_fn_with_state(isr_enabled, localize_page));
+    let app = app.layer(middleware::from_fn_with_state(
+        PageState {
+            isr_enabled,
+            policy: Arc::clone(&policy),
+        },
+        localize_page,
+    ));
 
-    app.layer(static_header(header::CONTENT_SECURITY_POLICY, CSP))
-        .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
-        .layer(static_header(header::X_FRAME_OPTIONS, "DENY"))
-        .layer(static_header(header::REFERRER_POLICY, "no-referrer"))
-        .layer(static_header(
-            header::STRICT_TRANSPORT_SECURITY,
-            "max-age=31536000; includeSubDomains; preload",
-        ))
-        .layer(static_header(
-            HeaderName::from_static("permissions-policy"),
-            "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-        ))
-        // Compress text assets per Accept-Encoding; already-encoded payloads are
-        // skipped, so this never double-compresses the SSR HTML.
-        .layer(CompressionLayer::new().compress_when(compression_predicate()))
-        // Assign a `Cache-Control` TTL per asset class, but only when a handler
-        // did not already set one (so the API's own headers win). Runs last.
-        .layer(middleware::from_fn(cache::set_cache_control))
-        .layer(TraceLayer::new_for_http())
+    // The policy for everything that is not a document, and only where the layer
+    // above has not already set a stricter, document-specific one — hence
+    // `if_not_present` rather than the `overriding` every other header uses.
+    app.layer(SetResponseHeaderLayer::if_not_present(
+        header::CONTENT_SECURITY_POLICY,
+        policy.subresource(),
+    ))
+    .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
+    .layer(static_header(header::X_FRAME_OPTIONS, "DENY"))
+    .layer(static_header(header::REFERRER_POLICY, "no-referrer"))
+    .layer(static_header(
+        header::STRICT_TRANSPORT_SECURITY,
+        "max-age=31536000; includeSubDomains; preload",
+    ))
+    .layer(static_header(
+        HeaderName::from_static("permissions-policy"),
+        "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    ))
+    // Compress text assets per Accept-Encoding; already-encoded payloads are
+    // skipped, so this never double-compresses the SSR HTML.
+    .layer(CompressionLayer::new().compress_when(compression_predicate()))
+    // Assign a `Cache-Control` TTL per asset class, but only when a handler
+    // did not already set one (so the API's own headers win). Runs last.
+    .layer(middleware::from_fn(cache::set_cache_control))
+    .layer(TraceLayer::new_for_http())
+}
+
+/// What [`localize_page`] carries per request.
+///
+/// Cloned for every request the middleware sees, so the policy — which owns a rendered header
+/// value and, when hashing is on, the builder each document's hashes are folded into — is behind
+/// an [`Arc`] rather than copied.
+#[derive(Clone)]
+struct PageState {
+    /// Whether the incremental cache is active, and therefore whether the request URI has to
+    /// carry the negotiated locale for the cache to key on.
+    isr_enabled: bool,
+    /// The Content-Security-Policy this server serves. See [`csp`].
+    policy: Arc<csp::SitePolicy>,
 }
 
 /// The response-compression predicate. Starts from tower-http's default (which
@@ -337,6 +362,9 @@ fn ensure_uncacheable_sentinel(dir: &std::path::Path) -> std::io::Result<()> {
 /// 3. The opening `<html>` tag is stamped with `lang`, so the language is
 ///    declared in the very first bytes a crawler or a JavaScript-less reader
 ///    receives rather than only after the client has hydrated.
+/// 4. The document is given its own Content-Security-Policy, derived from the
+///    inline scripts in the very bytes about to be sent (see [`csp`]). It rides
+///    along here because the body has to be buffered for point 3 regardless.
 ///
 /// The decision mirrors `crate::i18n::detect_locale` exactly (both go through
 /// `negotiate_locale`), so the cache key, the `<html lang>` and the HTML
@@ -344,7 +372,7 @@ fn ensure_uncacheable_sentinel(dir: &std::path::Path) -> std::io::Result<()> {
 /// are left untouched (they never hit the incremental cache and carry no
 /// language).
 async fn localize_page(
-    axum::extract::State(isr_enabled): axum::extract::State<bool>,
+    axum::extract::State(state): axum::extract::State<PageState>,
     mut request: axum::extract::Request,
     next: middleware::Next,
 ) -> axum::response::Response {
@@ -372,13 +400,13 @@ async fn localize_page(
     // untagged, language-blind cache entry — whichever locale happened to fill
     // it first. Requests that are not pages map to the sentinel anyway, so
     // tagging them would change nothing.
-    if isr_enabled && is_cacheable_path(request.uri().path()) {
+    if state.isr_enabled && is_cacheable_path(request.uri().path()) {
         *request.uri_mut() = with_locale_query(request.uri(), &locale);
     }
 
     // Whether the response is a page at all is decided by its content type, not
     // by what the request asked for, so the 404 page is localized too.
-    localize_html_response(next.run(request).await, locale).await
+    rewrite_html_response(next.run(request).await, locale, &state.policy).await
 }
 
 /// Largest HTML page body this server will buffer in order to stamp `<html
@@ -387,13 +415,15 @@ async fn localize_page(
 /// large `text/html` response.
 const MAX_HTML_REWRITE_BYTES: usize = 4 * 1024 * 1024;
 
-/// Marks `response` as language-dependent (`Vary`) and stamps `lang="<locale>"`
-/// onto its opening `<html>` tag.
+/// Finishes a document response: marks it language-dependent (`Vary`), stamps
+/// `lang="<locale>"` onto its opening `<html>` tag, and gives it the
+/// Content-Security-Policy derived from the bytes it will actually carry.
 ///
 /// Only `text/html` responses are touched: a request that merely *accepts* HTML
 /// may still be answered with JSON or an asset (a browser navigating straight to
 /// `/api/v1/profile`, say), and those neither vary by language nor have a tag to
-/// annotate. Everything else passes straight through.
+/// annotate. Everything else passes straight through and picks up the
+/// subresource policy from the layer outside this one.
 ///
 /// The tag sits in the first bytes of the document, but the SSR body arrives as
 /// a stream whose chunk boundaries are not ours to rely on, so the page is
@@ -402,9 +432,14 @@ const MAX_HTML_REWRITE_BYTES: usize = 4 * 1024 * 1024;
 /// kilobytes; enabling out-of-order streaming would mean revisiting this. A body
 /// that is unreadable or larger than [`MAX_HTML_REWRITE_BYTES`] fails the
 /// request rather than silently serving a truncated page.
-async fn localize_html_response(
+///
+/// The buffer is what makes the per-document policy affordable too: the inline
+/// scripts are hashed out of the same string, after the `lang` rewrite, so the
+/// hashes describe the response as sent rather than an earlier version of it.
+async fn rewrite_html_response(
     mut response: axum::response::Response,
     locale: String,
+    policy: &csp::SitePolicy,
 ) -> axum::response::Response {
     let is_html = response
         .headers()
@@ -427,11 +462,15 @@ async fn localize_html_response(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
     let Ok(html) = std::str::from_utf8(&bytes) else {
+        // Already broken: a document that is not UTF-8 cannot be scanned for the
+        // scripts a policy would have to admit, so it also keeps the subresource
+        // policy the outer layer supplies rather than a hashed one.
         tracing::error!("page body was not valid UTF-8; serving it unmodified");
         return axum::response::Response::from_parts(parts, Body::from(bytes));
     };
 
     let localized = with_html_lang(html, &locale);
+    policy.apply_to_document(&mut parts.headers, &localized);
     // The rewrite changes the body length, so any `Content-Length` computed
     // before it is now a lie. Drop it and let the new body's known size speak.
     parts.headers.remove(header::CONTENT_LENGTH);
@@ -671,6 +710,14 @@ mod tests {
     async fn json(response: axum::response::Response) -> Value {
         let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
         serde_json::from_slice(&bytes).unwrap()
+    }
+
+    /// The middleware state, with the policy the deployment's defaults produce.
+    fn page_state(isr_enabled: bool) -> PageState {
+        PageState {
+            isr_enabled,
+            policy: Arc::new(csp::SitePolicy::new(&portfolio_config::CspConfig::default())),
+        }
     }
 
     /// Builds a response with the given content type and a body large enough to
@@ -1073,7 +1120,10 @@ mod tests {
 
         let app = Router::new()
             .route("/", get(echo_uri))
-            .layer(middleware::from_fn_with_state(true, localize_page));
+            .layer(middleware::from_fn_with_state(
+                page_state(true),
+                localize_page,
+            ));
 
         let seen = |accept: Option<&'static str>| {
             let app = app.clone();
@@ -1107,7 +1157,10 @@ mod tests {
         // A request may accept HTML and still be answered with JSON; those do
         // not vary by language and have no tag to stamp.
         let response = api_router(AssetsConfig::default())
-            .layer(middleware::from_fn_with_state(false, localize_page))
+            .layer(middleware::from_fn_with_state(
+                page_state(false),
+                localize_page,
+            ))
             .oneshot(
                 Request::builder()
                     .uri("/api/v1/profile")
@@ -1120,5 +1173,109 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
         assert!(!response.headers().contains_key(header::VARY));
+    }
+
+    /// A document's policy is derived from the document: the hash of the inline script it
+    /// carries, the nonce Cloudflare copies onto what it injects at the edge, and the
+    /// `Cache-Control` that keeps that nonce from being shared between readers.
+    ///
+    /// What the directives say belongs to [`csp`] and is tested there; what this pins is that
+    /// the response pipeline actually reaches it, on the same buffered body it rewrites.
+    #[tokio::test]
+    async fn a_page_carries_a_policy_derived_from_its_own_html() {
+        async fn page() -> axum::response::Response {
+            axum::http::Response::builder()
+                .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+                .body(Body::from(
+                    "<!DOCTYPE html><html><body><script>window.x=1;</script></body></html>",
+                ))
+                .unwrap()
+        }
+
+        let response = Router::new()
+            .route("/", get(page))
+            .layer(middleware::from_fn_with_state(
+                page_state(false),
+                localize_page,
+            ))
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        let headers = response.headers();
+        let policy = headers
+            .get(header::CONTENT_SECURITY_POLICY)
+            .expect("a document must carry a policy")
+            .to_str()
+            .unwrap();
+        assert!(policy.contains("'sha256-"), "{policy}");
+        assert!(policy.contains("'nonce-"), "{policy}");
+        assert_eq!(headers.get(header::CACHE_CONTROL).unwrap(), "no-cache");
+    }
+
+    /// The document policy survives the layer that supplies the subresource one.
+    ///
+    /// This mirrors the two layers [`router`] puts either side of the page middleware, and it is
+    /// the assumption the whole design rests on: the subresource policy is applied *outside*
+    /// [`localize_page`], so it runs on the way out, after the document already has its own. Only
+    /// `if_not_present` makes that safe — with the `overriding` every other security header uses,
+    /// a document's hashes would be replaced by a policy that admits no inline script at all, and
+    /// every page would render blank.
+    #[tokio::test]
+    async fn the_subresource_layer_does_not_overwrite_a_document_policy() {
+        async fn page() -> axum::response::Response {
+            axum::http::Response::builder()
+                .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+                .body(Body::from(
+                    "<html><body><script>window.x=1;</script></body></html>",
+                ))
+                .unwrap()
+        }
+
+        let state = page_state(false);
+        let subresource = state.policy.subresource();
+        let response = Router::new()
+            .route("/", get(page))
+            .layer(middleware::from_fn_with_state(state, localize_page))
+            .layer(SetResponseHeaderLayer::if_not_present(
+                header::CONTENT_SECURITY_POLICY,
+                subresource.clone(),
+            ))
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        let served = response.headers().get(header::CONTENT_SECURITY_POLICY);
+        assert_ne!(served, Some(&subresource));
+        assert!(
+            served.unwrap().to_str().unwrap().contains("'sha256-"),
+            "the document policy was replaced by the subresource one"
+        );
+    }
+
+    /// A response that is not a document gets no policy here, so the one the outer layer applies
+    /// — which admits no inline script at all — is the one that stands.
+    #[tokio::test]
+    async fn non_documents_are_left_to_the_subresource_policy() {
+        let response = api_router(AssetsConfig::default())
+            .layer(middleware::from_fn_with_state(
+                page_state(false),
+                localize_page,
+            ))
+            .oneshot(
+                Request::builder()
+                    .uri("/api/v1/profile")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(
+            !response
+                .headers()
+                .contains_key(header::CONTENT_SECURITY_POLICY)
+        );
     }
 }

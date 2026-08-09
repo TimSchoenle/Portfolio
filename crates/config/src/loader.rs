@@ -51,12 +51,14 @@ pub fn load<T: DeserializeOwned>() -> Result<T, ConfigError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{GithubConfig, IsrConfig, load};
+    use crate::{CspConfig, GithubConfig, IsrConfig, load};
     use secrecy::ExposeSecret as _;
     use serde::Deserialize;
 
     #[derive(Debug, Deserialize)]
     struct Sample {
+        #[serde(default)]
+        csp: CspConfig,
         #[serde(default)]
         github: GithubConfig,
         #[serde(default)]
@@ -77,9 +79,16 @@ mod tests {
             jail.clear_env();
             jail.set_env("PORTFOLIO_GITHUB__USERNAME", "TimSchoenle");
             jail.set_env("PORTFOLIO_ISR__TTL_SECS", "3600");
+            // Two levels of nesting, which is the deepest key this workspace has and the one
+            // spelling a README table could quietly get wrong.
+            jail.set_env("PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE", "true");
 
             let config: Sample = load().map_err(|e| e.to_string()).unwrap();
             assert_eq!(config.github.username(), Some("TimSchoenle"));
+            assert!(config.csp.cloudflare.turnstile);
+            // Its siblings keep their defaults rather than being reset by the nested override.
+            assert!(config.csp.cloudflare.script_nonce);
+            assert!(config.csp.hash_inline_scripts);
             assert_eq!(
                 config.isr.invalidate_after(),
                 Some(std::time::Duration::from_secs(3600))

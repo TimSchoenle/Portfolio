@@ -204,6 +204,16 @@ WORKDIR /app
 #   PORTFOLIO_ISR__CACHE_DIR=/tmp/isr  # empty disables ISR
 #   PORTFOLIO_ISR__TTL_SECS=0          # 0/unset = permanent; positive = finite TTL
 #   PORTFOLIO_ASSETS__DIST_DIR=public  # what the readiness probe checks
+#
+# The Content-Security-Policy is built per document from the inline scripts that
+# document carries, with a per-response nonce for the script Cloudflare's bot
+# products inject at the edge. The ISR cache above is unaffected: it stores the
+# body, and the nonce lives only in the response header, minted after the cached
+# render is read. Both keys default to on and move together — see README.md.
+#   PORTFOLIO_CSP__HASH_INLINE_SCRIPTS=true       # false restores 'unsafe-inline'
+#   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE=true  # false drops the edge nonce
+#   PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE=false    # admit the Turnstile widget
+#   PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS=false
 ENV PORT=8080 \
     IP=0.0.0.0 \
     RUST_LOG=info \

@@ -874,6 +874,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "csp-policy"
+version = "0.2.0"
+source = "git+https://github.com/TimSchoenle/csp-shell?tag=csp-shell-v0.2.0#8e0d90cd955c6e366932bc56d93d4aedd72e1e05"
+
+[[package]]
+name = "csp-shell"
+version = "0.2.0"
+source = "git+https://github.com/TimSchoenle/csp-shell?tag=csp-shell-v0.2.0#8e0d90cd955c6e366932bc56d93d4aedd72e1e05"
+dependencies = [
+ "csp-policy",
+ "getrandom 0.4.3",
+ "sha2 0.11.0",
+]
+
+[[package]]
 name = "csv"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6088,6 +6103,7 @@ name = "web"
 version = "2.3.0"
 dependencies = [
  "axum",
+ "csp-shell",
  "dioxus",
  "dioxus-fullstack-core",
  "gloo-timers 0.4.0",

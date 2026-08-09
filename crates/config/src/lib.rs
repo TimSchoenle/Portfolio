@@ -16,7 +16,7 @@
 //! This crate owns the *blocks* and the dialect; each binary declares the aggregate it actually
 //! reads, so a struct field is evidence that something consumes it:
 //!
-//! - the SSR server ([`AssetsConfig`], [`IsrConfig`]),
+//! - the SSR server ([`AssetsConfig`], [`CspConfig`], [`IsrConfig`]),
 //! - the `update-repos` builder ([`GithubConfig`]).
 //!
 //! # Why the loader half only
@@ -45,11 +45,13 @@
 //! variable, and each block documents what the alternative reading would have cost.
 
 mod assets;
+mod csp;
 mod github;
 mod isr;
 mod loader;
 
 pub use assets::AssetsConfig;
+pub use csp::{CloudflareConfig, CspConfig, CspConfigError};
 pub use github::GithubConfig;
 pub use isr::IsrConfig;
 pub use loader::{ConfigError, load, terrace};
