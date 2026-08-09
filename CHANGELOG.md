@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.3.0](https://github.com/TimSchoenle/Portfolio/compare/v2.2.3...v2.3.0) (2026-08-09)
+
+
+### Features
+
+* **config:** migrate to file-based layered configuration ([#1090](https://github.com/TimSchoenle/Portfolio/issues/1090)) ([2de26fb](https://github.com/TimSchoenle/Portfolio/commit/2de26fb378a674d920addc79bd78a8f3e33c251f))
+
+
+### Miscellaneous
+
+* **deps:** update rust crate ureq to v3.4.0 ([#1091](https://github.com/TimSchoenle/Portfolio/issues/1091)) ([d247ed5](https://github.com/TimSchoenle/Portfolio/commit/d247ed570f1c97398bdf0c4469045a7ff4f3ad3c))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.18 ([#1088](https://github.com/TimSchoenle/Portfolio/issues/1088)) ([b90123f](https://github.com/TimSchoenle/Portfolio/commit/b90123f345131d15ae09fbd8ceccbbaf7545b1d8))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.29 ([#1085](https://github.com/TimSchoenle/Portfolio/issues/1085)) ([fe0a1d1](https://github.com/TimSchoenle/Portfolio/commit/fe0a1d12fc6ee86f48ad605db06b00a52b7f700c))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.1 ([#1086](https://github.com/TimSchoenle/Portfolio/issues/1086)) ([36f6c31](https://github.com/TimSchoenle/Portfolio/commit/36f6c315ff79123a453e0618e08f1209a4fcd3c5))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.10 ([#1087](https://github.com/TimSchoenle/Portfolio/issues/1087)) ([8321317](https://github.com/TimSchoenle/Portfolio/commit/8321317eb7f9f1a80d87ed32544fb6b17eec350d))
+
 ## [2.2.3](https://github.com/TimSchoenle/Portfolio/compare/v2.2.2...v2.2.3) (2026-08-06)
 
 
