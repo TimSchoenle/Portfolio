@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/TimSchoenle/Portfolio/compare/v2.3.0...v2.4.0) (2026-08-09)
+
+
+### Features
+
+* **csp:** build the policy from the served document with csp-shell ([#1092](https://github.com/TimSchoenle/Portfolio/issues/1092)) ([982fa0e](https://github.com/TimSchoenle/Portfolio/commit/982fa0e10eab3863c2f1ff9fc60c0aa2b2ca5b47))
+
 ## [2.3.0](https://github.com/TimSchoenle/Portfolio/compare/v2.2.3...v2.3.0) (2026-08-09)
 
 
