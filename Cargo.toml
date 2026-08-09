@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/config",
     "crates/data",
     "apps/web",
     "apps/resume-generator",
@@ -19,7 +20,31 @@ publish = false
 edition = "2024"
 
 [workspace.dependencies]
+portfolio-config = { path = "crates/config" }
 portfolio-data = { path = "crates/data" }
+
+# The layered configuration loader: struct defaults, then TOML, then
+# `PORTFOLIO_`-prefixed environment variables, then a secrets directory, then
+# `_FILE` indirection — with a key supplied by two of the last three refused
+# rather than silently resolved by precedence. Pinned by tag, not branch, so an
+# update to the loader is a deliberate commit here rather than whatever `main`
+# happened to be at build time.
+#
+# `loader` only, and `default-features = false` to say so: the crate's other
+# half is a supervisor that rebuilds a running service when its files change,
+# which would link tokio, notify and tracing into every consumer. Nothing here
+# needs it — see `crates/config/src/lib.rs` for why.
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.2.0", default-features = false, features = [
+    "loader",
+] }
+# Keeps the GitHub token out of `Debug` output and off every accidental log
+# line: a `SecretString` has no `Display`, and reading it is the explicit
+# `expose_secret()` call at the one place it is put on the wire.
+secrecy = { version = "0.10", features = ["serde"] }
+# `figment::Jail` sets and restores process-wide environment state, which is how
+# the config tests avoid `env::set_var` in a threaded test binary. Same figment
+# `terrace-config` resolves, plus its `test` feature.
+figment = { version = "0.10", features = ["test"] }
 
 # Dioxus 0.7 fullstack. `fullstack` enables server functions + hydration
 # serialization on both targets; `router` re-exports dioxus-router. The

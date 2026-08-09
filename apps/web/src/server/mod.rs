@@ -12,8 +12,7 @@ mod seo;
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 use axum::{
     Router,
@@ -24,7 +23,9 @@ use axum::{
     routing::get,
 };
 use dioxus::server::{DioxusRouterExt, IncrementalRendererConfig, ServeConfig};
+use portfolio_config::{AssetsConfig, IsrConfig};
 use portfolio_data::LANGUAGES;
+use serde::Deserialize;
 use tower_http::{
     compression::{
         CompressionLayer,
@@ -56,23 +57,66 @@ const CSP: &str = "default-src 'self'; \
      frame-ancestors 'none'; \
      upgrade-insecure-requests";
 
+/// Everything this server reads from its configuration.
+///
+/// The blocks belong to `portfolio-config`, which owns the layering; the
+/// aggregate belongs here, so a field exists exactly when this binary consumes
+/// it. See that crate's docs for the layers and their precedence.
+///
+/// Notably absent: the listen address. `IP`, `PORT` and `RUST_LOG` are the
+/// Dioxus toolchain's contract with the binary — `dx serve` sets them to tell a
+/// development build which port it is being proxied on — so folding them into
+/// the `PORTFOLIO_` namespace would take a name the framework still reads and
+/// leave two sources of truth for one socket.
+#[derive(Debug, Deserialize)]
+struct ServerConfig {
+    #[serde(default)]
+    assets: AssetsConfig,
+    #[serde(default)]
+    isr: IsrConfig,
+}
+
+/// Exit code for a configuration the process cannot start with (`EX_CONFIG`
+/// from `sysexits.h`), so an operator can tell a bad config apart from a crash
+/// without reading the logs.
+const EX_CONFIG: i32 = 78;
+
 /// Runs the Axum SSR server. `dioxus::serve` sets up the async runtime and the
 /// default logger, then binds to `IP`/`PORT` (default `127.0.0.1:8080`) and
-/// serves the router below with graceful shutdown.
+/// serves the router below.
+///
+/// Configuration is read once, before the runtime exists: a value that cannot
+/// be loaded is a start-up failure, not a per-request one, and failing here
+/// means the container never reports ready rather than serving a degraded site.
 pub fn serve() {
-    dioxus::serve(|| async move { Ok(router()) });
+    let config = match portfolio_config::load::<ServerConfig>() {
+        Ok(config) => Arc::new(config),
+        Err(err) => {
+            // Before `dioxus::serve` installs the logger, so `tracing` would
+            // discard this.
+            eprintln!("portfolio: cannot start, the configuration is not usable: {err}");
+            std::process::exit(EX_CONFIG);
+        }
+    };
+
+    dioxus::serve(move || {
+        let config = Arc::clone(&config);
+        async move { Ok(router(&config)) }
+    });
 }
 
 /// The full application router: the Dioxus SSR/asset router with our routes and
 /// layers mounted on top. Custom routes take precedence over the SSR fallback;
 /// layers apply to every response (SSR HTML, static assets, API, SEO).
-fn router() -> Router {
+fn router(config: &ServerConfig) -> Router {
     let static_header = |name: HeaderName, value: &'static str| {
         SetResponseHeaderLayer::overriding(name, HeaderValue::from_static(value))
     };
 
-    let (dioxus_app, isr_enabled) = dioxus_app_router();
-    let app = dioxus_app.merge(api_router()).merge(assets::router());
+    let (dioxus_app, isr_enabled) = dioxus_app_router(&config.isr);
+    let app = dioxus_app
+        .merge(api_router(config.assets.clone()))
+        .merge(assets::router());
     // Locale handling for page navigations, innermost so it sees the request
     // before the router and the response before compression: it stamps the
     // negotiated language onto `<html lang>`, declares the `Vary` axes the
@@ -111,22 +155,6 @@ fn compression_predicate() -> impl Predicate {
         .and(NotForContentType::const_new("font/woff2"))
         .and(NotForContentType::const_new("application/pdf"))
 }
-
-/// Environment variable naming the writable directory Dioxus's incremental
-/// renderer (ISR) caches rendered HTML into. Set empty to disable ISR (the
-/// server then renders every request fresh). The image defaults it to a
-/// sub-directory of `/tmp`, which the deployment (Helm chart) already provides
-/// as a writable mount even under a read-only root filesystem. Keep it *outside*
-/// the bundled `public/` asset tree so those assets remain immutable.
-const ISR_CACHE_DIR_ENV: &str = "ISR_CACHE_DIR";
-
-/// Environment variable overriding the ISR revalidation interval, in seconds.
-/// Unset, empty, `0`, or an unparseable value all mean "never revalidate" (a
-/// permanent cache): every page renders from compile-time data, so the only
-/// thing that changes the output is a new build/deploy — which starts from an
-/// empty cache anyway. A positive value opts into a finite, time-based TTL,
-/// useful only when a *persistent* cache volume is shared across deploys.
-const ISR_TTL_SECS_ENV: &str = "ISR_TTL_SECS";
 
 /// Query-string marker [`localize_page`] appends to page requests so the
 /// otherwise language-blind, path-keyed incremental cache stores one entry per
@@ -173,7 +201,7 @@ fn is_cacheable_path(path: &str) -> bool {
 const ISR_UNCACHEABLE_SENTINEL: &str = ".uncacheable";
 
 /// The Dioxus SSR/asset router, with incremental static regeneration enabled
-/// when [`ISR_CACHE_DIR_ENV`] names a writable directory.
+/// when the configuration names a writable cache directory.
 ///
 /// Dioxus's incremental renderer keys its cache by request path (and query)
 /// only. This site negotiates locale per request (cookie / `Accept-Language`,
@@ -184,8 +212,8 @@ const ISR_UNCACHEABLE_SENTINEL: &str = ".uncacheable";
 /// entry per language per path.
 /// Returns the Dioxus router and whether ISR is enabled (so the caller can add
 /// the locale-tagging middleware only when the cache is active).
-fn dioxus_app_router() -> (Router, bool) {
-    match incremental_config() {
+fn dioxus_app_router(isr: &IsrConfig) -> (Router, bool) {
+    match incremental_config(isr) {
         Some(cfg) => (
             Router::new()
                 .serve_dioxus_application(ServeConfig::builder().incremental(cfg), crate::app::App),
@@ -196,18 +224,11 @@ fn dioxus_app_router() -> (Router, bool) {
     }
 }
 
-/// Builds the incremental-render configuration from the environment, or `None`
-/// when ISR is disabled ([`ISR_CACHE_DIR_ENV`] unset) or the cache directory
-/// is not usable (cannot be created, or exists but is not writable).
-fn incremental_config() -> Option<IncrementalRendererConfig> {
-    let dir = std::env::var_os(ISR_CACHE_DIR_ENV)?;
-    // Treat an empty value the same as unset: container platforms routinely
-    // inject `KEY=` for a declared-but-unset variable, and that must mean "ISR
-    // off", not "cache into the current directory".
-    if dir.is_empty() {
-        return None;
-    }
-    let dir = PathBuf::from(dir);
+/// Builds the incremental-render configuration, or `None` when ISR is disabled
+/// (no cache directory configured) or the cache directory is not usable (cannot
+/// be created, or exists but is not writable).
+fn incremental_config(isr: &IsrConfig) -> Option<IncrementalRendererConfig> {
+    let dir = isr.cache_dir()?.to_path_buf();
     // Verify the directory can actually be written to, not merely that it
     // exists: a mounted volume (e.g. a root-owned Kubernetes `emptyDir`) can be
     // present yet unwritable to our non-root user, in which case `create_dir_all`
@@ -229,7 +250,7 @@ fn incremental_config() -> Option<IncrementalRendererConfig> {
         return None;
     }
 
-    let invalidate_after = parse_isr_ttl(std::env::var(ISR_TTL_SECS_ENV).ok().as_deref());
+    let invalidate_after = isr.invalidate_after();
     match invalidate_after {
         Some(ttl) => tracing::info!(
             "ISR enabled: caching rendered pages per locale in {} (revalidate after {}s)",
@@ -268,23 +289,6 @@ fn incremental_config() -> Option<IncrementalRendererConfig> {
         config = config.invalidate_after(ttl);
     }
     Some(config)
-}
-
-/// Parses the configured ISR revalidation interval ([`ISR_TTL_SECS_ENV`]) into an
-/// optional invalidation duration. `None` means a permanent cache (no time-based
-/// invalidation): unset, empty, a literal `0`, or an unparseable value all fail
-/// safe to permanent, since every page renders from compile-time data and the
-/// real invalidation boundary is a redeploy (which starts from an empty cache).
-/// A positive integer opts back into a finite TTL for setups that share a
-/// persistent cache volume across deploys and want time-based churn.
-fn parse_isr_ttl(raw: Option<&str>) -> Option<Duration> {
-    match raw.map(str::trim) {
-        None | Some("") => None,
-        Some(secs) => match secs.parse::<u64>() {
-            Ok(0) | Err(_) => None,
-            Ok(secs) => Some(Duration::from_secs(secs)),
-        },
-    }
 }
 
 /// Ensures `dir` exists and is actually writable by our process. Creates the
@@ -623,7 +627,13 @@ fn log_cache_entry_created(route: &str, mapped: &Path) {
 /// The public HTTP API + SEO documents, as a standalone sub-router so it can be
 /// exercised in isolation by the integration tests below (without the SSR
 /// render machinery).
-fn api_router() -> Router {
+///
+/// `assets` is the router's state purely for the readiness probe, which is the
+/// one handler whose answer depends on configuration rather than on
+/// compile-time data. Holding it as state rather than re-reading it per request
+/// means the probe cannot start disagreeing with the rest of the process about
+/// where the bundle is.
+fn api_router(assets: AssetsConfig) -> Router {
     Router::new()
         .route("/api/health", get(api::health))
         .route("/api/health/live", get(api::live))
@@ -636,6 +646,7 @@ fn api_router() -> Router {
         .route("/robots.txt", get(seo::robots))
         .route("/sitemap.xml", get(seo::sitemap))
         .route("/site.webmanifest", get(seo::webmanifest))
+        .with_state(assets)
 }
 
 #[cfg(test)]
@@ -651,7 +662,7 @@ mod tests {
 
     /// Dispatches a `GET` through the real API router and returns the response.
     async fn get_(path: &str) -> axum::response::Response {
-        api_router()
+        api_router(AssetsConfig::default())
             .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
             .await
             .unwrap()
@@ -759,7 +770,7 @@ mod tests {
 
     #[tokio::test]
     async fn profile_rejects_non_get_methods() {
-        let response = api_router()
+        let response = api_router(AssetsConfig::default())
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -976,19 +987,53 @@ mod tests {
         assert_ne!(imprint_de, de);
     }
 
+    /// ISR is off unless the configuration names a cache directory. That answer
+    /// is what [`dioxus_app_router`] turns into the flag gating locale tagging,
+    /// so getting it wrong would leave every language sharing one cache entry.
+    ///
+    /// The TTL and empty-value semantics themselves belong to
+    /// `portfolio_config::IsrConfig` and are tested there; what this pins is
+    /// that the server asks it rather than reading the environment behind its
+    /// back.
     #[test]
-    fn ttl_defaults_to_permanent_and_honours_a_finite_override() {
-        // Unset, blank, whitespace, and an explicit zero all mean "never
-        // revalidate": the cache is refreshed by a redeploy, not by elapsed time.
-        assert_eq!(parse_isr_ttl(None), None);
-        assert_eq!(parse_isr_ttl(Some("")), None);
-        assert_eq!(parse_isr_ttl(Some("  ")), None);
-        assert_eq!(parse_isr_ttl(Some("0")), None);
-        // Garbage fails safe to permanent rather than a surprise interval.
-        assert_eq!(parse_isr_ttl(Some("later")), None);
-        // A positive value opts back into a finite, time-based TTL.
-        assert_eq!(parse_isr_ttl(Some("3600")), Some(Duration::from_secs(3600)));
-        assert_eq!(parse_isr_ttl(Some(" 90 ")), Some(Duration::from_secs(90)));
+    fn isr_is_off_without_a_configured_cache_directory() {
+        assert!(incremental_config(&IsrConfig::default()).is_none());
+    }
+
+    #[test]
+    fn a_writable_cache_directory_turns_isr_on() {
+        let dir = scratch_path("isr-config");
+        let on = IsrConfig {
+            cache_dir: Some(dir.clone()),
+            ttl_secs: 0,
+        };
+
+        assert!(incremental_config(&on).is_some());
+        // The sentinel is what keeps non-cacheable routes from minting entries;
+        // enabling ISR must have created it as a regular file.
+        assert!(dir.join(ISR_UNCACHEABLE_SENTINEL).is_file());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A cache directory the process cannot write to fails safe: the server
+    /// renders every request fresh rather than refusing to start or persisting
+    /// nothing while believing it caches.
+    #[test]
+    fn an_unusable_cache_directory_disables_isr_instead_of_failing() {
+        // A path *under a regular file* can never be created, which is the one
+        // "unwritable" shape that reproduces identically on every platform
+        // (a mode-0555 directory does not, since root ignores it).
+        let blocker = scratch_path("isr-blocker");
+        std::fs::write(&blocker, b"not a directory").unwrap();
+
+        let unusable = IsrConfig {
+            cache_dir: Some(blocker.join("cache")),
+            ttl_secs: 0,
+        };
+        assert!(incremental_config(&unusable).is_none());
+
+        let _ = std::fs::remove_file(&blocker);
     }
 
     #[test]
@@ -1061,7 +1106,7 @@ mod tests {
     async fn non_page_responses_are_left_alone() {
         // A request may accept HTML and still be answered with JSON; those do
         // not vary by language and have no tag to stamp.
-        let response = api_router()
+        let response = api_router(AssetsConfig::default())
             .layer(middleware::from_fn_with_state(false, localize_page))
             .oneshot(
                 Request::builder()

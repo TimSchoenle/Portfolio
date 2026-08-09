@@ -7,9 +7,11 @@ use std::sync::LazyLock;
 
 use axum::{
     Json,
+    extract::State,
     http::{StatusCode, header},
     response::IntoResponse,
 };
+use portfolio_config::AssetsConfig;
 use portfolio_data::profile::{Profile, ProfileWithSchema};
 use serde::Serialize;
 use time::{OffsetDateTime, macros::format_description};
@@ -81,12 +83,11 @@ fn assets_ready(dist: &Path) -> bool {
     dist.join("index.html").is_file()
 }
 
-/// Readiness probe. Confirms the built client assets are present under
-/// `DIST_DIR` before Kubernetes routes traffic to this instance.
-pub async fn ready() -> impl IntoResponse {
-    let dist = std::env::var("DIST_DIR").unwrap_or_else(|_| "public".into());
-
-    let (status, payload) = if assets_ready(Path::new(&dist)) {
+/// Readiness probe. Confirms the built client assets are present under the
+/// configured bundle directory before Kubernetes routes traffic to this
+/// instance.
+pub async fn ready(State(assets): State<AssetsConfig>) -> impl IntoResponse {
+    let (status, payload) = if assets_ready(assets.dist_dir()) {
         (StatusCode::OK, "ready")
     } else {
         (StatusCode::SERVICE_UNAVAILABLE, "unavailable")

@@ -11,6 +11,9 @@ use std::fmt;
 /// Everything that can go wrong while building `repos.json`.
 #[derive(Debug)]
 pub enum UpdateReposError {
+    /// The layered configuration could not be loaded: a value failed to parse,
+    /// a mounted file could not be read, or one key was supplied twice.
+    Config(portfolio_config::ConfigError),
     /// The GitHub username to query was empty.
     MissingUser,
     /// No repositories were found to write (the user has no non-archived
@@ -30,11 +33,12 @@ pub enum UpdateReposError {
 impl fmt::Display for UpdateReposError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            UpdateReposError::MissingUser => {
-                f.write_str("no GitHub username configured (set GITHUB_USERNAME)")
-            }
+            UpdateReposError::Config(e) => write!(f, "configuration is not usable: {e}"),
+            UpdateReposError::MissingUser => f.write_str(
+                "no GitHub username configured (set PORTFOLIO_GITHUB__USERNAME, or `github.username`)",
+            ),
             UpdateReposError::NoRepos => f.write_str(
-                "no repositories found to write (none non-archived, or GITHUB_REPOS was empty)",
+                "no repositories found to write (none active, or `github.repos` named none)",
             ),
             UpdateReposError::Http(e) => write!(f, "GitHub API request failed: {e}"),
             UpdateReposError::Io(e) => write!(f, "file I/O failed: {e}"),
@@ -47,6 +51,7 @@ impl fmt::Display for UpdateReposError {
 impl Error for UpdateReposError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
+            UpdateReposError::Config(e) => Some(e),
             UpdateReposError::MissingUser => None,
             UpdateReposError::NoRepos => None,
             UpdateReposError::Http(e) => Some(e),
@@ -54,6 +59,12 @@ impl Error for UpdateReposError {
             UpdateReposError::Serialize(e) => Some(e),
             UpdateReposError::Timestamp(e) => Some(e),
         }
+    }
+}
+
+impl From<portfolio_config::ConfigError> for UpdateReposError {
+    fn from(e: portfolio_config::ConfigError) -> Self {
+        UpdateReposError::Config(e)
     }
 }
 
@@ -86,10 +97,14 @@ mod tests {
     use super::*;
     use std::io::{self, ErrorKind};
 
+    /// The message has to name the key an operator would actually set, in the
+    /// dialect the loader speaks — the whole point of the migration is that
+    /// there is one spelling, so an error naming a retired variable would send
+    /// them to a variable nothing reads.
     #[test]
     fn missing_user_has_actionable_message() {
         let msg = UpdateReposError::MissingUser.to_string();
-        assert!(msg.contains("GITHUB_USERNAME"), "{msg}");
+        assert!(msg.contains("PORTFOLIO_GITHUB__USERNAME"), "{msg}");
         assert!(UpdateReposError::MissingUser.source().is_none());
     }
 

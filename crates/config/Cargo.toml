@@ -1,0 +1,20 @@
+[package]
+name = "portfolio-config"
+version = "2.2.3"
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+# The loader itself. This crate owns the *schema* and the Portfolio dialect
+# (`src/loader.rs`) and none of the layering, the secrets-directory provider or
+# the shadow-key rejection.
+terrace-config.workspace = true
+# Config is where the GitHub token enters the process, so it is where the
+# wrapper has to start: a `SecretString` field cannot be unwrapped by the
+# struct that nests it, so the token stays wrapped until the one line that
+# builds the `Authorization` header.
+secrecy.workspace = true
+
+[dev-dependencies]
+figment.workspace = true

@@ -32,6 +32,9 @@ time = { workspace = true, features = ["macros"], optional = true }
 # Pinned to the version dioxus-fullstack re-exports.
 dioxus-fullstack-core = { version = "=0.7.10", optional = true }
 http = { version = "1", optional = true }
+# The layered configuration the SSR server boots through. Server-only: the wasm
+# client has no filesystem to read a config file or a mounted secret from.
+portfolio-config = { workspace = true, optional = true }
 
 [build-dependencies]
 # Read at build time so `build.rs` embeds the resume PDFs under their canonical
@@ -75,4 +78,5 @@ server = [
     "dep:time",
     "dep:dioxus-fullstack-core",
     "dep:http",
+    "dep:portfolio-config",
 ]

@@ -5,7 +5,11 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
+portfolio-config.workspace = true
 portfolio-data.workspace = true
+# The GitHub token stays wrapped from the loader to the `Authorization` header,
+# so it cannot reach a log line or a `Debug` dump on the way.
+secrecy.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 time.workspace = true
