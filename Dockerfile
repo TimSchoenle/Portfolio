@@ -77,7 +77,18 @@ COPY . .
 # repos.json from the GitHub API (build.rs embeds it into the web binary). CI=1
 # selects the long cache TTL so a fresh committed/cached file is reused; an
 # optional `gh_token` build secret lifts the API rate limit.
-RUN --mount=type=secret,id=gh_token,env=GH_TOKEN \
+#
+# The secret is handed over as a *path*, not as an environment variable: the
+# builder resolves `PORTFOLIO_GITHUB__TOKEN_FILE` through the layered config, so
+# the token is never in the process environment where a crash dump, `ps e` or a
+# child process would carry it. BuildKit omits the mount entirely when the
+# secret was not supplied (a fork's pull request has none), so the path is only
+# exported when it actually exists — pointing the indirection at a missing file
+# is an error, and correctly so.
+RUN --mount=type=secret,id=gh_token \
+    if [ -s /run/secrets/gh_token ]; then \
+      export PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token; \
+    fi; \
     CI=1 cargo run --release --locked -p update-repos -- apps/web/repos.json
 # Resume PDFs + resume-fingerprint.json, both embedded into the web binary by
 # build.rs (the PDFs are served at /resume/ from memory; the fingerprint is shown
@@ -167,28 +178,36 @@ COPY --from=web-builder /app/target/dx/web/release/web /app
 COPY --from=web-builder --chown=${USER_ID}:${GROUP_ID} /isr-cache /tmp/isr
 WORKDIR /app
 
-# Incremental static regeneration (ISR) is ON by default: ISR_CACHE_DIR points at
-# /tmp/isr, which the deployment (Helm chart) already mounts as a writable volume
-# (so it works under `readOnlyRootFilesystem: true` with no extra setup); a plain
-# `docker run` falls back to the baked-in copy above. The server is locale-aware
-# — it tags each render with the negotiated language, so the cache keeps a
-# separate entry per locale — and the site has only a handful of pages built
-# entirely from compile-time data, so caching every rendered page is safe and
-# cheap. If /tmp/isr is ever not writable, the server fails safe and renders
-# every request fresh.
+# The server reads its own settings through the layered `PORTFOLIO_` config
+# (struct defaults < TOML at $PORTFOLIO_CONFIG < PORTFOLIO_* environment <
+# $PORTFOLIO_SECRETS_DIR < PORTFOLIO_<KEY>_FILE), so every key below can equally
+# be supplied as a mounted ConfigMap fragment or Secret file. See README.md and
+# config.example.toml. PORT, IP and RUST_LOG are *not* in that namespace: they
+# belong to the Dioxus toolchain, which reads them itself.
+#
+# Incremental static regeneration (ISR) is ON by default: the cache directory
+# points at /tmp/isr, which the deployment (Helm chart) already mounts as a
+# writable volume (so it works under `readOnlyRootFilesystem: true` with no extra
+# setup); a plain `docker run` falls back to the baked-in copy above. The server
+# is locale-aware — it tags each render with the negotiated language, so the
+# cache keeps a separate entry per locale — and the site has only a handful of
+# pages built entirely from compile-time data, so caching every rendered page is
+# safe and cheap. If /tmp/isr is ever not writable, the server fails safe and
+# renders every request fresh.
 #
 # The cache is permanent by default (no time-based TTL): the only thing that
-# changes a page is a new build, which starts from an empty cache. Set
-# ISR_TTL_SECS to a positive number of seconds only when you share a *persistent*
-# cache volume across deploys and want time-based revalidation; set ISR_CACHE_DIR
-# empty to turn ISR off entirely. Keep the path outside /app/public so the
-# immutable, content-hashed assets stay read-only.
-#   ISR_CACHE_DIR=/tmp/isr   # empty disables ISR
-#   ISR_TTL_SECS=0           # 0/unset = permanent; positive = finite TTL
+# changes a page is a new build, which starts from an empty cache. Set the TTL to
+# a positive number of seconds only when you share a *persistent* cache volume
+# across deploys and want time-based revalidation; set the cache directory empty
+# to turn ISR off entirely. Keep the path outside /app/public so the immutable,
+# content-hashed assets stay read-only.
+#   PORTFOLIO_ISR__CACHE_DIR=/tmp/isr  # empty disables ISR
+#   PORTFOLIO_ISR__TTL_SECS=0          # 0/unset = permanent; positive = finite TTL
+#   PORTFOLIO_ASSETS__DIST_DIR=public  # what the readiness probe checks
 ENV PORT=8080 \
     IP=0.0.0.0 \
     RUST_LOG=info \
-    ISR_CACHE_DIR=/tmp/isr
+    PORTFOLIO_ISR__CACHE_DIR=/tmp/isr
 
 EXPOSE 8080
 USER ${USER_ID}:${GROUP_ID}

@@ -4,8 +4,8 @@
 //! By default it lists every repository the user owns (paginated) and keeps
 //! only the active ones: not archived, not blacklisted and updated within the
 //! last [`MAX_AGE_DAYS`] days. An explicit set of repository names may also be
-//! supplied (e.g. via `GITHUB_REPOS`), in which case each is fetched by name
-//! without filtering.
+//! supplied (via `github.repos`), in which case each is fetched by name without
+//! filtering.
 //!
 //! [`ReposBuilder::fetch`] performs the network calls; [`ReposBuilder::assemble`]
 //! is a pure step (timestamp + user + repos) so it can be unit-tested without
@@ -14,6 +14,7 @@
 use std::time::Duration;
 
 use portfolio_data::{Repo, ReposFile};
+use secrecy::{ExposeSecret as _, SecretString};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
@@ -33,7 +34,7 @@ const MAX_AGE_DAYS: i64 = 365;
 /// [`ReposFile`] ready to be serialized to `repos.json`.
 pub struct ReposBuilder {
     user: String,
-    token: Option<String>,
+    token: Option<SecretString>,
     repos: Vec<String>,
     blacklist: Vec<String>,
     api_base: String,
@@ -58,10 +59,14 @@ impl ReposBuilder {
     }
 
     /// Sets the bearer token used to authenticate API requests (lifts the rate
-    /// limit and is required for the workflow's `GITHUB_TOKEN`). A `None` or
-    /// empty token leaves requests unauthenticated.
-    pub fn token(mut self, token: Option<String>) -> Self {
-        self.token = token.filter(|t| !t.is_empty());
+    /// limit). A `None` or empty token leaves requests unauthenticated, which
+    /// is the normal case on a fork's pull request.
+    ///
+    /// Kept wrapped rather than taken as a `String`: the token arrives from a
+    /// mounted file and is never printed, so the only place it becomes a `&str`
+    /// is [`Self::get`], where it goes onto the wire.
+    pub fn token(mut self, token: Option<SecretString>) -> Self {
+        self.token = token.filter(|token| !token.expose_secret().is_empty());
         self
     }
 
@@ -193,7 +198,7 @@ impl ReposBuilder {
             .header("X-GitHub-Api-Version", "2022-11-28")
             .header("User-Agent", USER_AGENT);
         if let Some(token) = &self.token {
-            request = request.header("Authorization", format!("Bearer {token}"));
+            request = request.header("Authorization", format!("Bearer {}", token.expose_secret()));
         }
         request
     }

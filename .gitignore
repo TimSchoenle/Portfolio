@@ -53,8 +53,16 @@ yarn-error.log*
 .serena/
 
 # ---------------------------------------------------------------------------
-# IDE / editor
+# Local layered configuration
 # ---------------------------------------------------------------------------
+# `./config.toml` is the loader's default path, so a developer copying
+# config.example.toml lands here — and may put a GitHub token in it. The example
+# itself is tracked; a real one never is.
+/config.toml
+/config.d/
+/secrets/
+
+
 .vscode/
 .idea/
 *.iml

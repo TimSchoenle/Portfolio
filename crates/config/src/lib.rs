@@ -1,0 +1,55 @@
+//! The typed configuration surface every binary in this workspace reads, plus the Portfolio
+//! dialect of the layered loader.
+//!
+//! The layering is [`terrace_config`]'s. Lowest precedence first: struct defaults, TOML at
+//! `$PORTFOLIO_CONFIG` (a file, or every `*.toml` in it when it names a directory),
+//! `PORTFOLIO_`-prefixed `__`-nested environment variables, `$PORTFOLIO_SECRETS_DIR`, and
+//! `PORTFOLIO_<KEY>_FILE` indirection. The last three are mutually exclusive per key: a key
+//! supplied by two of them is refused at boot rather than resolved by precedence, because a
+//! stale environment variable shadowing a rotated mounted secret keeps the process running on
+//! the old credential.
+//!
+//! Call [`load`], which is the only entry point.
+//!
+//! # What each binary composes
+//!
+//! This crate owns the *blocks* and the dialect; each binary declares the aggregate it actually
+//! reads, so a struct field is evidence that something consumes it:
+//!
+//! - the SSR server ([`AssetsConfig`], [`IsrConfig`]),
+//! - the `update-repos` builder ([`GithubConfig`]).
+//!
+//! # Why the loader half only
+//!
+//! `terrace-config` also ships a supervisor that rebuilds a running service when the files its
+//! configuration came from change. This workspace deliberately does not take it, for two
+//! reasons that both have to hold before it would be worth the tokio/notify/`inotify` weight:
+//!
+//! 1. **The server holds no secrets.** Rotation is what the supervisor exists to survive, and
+//!    the only secret in the workspace ([`GithubConfig::token`]) belongs to a one-shot build
+//!    tool that exits in seconds. Every value the *server* reads changes only on a redeploy.
+//! 2. **The serve loop is not ours to cancel.** `dioxus::serve` owns the listener and the accept
+//!    loop, and offers no shutdown handle, so a rebuild could not stop the previous generation
+//!    before the replacement binds the same address. Taking the supervisor would mean
+//!    reimplementing the framework's serve loop — including the devtools hot-patch path that
+//!    `dx serve` depends on in development — to gain a reload for configuration that a
+//!    redeploy already replaces.
+//!
+//! Both halves of that reasoning are recorded here rather than in a commit message because the
+//! second one changes the moment Dioxus grows a cancellable `serve`.
+//!
+//! # Blank means unset
+//!
+//! Every accessor in this crate treats an empty or whitespace-only value as though the key had
+//! not been supplied. Container platforms routinely inject `KEY=` for a declared-but-unset
+//! variable, and each block documents what the alternative reading would have cost.
+
+mod assets;
+mod github;
+mod isr;
+mod loader;
+
+pub use assets::AssetsConfig;
+pub use github::GithubConfig;
+pub use isr::IsrConfig;
+pub use loader::{ConfigError, load, terrace};

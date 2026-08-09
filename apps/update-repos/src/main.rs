@@ -7,7 +7,7 @@
 //! [`portfolio_data::Repo`]/[`portfolio_data::ReposFile`] models (the very same
 //! types the web client embeds and the server's schema describes) and writes the
 //! pretty-printed JSON to disk. A specific set of repositories can still be
-//! requested explicitly via `GITHUB_REPOS`.
+//! requested explicitly via `github.repos`.
 //!
 //! To avoid hitting the GitHub API on every rebuild (and its rate limits), the
 //! existing output is reused while it is still fresh: the network fetch is
@@ -20,12 +20,23 @@
 //! update-repos [OUTPUT_PATH]      # default: apps/web/repos.json
 //! ```
 //!
-//! Environment:
-//!   GITHUB_USERNAME  user whose repos to fetch (default: CONFIG.github_username)
-//!   GITHUB_REPOS  comma-separated repo names to fetch (default: all
-//!                 non-archived repositories of the user)
-//!   GH_TOKEN / GITHUB_TOKEN  bearer token to authenticate (optional)
-//!   CI  when set, uses the longer (10h) cache TTL instead of 60 minutes
+//! Configuration is layered (see `portfolio_config`); the keys this binary reads
+//! are the [`GithubConfig`] block:
+//!
+//! ```text
+//! PORTFOLIO_GITHUB__USERNAME    user whose repos to fetch
+//!                               (default: CONFIG.github_username)
+//! PORTFOLIO_GITHUB__REPOS       repo names to fetch, e.g. [Portfolio,actions]
+//!                               (default: all active repositories of the user)
+//! PORTFOLIO_GITHUB__TOKEN       bearer token lifting the API rate limit
+//!                               (optional; prefer ..._TOKEN_FILE)
+//! PORTFOLIO_GITHUB__TOKEN_FILE  path to a file holding the token, so it never
+//!                               enters the process environment
+//! ```
+//!
+//! `CI` is read separately and deliberately stays outside that namespace: it is
+//! the CI provider's variable, not ours, and it selects the cache TTL rather
+//! than configuring the fetch.
 
 mod builder;
 mod cache;
@@ -35,7 +46,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use portfolio_config::GithubConfig;
 use portfolio_data::CONFIG;
+use serde::Deserialize;
 use time::OffsetDateTime;
 
 use crate::builder::ReposBuilder;
@@ -43,6 +56,17 @@ use crate::error::UpdateReposError;
 
 /// Where `repos.json` is committed, relative to the workspace root.
 const DEFAULT_OUTPUT: &str = "apps/web/repos.json";
+
+/// Everything this builder reads from its configuration.
+///
+/// One block, so the aggregate looks redundant — it is not: it is what fixes the
+/// key path to `github.*`, which is the half of the environment spelling
+/// `portfolio_config` cannot decide on this binary's behalf.
+#[derive(Debug, Deserialize)]
+struct Config {
+    #[serde(default)]
+    github: GithubConfig,
+}
 
 fn main() -> ExitCode {
     match run() {
@@ -71,23 +95,21 @@ fn run() -> Result<(), UpdateReposError> {
         return Ok(());
     }
 
-    let user =
-        env_non_empty("GITHUB_USERNAME").unwrap_or_else(|| CONFIG.github_username.to_string());
-    let token = env_non_empty("GH_TOKEN").or_else(|| env_non_empty("GITHUB_TOKEN"));
+    let github = config()?.github;
+    // The site's own identity is the only sensible default, and it lives in the
+    // compile-time data rather than in the config schema — a deployment that has
+    // to name the user it is a portfolio *for* has bigger problems.
+    let user = github
+        .username()
+        .unwrap_or(CONFIG.github_username)
+        .to_owned();
 
-    // An explicit, comma-separated override; when unset the builder lists every
-    // non-archived repository the user owns.
-    let names: Vec<String> = match env_non_empty("GITHUB_REPOS") {
-        Some(list) => list
-            .split(',')
-            .map(|name| name.trim().to_string())
-            .filter(|name| !name.is_empty())
-            .collect(),
-        None => Vec::new(),
-    };
+    // An explicit override; when empty the builder lists every active repository
+    // the user owns. Collected before the token moves out of `github`.
+    let names: Vec<String> = github.repos().map(str::to_owned).collect();
 
     let builder = ReposBuilder::new(user)
-        .token(token)
+        .token(github.into_token())
         .repos(names)
         .blacklist(CONFIG.blacklisted_repos.iter().map(|name| name.to_string()));
 
@@ -110,7 +132,12 @@ fn run() -> Result<(), UpdateReposError> {
     Ok(())
 }
 
-/// Returns the value of `var` only when it is set and non-empty.
-fn env_non_empty(var: &str) -> Option<String> {
-    std::env::var(var).ok().filter(|v| !v.is_empty())
+/// Reads the layered configuration.
+///
+/// A configuration error aborts the build rather than falling back to an
+/// unauthenticated fetch: silently dropping the token would turn a typo in a
+/// secret's path into an intermittent rate-limit failure much later, in a job
+/// that has nothing to do with the mistake.
+fn config() -> Result<Config, UpdateReposError> {
+    portfolio_config::load().map_err(UpdateReposError::from)
 }

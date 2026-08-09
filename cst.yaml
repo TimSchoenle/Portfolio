@@ -11,6 +11,11 @@ metadataTest:
       value: 0.0.0.0
     - key: RUST_LOG
       value: info
+    # ISR is on by default, cached into the writable /tmp mount. The image's
+    # only `PORTFOLIO_` default, and a deployment-visible contract: a chart that
+    # mounts a volume elsewhere has to override precisely this key.
+    - key: PORTFOLIO_ISR__CACHE_DIR
+      value: /tmp/isr
 
 fileExistenceTests:
   # ── fullstack SSR server binary (the whole `dx bundle` output copied to /app) ─

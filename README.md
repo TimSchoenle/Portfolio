@@ -16,6 +16,7 @@ a distroless container.
   - [Development](#development)
   - [Production Build](#production-build)
   - [Container](#container)
+- [Configuration](#configuration)
 - [Deployment](#deployment)
   - [Probe Endpoints](#probe-endpoints)
   - [Read-only and Security Posture](#read-only-and-security-posture)
@@ -32,6 +33,7 @@ applications.
 
 | Crate | Purpose |
 | --- | --- |
+| `crates/config` | The typed configuration blocks every binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader (see [Configuration](#configuration)) |
 | `crates/data` | Shared, language-neutral data (config, skills, experience, repos schema) plus embedded `i18n/{en,de}.json` translations |
 | `apps/web` | Dioxus 0.7 fullstack app: a single crate that compiles to both the WASM client (`web` feature) and the native Axum SSR server (`server` feature), with the JSON API, SEO documents, security headers, and probe endpoints |
 | `apps/resume-generator` | Generates `resume/{en,de}.pdf` and `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans) |
@@ -116,6 +118,67 @@ The container performs all of the above and serves the result on port 8080:
 docker build -t portfolio .
 ```
 
+## Configuration
+
+Configuration is **layered and file-first**, via
+[terrace-config](https://github.com/TimSchoenle/terrace-config). `crates/config`
+owns the typed blocks and the `PORTFOLIO_` dialect; each binary declares the
+aggregate it actually reads. Sources are merged in this order, lowest precedence
+first:
+
+1. **Struct defaults** — the `serde` defaults in `crates/config`.
+2. **TOML** at `$PORTFOLIO_CONFIG` — a file, or every `*.toml` inside it when it
+   names a directory (so a `ConfigMap` can be split into fragments).
+3. **Environment** — `PORTFOLIO_`-prefixed variables, `__` for nesting.
+4. **Secrets directory** at `$PORTFOLIO_SECRETS_DIR` — one file per key, named
+   after it (`github__token`); this is what a Kubernetes `Secret` volume mounts.
+5. **File indirection** — `PORTFOLIO_<KEY>_FILE=/path` names a file holding the
+   value.
+
+The last three are **mutually exclusive per key**: a key supplied by two of them
+fails the boot instead of one silently winning, because a stale environment
+variable shadowing a rotated mounted secret keeps the process running on the old
+credential.
+
+Every key, its TOML path and its environment spelling:
+
+| TOML | Environment | Default | Purpose |
+| --- | --- | --- | --- |
+| `assets.dist_dir` | `PORTFOLIO_ASSETS__DIST_DIR` | `public` | Bundle directory the readiness probe checks |
+| `isr.cache_dir` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | Writable directory rendered pages are cached into |
+| `isr.ttl_secs` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | Revalidation interval in seconds |
+| `github.username` | `PORTFOLIO_GITHUB__USERNAME` | `CONFIG.github_username` | User whose repositories `update-repos` lists |
+| `github.repos` | `PORTFOLIO_GITHUB__REPOS` | all active repos | Explicit repository set, e.g. `[Portfolio,actions]` |
+| `github.token` | `PORTFOLIO_GITHUB__TOKEN` | unset | Bearer token lifting the GitHub API rate limit |
+
+An empty value counts as unset everywhere, because container platforms routinely
+inject `KEY=` for a declared-but-unset variable. See
+[`config.example.toml`](./config.example.toml) for a commented starting point.
+
+`IP`, `PORT` and `RUST_LOG` are deliberately **outside** this namespace: they are
+the Dioxus toolchain's contract with the binary (`dx serve` sets them to tell a
+development build which port it is proxied on), so the framework keeps reading
+them itself. `CI` likewise belongs to the CI provider.
+
+### Secrets
+
+`github.token` is the only secret in the workspace, and it should arrive as a
+**file**, never as an environment variable — `/proc/<pid>/environ`, a crash dump
+and `docker inspect` all carry the environment, and child processes inherit it:
+
+```bash
+PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token cargo run --release -p update-repos
+```
+
+The Docker build already does this: the `gh_token` BuildKit secret is mounted as
+a file and handed to `update-repos` by path. In the process it is a
+`secrecy::SecretString`, so it has no `Debug` or `Display` and the one place it
+becomes a `&str` is the `Authorization` header.
+
+Only the loader half of `terrace-config` is used; its hot-reload supervisor is
+not. The reasoning — the server holds no secrets, and `dioxus::serve` owns an
+accept loop with no shutdown handle — is recorded in `crates/config/src/lib.rs`.
+
 ## Deployment
 
 The image is built on a `distroless/cc` base holding the dynamically linked
@@ -130,15 +193,16 @@ hardened pod spec out of the box.
 | --- | --- | --- |
 | `GET /api/health` | — | General health report with the current UTC time |
 | `GET /api/health/live` | `GET /livez` | **Liveness** — process is running; failure restarts the container |
-| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the client bundle (`$DIST_DIR/index.html`, default `public/index.html`) is present and servable; failure removes the pod from the Service endpoints |
+| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the client bundle (`index.html` under `assets.dist_dir`, default `public/`) is present and servable; failure removes the pod from the Service endpoints |
 
 All probe responses are `no-store` (never cached). Readiness returns `503` until
 the assets are present.
 
 ### Read-only and Security Posture
 
-The server only reads from `$DIST_DIR` (its sibling `public/` dir) and writes
-logs to stdout, so it runs unchanged with a fully read-only root filesystem (no
+The server only reads from its bundle directory (the sibling `public/` dir) and
+writes logs to stdout, so it runs unchanged with a fully read-only root
+filesystem (no
 writable volume, not even `/tmp`). It is built to satisfy the restricted Pod
 Security Standard:
 
@@ -149,9 +213,10 @@ Security Standard:
   `Referrer-Policy`, `Permissions-Policy`) set on every response
 - listens on `:$PORT` (default `8080`); graceful shutdown on `SIGTERM`
 
-Configuration is provided via environment variables: `DIST_DIR` (default
-`public`), `IP` (default `0.0.0.0`), `PORT` (default `8080`), and `RUST_LOG`
-(default `info`).
+Everything else the server reads comes from the layered configuration described
+under [Configuration](#configuration), so a `ConfigMap` fragment or a `Secret`
+volume is a first-class source rather than something a chart has to flatten into
+environment variables.
 
 ### Reproducible Builds
 
@@ -195,17 +260,19 @@ blacklisted in `CONFIG.blacklisted_repos`, and any repository with no update in
 the last 365 days. It deserializes the rest directly into the shared
 `portfolio_data::Repo`/`ReposFile` models and writes the pretty-printed JSON,
 surfacing failures through a dedicated `UpdateReposError` model. An explicit
-repository set can be requested at runtime via `GITHUB_REPOS` (comma-separated), in
-which case each named repository is fetched directly (without filtering):
+repository set can be requested via `github.repos`, in which case each named
+repository is fetched directly (without filtering):
 
 ```bash
 # Defaults: user = CONFIG.github_username, repos = all active repos
 #           (archived/blacklisted/>1y-stale excluded),
 #           output = apps/web/repos.json
-GH_TOKEN=<token> cargo run --release -p update-repos -- apps/web/repos.json
+PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
+  cargo run --release -p update-repos -- apps/web/repos.json
 
-# Override the repo set for a one-off run
-GITHUB_REPOS=Portfolio,actions cargo run --release -p update-repos
+# Override the repo set for a one-off run (figment's bracketed array syntax,
+# so the environment and the TOML spelling stay the same shape)
+PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repos
 ```
 
 ## Contributing

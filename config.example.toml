@@ -1,0 +1,70 @@
+# Example configuration for the portfolio workspace.
+#
+# Point $PORTFOLIO_CONFIG at a copy of this file, or at a directory holding
+# several `*.toml` fragments (merged in sorted order — one file per concern is
+# what lets a Kubernetes ConfigMap and a Secret land side by side).
+#
+#   PORTFOLIO_CONFIG=./config.toml cargo run -p web --features server
+#
+# Every key here can equally be supplied as a `PORTFOLIO_`-prefixed environment
+# variable with `__` for nesting (`assets.dist_dir` → PORTFOLIO_ASSETS__DIST_DIR),
+# as a file in $PORTFOLIO_SECRETS_DIR named after the key (`assets__dist_dir`),
+# or as `PORTFOLIO_<KEY>_FILE=/path`. The last three are mutually exclusive per
+# key: supplying one key from two of them fails the boot rather than letting a
+# stale environment variable shadow a rotated secret.
+#
+# Every value below is the default, so an empty file behaves identically —
+# except `isr.cache_dir`, which has no default and which the container image
+# sets to /tmp/isr.
+#
+# NOT configured here: IP, PORT and RUST_LOG belong to the Dioxus toolchain,
+# which reads them itself, and CI belongs to the CI provider.
+
+# ── the SSR server ───────────────────────────────────────────────────────────
+
+[assets]
+# Directory holding the `dx bundle` output, relative to the working directory.
+# Only the readiness probe consults it: the bundle itself is served by the Dioxus
+# asset router, which resolves `public/` relative to the binary.
+dist_dir = "public"
+
+[isr]
+# Writable directory rendered HTML is cached into. Unset — as it is here —
+# disables incremental static regeneration and renders every request fresh.
+# Keep it outside the bundled `public/` tree so those content-hashed assets stay
+# immutable. The image sets this to /tmp/isr, which the deployment mounts as a
+# writable volume even under a read-only root filesystem.
+#
+# cache_dir = "/tmp/isr"
+
+# Revalidation interval in seconds. `0` means a permanent cache, which is right
+# for this site: every page renders from compile-time data, so the only thing
+# that changes the output is a redeploy — and that starts from an empty cache.
+# Set a positive value only when a *persistent* cache volume is shared across
+# deploys. Unlike the environment variable this replaced, an unparseable value
+# now fails the boot instead of silently meaning "permanent".
+ttl_secs = 0
+
+# ── the update-repos builder (build time only) ───────────────────────────────
+
+[github]
+# User whose repositories to list. Unset falls back to the site's own identity
+# from `crates/data`.
+#
+# username = "TimSchoenle"
+
+# An explicit repository set, bypassing the "every active repository" listing and
+# its archived/blacklisted/stale filtering. Empty lists them all.
+repos = []
+
+# Bearer token lifting the GitHub API rate limit. DO NOT put it here.
+#
+# Supply it as a file so it never enters the process environment, where
+# /proc/<pid>/environ, a crash dump, `docker inspect` and every child process
+# would carry it:
+#
+#   PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token
+#
+# or as `github__token` inside $PORTFOLIO_SECRETS_DIR, which is what a Kubernetes
+# Secret volume mounts. In the process it is a `secrecy::SecretString`: no Debug,
+# no Display, and the one place it becomes a `&str` is the Authorization header.

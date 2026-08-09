@@ -90,6 +90,12 @@ public/resume/**
 .env.development.local
 .env.test.local
 .env.production.local
+# A local `config.toml` (the loader's default path) or secrets directory would be
+# read by the build-time `update-repos` run and baked into a cached layer. The
+# build supplies its token as a mounted BuildKit secret instead.
+config.toml
+config.d
+secrets
 *.pem
 *.key
 *.crt
