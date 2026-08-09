@@ -3552,7 +3552,7 @@ checksum = "3d20d5497ef88037a52ff98267d066e7f11fcc5e99bbfbd58a42336193aacec3"
 
 [[package]]
 name = "portfolio-config"
-version = "2.2.3"
+version = "2.3.0"
 dependencies = [
  "figment",
  "secrecy",
@@ -3562,7 +3562,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-data"
-version = "2.2.3"
+version = "2.3.0"
 dependencies = [
  "schemars",
  "serde",
@@ -3571,7 +3571,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-platform"
-version = "2.2.3"
+version = "2.3.0"
 
 [[package]]
 name = "postcard"
@@ -4000,7 +4000,7 @@ dependencies = [
 
 [[package]]
 name = "resume-generator"
-version = "2.2.3"
+version = "2.3.0"
 dependencies = [
  "portfolio-data",
  "serde_json",
@@ -5742,7 +5742,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "update-repos"
-version = "2.2.3"
+version = "2.3.0"
 dependencies = [
  "portfolio-config",
  "portfolio-data",
@@ -6085,7 +6085,7 @@ dependencies = [
 
 [[package]]
 name = "web"
-version = "2.2.3"
+version = "2.3.0"
 dependencies = [
  "axum",
  "dioxus",
