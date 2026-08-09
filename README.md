@@ -20,6 +20,7 @@ a distroless container.
 - [Deployment](#deployment)
   - [Probe Endpoints](#probe-endpoints)
   - [Read-only and Security Posture](#read-only-and-security-posture)
+  - [Content-Security-Policy](#content-security-policy)
   - [Reproducible Builds](#reproducible-builds)
 - [Project Data (`repos.json`)](#project-data-reposjson)
 - [Contributing](#contributing)
@@ -72,7 +73,9 @@ applications.
 - Server-side rendering with WASM hydration; per-route `<head>` metadata, JSON-LD,
   and server-negotiated locale for the first paint
 - SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, and a web manifest
-- Security headers (CSP, HSTS, and others) set by the server
+- Security headers set by the server: HSTS, `Referrer-Policy`, `Permissions-Policy`,
+  and a Content-Security-Policy built per document from the inline scripts it
+  actually carries, with a per-response nonce for Cloudflare's edge injection
 - WASM client tuned for size: `opt-level = "z"`, LTO, and a single codegen unit
 
 ## Getting Started
@@ -145,6 +148,10 @@ Every key, its TOML path and its environment spelling:
 | TOML | Environment | Default | Purpose |
 | --- | --- | --- | --- |
 | `assets.dist_dir` | `PORTFOLIO_ASSETS__DIST_DIR` | `public` | Bundle directory the readiness probe checks |
+| `csp.hash_inline_scripts` | `PORTFOLIO_CSP__HASH_INLINE_SCRIPTS` | `true` | Hash the document's inline scripts instead of allowing `'unsafe-inline'` |
+| `csp.cloudflare.script_nonce` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE` | `true` | Per-response nonce for the script Cloudflare injects at the edge |
+| `csp.cloudflare.turnstile` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE` | `false` | Admit the Turnstile widget (`script-src` **and** `frame-src`) |
+| `csp.cloudflare.web_analytics` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `false` | Admit the Cloudflare Web Analytics beacon and its endpoint |
 | `isr.cache_dir` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | Writable directory rendered pages are cached into |
 | `isr.ttl_secs` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | Revalidation interval in seconds |
 | `github.username` | `PORTFOLIO_GITHUB__USERNAME` | `CONFIG.github_username` | User whose repositories `update-repos` lists |
@@ -210,13 +217,60 @@ Security Standard:
 - `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`
 - all Linux capabilities dropped, `seccompProfile: RuntimeDefault`
 - HTTP security headers (CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`, `Permissions-Policy`) set on every response
+  `Referrer-Policy`, `Permissions-Policy`) set on every response — see
+  [Content-Security-Policy](#content-security-policy)
 - listens on `:$PORT` (default `8080`); graceful shutdown on `SIGTERM`
 
 Everything else the server reads comes from the layered configuration described
 under [Configuration](#configuration), so a `ConfigMap` fragment or a `Secret`
 volume is a first-class source rather than something a chart has to flatten into
 environment variables.
+
+### Content-Security-Policy
+
+Built with [csp-shell](https://github.com/TimSchoenle/csp-shell) rather than
+written out as a string, in `apps/web/src/server/csp.rs`. Two policies leave the
+server:
+
+- **Documents** get one derived from the bytes they carry. Dioxus renders its
+  hydration data inline (`window.initial_dioxus_hydration_data="…"`), so its text
+  is only known per response — the body is buffered anyway to stamp `<html lang>`,
+  and each inline script is hashed out of that same string. `'unsafe-inline'` is
+  therefore gone from `script-src`: an injected `<script>` no longer runs just
+  because the hydration bootstrap has to.
+- **Everything else** — assets, the JSON API, the SEO documents — gets a policy
+  that admits no inline script at all, because none of them has any.
+
+`'unsafe-eval'` remains, and only for the one reason it has ever been here:
+`dioxus-web`'s document provider applies `document::Title`, `document::Stylesheet`
+and friends through `new Function(…)`, which throws an uncaught `EvalError`
+without it and freezes client-side navigation.
+
+**Cloudflare.** The bot products in front of this origin (Bot Fight Mode,
+JavaScript Detections, the challenge platform — the `_cf_bm`, `cf_clearance` and
+`cf_chl_rc_*` cookies the privacy page lists) inject an inline `<script>` at the
+edge, after this server has hashed what it rendered. No hash can cover it; a
+nonce can, because Cloudflare parses the `Content-Security-Policy` response
+header and copies the nonce onto what it injects. That is
+`csp.cloudflare.script_nonce`, on by default, and it brings one obligation the
+server discharges — every document is `Cache-Control: no-cache`, so a nonce is
+never shared between readers — and one it cannot:
+
+> **Deployment checklist:** no Cloudflare Cache Rule may cache the shell. A
+> "Cache Everything" rule overrides the origin's `Cache-Control`, pinning one
+> nonce across every reader for the lifetime of the cache entry, and nothing
+> inside this process can see that happening.
+
+Turnstile and Web Analytics are off; switching either on admits its origins in
+the directives that product actually needs them in (Turnstile in `script-src`
+**and** `frame-src` — admitting only the first renders an empty box).
+
+**If a page ever renders blank**, that is the failure mode this design has:
+`PORTFOLIO_CSP__HASH_INLINE_SCRIPTS=false` together with
+`PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE=false` restores `'unsafe-inline'` on a
+restart rather than a redeploy. The two must move together — a browser ignores
+`'unsafe-inline'` as soon as the policy carries a nonce — and supplying one
+without the other fails the boot with a message saying so.
 
 ### Reproducible Builds
 

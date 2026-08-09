@@ -290,6 +290,70 @@ jobs:
           expect_header / x-frame-options DENY
           expect_header / referrer-policy no-referrer
 
+          # ── The Content-Security-Policy is derived from the page it protects ──
+          # This is the only place the real bundle is served, and the failure it
+          # catches is silent everywhere else: `'unsafe-inline'` is gone from
+          # script-src, so an inline script the scanner never saw is refused by
+          # the browser and the page renders blank with a console message nobody
+          # is watching.
+          csp_of() {
+            curl -fsS -D - -o /dev/null "$base$1" 2>/dev/null \
+              | tr -d '\r' \
+              | awk -F': ' 'tolower($1)=="content-security-policy"{print $2; exit}'
+          }
+
+          page_csp=$(csp_of /)
+          page_html=$(curl -fsS "$base/" || true)
+          # Bare `<script>`: the renderer's own inline scripts. The wasm bootstrap
+          # is `<script type="module" src=…>` and needs no hash — `'self'` covers it.
+          inline_scripts=$(grep -oF '<script>' <<<"$page_html" | wc -l | tr -d ' ')
+          page_hashes=$(grep -oF "'sha256-" <<<"$page_csp" | wc -l | tr -d ' ')
+          if [ "$inline_scripts" -gt 0 ] && [ "$page_hashes" = "$inline_scripts" ]; then
+            echo "ok: all $inline_scripts inline scripts on / are covered by a hash"
+          else
+            echo "::error::/ carries $inline_scripts inline scripts but $page_hashes hashes; a browser will refuse the difference"
+            fail=1
+          fi
+
+          # `'unsafe-inline'` must be gone from script-src. style-src keeps it,
+          # so the check is on that directive alone rather than on the header.
+          script_src=$(tr ';' '\n' <<<"$page_csp" | grep -F 'script-src' || true)
+          case "$script_src" in
+            *"'unsafe-inline'"*)
+              echo "::error::script-src still admits all inline script:$script_src"
+              fail=1
+              ;;
+            *) echo "ok: script-src admits no blanket inline script" ;;
+          esac
+
+          # Cloudflare copies this nonce onto the script it injects at the edge.
+          # Minted per response, and never cached — one served twice is pinned
+          # across every reader, which is `'unsafe-inline'` with extra steps.
+          first_nonce=$(grep -o "'nonce-[^']*'" <<<"$page_csp" || true)
+          second_nonce=$(grep -o "'nonce-[^']*'" <<<"$(csp_of /)" || true)
+          if [ -n "$first_nonce" ] && [ "$first_nonce" != "$second_nonce" ]; then
+            echo "ok: script-src carries a nonce, freshly minted per response"
+          else
+            echo "::error::expected a per-response nonce, got '$first_nonce' then '$second_nonce'"
+            fail=1
+          fi
+          expect_header / cache-control no-cache
+
+          # Anything that is not a document has no inline script to admit, and
+          # gets the policy that admits none.
+          asset_csp=$(csp_of /favicon.svg)
+          case "$asset_csp" in
+            "")
+              echo "::error::/favicon.svg carried no Content-Security-Policy"
+              fail=1
+              ;;
+            *"sha256-"* | *"nonce-"*)
+              echo "::error::a subresource carried a document policy: $asset_csp"
+              fail=1
+              ;;
+            *) echo "ok: subresources carry the policy with no inline-script allowance" ;;
+          esac
+
           if [ "$fail" != "0" ]; then
             echo "::error::container functional smoke tests failed"
             exit 1

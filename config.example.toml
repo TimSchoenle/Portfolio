@@ -45,6 +45,60 @@ dist_dir = "public"
 # now fails the boot instead of silently meaning "permanent".
 ttl_secs = 0
 
+# ── the Content-Security-Policy ──────────────────────────────────────────────
+#
+# The policy itself is not configurable: it is built from `csp-shell` in
+# `apps/web/src/server/csp.rs`, where the directives sit next to the reason each
+# one is what it is. What is configurable is the part that depends on the
+# deployment rather than on the code.
+
+[csp]
+# Derive a `'sha256-…'` source for every inline <script> in the document being
+# served, instead of admitting all inline script with `'unsafe-inline'`. The
+# hashes are computed from the response body itself, so they cannot drift from
+# what is sent — Dioxus renders its hydration data inline, and its text is only
+# known per response.
+#
+# Set to false as an escape hatch, not as a preference: it restores
+# `'unsafe-inline'`, which admits an injected <script> exactly as readily as the
+# hydration bootstrap. It exists because the opposite failure is silent — an
+# inline script the scanner does not see is refused by the browser and the page
+# renders blank — and because a development server that injects its own
+# live-reload script downstream of this process is outside what can be hashed
+# here. Turning it off also requires turning `csp.cloudflare.script_nonce` off:
+# a browser ignores `'unsafe-inline'` as soon as the policy carries any nonce,
+# so the combination fails the boot rather than serving a blank page.
+hash_inline_scripts = true
+
+[csp.cloudflare]
+# Reserve a per-response nonce in `script-src` for the inline <script>
+# Cloudflare's bot products (Bot Fight Mode, JavaScript Detections, the
+# challenge platform) inject at the edge — after this server has hashed what it
+# renders, so no hash can cover it. Without the nonce, `script-src` refuses it
+# and the detection silently never runs: bot management looks enabled and does
+# nothing. Cloudflare reads the nonce out of the response header and copies it
+# onto what it injects, so nothing is stamped into the document.
+#
+# On by default because this site is delivered through a Cloudflare Tunnel with
+# those products active. Two conditions come with it: every document is served
+# `Cache-Control: no-cache` (the server does this), and **no Cloudflare Cache
+# Rule may cache the shell** — a "Cache Everything" rule overrides the origin's
+# header and pins one nonce across every reader, which nothing inside this
+# process can detect. That one belongs in the deployment checklist.
+script_nonce = true
+
+# Admit https://challenges.cloudflare.com in `script-src` *and* `frame-src`, for
+# a Turnstile widget rendered in a page this server serves. Off: this site has
+# no form behind a challenge, and a managed-challenge interstitial is a
+# Cloudflare-served document carrying its own policy.
+turnstile = false
+
+# Admit the Cloudflare Web Analytics beacon (https://static.cloudflareinsights.com)
+# and the endpoint it reports to (https://cloudflareinsights.com). Off: this
+# site measures nothing. Only for the manual snippet — the automatic edge
+# injection is an inline script, which is what `script_nonce` above is for.
+web_analytics = false
+
 # ── the update-repos builder (build time only) ───────────────────────────────
 
 [github]

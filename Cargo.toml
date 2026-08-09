@@ -118,6 +118,24 @@ tower-http = { version = "0.7", features = [
 ] }
 tracing = "0.1"
 
+# The Content-Security-Policy the SSR server sends, built from the document it is
+# about to serve rather than from a hand-maintained list of hashes that drifts the
+# moment anyone edits the shell. `cloudflare` is the crate's `presets` + `nonce`
+# pair: the origins Cloudflare's products load from *and* the directives they have
+# to appear in, plus the per-response nonce its edge-injected bot script needs.
+#
+# Pinned by tag rather than branch, for the same reason as `terrace-config`: the
+# policy this site serves changes on a deliberate commit here, not on whatever
+# `main` happened to be at build time. Not on crates.io, hence the git source.
+#
+# Server-only — `apps/web` takes it through `dep:` under its `server` feature. The
+# `nonce` feature pulls `getrandom`, which has no default backend on
+# `wasm32-unknown-unknown`, and a response header is not something the wasm client
+# builds anyway.
+csp-shell = { git = "https://github.com/TimSchoenle/csp-shell", tag = "csp-shell-v0.2.0", features = [
+    "cloudflare",
+] }
+
 # Typst is the resume PDF engine, embedded as a library so the generator stays
 # a self-contained `cargo run` (no external binary in CI/Docker). It emits a
 # tagged, standard PDF 1.7 with subsetted fonts and live links.
