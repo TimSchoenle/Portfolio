@@ -1,6 +1,8 @@
 //! Stack section: filter chips + radar tooltip in the label column, the radar
 //! and the per-category chip list side by side.
 
+use std::rc::Rc;
+
 use dioxus::prelude::*;
 use portfolio_data::{Quadrant, Skill, matrix_skills};
 
@@ -17,7 +19,11 @@ pub fn Skills() -> Element {
     let mut active = use_signal(|| None::<Quadrant>);
     let mut hovered = use_signal(|| None::<Skill>);
 
-    let all = matrix_skills();
+    // A pure function of compile-time data, so it is built once per mounted
+    // section rather than on every render — and this section re-renders on every
+    // chip click and every pointer move over the radar, both of which write the
+    // signals above.
+    let all = use_hook(|| Rc::new(matrix_skills()));
     let confidence_pct = move |s: &Skill| {
         format!(
             "{} {}%",

@@ -142,6 +142,11 @@ csp-shell = { git = "https://github.com/TimSchoenle/csp-shell", tag = "csp-shell
 typst = "0.15"
 typst-layout = "0.15"
 typst-pdf = "0.15"
+# Rasterizes the Open Graph card. Link unfurlers (Facebook, LinkedIn, Slack, X)
+# all refuse SVG, so the one social image this site ships has to be a raster —
+# and typst is already here, with the brand font embedded and a layout engine,
+# so the card is a second tiny document rather than a new toolchain.
+typst-render = "0.15"
 sha2 = "0.11"
 # Exact-pinned because 0.3.52 changed `Parsable::parse`'s signature, which broke
 # `cookie 0.18.1` (pulled transitively via dioxus-fullstack → reqwest →
@@ -160,4 +165,22 @@ codegen-units = 1
 # unaffected — `wasm32-unknown-unknown` has no unwinding, so panics abort there
 # regardless and the bundle keeps its size.
 panic = "unwind"
+strip = true
+
+# The two build-time generators (`update-repos`, `resume-generator`) run once
+# during the image build and are never shipped, so every property `release`
+# optimises for is the wrong trade for them: `opt-level = "z"`, fat LTO and a
+# single codegen unit buy a smaller binary nobody keeps, at the cost of the
+# slowest possible compile of a 296-crate tree (typst).
+#
+# Measured on `resume-generator` from a cold target directory: 5m03s under
+# `release`, 1m29s under this profile — and `opt-level = 1` is the faster of the
+# two at *runtime* as well, since typst's layout pass is compute-bound and `z`
+# trades speed for size. `inherits = "release"` rather than "dev" so the
+# generators still run optimised and with `debug-assertions` off.
+[profile.tools]
+inherits = "release"
+opt-level = 1
+lto = false
+codegen-units = 16
 strip = true

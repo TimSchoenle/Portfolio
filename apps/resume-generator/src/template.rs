@@ -14,7 +14,7 @@ use crate::translations::Translations;
 
 /// Escapes a value so it is rendered literally inside a Typst content block
 /// (`[...]`), neutralizing markup-significant characters.
-fn esc(s: &str) -> String {
+pub(crate) fn esc(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for c in s.chars() {
         match c {

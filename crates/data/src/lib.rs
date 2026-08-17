@@ -25,6 +25,20 @@ pub const RESUME_FILES: [(&str, &str); 2] = [
     ("de", "Tim-Schönle-Lebenslauf.pdf"),
 ];
 
+/// File name of the generated Open Graph card, which is also the path it is
+/// served from (`/og-image.png`).
+pub const OG_IMAGE_FILE: &str = "og-image.png";
+
+/// Pixel size of that card: the 1.91:1 box every major link-preview consumer
+/// crops to.
+///
+/// Shared because both ends of the pipeline need it and they have to agree —
+/// `resume-generator` renders the image at exactly this size, and the web app
+/// declares it in `og:image:width` / `og:image:height` so a consumer can reserve
+/// the space before the bytes arrive. A card that disagrees with its own
+/// declared size is letterboxed or dropped, and nothing warns about it.
+pub const OG_IMAGE_SIZE: (u32, u32) = (1200, 630);
+
 /// The resume file name for a language code, falling back to English.
 pub fn resume_file(lang: &str) -> &'static str {
     RESUME_FILES

@@ -3,15 +3,27 @@
 //! the `<head>` block it also produced is now rendered per-route via Dioxus
 //! `document::` elements in the app, so only these three files remain.
 
+use std::sync::LazyLock;
+
 use axum::{http::header, response::IntoResponse};
 use portfolio_data::CONFIG;
 use serde_json::json;
+
+/// All three documents are built from [`CONFIG`] alone, so each is rendered once
+/// on first request rather than rebuilt on every one — the manifest in
+/// particular ran a full pretty-printing serialization each time it was fetched.
+///
+/// The builders below stay separate functions so the tests exercise the
+/// construction itself rather than whatever a `LazyLock` happens to be holding.
+static ROBOTS_TXT: LazyLock<String> = LazyLock::new(robots_txt);
+static SITEMAP_XML: LazyLock<String> = LazyLock::new(sitemap_xml);
+static WEBMANIFEST_JSON: LazyLock<String> = LazyLock::new(webmanifest_json);
 
 /// `GET /robots.txt`.
 pub async fn robots() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
-        robots_txt(),
+        ROBOTS_TXT.as_str(),
     )
 }
 
@@ -19,7 +31,7 @@ pub async fn robots() -> impl IntoResponse {
 pub async fn sitemap() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
-        sitemap_xml(),
+        SITEMAP_XML.as_str(),
     )
 }
 
@@ -30,7 +42,7 @@ pub async fn webmanifest() -> impl IntoResponse {
             header::CONTENT_TYPE,
             "application/manifest+json; charset=utf-8",
         )],
-        webmanifest_json(),
+        WEBMANIFEST_JSON.as_str(),
     )
 }
 

@@ -66,6 +66,14 @@ pub(super) struct SitePolicy {
     reported: Mutex<HashSet<ScanWarning>>,
 }
 
+/// What a document's own bytes contribute to its policy: the `'sha256-…'` sources for the inline
+/// scripts found in them.
+///
+/// Carried as a distinct type so a caller can hold one alongside the bytes it was taken from and
+/// apply it repeatedly. It is inert for a policy that does not hash — see [`SitePolicy::scan`].
+#[derive(Debug, Clone, Default)]
+pub(super) struct DocumentScan(csp_shell::ScanResult);
+
 /// How a document response gets its policy.
 #[derive(Debug, Clone)]
 enum DocumentPolicy {
@@ -117,21 +125,41 @@ impl SitePolicy {
         self.subresource.clone()
     }
 
-    /// Give a document response the policy for the HTML it is about to carry.
+    /// Scan a document's bytes for the inline scripts its policy has to admit.
     ///
-    /// `html` must be the body as it will be sent: the hashes are computed from it, and a policy
-    /// derived from anything else refuses the scripts it was meant to permit.
-    pub(super) fn apply_to_document(&self, headers: &mut HeaderMap, html: &str) {
+    /// Split from [`apply_to_document`](Self::apply_to_document) so a server that sends the same
+    /// document more than once can scan it once: the hashes are a function of the bytes and never
+    /// change while those bytes do not, whereas the nonce beside them has to be minted per
+    /// response. `html` must be the body as it will be sent — a scan of anything else describes a
+    /// document this server is not sending.
+    ///
+    /// Scanning is skipped entirely for a policy that does not hash; the empty result it returns
+    /// is never read, because [`apply_to_document`](Self::apply_to_document) answers that case
+    /// from the constant it rendered at start-up.
+    pub(super) fn scan(&self, html: &str) -> DocumentScan {
+        match &self.document {
+            DocumentPolicy::Constant(_) => DocumentScan(csp_shell::ScanResult::default()),
+            DocumentPolicy::PerResponse(_) => {
+                let scan = csp_shell::scan_shell(html);
+                self.report(&scan.warnings);
+                DocumentScan(scan)
+            }
+        }
+    }
+
+    /// Give a document response the policy for a [`DocumentScan`] of the very bytes it carries.
+    ///
+    /// The scan must come from [`scan`](Self::scan) on the same document: the hashes are what
+    /// permit that document's inline scripts, and a policy derived from anything else refuses the
+    /// scripts it was meant to permit.
+    pub(super) fn apply_to_document(&self, headers: &mut HeaderMap, scan: &DocumentScan) {
         let (policy, cache_control) = match &self.document {
             DocumentPolicy::Constant(value) => (value.clone(), None),
             DocumentPolicy::PerResponse(builder) => {
-                let scan = csp_shell::scan_shell(html);
-                self.report(&scan.warnings);
-
                 // The builder is cloned because rendering consumes it, and the hashes have to go
                 // in before the nonce is spliced. A dozen small allocations against a response
                 // that has already allocated the whole page as a `String`.
-                let rendered = builder.clone().with_scan(&scan).build().headers();
+                let rendered = builder.clone().with_scan(&scan.0).build().headers();
                 (
                     header_value(rendered.content_security_policy),
                     rendered.cache_control,
@@ -232,7 +260,8 @@ mod tests {
 
     fn document_policy(config: &CspConfig, html: &str) -> HeaderMap {
         let mut headers = HeaderMap::new();
-        SitePolicy::new(config).apply_to_document(&mut headers, html);
+        let policy = SitePolicy::new(config);
+        policy.apply_to_document(&mut headers, &policy.scan(html));
         headers
     }
 
@@ -342,6 +371,27 @@ mod tests {
                 .map(|v| v.to_str().unwrap()),
             Some("no-cache")
         );
+    }
+
+    /// One scan, applied twice, still mints two nonces. This is what lets the server memoize a
+    /// page's scan beside its bytes and reuse both: the half that depends on the document is
+    /// reusable, the half that must not be is not.
+    #[test]
+    fn a_reused_scan_still_yields_a_fresh_nonce_per_response() {
+        let policy = SitePolicy::new(&CspConfig::default());
+        let scan = policy.scan(PAGE);
+
+        let mut first = HeaderMap::new();
+        let mut second = HeaderMap::new();
+        policy.apply_to_document(&mut first, &scan);
+        policy.apply_to_document(&mut second, &scan);
+
+        // The hashes are the reusable half: identical, and covering both inline scripts.
+        let hashes = |headers: &HeaderMap| policy_of(headers).matches("'sha256-").count();
+        assert_eq!(hashes(&first), 2);
+        assert_eq!(hashes(&second), 2);
+        // The nonce is not: a scan reused across responses must not pin it.
+        assert_ne!(policy_of(&first), policy_of(&second));
     }
 
     /// A subresource never carries the nonce: it is minted for the document Cloudflare rewrites,

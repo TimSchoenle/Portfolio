@@ -11,9 +11,9 @@ mod cache;
 mod csp;
 mod seo;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use axum::{
     Router,
@@ -30,7 +30,7 @@ use serde::Deserialize;
 use tower_http::{
     compression::{
         CompressionLayer,
-        predicate::{DefaultPredicate, NotForContentType, Predicate},
+        predicate::{NotForContentType, Predicate, SizeAbove},
     },
     set_header::SetResponseHeaderLayer,
     trace::TraceLayer,
@@ -125,6 +125,7 @@ fn router(config: &ServerConfig) -> Router {
         PageState {
             isr_enabled,
             policy: Arc::clone(&policy),
+            pages: Arc::new(PageMemo::default()),
         },
         localize_page,
     ));
@@ -168,17 +169,111 @@ struct PageState {
     isr_enabled: bool,
     /// The Content-Security-Policy this server serves. See [`csp`].
     policy: Arc<csp::SitePolicy>,
+    /// Finished pages, memoized per `(path, locale)`. See [`PageMemo`].
+    pages: Arc<PageMemo>,
 }
 
-/// The response-compression predicate. Starts from tower-http's default (which
-/// already skips tiny bodies, images, gRPC and server-sent-event streams) and
-/// additionally skips our woff2 fonts and resume PDFs: those are already
-/// compressed, so running br/gzip over them only burns CPU and can grow the
-/// payload rather than shrink it.
+/// A finished page: the body exactly as it will be sent, and the inline-script hashes taken from
+/// those very bytes.
+///
+/// The two are stored and served as a unit and never mixed, which is what makes memoizing them
+/// safe: a policy is only ever applied to the document it was scanned from, so a remembered entry
+/// cannot go stale against the bytes it describes.
+struct RenderedPage {
+    /// The body with `lang` already stamped onto its `<html>` tag.
+    body: axum::body::Bytes,
+    /// What [`csp::SitePolicy::scan`] found in [`Self::body`].
+    scan: csp::DocumentScan,
+}
+
+/// Finished pages, keyed by `(path, locale)`.
+///
+/// [`localize_page`] is layered *outside* the Dioxus router, so it runs on incremental-cache hits
+/// as well as misses. Without this memo every page request re-validated tens of kilobytes of
+/// UTF-8, copied all of it into a fresh `String` to stamp `<html lang>`, and ran SHA-256 over
+/// every inline script — the serialized hydration payload among them — only to rebuild a policy
+/// byte-identical to the one before it.
+///
+/// Sound for exactly the reason the incremental cache itself is: a [`CACHEABLE_PATHS`] page is
+/// rendered entirely from compile-time data, so its bytes are a function of the path and the
+/// negotiated locale and of nothing else. Both halves of the key are `&'static str` drawn from
+/// those same compile-time lists, which is also what bounds the map at
+/// `CACHEABLE_PATHS.len() * LANGUAGES.len()` entries — it is a memo, not a cache, and so needs
+/// neither eviction nor a TTL.
+///
+/// What it deliberately does *not* do is answer the request itself: the render still goes through
+/// the router, so the incremental cache stays the one thing deciding whether a page is rendered
+/// or read back. This only removes the post-processing that used to run on both paths.
+type PageMemo = RwLock<HashMap<(&'static str, &'static str), Arc<RenderedPage>>>;
+
+/// The memoized page for `key`, if one has been rendered in this process.
+///
+/// A poisoned lock is recovered from rather than propagated, matching
+/// [`is_new_cache_entry`]: nothing can panic while it is held, and a request must not fail over a
+/// bookkeeping structure it could just as well have missed in.
+fn memo_get(memo: &PageMemo, key: (&'static str, &'static str)) -> Option<Arc<RenderedPage>> {
+    memo.read()
+        .unwrap_or_else(|err| err.into_inner())
+        .get(&key)
+        .cloned()
+}
+
+/// Records a finished page under `key` and hands back the shared handle to it.
+fn memo_insert(
+    memo: &PageMemo,
+    key: (&'static str, &'static str),
+    page: RenderedPage,
+) -> Arc<RenderedPage> {
+    let page = Arc::new(page);
+    memo.write()
+        .unwrap_or_else(|err| err.into_inner())
+        .insert(key, Arc::clone(&page));
+    page
+}
+
+/// The response-compression predicate: which responses are worth the CPU.
+///
+/// Assembled from tower-http's parts rather than started from its
+/// `DefaultPredicate`, because one of the exclusions that default bundles has to
+/// be *narrowed*. `NotForContentType::IMAGES` skips everything under `image/`,
+/// which silently included this site's `image/svg+xml` favicon — markup, and the
+/// one image here that is worth compressing. Predicates compose only with AND,
+/// so an exclusion cannot be taken back once it is in; the rule is therefore
+/// stated directly (see [`not_for_raster_images`]) instead of being applied and
+/// then undone.
+///
+/// The remaining default exclusions are kept verbatim — tiny bodies, gRPC and
+/// server-sent-event streams — and two of our own are added: woff2 fonts and the
+/// resume PDFs are already compressed, so running br/gzip over them only burns
+/// CPU and can grow the payload rather than shrink it.
 fn compression_predicate() -> impl Predicate {
-    DefaultPredicate::new()
+    SizeAbove::default()
+        .and(NotForContentType::GRPC)
+        .and(NotForContentType::SSE)
+        .and(not_for_raster_images)
         .and(NotForContentType::const_new("font/woff2"))
         .and(NotForContentType::const_new("application/pdf"))
+}
+
+/// The raster half of tower-http's `NotForContentType::IMAGES`: everything under
+/// `image/` is skipped except `image/svg+xml`, which is text and compresses to
+/// roughly a third of its size.
+///
+/// Written as a bare `fn` because `Predicate` is implemented for any
+/// `Fn(StatusCode, Version, &HeaderMap, &Extensions) -> bool + Clone`, which is
+/// the whole signature — the body is never inspected, so nothing here needs the
+/// `http-body` trait bound a manual `impl Predicate` would.
+fn not_for_raster_images(
+    _status: StatusCode,
+    _version: axum::http::Version,
+    headers: &axum::http::HeaderMap,
+    _extensions: &axum::http::Extensions,
+) -> bool {
+    let content_type = headers
+        .get(header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+    !content_type.starts_with("image/") || content_type.starts_with("image/svg+xml")
 }
 
 /// Query-string marker [`localize_page`] appends to page requests so the
@@ -196,6 +291,29 @@ fn compression_predicate() -> impl Predicate {
 /// written.
 const ISR_LOCALE_PARAM: &str = "__isr_locale";
 
+/// [`ISR_LOCALE_PARAM`] with the `=` that separates a query pair's key from its
+/// value. A constant rather than a `format!` at the use site: [`locale_from_query`]
+/// is called by the incremental renderer's path mapper on every cacheable page
+/// request, and building the needle there allocated a `String` each time.
+const ISR_LOCALE_QUERY_PREFIX: &str = "__isr_locale=";
+
+/// Compile-time proof that the two constants above have not drifted apart, for
+/// the same reason as `crate::i18n::LANG_COOKIE_PREFIX`: `concat!` takes only
+/// literals, so nothing else would catch a rename of one leaving the other
+/// behind — and a mapper that stops recognising the marker silently collapses
+/// every language back onto one cache entry.
+const _: () = {
+    let key = ISR_LOCALE_PARAM.as_bytes();
+    let prefix = ISR_LOCALE_QUERY_PREFIX.as_bytes();
+    assert!(prefix.len() == key.len() + 1);
+    assert!(prefix[key.len()] == b'=');
+    let mut i = 0;
+    while i < key.len() {
+        assert!(prefix[i] == key[i]);
+        i += 1;
+    }
+};
+
 /// Page paths whose rendered HTML is worth persisting. These mirror the concrete
 /// variants of `crate::routes::Route`; the catch-all `NotFound` route is
 /// deliberately absent.
@@ -210,7 +328,17 @@ const CACHEABLE_PATHS: [&str; 3] = ["/", "/imprint", "/privacy"];
 
 /// Whether a request path is one of the [`CACHEABLE_PATHS`].
 fn is_cacheable_path(path: &str) -> bool {
-    CACHEABLE_PATHS.contains(&path)
+    cacheable_path(path).is_some()
+}
+
+/// The [`CACHEABLE_PATHS`] entry equal to `path`.
+///
+/// Returning the compile-time entry rather than a `bool` is what lets [`PageMemo`] key on a
+/// `&'static str`: the request's own path is borrowed from a URI that does not outlive the
+/// request, whereas this one is a program constant, so the memo owns nothing and can never be
+/// keyed by attacker-supplied text.
+fn cacheable_path(path: &str) -> Option<&'static str> {
+    CACHEABLE_PATHS.into_iter().find(|known| *known == path)
 }
 
 /// Name of the sentinel that [`isr_map_path`] maps every non-cacheable route to.
@@ -381,17 +509,19 @@ async fn localize_page(
         return next.run(request).await;
     }
 
+    // Read straight out of the request rather than copied out of it:
+    // `negotiate_locale` answers with a `&'static str` from `LANGUAGES`, so
+    // nothing has to outlive the borrow. This middleware sees every request the
+    // server answers, and the two `String`s this used to build were allocated on
+    // all of them — including the asset requests that never reach the branch
+    // below.
     let locale = {
-        let read_header = |name| {
-            request
-                .headers()
-                .get(name)
-                .and_then(|v| v.to_str().ok())
-                .map(str::to_owned)
-        };
-        let cookie = read_header(header::COOKIE);
-        let accept_language = read_header(header::ACCEPT_LANGUAGE);
-        crate::i18n::negotiate_locale(cookie.as_deref(), accept_language.as_deref())
+        let headers = request.headers();
+        let read_header = |name| headers.get(name).and_then(|v| v.to_str().ok());
+        crate::i18n::negotiate_locale(
+            read_header(header::COOKIE),
+            read_header(header::ACCEPT_LANGUAGE),
+        )
     };
 
     // Tag only what the cache will actually store. Notably this does *not* also
@@ -400,13 +530,20 @@ async fn localize_page(
     // untagged, language-blind cache entry — whichever locale happened to fill
     // it first. Requests that are not pages map to the sentinel anyway, so
     // tagging them would change nothing.
-    if state.isr_enabled && is_cacheable_path(request.uri().path()) {
-        *request.uri_mut() = with_locale_query(request.uri(), &locale);
+    // Resolved before the request is consumed, and to the compile-time entry
+    // rather than to the request's own slice, so [`PageMemo`] keys on a program
+    // constant. `None` for anything else: the catch-all route is shared by every
+    // unknown URL, so remembering one of their renders under it would answer the
+    // next unknown URL with the previous one's document.
+    let memo_key = cacheable_path(request.uri().path());
+
+    if state.isr_enabled && memo_key.is_some() {
+        *request.uri_mut() = with_locale_query(request.uri(), locale);
     }
 
     // Whether the response is a page at all is decided by its content type, not
     // by what the request asked for, so the 404 page is localized too.
-    rewrite_html_response(next.run(request).await, locale, &state.policy).await
+    rewrite_html_response(next.run(request).await, locale, &state, memo_key).await
 }
 
 /// Largest HTML page body this server will buffer in order to stamp `<html
@@ -436,10 +573,16 @@ const MAX_HTML_REWRITE_BYTES: usize = 4 * 1024 * 1024;
 /// The buffer is what makes the per-document policy affordable too: the inline
 /// scripts are hashed out of the same string, after the `lang` rewrite, so the
 /// hashes describe the response as sent rather than an earlier version of it.
+///
+/// All of that happens once per `(path, locale)`. `memo_key` names the
+/// [`CACHEABLE_PATHS`] entry this request is for, if any; a second request for
+/// the same page is answered from [`PageMemo`] without buffering, validating,
+/// copying or re-hashing anything — only the nonce in its policy is new.
 async fn rewrite_html_response(
     mut response: axum::response::Response,
-    locale: String,
-    policy: &csp::SitePolicy,
+    locale: &'static str,
+    state: &PageState,
+    memo_key: Option<&'static str>,
 ) -> axum::response::Response {
     let is_html = response
         .headers()
@@ -456,7 +599,25 @@ async fn rewrite_html_response(
         HeaderValue::from_static("accept-language, cookie"),
     );
 
-    let (mut parts, body) = response.into_parts();
+    let (parts, body) = response.into_parts();
+    // Only a successful render is worth remembering, and worth being served from
+    // memory. An error page shares its path with the document it failed to
+    // produce, so keying one as the other would answer a later 500 with the last
+    // good page — or, worse, hand the error page's body a 200's policy.
+    let key = memo_key
+        .filter(|_| parts.status == StatusCode::OK)
+        .map(|path| (path, locale));
+
+    if let Some(page) = key.and_then(|key| memo_get(&state.pages, key)) {
+        // The stored bytes are already localized and the stored scan describes
+        // exactly them, so there is nothing here to buffer, validate, copy or
+        // hash. The upstream body is dropped undrained, which is sound because
+        // the renderer does not stream out of order — the response was complete
+        // before this middleware saw it.
+        drop(body);
+        return finish_page(parts, &state.policy, &page);
+    }
+
     let Ok(bytes) = axum::body::to_bytes(body, MAX_HTML_REWRITE_BYTES).await else {
         tracing::error!("page body was unreadable or exceeded {MAX_HTML_REWRITE_BYTES} bytes");
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
@@ -469,12 +630,34 @@ async fn rewrite_html_response(
         return axum::response::Response::from_parts(parts, Body::from(bytes));
     };
 
-    let localized = with_html_lang(html, &locale);
-    policy.apply_to_document(&mut parts.headers, &localized);
+    let localized = with_html_lang(html, locale);
+    let page = RenderedPage {
+        scan: state.policy.scan(&localized),
+        body: axum::body::Bytes::from(localized),
+    };
+    let page = match key {
+        Some(key) => memo_insert(&state.pages, key, page),
+        None => Arc::new(page),
+    };
+    finish_page(parts, &state.policy, &page)
+}
+
+/// Assembles the response for a finished page: the policy for the scripts in its
+/// body, then the body itself.
+///
+/// Split out because it is reached from both the memo hit and the first render,
+/// and the two must not drift — in particular over the `Content-Length` below,
+/// which is wrong on either path.
+fn finish_page(
+    mut parts: axum::http::response::Parts,
+    policy: &csp::SitePolicy,
+    page: &RenderedPage,
+) -> axum::response::Response {
+    policy.apply_to_document(&mut parts.headers, &page.scan);
     // The rewrite changes the body length, so any `Content-Length` computed
     // before it is now a lie. Drop it and let the new body's known size speak.
     parts.headers.remove(header::CONTENT_LENGTH);
-    axum::response::Response::from_parts(parts, Body::from(localized))
+    axum::response::Response::from_parts(parts, Body::from(page.body.clone()))
 }
 
 /// Rewrites the opening `<html …>` tag of `html` to carry `lang="<locale>"`,
@@ -507,8 +690,11 @@ fn with_html_lang(html: &str, locale: &str) -> String {
         out.push_str(attr);
     }
     // `locale` is a `LANGUAGES` entry, never request text, so it needs no
-    // escaping to sit safely inside the attribute.
-    out.push_str(&format!(" lang=\"{locale}\""));
+    // escaping to sit safely inside the attribute. Pushed in pieces rather than
+    // through a `format!`, which would allocate a throwaway `String` per page.
+    out.push_str(" lang=\"");
+    out.push_str(locale);
+    out.push('"');
     out.push_str(&html[close..]);
     out
 }
@@ -599,10 +785,9 @@ fn is_cacheable_route(route: &str) -> bool {
 /// become a directory name. Rejecting it here means the only strings that ever
 /// reach [`isr_map_path`] are the compile-time language codes.
 fn locale_from_query(query: &str) -> Option<&str> {
-    let prefix = format!("{ISR_LOCALE_PARAM}=");
     query
         .split('&')
-        .filter_map(|pair| pair.strip_prefix(&prefix))
+        .filter_map(|pair| pair.strip_prefix(ISR_LOCALE_QUERY_PREFIX))
         .find(|locale| LANGUAGES.contains(locale))
 }
 
@@ -717,6 +902,7 @@ mod tests {
         PageState {
             isr_enabled,
             policy: Arc::new(csp::SitePolicy::new(&portfolio_config::CspConfig::default())),
+            pages: Arc::new(PageMemo::default()),
         }
     }
 
@@ -741,6 +927,25 @@ mod tests {
         assert!(predicate.should_compress(&typed_response("text/css")));
         assert!(predicate.should_compress(&typed_response("application/json")));
         assert!(predicate.should_compress(&typed_response("application/wasm")));
+        // The defaults this predicate is assembled from are still in force.
+        assert!(!predicate.should_compress(&typed_response("text/event-stream")));
+        assert!(!predicate.should_compress(&typed_response("application/grpc")));
+    }
+
+    /// An SVG is markup, not a raster image. tower-http's default predicate skips
+    /// everything under `image/`, which took the favicon with it — this asserts
+    /// the narrowing that puts it back without admitting the raster types.
+    #[test]
+    fn svg_is_compressed_but_raster_images_are_not() {
+        let predicate = compression_predicate();
+        assert!(predicate.should_compress(&typed_response("image/svg+xml")));
+        assert!(predicate.should_compress(&typed_response("image/svg+xml; charset=utf-8")));
+        for raster in ["image/png", "image/jpeg", "image/webp", "image/avif"] {
+            assert!(
+                !predicate.should_compress(&typed_response(raster)),
+                "{raster} should not be compressed"
+            );
+        }
     }
 
     #[tokio::test]
@@ -1211,6 +1416,199 @@ mod tests {
         assert!(policy.contains("'sha256-"), "{policy}");
         assert!(policy.contains("'nonce-"), "{policy}");
         assert_eq!(headers.get(header::CACHE_CONTROL).unwrap(), "no-cache");
+    }
+
+    /// A `GET` for a page, optionally advertising a preferred language.
+    fn page_request(path: &str, accept_language: Option<&str>) -> Request<Body> {
+        let mut builder = Request::builder().uri(path);
+        if let Some(value) = accept_language {
+            builder = builder.header(header::ACCEPT_LANGUAGE, value);
+        }
+        builder.body(Body::empty()).unwrap()
+    }
+
+    async fn body_text(response: axum::response::Response) -> String {
+        let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        String::from_utf8(bytes.to_vec()).expect("the page is UTF-8")
+    }
+
+    fn csp_of(response: &axum::response::Response) -> String {
+        response
+            .headers()
+            .get(header::CONTENT_SECURITY_POLICY)
+            .expect("a document must carry a policy")
+            .to_str()
+            .unwrap()
+            .to_owned()
+    }
+
+    /// A router whose page handler renders something different on every call, so
+    /// a response that repeats itself can only have come from [`PageMemo`].
+    fn counting_page_router(state: PageState) -> Router {
+        let renders = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let handler = move || {
+            let renders = Arc::clone(&renders);
+            async move {
+                let n = renders.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                axum::http::Response::builder()
+                    .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+                    .body(Body::from(format!(
+                        "<!DOCTYPE html><html><body>render {n}<script>window.x={n};</script></body></html>"
+                    )))
+                    .unwrap()
+            }
+        };
+        Router::new()
+            .route("/", get(handler.clone()))
+            .route("/{*rest}", get(handler))
+            .layer(middleware::from_fn_with_state(state, localize_page))
+    }
+
+    /// The second request for a cacheable page is answered from the memo: the
+    /// same bytes, with none of the buffering, copying or re-hashing that
+    /// produced them the first time.
+    #[tokio::test]
+    async fn a_cacheable_page_is_served_from_the_memo() {
+        let router = counting_page_router(page_state(false));
+
+        let first = router
+            .clone()
+            .oneshot(page_request("/", None))
+            .await
+            .unwrap();
+        let first_csp = csp_of(&first);
+        let first_body = body_text(first).await;
+
+        let second = router
+            .clone()
+            .oneshot(page_request("/", None))
+            .await
+            .unwrap();
+        let second_csp = csp_of(&second);
+        let second_body = body_text(second).await;
+
+        assert!(first_body.contains("render 1"), "{first_body}");
+        assert!(first_body.contains("<html lang=\"en\">"), "{first_body}");
+        assert_eq!(
+            first_body, second_body,
+            "the second response must be the memoized bytes"
+        );
+
+        // The hashes describe the document, so they repeat with it...
+        let hashes = |csp: &str| csp.matches("'sha256-").count();
+        assert_eq!(hashes(&first_csp), 1, "{first_csp}");
+        assert_eq!(hashes(&first_csp), hashes(&second_csp));
+        // ...while the nonce beside them must not: one reused across responses
+        // is `'unsafe-inline'` with extra steps, memo or no memo.
+        assert_ne!(first_csp, second_csp);
+    }
+
+    /// One entry per language. Serving whichever locale rendered a path first to
+    /// every later visitor is the bug the locale in the key exists to prevent —
+    /// the same one the incremental cache's locale marker prevents on disk.
+    #[tokio::test]
+    async fn the_memo_keeps_one_entry_per_locale() {
+        let router = counting_page_router(page_state(false));
+
+        let english = body_text(
+            router
+                .clone()
+                .oneshot(page_request("/", None))
+                .await
+                .unwrap(),
+        )
+        .await;
+        let german = body_text(
+            router
+                .clone()
+                .oneshot(page_request("/", Some("de-DE,de")))
+                .await
+                .unwrap(),
+        )
+        .await;
+
+        assert!(english.contains("<html lang=\"en\">"), "{english}");
+        assert!(german.contains("<html lang=\"de\">"), "{german}");
+        assert!(english.contains("render 1"), "{english}");
+        assert!(german.contains("render 2"), "{german}");
+    }
+
+    /// The catch-all route is shared by every URL that does not exist, so a memo
+    /// entry under it would answer one unknown URL with another's document.
+    #[tokio::test]
+    async fn an_uncacheable_route_is_rendered_fresh_every_time() {
+        let router = counting_page_router(page_state(false));
+
+        let first = body_text(
+            router
+                .clone()
+                .oneshot(page_request("/1", None))
+                .await
+                .unwrap(),
+        )
+        .await;
+        let second = body_text(
+            router
+                .clone()
+                .oneshot(page_request("/2", None))
+                .await
+                .unwrap(),
+        )
+        .await;
+
+        assert!(first.contains("render 1"), "{first}");
+        assert!(second.contains("render 2"), "{second}");
+        // Still localized: the 404 page is a page.
+        assert!(second.contains("<html lang=\"en\">"), "{second}");
+    }
+
+    /// A failed render shares its path with the page it could not produce, so it
+    /// must not take that page's place — otherwise one transient error would
+    /// pin the error document for the rest of the process's life.
+    #[tokio::test]
+    async fn a_failed_render_is_not_memoized() {
+        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let handler = move || {
+            let calls = Arc::clone(&calls);
+            async move {
+                let n = calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                let (status, text) = if n == 1 {
+                    (StatusCode::INTERNAL_SERVER_ERROR, "the render failed")
+                } else {
+                    (StatusCode::OK, "the real page")
+                };
+                axum::http::Response::builder()
+                    .status(status)
+                    .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+                    .body(Body::from(format!(
+                        "<!DOCTYPE html><html><body>{text}</body></html>"
+                    )))
+                    .unwrap()
+            }
+        };
+        let router = Router::new()
+            .route("/", get(handler))
+            .layer(middleware::from_fn_with_state(
+                page_state(false),
+                localize_page,
+            ));
+
+        let failed = router
+            .clone()
+            .oneshot(page_request("/", None))
+            .await
+            .unwrap();
+        assert_eq!(failed.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert!(body_text(failed).await.contains("the render failed"));
+
+        // Had the failure been remembered, this would still be the error page.
+        let recovered = router
+            .clone()
+            .oneshot(page_request("/", None))
+            .await
+            .unwrap();
+        assert_eq!(recovered.status(), StatusCode::OK);
+        assert!(body_text(recovered).await.contains("the real page"));
     }
 
     /// The document policy survives the layer that supplies the subresource one.

@@ -79,7 +79,7 @@ fn Shell() -> Element {
             Footer {}
             if palette_open() {
                 CommandPalette {
-                    repos: repos.repos(),
+                    repos: repos.clone(),
                     on_close: move |_| palette_open.set(false),
                 }
             }
