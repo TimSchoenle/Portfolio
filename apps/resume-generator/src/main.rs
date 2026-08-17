@@ -4,6 +4,7 @@
 //!   resume/Tim-Schönle-Resume.pdf      (en)
 //!   resume/Tim-Schönle-Lebenslauf.pdf  (de)
 //!   resume-fingerprint.json            (SHA-256 per file, shown on the contact card)
+//!   og-image.png                       (1200×630 social card, see [`og_image`])
 //!
 //! Layout: a two-column design rendered with Typst — a full-width header band
 //! over a tinted sidebar (Contact, Skills, Education, Languages) and a wide main
@@ -18,6 +19,7 @@
 //! embedded i18n lookup).
 
 mod fit;
+mod og_image;
 mod style;
 mod template;
 mod translations;
@@ -28,7 +30,7 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-use portfolio_data::{RESUME_FILES, ResumeFingerprints};
+use portfolio_data::{CONFIG, RESUME_FILES, ResumeFingerprints};
 use sha2::{Digest, Sha256};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
@@ -87,6 +89,20 @@ fn run() -> Result<(), Box<dyn Error>> {
     let manifest_path = Path::new(&out_dir).join("resume-fingerprint.json");
     fs::write(&manifest_path, serde_json::to_string_pretty(&manifest)?)?;
     println!("wrote {}", manifest_path.display());
+
+    // The social card, alongside the resumes: another artifact derived from the
+    // shared data here and embedded into the web binary by its `build.rs`. Paired
+    // with `CONFIG` rather than the translations so it says exactly what the
+    // `og:title`/`og:description` beside it say.
+    let og_path = Path::new(&out_dir).join(portfolio_data::OG_IMAGE_FILE);
+    let og_bytes = og_image::render(CONFIG.job_title, CONFIG.description)?;
+    fs::write(&og_path, &og_bytes)?;
+    let (width, height) = portfolio_data::OG_IMAGE_SIZE;
+    println!(
+        "wrote {} ({} bytes, {width}×{height})",
+        og_path.display(),
+        og_bytes.len()
+    );
 
     Ok(())
 }

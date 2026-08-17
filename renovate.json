@@ -7,16 +7,22 @@
     {
       "matchPackageNames": [
         "dtolnay/rust-toolchain",
-        "lukemathwalker/cargo-chef",
         "aquasecurity/trivy-action",
         "taiki-e/install-action"
       ],
       "enabled": false
     },
     {
-      "groupName": "yew packages",
+      "groupName": "typst",
       "matchPackageNames": [
-        "/^yew/"
+        "/^typst/"
+      ]
+    },
+    {
+      "groupName": "dioxus",
+      "matchPackageNames": [
+        "/^dioxus/",
+        "dioxus-cli"
       ]
     }
   ]

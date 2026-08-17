@@ -85,19 +85,33 @@ COPY . .
 # secret was not supplied (a fork's pull request has none), so the path is only
 # exported when it actually exists — pointing the indirection at a missing file
 # is an error, and correctly so.
+#
+# The cache mount is what makes `CI=1` mean anything. `update-repos` skips the
+# fetch entirely when its output file is still fresh (ten hours on CI, see
+# apps/update-repos/src/cache.rs) — but repos.json is not committed, so every
+# build started from nothing and the freshness check could never hit. Carrying
+# the file across builds in a cache mount lets that logic do what it was written
+# to do: one API call per ten hours per builder, instead of one per build.
+#
+# `|| true` on the restore: an empty cache is the normal state of a fresh builder,
+# and a missing file is exactly the "stale" the generator already handles.
 RUN --mount=type=secret,id=gh_token \
+    --mount=type=cache,target=/repos-cache,sharing=locked \
     if [ -s /run/secrets/gh_token ]; then \
       export PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token; \
     fi; \
-    CI=1 cargo run --release --locked -p update-repos -- apps/web/repos.json
+    cp /repos-cache/repos.json apps/web/repos.json 2>/dev/null || true; \
+    CI=1 cargo run --profile tools --locked -p update-repos -- apps/web/repos.json \
+    && cp apps/web/repos.json /repos-cache/repos.json
 # Resume PDFs + resume-fingerprint.json, both embedded into the web binary by
 # build.rs (the PDFs are served at /resume/ from memory; the fingerprint is shown
 # on the contact card). Embedding keeps the runtime a single self-contained
 # binary with no on-disk asset tree.
-RUN cargo run --release --locked -p resume-generator -- /app/resume-out \
+RUN cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
     && mkdir -p apps/web/generated/resume \
     && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
-    && cp /app/resume-out/resume-fingerprint.json apps/web/generated/
+    && cp /app/resume-out/resume-fingerprint.json apps/web/generated/ \
+    && cp /app/resume-out/og-image.png apps/web/generated/
 
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
 FROM generate AS web-builder

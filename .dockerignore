@@ -77,7 +77,6 @@ designs
 *.fig
 *.psd
 *.ai
-public/resume/**
 
 # -------- Secrets / env / credentials
 # `.env` and `.env.<stage>` are matched too, not just the `.local` variants:

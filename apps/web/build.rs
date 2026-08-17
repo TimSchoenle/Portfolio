@@ -17,7 +17,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
-use portfolio_data::RESUME_FILES;
+use portfolio_data::{OG_IMAGE_FILE, RESUME_FILES};
 
 const EMPTY_MANIFEST: &str = r#"{"algorithm":"","generated_at":"","files":{}}"#;
 const EMPTY_REPOS: &str = r#"{"generated_at":"","user":"","repos":[]}"#;
@@ -29,15 +29,21 @@ fn embed(source: &Path, out_dir: &str, name: &str, default: &str) {
     println!("cargo:rerun-if-changed={}", source.display());
 }
 
-/// Copies a resume PDF into `OUT_DIR` under a stable ASCII name (`resume-<lang>.pdf`)
-/// so `assets.rs` can `include_bytes!` it without embedding the non-ASCII source
-/// name into the include path. Writes an empty file when the PDF is absent (dev
-/// builds where the resume generator has not run), which the route serves as 404.
-fn embed_resume(source: &Path, out_dir: &str, lang: &str) {
-    let dest = Path::new(out_dir).join(format!("resume-{lang}.pdf"));
+/// Copies a binary artifact into `OUT_DIR` under `name` so `assets.rs` can
+/// `include_bytes!` it. Writes an empty file when the source is absent (dev
+/// builds where the resume generator has not run), which the routes serve as a
+/// 404 rather than an empty body.
+fn embed_bytes(source: &Path, out_dir: &str, name: &str) {
+    let dest = Path::new(out_dir).join(name);
     let bytes = fs::read(source).unwrap_or_default();
-    fs::write(&dest, bytes).unwrap_or_else(|_| panic!("write embedded resume-{lang}.pdf"));
+    fs::write(&dest, bytes).unwrap_or_else(|_| panic!("write embedded {name}"));
     println!("cargo:rerun-if-changed={}", source.display());
+}
+
+/// Copies a resume PDF in under a stable ASCII name (`resume-<lang>.pdf`), so the
+/// non-ASCII published file name never has to appear in an `include_bytes!` path.
+fn embed_resume(source: &Path, out_dir: &str, lang: &str) {
+    embed_bytes(source, out_dir, &format!("resume-{lang}.pdf"));
 }
 
 fn main() {
@@ -75,4 +81,10 @@ fn main() {
     for (lang, file_name) in RESUME_FILES {
         embed_resume(&resume_dir.join(file_name), &out_dir, lang);
     }
+
+    // The Open Graph card, from the same generator and embedded for the same
+    // reason. Served at `/og-image.png`, which is what the `og:image` meta tag
+    // points at.
+    let generated = Path::new(&manifest_dir).join("generated");
+    embed_bytes(&generated.join(OG_IMAGE_FILE), &out_dir, OG_IMAGE_FILE);
 }

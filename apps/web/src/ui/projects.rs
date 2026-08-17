@@ -1,6 +1,8 @@
 //! Selected-work section: GitHub filter chips + the paged project grid, fed by
 //! the build-time embedded `repos.json`.
 
+use std::rc::Rc;
+
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, Repo, lang_color};
 
@@ -42,6 +44,28 @@ impl Filter {
     }
 }
 
+/// The repositories worth showing, most-starred first, and the languages found
+/// among them — the two derivations every render of this section used to redo.
+///
+/// Forks and archived repositories are dropped here rather than at each use
+/// site, so the chip counts, the pager and the grid all agree on what "a project"
+/// is.
+fn base_lists(state: &ReposState) -> (Vec<Repo>, Vec<String>) {
+    let mut repos: Vec<Repo> = state
+        .repos()
+        .iter()
+        .filter(|r| !r.fork && !r.archived)
+        .cloned()
+        .collect();
+    repos.sort_by_key(|repo| std::cmp::Reverse(repo.stargazers_count));
+
+    let mut langs: Vec<String> = repos.iter().filter_map(|r| r.language.clone()).collect();
+    langs.sort();
+    langs.dedup();
+
+    (repos, langs)
+}
+
 #[component]
 pub fn Projects(state: ReposState) -> Element {
     let i18n = use_i18n().i18n;
@@ -51,34 +75,35 @@ pub fn Projects(state: ReposState) -> Element {
 
     let offline = matches!(state, ReposState::Failed);
 
-    let mut repos: Vec<Repo> = match &state {
-        ReposState::Ready(file) => file
-            .repos
-            .iter()
-            .filter(|r| !r.fork && !r.archived)
-            .cloned()
-            .collect(),
-        ReposState::Failed => Vec::new(),
-    };
-    repos.sort_by_key(|b| std::cmp::Reverse(b.stargazers_count));
-
-    let mut langs: Vec<String> = repos.iter().filter_map(|r| r.language.clone()).collect();
-    langs.sort();
-    langs.dedup();
+    // The shown repositories and the languages among them: both are pure
+    // functions of the build-time embedded `repos.json`, so they are derived once
+    // per mounted section rather than on every render — the same treatment the
+    // radar's dot layout gets, and for the same reason. `filter` and `page` below
+    // write signals, and before this each chip click and each page step re-cloned
+    // the whole repository list three times over, re-sorted it and rebuilt the
+    // language list, for data that cannot change while the page is open.
+    let base = use_hook(|| Rc::new(base_lists(&state)));
+    let (repos, langs) = (&base.0, &base.1);
 
     let current = filter();
-    let filtered: Vec<Repo> = match &current {
+    // Borrowed, not cloned: this is re-derived on every render (it depends on the
+    // active chip) and only the handful of cards actually rendered below need an
+    // owned `Repo`.
+    let filtered: Vec<&Repo> = match &current {
         Filter::Favorites => {
-            let favs: Vec<Repo> = repos.iter().filter(|r| r.is_featured()).cloned().collect();
+            let favs: Vec<&Repo> = repos.iter().filter(|r| r.is_featured()).collect();
             // Fall back to the full list rather than showing an empty section
             // when none of the featured repositories survived the fetch.
-            if favs.is_empty() { repos.clone() } else { favs }
+            if favs.is_empty() {
+                repos.iter().collect()
+            } else {
+                favs
+            }
         }
-        Filter::All => repos.clone(),
+        Filter::All => repos.iter().collect(),
         Filter::Language(lang) => repos
             .iter()
             .filter(|r| r.language.as_deref() == Some(lang.as_str()))
-            .cloned()
             .collect(),
     };
 
@@ -156,7 +181,7 @@ pub fn Projects(state: ReposState) -> Element {
                                 div { key: "p{pi}", class: "project-grid",
                                     {chunk.iter().enumerate().map(|(i, r)| rsx! {
                                         Reveal { key: "{r.name}", delay: (180 + i * 60).min(600) as u32,
-                                            ProjectCard { repo: r.clone(), index: pi * PAGE_SIZE + i }
+                                            ProjectCard { repo: (*r).clone(), index: pi * PAGE_SIZE + i }
                                         }
                                     })}
                                 }

@@ -4,6 +4,8 @@
 //! so the projects and contact sections render from the first paint — including
 //! the server-side render — without an extra round-trip.
 
+use std::sync::{Arc, LazyLock};
+
 use portfolio_data::{Repo, ReposFile, ResumeFingerprints};
 
 /// `repos.json`, embedded at compile time. `build.rs` copies it into `OUT_DIR`
@@ -17,33 +19,51 @@ const RESUME_FINGERPRINT_JSON: &str =
 
 /// Availability of the embedded repo list, kept as an enum so the projects
 /// section can degrade gracefully if `repos.json` ever fails to parse.
+///
+/// The parsed document is shared rather than owned: this value lives in a Dioxus
+/// context and is cloned by everything that reads it, while the list behind it
+/// is a compile-time constant nothing mutates. `Arc` rather than `Rc` so the
+/// same type can back the process-wide [`REPOS`] below on the server, where the
+/// renderer is not confined to one thread.
 #[derive(Clone, PartialEq)]
 pub enum ReposState {
-    Ready(ReposFile),
+    Ready(Arc<ReposFile>),
     Failed,
 }
 
 impl ReposState {
-    /// Repos for consumers that only need the list (empty unless ready).
-    pub fn repos(&self) -> Vec<Repo> {
+    /// The repositories, borrowed. Empty unless ready.
+    ///
+    /// Borrowed rather than cloned: the projects section and the command palette
+    /// read this on every render, and giving each of them its own deep copy of
+    /// the whole list was the largest allocation in a re-render.
+    pub fn repos(&self) -> &[Repo] {
         match self {
-            ReposState::Ready(file) => file.repos.clone(),
-            ReposState::Failed => Vec::new(),
+            ReposState::Ready(file) => &file.repos,
+            ReposState::Failed => &[],
         }
     }
 }
 
-/// Parses the embedded `repos.json`. Runs identically on the server (SSR) and
-/// the wasm client, so the rendered project list matches across hydration.
-pub fn load_repos() -> ReposState {
-    match serde_json::from_str::<ReposFile>(REPOS_JSON) {
-        Ok(file) => ReposState::Ready(file),
+/// The parsed `repos.json`, shared by every render in this process.
+///
+/// Parsing a compile-time constant a second time answers the same question
+/// twice. That mattered most on the server, where `App` mounts once per render:
+/// every incremental-cache miss re-parsed the entire document.
+static REPOS: LazyLock<ReposState> =
+    LazyLock::new(|| match serde_json::from_str::<ReposFile>(REPOS_JSON) {
+        Ok(file) => ReposState::Ready(Arc::new(file)),
         Err(_e) => {
             #[cfg(feature = "web")]
             web_sys::console::warn_1(&format!("repos.json parse failed: {_e}").into());
             ReposState::Failed
         }
-    }
+    });
+
+/// The embedded repo list. Resolves identically on the server (SSR) and the wasm
+/// client, so the rendered project list matches across hydration.
+pub fn load_repos() -> ReposState {
+    REPOS.clone()
 }
 
 /// Parses the embedded `resume-fingerprint.json`; `None` when no resumes were

@@ -3,11 +3,16 @@
    to fonts.googleapis.com / fonts.gstatic.com (privacy/GDPR + perf).
 
    The woff2 files live in assets/fonts/ (vendored from the @fontsource
-   npm packages via `npm run vendor:fonts`) and are copied to /fonts/ by
-   the `copy-dir` link in index.html. The src URLs are root-absolute
-   (/fonts/…) on purpose: this stylesheet is inlined into index.html, so a
-   relative url() would resolve against the current SPA route and 404 on a
-   sub-route hard-refresh.
+   npm packages via `npm run vendor:fonts`) and are compiled into the SSR
+   server binary, which serves them at the fixed /fonts/… paths (see
+   apps/web/src/server/assets.rs). The src URLs are root-absolute on
+   purpose, and the paths have to stay fixed: manganis content-hashes this
+   stylesheet but does not rewrite the url() references inside it, so a
+   relative or hashed font path would not resolve.
+
+   The two faces the first paint needs are additionally preloaded from the
+   document head (see PRELOADED_FONTS in apps/web/src/app.rs) — keep that
+   list in sync with the @font-face rules below.
 
    Only the "latin" subset is vendored (ASCII + Latin-1). The heavier
    "latin-ext" subset is intentionally omitted to keep the shipped payload

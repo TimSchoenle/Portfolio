@@ -6,8 +6,9 @@
 //! work here.
 
 use dioxus::prelude::*;
-use portfolio_data::{CONFIG, Repo, resume_file};
+use portfolio_data::{CONFIG, resume_file};
 
+use crate::github::ReposState;
 use crate::i18n::{other_language, persist_locale, use_i18n};
 use crate::routes::Route;
 use crate::sections::section_num;
@@ -31,7 +32,7 @@ struct Entry {
 }
 
 #[component]
-pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
+pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element {
     let ctx = use_i18n();
     let i18n = ctx.i18n;
     let set_language = ctx.set_language;
@@ -70,7 +71,7 @@ pub fn CommandPalette(repos: Vec<Repo>, on_close: EventHandler<()>) -> Element {
         action: Action::Goto(Route::Privacy {}),
     });
 
-    for r in repos.iter().filter(|r| !r.fork && !r.archived) {
+    for r in repos.repos().iter().filter(|r| !r.fork && !r.archived) {
         entries.push(Entry {
             group: g_work.clone(),
             label: r.name.clone(),

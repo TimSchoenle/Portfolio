@@ -9,9 +9,11 @@
 //! handler has not already done so, so the API's own headers win.
 //!
 //! NOTE: `is_content_hashed` recognises the `dx`/`manganis` hash format, in which
-//! the asset filename stem ends in a `dxh`-prefixed 16-hex segment (e.g.
-//! `tailwind-dxhd165a451a45ed030.css`). The wasm bundle (`/wasm/web.js`,
-//! `/wasm/web_bg.wasm`) is not filename-hashed and so revalidates.
+//! the asset filename stem ends in a `dxh`-prefixed hex segment (e.g.
+//! `tailwind-dxh31cffa1cc71c7bb.css`). `dx bundle` puts the whole client bundle
+//! under those names — the loader *and* the wasm binary — so everything in
+//! `public/assets/` is immutable. Nothing is served from `/wasm/`; that path
+//! exists only inside the build tree, before bundling renames and hashes it.
 
 use axum::{
     extract::Request,
@@ -44,6 +46,9 @@ fn cache_control_for(path: &str) -> &'static str {
         || path.ends_with("robots.txt")
         || path.ends_with("sitemap.xml")
         || path.ends_with(".svg")
+        // The generated Open Graph card, served unhashed from a fixed path
+        // because the meta tag naming it has to stay stable.
+        || path.ends_with(".png")
         || path.ends_with(".css")
     {
         return ONE_HOUR;
@@ -53,27 +58,40 @@ fn cache_control_for(path: &str) -> &'static str {
 }
 
 /// Whether the path's filename carries a `dx`/manganis content hash: a
-/// `dxh`-prefixed 16-hex segment at the end of the stem, e.g.
-/// `tailwind-dxhd165a451a45ed030.css`.
+/// `dxh`-prefixed hex segment at the end of the stem, e.g.
+/// `tailwind-dxh31cffa1cc71c7bb.css`.
+///
+/// The digit count is **not** fixed. manganis renders the 64-bit asset hash as
+/// plain hex, so a hash with leading zero nibbles is written short — one real
+/// `dx bundle` of this crate produced `web-dxh9c6f94a783aca5d3.js` (16 digits)
+/// and `web_bg-dxhfc275e0429871eb.wasm` (15) side by side. Requiring exactly 16
+/// therefore failed to recognise roughly one asset in sixteen as hashed, and
+/// those fell through to `no-cache`: the wasm binary and the stylesheet, the two
+/// largest and most cacheable files on the page, were revalidated on every visit.
 fn is_content_hashed(path: &str) -> bool {
     let file = path.rsplit('/').next().unwrap_or(path);
     let stem = file.split('.').next().unwrap_or(file);
     let last = stem.rsplit('-').next().unwrap_or(stem);
-    // manganis (dx) prefixes the 16-hex asset hash with `dxh`.
     let Some(hash) = last.strip_prefix("dxh") else {
         return false;
     };
-    hash.len() == 16 && hash.bytes().all(|b| b.is_ascii_hexdigit())
+    // A 64-bit value is at most 16 hex digits; the upper bound is what keeps an
+    // arbitrarily long `-dxh…` segment from passing as a content hash.
+    !hash.is_empty() && hash.len() <= 16 && hash.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
 /// Response middleware that sets a `Cache-Control` TTL for the request path
 /// unless the handler already provided one.
 pub async fn set_cache_control(request: Request, next: Next) -> Response {
-    let path = request.uri().path().to_owned();
+    // Classified before the request is consumed. `cache_control_for` answers with
+    // a `&'static str`, so carrying its verdict across the await costs nothing —
+    // whereas carrying the path to classify it afterwards meant copying the path
+    // onto the heap for every request the server answers, asset requests
+    // included.
+    let value = cache_control_for(request.uri().path());
     let mut response = next.run(request).await;
 
     if !response.headers().contains_key(header::CACHE_CONTROL) {
-        let value = cache_control_for(&path);
         response
             .headers_mut()
             .insert(header::CACHE_CONTROL, HeaderValue::from_static(value));
@@ -85,27 +103,44 @@ pub async fn set_cache_control(request: Request, next: Next) -> Response {
 mod tests {
     use super::*;
 
+    /// The exact file names one real `dx bundle --release` of this crate emitted
+    /// into `public/`. Two of the four carry a 15-digit hash and two a 16-digit
+    /// one, which is the whole reason this is asserted against observed output
+    /// rather than against a hand-written example.
+    const BUNDLED_ASSETS: [&str; 4] = [
+        "/assets/web-dxh9c6f94a783aca5d3.js",
+        "/assets/web_bg-dxhfc275e0429871eb.wasm",
+        "/assets/tailwind-dxh31cffa1cc71c7bb.css",
+        "/assets/fonts-dxh492b30d149ad9286.css",
+    ];
+
     #[test]
     fn hashed_assets_are_immutable_for_a_year() {
-        assert_eq!(
-            cache_control_for("/assets/tailwind-dxhd165a451a45ed030.css"),
-            IMMUTABLE_ONE_YEAR
-        );
+        for asset in BUNDLED_ASSETS {
+            assert_eq!(
+                cache_control_for(asset),
+                IMMUTABLE_ONE_YEAR,
+                "{asset} is content-hashed and must never be revalidated"
+            );
+        }
         assert_eq!(
             cache_control_for("/assets/favicon-dxhc8f7fbe218189b6d.svg"),
             IMMUTABLE_ONE_YEAR
         );
-        assert_eq!(
-            cache_control_for("/assets/fonts-dxh55766d8d82c28550.css"),
-            IMMUTABLE_ONE_YEAR
-        );
     }
 
+    /// The client bundle is the largest thing the page loads, and its hash is the
+    /// one most likely to come out short — `{:x}` drops leading zero nibbles. A
+    /// length check that missed that served it `no-cache` on every visit.
     #[test]
-    fn unhashed_wasm_bundle_revalidates() {
-        // dx emits the wasm bundle at stable, unhashed paths.
-        assert_eq!(cache_control_for("/wasm/web.js"), REVALIDATE);
-        assert_eq!(cache_control_for("/wasm/web_bg.wasm"), REVALIDATE);
+    fn a_short_hash_is_still_a_hash() {
+        assert!(is_content_hashed("/assets/web_bg-dxhfc275e0429871eb.wasm"));
+        assert!(is_content_hashed("/assets/tailwind-dxh31cffa1cc71c7bb.css"));
+        // Down to a single digit, which is what a hash of 0x…0f would render as.
+        assert!(is_content_hashed("/assets/thing-dxhf.css"));
+        // But not beyond what 64 bits can express, and not an empty segment.
+        assert!(!is_content_hashed("/assets/thing-dxh0123456789abcdef0.css"));
+        assert!(!is_content_hashed("/assets/thing-dxh.css"));
     }
 
     #[test]

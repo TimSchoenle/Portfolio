@@ -285,6 +285,59 @@ jobs:
           expect_status /robots.txt 200
           expect_status /favicon.svg 200
 
+          # ── The social card is a raster, and it is actually in the image ──────
+          # `og:image` pointed at the SVG favicon for a while, which every
+          # unfurler refuses; the tag looked correct and produced no preview
+          # anywhere. Asserting the bytes, not just the tag.
+          expect_status /og-image.png 200
+          expect_header /og-image.png content-type image/png
+          expect_body_contains / '<meta content="image/png" property="og:image:type"/>'
+
+          # ── Content-hashed assets are cached forever ──────────────────────────
+          # dx renders the asset hash as plain hex, so it comes out 15 digits
+          # about as often as 16. A cache rule that assumed 16 served the wasm
+          # binary and the stylesheet — the two largest files on the page —
+          # `no-cache` on every visit, which nothing else here would notice.
+          bundle=$(grep -oE '/\./assets/web-dxh[0-9a-f]+\.js' <<<"$(curl -fsS "$base/" || true)" \
+            | head -1 | sed 's|^/\.||')
+          if [ -n "$bundle" ]; then
+            expect_header "$bundle" cache-control 'public, max-age=31536000, immutable'
+          else
+            echo "::error::no hashed client bundle referenced by the served page"
+            fail=1
+          fi
+
+          # ── Embedded assets carry a validator ─────────────────────────────────
+          # Their TTL is the only thing keeping them off the wire; without an
+          # ETag every lapsed TTL re-sends the whole body instead of a 304.
+          favicon_etag=$(curl -fsS -D - -o /dev/null "$base/favicon.svg" 2>/dev/null \
+            | tr -d '\r' | awk -F': ' 'tolower($1)=="etag"{print $2; exit}')
+          if [ -n "$favicon_etag" ]; then
+            got=$(curl -s -o /dev/null -w '%{http_code}' \
+              -H "If-None-Match: $favicon_etag" "$base/favicon.svg")
+            if [ "$got" = "304" ]; then
+              echo "ok: an unchanged embedded asset revalidates to 304"
+            else
+              echo "::error::conditional GET /favicon.svg returned $got, expected 304"
+              fail=1
+            fi
+          else
+            echo "::error::/favicon.svg carried no ETag"
+            fail=1
+          fi
+
+          # An SVG is markup. tower-http's default compression predicate skips
+          # everything under `image/`, which took the favicon with it.
+          svg_encoding=$(curl -fsS -D - -o /dev/null -H 'Accept-Encoding: gzip' \
+            "$base/favicon.svg" 2>/dev/null \
+            | tr -d '\r' | awk -F': ' 'tolower($1)=="content-encoding"{print $2; exit}')
+          if [ -n "$svg_encoding" ]; then
+            echo "ok: the SVG favicon is compressed ($svg_encoding)"
+          else
+            echo "::error::/favicon.svg was served uncompressed"
+            fail=1
+          fi
+
           # ── Security headers are applied to every response ────────────────────
           expect_header / x-content-type-options nosniff
           expect_header / x-frame-options DENY

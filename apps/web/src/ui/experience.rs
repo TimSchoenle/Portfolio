@@ -1,6 +1,8 @@
 //! Experience accordion: period + years badge, role row with a plus/minus
 //! indicator, and a max-height-animated body with bullet arrows and tech tags.
 
+use std::rc::Rc;
+
 use dioxus::prelude::*;
 use portfolio_data::{experiences_sorted, format_period_years};
 
@@ -28,6 +30,10 @@ pub fn Experience() -> Element {
     // `usize::MAX` = all collapsed.
     let mut open = use_signal(|| 0usize);
     let now = t("common.now");
+    // Sorted once per mounted section rather than on every render: the ordering
+    // is a property of the compile-time data, while `open` above changes on every
+    // row the reader expands.
+    let entries = use_hook(|| Rc::new(experiences_sorted()));
 
     rsx! {
         section { id: section_id("experience"), class: "sec",
@@ -43,7 +49,7 @@ pub fn Experience() -> Element {
                 div { class: "col-label" }
                 div { class: "col-body",
                     div { class: "experience-list",
-                        {experiences_sorted().into_iter().enumerate().map(|(i, e)| {
+                        {entries.iter().enumerate().map(|(i, e)| {
                             let is_open = open() == i;
                             let row_cls = if is_open { "experience-row open" } else { "experience-row" };
                             let icon_cls = if is_open { "exp-icon open" } else { "exp-icon" };
