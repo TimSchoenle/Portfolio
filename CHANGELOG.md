@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.4.1](https://github.com/TimSchoenle/Portfolio/compare/v2.4.0...v2.4.1) (2026-08-17)
+
+
+### Miscellaneous
+
+* **deps:** update docker/dockerfile:1 docker digest to ecfaec9 ([#1103](https://github.com/TimSchoenle/Portfolio/issues/1103)) ([3d7359e](https://github.com/TimSchoenle/Portfolio/commit/3d7359e2bb7c89de74c88f2555256e64bce935f2))
+* **deps:** update github/codeql-action action to v4.37.7 ([#1105](https://github.com/TimSchoenle/Portfolio/issues/1105)) ([beeb0cd](https://github.com/TimSchoenle/Portfolio/commit/beeb0cdbbd5550f708e5b85f03c868c08b3337e4))
+* **deps:** update rust:1.97-slim docker digest to 8e8cf8f ([#1104](https://github.com/TimSchoenle/Portfolio/issues/1104)) ([af340a8](https://github.com/TimSchoenle/Portfolio/commit/af340a8056ff57566a42071d0c635cd13a2129f1))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.19 ([#1096](https://github.com/TimSchoenle/Portfolio/issues/1096)) ([31330e2](https://github.com/TimSchoenle/Portfolio/commit/31330e20374145dd81d2c05b51c641a7bf47abdf))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.20 ([#1099](https://github.com/TimSchoenle/Portfolio/issues/1099)) ([896e8ed](https://github.com/TimSchoenle/Portfolio/commit/896e8ed7968f070dc6a6c2276f77d12418272de2))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.30 ([#1097](https://github.com/TimSchoenle/Portfolio/issues/1097)) ([d3f37d1](https://github.com/TimSchoenle/Portfolio/commit/d3f37d15ba9aae6b99c0625f92ec24572909856d))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.31 ([#1102](https://github.com/TimSchoenle/Portfolio/issues/1102)) ([148ccac](https://github.com/TimSchoenle/Portfolio/commit/148ccacae54f0a530b2f62672edbbb098826d04d))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.3.1 ([#1098](https://github.com/TimSchoenle/Portfolio/issues/1098)) ([017d295](https://github.com/TimSchoenle/Portfolio/commit/017d295cefae47ab571aecfe7a5ebd4d9cb72005))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.2 ([#1100](https://github.com/TimSchoenle/Portfolio/issues/1100)) ([f4b2919](https://github.com/TimSchoenle/Portfolio/commit/f4b2919355eef321c73075782a625f21ffd2712d))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.3 ([#1106](https://github.com/TimSchoenle/Portfolio/issues/1106)) ([45d8c32](https://github.com/TimSchoenle/Portfolio/commit/45d8c3263463e6caeb08e3864a4a29395436c099))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.11 ([#1101](https://github.com/TimSchoenle/Portfolio/issues/1101)) ([3386fbb](https://github.com/TimSchoenle/Portfolio/commit/3386fbbeddea9162cd15db31a30c59835bb9832c))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1094](https://github.com/TimSchoenle/Portfolio/issues/1094)) ([7e36daa](https://github.com/TimSchoenle/Portfolio/commit/7e36daa11246c2f86dc34784555fabf84b123604))
+
 ## [2.4.0](https://github.com/TimSchoenle/Portfolio/compare/v2.3.0...v2.4.0) (2026-08-09)
 
 
