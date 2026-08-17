@@ -43,6 +43,35 @@ cargo clippy -p web --no-default-features --features server -- -D warnings
 cargo clippy -p portfolio-data -p resume-generator -p update-repos -- -D warnings
 ```
 
+## Generated Files
+
+`README.md` is rendered from
+[`.github/templates/README.md.hbs`](.github/templates/README.md.hbs) — edit the
+template, never the README. CI renders it on every pull request and commits the
+result back to the branch, so there is no toolchain to install locally.
+
+Its one variable is the configuration reference, generated from the `Describe`
+derives on the blocks in `crates/config`:
+
+```bash
+cargo run -p portfolio-config --features config-schema --example config-schema \
+  -- --format markdown   # the tables the README embeds
+cargo run -p portfolio-config --features config-schema --example config-schema
+                         # the same thing as the versioned JSON contract
+```
+
+Two rules follow from the table being generated:
+
+- A field's `///` comment is **one summary sentence on one line** — it is copied
+  verbatim into a Markdown table cell. Longer reasoning goes in `//` comments
+  above the field.
+- A new config block only reaches the README once it is listed in the
+  `Documented` aggregate in `crates/config/examples/config-schema.rs`.
+
+The `config-schema` feature is off by default and is never enabled by a build
+that ships; `cargo clippy --all-features --all-targets` is what keeps the
+generator compiling.
+
 ## Translations
 
 All user-visible strings live in `crates/data/i18n/{en,de}.json`. Both files

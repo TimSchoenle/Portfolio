@@ -34,7 +34,12 @@ portfolio-data = { path = "crates/data" }
 # half is a supervisor that rebuilds a running service when its files change,
 # which would link tokio, notify and tracing into every consumer. Nothing here
 # needs it — see `crates/config/src/lib.rs` for why.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.2.0", default-features = false, features = [
+#
+# The third feature, `schema`, is not taken here either. It is what generates the
+# configuration reference in `README.md`, and `portfolio-config` turns it on
+# through its own off-by-default `config-schema` feature, so `serde_json`, `syn`
+# and the derive stay out of every binary this workspace ships.
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.3.0", default-features = false, features = [
     "loader",
 ] }
 # Keeps the GitHub token out of `Debug` output and off every accidental log

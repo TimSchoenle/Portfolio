@@ -4,6 +4,25 @@ version = "2.5.0"
 edition.workspace = true
 publish.workspace = true
 
+# Off by default, and it has to stay that way: `terrace-config/schema` links
+# `serde_json` and compiles a proc macro, neither of which a running binary has
+# any use for. Only `cargo run --example config-schema` and the `--all-features`
+# CI gates ever turn it on, so nothing it costs reaches the image — the
+# Dockerfile builds no feature flags at all.
+#
+# The `#[config(...)]` helper attributes are gated with it rather than left in
+# place: they are the derive's, so a build without the derive fails with
+# `cannot find attribute config` the moment one is unconditional.
+[features]
+config-schema = ["terrace-config/schema"]
+
+# The generator that renders the configuration reference in `README.md`. Listed
+# so `cargo clippy --all-targets --all-features` compiles it, which is the only
+# thing standing between a new config block and a README that silently omits it.
+[[example]]
+name = "config-schema"
+required-features = ["config-schema"]
+
 [dependencies]
 serde.workspace = true
 # The loader itself. This crate owns the *schema* and the Portfolio dialect

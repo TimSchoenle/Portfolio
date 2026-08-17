@@ -11,20 +11,27 @@ use serde::Deserialize;
 /// that directory turns out not to be writable — the server then renders every request fresh
 /// rather than failing to start.
 #[derive(Debug, Clone, Default, Deserialize)]
+#[cfg_attr(
+    feature = "config-schema",
+    derive(serde::Serialize, terrace_config::schema::Describe)
+)]
 pub struct IsrConfig {
-    /// Writable directory rendered HTML is cached into. Unset (or empty) disables ISR.
-    ///
-    /// Keep it *outside* the bundled `public/` asset tree so those content-hashed assets stay
-    /// immutable. The image points it at a sub-directory of `/tmp`, which the deployment
-    /// already provides as a writable mount even under a read-only root filesystem.
+    // Keep it *outside* the bundled `public/` asset tree so those content-hashed assets stay
+    // immutable. The image points it at a sub-directory of `/tmp`, which the deployment already
+    // provides as a writable mount even under a read-only root filesystem.
+    /// Writable directory rendered HTML is cached into. Unset or empty disables ISR.
+    #[cfg_attr(
+        feature = "config-schema",
+        config(note = "ISR off; the image sets `/tmp/isr`")
+    )]
     #[serde(default)]
     pub cache_dir: Option<PathBuf>,
-    /// Revalidation interval in seconds. `0` — the default — means a permanent cache.
-    ///
-    /// Every page renders from compile-time data, so the only thing that changes the output is
-    /// a new build, which starts from an empty cache anyway. A positive value opts into a
-    /// finite, time-based TTL, which is useful only when a *persistent* cache volume is shared
-    /// across deploys.
+    // Every page renders from compile-time data, so the only thing that changes the output is a
+    // new build, which starts from an empty cache anyway. A positive value opts into a finite,
+    // time-based TTL, which is useful only when a *persistent* cache volume is shared across
+    // deploys.
+    /// Revalidation interval in seconds. Zero means a permanent cache.
+    #[cfg_attr(feature = "config-schema", config(note = "permanent"))]
     #[serde(default)]
     pub ttl_secs: u64,
 }
