@@ -43,6 +43,24 @@
 //! Every accessor in this crate treats an empty or whitespace-only value as though the key had
 //! not been supplied. Container platforms routinely inject `KEY=` for a declared-but-unset
 //! variable, and each block documents what the alternative reading would have cost.
+//!
+//! # The configuration reference in `README.md` is generated from these types
+//!
+//! Every block above derives `terrace_config::schema::Describe` under the off-by-default
+//! `config-schema` feature, and `examples/config-schema.rs` walks it into the table CI renders
+//! into the README. The feature is off in every build that ships, so `serde_json` and the derive
+//! never reach a binary; `cargo clippy --all-features --all-targets` is what keeps the generator
+//! compiling.
+//!
+//! Two consequences for anyone editing this crate:
+//!
+//! - **A field's `///` comment is one summary sentence on one line.** It is copied verbatim into
+//!   a Markdown table cell, where a second paragraph becomes a `<br>`. Longer reasoning goes in
+//!   `//` comments above the field, which is why the blocks below read the way they do.
+//! - **A new block is not documented until it is added to the example's aggregate.** This crate
+//!   deliberately has no root config type — each binary declares the aggregate it reads — so the
+//!   generator declares one of its own, and nothing but that file can notice a block missing
+//!   from it.
 
 mod assets;
 mod csp;

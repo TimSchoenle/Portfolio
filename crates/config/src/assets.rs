@@ -16,9 +16,16 @@ use serde::Deserialize;
 // the file layer supplies. Denying unknown fields would reject exactly the mechanism this
 // migration exists to enable.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(
+    feature = "config-schema",
+    derive(serde::Serialize, terrace_config::schema::Describe)
+)]
 pub struct AssetsConfig {
-    /// Directory holding the `dx bundle` output, relative to the working directory (the image
-    /// runs from `/app`, next to `public/`).
+    // The image runs from `/app`, next to `public/`, so the default resolves without anything
+    // being set. Every `///` line on a field in this crate is one summary sentence on one line:
+    // it is copied verbatim into the README's generated key table, where a second paragraph
+    // becomes a `<br>` in a table cell. The reasoning goes in comments like this one.
+    /// Directory holding the `dx bundle` output, relative to the working directory.
     #[serde(default = "AssetsConfig::default_dist_dir")]
     pub dist_dir: PathBuf,
 }

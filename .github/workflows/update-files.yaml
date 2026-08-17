@@ -70,3 +70,84 @@ jobs:
               issue_number: context.issue.number,
               body: 'Cargo.lock has been updated to match Cargo.toml.'
             })
+
+  # `README.md` is rendered from `.github/templates/README.md.hbs`, whose one variable is the
+  # configuration reference generated out of the `Describe` derives in `crates/config`. The table
+  # therefore cannot drift from the types: renaming a key renames it in the README, in the same
+  # pull request.
+  #
+  # A job of its own rather than more steps above, and `needs:` rather than parallel, for one
+  # reason: both push to the head branch, and two jobs racing on one ref is a lost commit or a
+  # rejected push. Sequencing also means this renders against the tree the lock-file commit left
+  # behind, so a dependency bump that changes nothing here still produces no second commit.
+  render-readme:
+    name: Ensure README is Rendered from its Template
+    needs: update-lock-file
+    environment:
+      name: ci
+      deployment: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to push the rendered README
+      pull-requests: write # to comment on PRs
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Generate Bot Token
+        id: generate_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+
+      # The generator reads nothing from the environment, so it produces the same tables here as
+      # on a developer's machine — which is what lets the render step below skip its commit when
+      # the configuration has not changed. Cargo's progress goes to stderr, so stdout is the
+      # document and nothing else; `$(…)` drops its trailing newline, and `--arg` makes it a JSON
+      # string, so the payload is strict JSON on one line whatever the table contains.
+      - name: Generate the configuration reference
+        id: config-schema
+        run: |
+          set -euo pipefail
+          table="$(cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format markdown)"
+          variables="$(jq -cn --arg table "$table" '{configTable: $table}')"
+          echo "variables=${variables}" >> "$GITHUB_OUTPUT"
+
+      - name: Render and commit the README
+        id: readme
+        uses: TimSchoenle/actions/actions/common/render-template-and-commit@15d83f02081c9dc8a844646199c63792dcccdfa8 # tag=actions-common-render-template-and-commit-v1.1.3
+        with:
+          template: .github/templates/README.md.hbs
+          output: README.md
+          variables: ${{ steps.config-schema.outputs.variables }}
+          token: ${{ steps.generate_token.outputs.token }}
+          commit_message: 'docs: render README from its template'
+
+      - name: Comment on PR
+        if: steps.readme.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          github-token: ${{ steps.generate_token.outputs.token }}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'README.md has been re-rendered from `.github/templates/README.md.hbs`.'
+            })

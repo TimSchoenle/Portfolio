@@ -19,29 +19,32 @@ use serde::Deserialize;
 // No `deny_unknown_fields`, for the reason given on `AssetsConfig`: the `_FILE` indirection keys
 // share this namespace.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(
+    feature = "config-schema",
+    derive(serde::Serialize, terrace_config::schema::Describe)
+)]
 pub struct CspConfig {
-    /// Derive a `'sha256-…'` source for every inline `<script>` in the document being served,
-    /// instead of admitting all inline script with `'unsafe-inline'`.
-    ///
-    /// On — the default — the server hashes the response body it is about to send, so the only
-    /// inline scripts that run are the ones it rendered itself. That is the whole point of the
-    /// exercise: `'unsafe-inline'` admits an injected `<script>` just as readily as the Dioxus
-    /// hydration bootstrap.
-    ///
-    /// Off is the escape hatch, and it exists because the failure mode is silent: an inline
-    /// script the scanner does not see is refused by the browser, and the evidence is a blank
-    /// page and a console message nobody is watching. Turning it off restores `'unsafe-inline'`
-    /// through an environment variable and a restart rather than a redeploy. Known cases: a
-    /// development server that injects its own live-reload script downstream of this process,
-    /// and any future renderer change that emits script this server never sees.
-    ///
-    /// The two settings are mutually exclusive in the browser, not merely different: a policy
-    /// carrying any hash or nonce makes `'unsafe-inline'` inert, which is why there is one switch
-    /// here rather than two independent ones.
+    // On — the default — the server hashes the response body it is about to send, so the only
+    // inline scripts that run are the ones it rendered itself. That is the whole point of the
+    // exercise: `'unsafe-inline'` admits an injected `<script>` just as readily as the Dioxus
+    // hydration bootstrap.
+    //
+    // Off is the escape hatch, and it exists because the failure mode is silent: an inline
+    // script the scanner does not see is refused by the browser, and the evidence is a blank
+    // page and a console message nobody is watching. Turning it off restores `'unsafe-inline'`
+    // through an environment variable and a restart rather than a redeploy. Known cases: a
+    // development server that injects its own live-reload script downstream of this process,
+    // and any future renderer change that emits script this server never sees.
+    //
+    // The two settings are mutually exclusive in the browser, not merely different: a policy
+    // carrying any hash or nonce makes `'unsafe-inline'` inert, which is why there is one switch
+    // here rather than two independent ones.
+    /// Hash every inline `<script>` in the document being served instead of admitting all inline script with `'unsafe-inline'`.
     #[serde(default = "CspConfig::default_hash_inline_scripts")]
     pub hash_inline_scripts: bool,
 
     /// The Cloudflare products in front of this origin that the policy has to make room for.
+    #[cfg_attr(feature = "config-schema", config(nested))]
     #[serde(default)]
     pub cloudflare: CloudflareConfig,
 }
@@ -84,39 +87,38 @@ impl Default for CspConfig {
 /// silent when it is: not only which origins a product loads from, but which directives they have
 /// to appear in — admitting Turnstile's script without its frame renders an empty box.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(
+    feature = "config-schema",
+    derive(serde::Serialize, terrace_config::schema::Describe)
+)]
 pub struct CloudflareConfig {
+    // On by default, because this site is delivered through a Cloudflare Tunnel with the bot
+    // products active — the privacy page lists `_cf_bm`, `cf_clearance` and the `cf_chl_rc_*`
+    // challenge cookies, which is the observable half of the same feature. Those products inject
+    // an inline `<script>` into the HTML *after* it leaves this process, so no hash this server
+    // computes can cover it; `script-src` refuses it and the detection silently never runs.
+    // Cloudflare's documented answer is to parse the `Content-Security-Policy` response header
+    // and copy the nonce onto what it injects, so nothing has to be stamped into the document.
+    //
+    // It carries one obligation the server discharges (`Cache-Control: no-cache` on every
+    // document, so a nonce is never shared between readers) and one it cannot: no Cloudflare
+    // Cache Rule may cache the shell. A "Cache Everything" rule overrides the origin's
+    // `Cache-Control`, satisfying the obligation here and violating it at the edge, and nothing
+    // inside this process can see that.
     /// Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge.
-    ///
-    /// On by default, because this site is delivered through a Cloudflare Tunnel with the bot
-    /// products active — the privacy page lists `_cf_bm`, `cf_clearance` and the `cf_chl_rc_*`
-    /// challenge cookies, which is the observable half of the same feature. Those products inject
-    /// an inline `<script>` into the HTML *after* it leaves this process, so no hash this server
-    /// computes can cover it; `script-src` refuses it and the detection silently never runs.
-    /// Cloudflare's documented answer is to parse the `Content-Security-Policy` response header
-    /// and copy the nonce onto what it injects, so nothing has to be stamped into the document.
-    ///
-    /// It carries one obligation the server discharges (`Cache-Control: no-cache` on every
-    /// document, so a nonce is never shared between readers) and one it cannot: **no Cloudflare
-    /// Cache Rule may cache the shell**. A "Cache Everything" rule overrides the origin's
-    /// `Cache-Control`, satisfying the obligation here and violating it at the edge, and nothing
-    /// inside this process can see that.
     #[serde(default = "CloudflareConfig::default_script_nonce")]
     pub script_nonce: bool,
 
-    /// Admit `https://challenges.cloudflare.com` in `script-src` **and** `frame-src`, for a
-    /// Turnstile widget rendered in a page this server serves.
-    ///
-    /// Off: this site has no form behind a challenge. A managed-challenge interstitial needs
-    /// nothing here either — that is a Cloudflare-served document carrying its own policy.
+    // Off: this site has no form behind a challenge. A managed-challenge interstitial needs
+    // nothing here either — that is a Cloudflare-served document carrying its own policy.
+    /// Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile widget.
     #[serde(default)]
     pub turnstile: bool,
 
-    /// Admit the Cloudflare Web Analytics beacon (`https://static.cloudflareinsights.com`) and the
-    /// endpoint it reports to (`https://cloudflareinsights.com`).
-    ///
-    /// Off: this site measures nothing, which the privacy page states. Only for the *manual*
-    /// snippet — the automatic edge injection is an inline script and needs
-    /// [`script_nonce`](Self::script_nonce) instead.
+    // Off: this site measures nothing, which the privacy page states. Only for the *manual*
+    // snippet — the automatic edge injection is an inline script and needs
+    // [`script_nonce`](Self::script_nonce) instead.
+    /// Admit the Cloudflare Web Analytics beacon and the endpoint it reports to.
     #[serde(default)]
     pub web_analytics: bool,
 }
