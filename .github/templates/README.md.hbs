@@ -2,18 +2,28 @@
 Template for the repository README. CI renders it on every pull request and commits the result
 to README.md, so edit this file — never README.md itself.
 
-Two variables, `serverConfigTable` and `builderConfigTable`, one per binary, from
+Every variable comes from one command:
 
     cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown --scope server
-    cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown --scope builder
+      -- --format variables
 
-which walk the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
-binaries actually load — and emit each key with its TOML path, type, environment spelling,
-default and purpose. The server scope leads with the variables the loader reads before any layer
-exists; the builder scope renders keys alone, because they are the same two variables. Both are
-interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+which walks the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
+binaries actually load — and prints the whole payload as strict JSON:
+
+  - `serverConfigTable` and `builderConfigTable`, one Markdown table per binary, each key with
+    its TOML path, type, environment spelling, default and purpose. The server scope leads with
+    the variables the loader reads before any layer exists; the builder scope renders keys alone,
+    because they would be the same two variables. Both go through a triple-stash, being Markdown
+    to emit as-is rather than escape.
+  - `loader`, the dialect: the prefix, the nesting separator, the indirection suffix and the two
+    variables naming the layers.
+  - `keys`, the spellings of the handful of keys the prose below names — `keys.githubToken.env`,
+    `keys.githubToken.envFile`, and so on.
+
+Prefer an injected value to a typed one anywhere the two would say the same thing. A rename in
+`crates/config` then reaches the sentences as well as the tables, and a key the prose names and
+the types no longer have fails the generator instead of rendering a blank. `KEYS` in
+`crates/config/examples/config-schema.rs` is where a key joins that set.
 
 Neither table has a `_FILE` column: it is the environment spelling plus a constant suffix, which
 the layer list above the tables already states once.
@@ -157,17 +167,17 @@ docker build -t portfolio .
 
 Configuration is **layered and file-first**, via
 [terrace-config](https://github.com/TimSchoenle/terrace-config). `crates/config`
-owns the typed blocks and the `PORTFOLIO_` dialect; each binary declares the
+owns the typed blocks and the `{{ loader.envPrefix }}` dialect; each binary declares the
 aggregate it actually reads. Sources are merged in this order, lowest precedence
 first:
 
 1. **Struct defaults** — the `serde` defaults in `crates/config`.
-2. **TOML** at `$PORTFOLIO_CONFIG` — a file, or every `*.toml` inside it when it
+2. **TOML** at `${{ loader.configVar }}` — a file, or every `*.toml` inside it when it
    names a directory (so a `ConfigMap` can be split into fragments).
-3. **Environment** — `PORTFOLIO_`-prefixed variables, `__` for nesting.
-4. **Secrets directory** at `$PORTFOLIO_SECRETS_DIR` — one file per key, named
-   after it (`github__token`); this is what a Kubernetes `Secret` volume mounts.
-5. **File indirection** — `PORTFOLIO_<KEY>_FILE=/path` names a file holding the
+3. **Environment** — `{{ loader.envPrefix }}`-prefixed variables, `{{ loader.envNesting }}` for nesting.
+4. **Secrets directory** at `${{ loader.secretsDirVar }}` — one file per key, named
+   after it (`{{ keys.githubToken.secretsFile }}`); this is what a Kubernetes `Secret` volume mounts.
+5. **File indirection** — `{{ loader.envPrefix }}<KEY>{{ loader.fileSuffix }}=/path` names a file holding the
    value.
 
 The last three are **mutually exclusive per key**: a key supplied by two of them
@@ -180,7 +190,7 @@ The tables below are **generated from the aggregates the binaries load** —
 binaries are, because the two configurations are not one: what a deployment sets
 and what the image build sets have no overlap at all.
 
-Regenerate them with:
+Regenerate one on its own with:
 
 ```bash
 cargo run -p portfolio-config --features config-schema --example config-schema \
@@ -208,8 +218,16 @@ the `serde_json` it pulls stay out of the image; CI's `--all-features` gates are
 what keep the generator compiling.
 
 An empty value counts as unset everywhere, because container platforms routinely
-inject `KEY=` for a declared-but-unset variable. See
-[`config.example.toml`](./config.example.toml) for a commented starting point.
+inject `KEY=` for a declared-but-unset variable.
+[`config.example.toml`](./config.example.toml) is a commented starting point, and
+is generated from the same types as the tables above — every key at its default,
+commented out, so a copy of it and an empty file mean the same thing to the
+loader:
+
+```bash
+cargo run -p portfolio-config --features config-schema --example config-schema \
+  -- --format toml
+```
 
 `IP`, `PORT` and `RUST_LOG` are deliberately **outside** this namespace: they are
 the Dioxus toolchain's contract with the binary (`dx serve` sets them to tell a
@@ -218,12 +236,12 @@ them itself. `CI` likewise belongs to the CI provider.
 
 ### Secrets
 
-`github.token` is the only secret in the workspace, and it should arrive as a
+`{{ keys.githubToken.path }}` is the only secret in the workspace, and it should arrive as a
 **file**, never as an environment variable — `/proc/<pid>/environ`, a crash dump
 and `docker inspect` all carry the environment, and child processes inherit it:
 
 ```bash
-PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token cargo run --release -p update-repos
+{{ keys.githubToken.envFile }}=/run/secrets/gh_token cargo run --release -p update-repos
 ```
 
 The Docker build already does this: the `gh_token` BuildKit secret is mounted as
@@ -249,7 +267,7 @@ hardened pod spec out of the box.
 | --- | --- | --- |
 | `GET /api/health` | — | General health report with the current UTC time |
 | `GET /api/health/live` | `GET /livez` | **Liveness** — process is running; failure restarts the container |
-| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the client bundle (`index.html` under `assets.dist_dir`, default `public/`) is present and servable; failure removes the pod from the Service endpoints |
+| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the client bundle (`index.html` under `{{ keys.assetsDistDir.path }}`, default `{{ keys.assetsDistDir.default }}/`) is present and servable; failure removes the pod from the Service endpoints |
 
 All probe responses are `no-store` (never cached). Readiness returns `503` until
 the assets are present.
@@ -301,7 +319,7 @@ JavaScript Detections, the challenge platform — the `_cf_bm`, `cf_clearance` a
 edge, after this server has hashed what it rendered. No hash can cover it; a
 nonce can, because Cloudflare parses the `Content-Security-Policy` response
 header and copies the nonce onto what it injects. That is
-`csp.cloudflare.script_nonce`, on by default, and it brings one obligation the
+`{{ keys.cspScriptNonce.path }}`, on by default, and it brings one obligation the
 server discharges — every document is `Cache-Control: no-cache`, so a nonce is
 never shared between readers — and one it cannot:
 
@@ -315,8 +333,8 @@ the directives that product actually needs them in (Turnstile in `script-src`
 **and** `frame-src` — admitting only the first renders an empty box).
 
 **If a page ever renders blank**, that is the failure mode this design has:
-`PORTFOLIO_CSP__HASH_INLINE_SCRIPTS=false` together with
-`PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE=false` restores `'unsafe-inline'` on a
+`{{ keys.cspHashInlineScripts.env }}=false` together with
+`{{ keys.cspScriptNonce.env }}=false` restores `'unsafe-inline'` on a
 restart rather than a redeploy. The two must move together — a browser ignores
 `'unsafe-inline'` as soon as the policy carries a nonce — and supplying one
 without the other fails the boot with a message saying so.
@@ -363,19 +381,19 @@ blacklisted in `CONFIG.blacklisted_repos`, and any repository with no update in
 the last 365 days. It deserializes the rest directly into the shared
 `portfolio_data::Repo`/`ReposFile` models and writes the pretty-printed JSON,
 surfacing failures through a dedicated `UpdateReposError` model. An explicit
-repository set can be requested via `github.repos`, in which case each named
+repository set can be requested via `{{ keys.githubRepos.path }}`, in which case each named
 repository is fetched directly (without filtering):
 
 ```bash
 # Defaults: user = CONFIG.github_username, repos = all active repos
 #           (archived/blacklisted/>1y-stale excluded),
 #           output = apps/web/repos.json
-PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
+{{ keys.githubToken.envFile }}=/run/secrets/gh_token \
   cargo run --release -p update-repos -- apps/web/repos.json
 
 # Override the repo set for a one-off run (figment's bracketed array syntax,
 # so the environment and the TOML spelling stay the same shape)
-PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repos
+{{ keys.githubRepos.env }}='[Portfolio,actions]' cargo run --release -p update-repos
 ```
 
 ## Contributing
@@ -383,10 +401,11 @@ PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repo
 Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
 development setup and the checks that must pass before opening a pull request.
 
-**This file is generated.** Edit
-[`.github/templates/README.md.hbs`](./.github/templates/README.md.hbs) instead —
-CI renders it on every pull request and commits the result back to the branch, so
-there is no toolchain to install locally.
+**This file is generated**, as is
+[`config.example.toml`](./config.example.toml). Edit the templates under
+[`.github/templates/`](./.github/templates) instead — CI renders both on every
+pull request and commits the results back to the branch, so there is no toolchain
+to install locally.
 
 ## Security
 

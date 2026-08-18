@@ -1,0 +1,29 @@
+# Example configuration for the portfolio workspace.
+#
+# THIS FILE IS GENERATED. Every key below — its purpose, its type, its default and the
+# other spellings that supply it — comes from the `Describe` derives in `crates/config`,
+# so it cannot omit a key the binaries read or describe one they do not. Only this
+# preamble is hand-written, in `.github/templates/config.example.toml.hbs`; CI renders
+# both on every pull request.
+#
+# Point ${{ loader.configVar }} at a copy of this file, or at a directory holding several
+# `*.toml` fragments — merged in sorted order, which is what lets a Kubernetes ConfigMap
+# and a Secret land side by side:
+#
+#   {{ loader.configVar }}=./config.toml cargo run -p web --features server
+#
+# Every key is commented out at the value it already has, so a copy of this file and an
+# empty file mean the same thing to the loader; uncomment one only to change it. The three
+# spellings named above each key all outrank this file, and they are mutually exclusive per
+# key: supplying one key from two of them fails the boot rather than letting a stale
+# {{ loader.envPrefix }} variable shadow a rotated mounted secret. README.md carries the whole
+# precedence order.
+#
+# Secrets do not belong in a committed file. {{ keys.githubToken.envFile }} names a file
+# holding one, and {{ keys.githubToken.secretsFile }} inside ${{ loader.secretsDirVar }} is the same value as a
+# mounted `Secret` key.
+#
+# NOT configured here: IP, PORT and RUST_LOG belong to the Dioxus toolchain, which reads
+# them itself, and CI belongs to the CI provider.
+
+{{{exampleConfig}}}

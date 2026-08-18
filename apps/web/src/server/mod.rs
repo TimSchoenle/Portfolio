@@ -67,8 +67,13 @@ pub fn serve() {
 /// container never reports ready, rather than serving every visitor a blank page.
 fn load_config() -> ServerConfig {
     // Runs before `dioxus::serve` installs the logger, so `tracing` would discard this.
+    //
+    // The error names the key; the report under it names the layer that supplied it, which is
+    // the half an operator cannot get at from inside a distroless image with no shell. It holds
+    // no configuration value, so it is safe in a log that is shipped and retained.
     let refuse = |err: &dyn std::fmt::Display| -> ! {
         eprintln!("portfolio: cannot start, the configuration is not usable: {err}");
+        eprintln!("{}", portfolio_config::provenance());
         std::process::exit(EX_CONFIG)
     };
 

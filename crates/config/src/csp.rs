@@ -123,8 +123,8 @@ pub struct CloudflareConfig {
     /// Admit the Cloudflare Web Analytics beacon and the endpoint it reports to.
     ///
     /// Off: this site measures nothing, which the privacy page states. Only for the *manual*
-    /// snippet — the automatic edge injection is an inline script and needs
-    /// [`script_nonce`](Self::script_nonce) instead.
+    /// snippet — the automatic edge injection is an inline script and needs `script_nonce`
+    /// instead.
     #[serde(default)]
     pub web_analytics: bool,
 }

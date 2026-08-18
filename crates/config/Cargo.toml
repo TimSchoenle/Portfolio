@@ -36,4 +36,15 @@ terrace-config.workspace = true
 secrecy.workspace = true
 
 [dev-dependencies]
-figment.workspace = true
+# The loader's own test harness, which is why `src/loader.rs` arranges a mount
+# rather than a variable name: every name it writes is derived from the
+# `Terrace` under test, so a test cannot keep passing against a spelling this
+# crate no longer reads. A development dependency because `testing` is
+# deliberately outside `full` — a service asking for everything the crate does
+# at runtime should not link a test harness.
+terrace-config = { workspace = true, features = ["testing"] }
+# The `--format variables` payload the documentation job forwards to the
+# template action. `serde_json` reaches this crate only as a development
+# dependency, so it stays where `terrace-config/schema` already puts it — in
+# the generator — and out of every binary this workspace ships.
+serde_json.workspace = true

@@ -1,124 +1,167 @@
 # Example configuration for the portfolio workspace.
 #
-# Point $PORTFOLIO_CONFIG at a copy of this file, or at a directory holding
-# several `*.toml` fragments (merged in sorted order — one file per concern is
-# what lets a Kubernetes ConfigMap and a Secret land side by side).
+# THIS FILE IS GENERATED. Every key below — its purpose, its type, its default and the
+# other spellings that supply it — comes from the `Describe` derives in `crates/config`,
+# so it cannot omit a key the binaries read or describe one they do not. Only this
+# preamble is hand-written, in `.github/templates/config.example.toml.hbs`; CI renders
+# both on every pull request.
+#
+# Point $PORTFOLIO_CONFIG at a copy of this file, or at a directory holding several
+# `*.toml` fragments — merged in sorted order, which is what lets a Kubernetes ConfigMap
+# and a Secret land side by side:
 #
 #   PORTFOLIO_CONFIG=./config.toml cargo run -p web --features server
 #
-# Every key here can equally be supplied as a `PORTFOLIO_`-prefixed environment
-# variable with `__` for nesting (`assets.dist_dir` → PORTFOLIO_ASSETS__DIST_DIR),
-# as a file in $PORTFOLIO_SECRETS_DIR named after the key (`assets__dist_dir`),
-# or as `PORTFOLIO_<KEY>_FILE=/path`. The last three are mutually exclusive per
-# key: supplying one key from two of them fails the boot rather than letting a
-# stale environment variable shadow a rotated secret.
+# Every key is commented out at the value it already has, so a copy of this file and an
+# empty file mean the same thing to the loader; uncomment one only to change it. The three
+# spellings named above each key all outrank this file, and they are mutually exclusive per
+# key: supplying one key from two of them fails the boot rather than letting a stale
+# PORTFOLIO_ variable shadow a rotated mounted secret. README.md carries the whole
+# precedence order.
 #
-# Every value below is the default, so an empty file behaves identically —
-# except `isr.cache_dir`, which has no default and which the container image
-# sets to /tmp/isr.
+# Secrets do not belong in a committed file. PORTFOLIO_GITHUB__TOKEN_FILE names a file
+# holding one, and github__token inside $PORTFOLIO_SECRETS_DIR is the same value as a
+# mounted `Secret` key.
 #
-# NOT configured here: IP, PORT and RUST_LOG belong to the Dioxus toolchain,
-# which reads them itself, and CI belongs to the CI provider.
-
-# ── the SSR server ───────────────────────────────────────────────────────────
+# NOT configured here: IP, PORT and RUST_LOG belong to the Dioxus toolchain, which reads
+# them itself, and CI belongs to the CI provider.
 
 [assets]
 # Directory holding the `dx bundle` output, relative to the working directory.
-# Only the readiness probe consults it: the bundle itself is served by the Dioxus
-# asset router, which resolves `public/` relative to the binary.
-dist_dir = "public"
-
-[isr]
-# Writable directory rendered HTML is cached into. Unset — as it is here —
-# disables incremental static regeneration and renders every request fresh.
-# Keep it outside the bundled `public/` tree so those content-hashed assets stay
-# immutable. The image sets this to /tmp/isr, which the deployment mounts as a
-# writable volume even under a read-only root filesystem.
 #
-# cache_dir = "/tmp/isr"
-
-# Revalidation interval in seconds. `0` means a permanent cache, which is right
-# for this site: every page renders from compile-time data, so the only thing
-# that changes the output is a redeploy — and that starts from an empty cache.
-# Set a positive value only when a *persistent* cache volume is shared across
-# deploys. Unlike the environment variable this replaced, an unparseable value
-# now fails the boot instead of silently meaning "permanent".
-ttl_secs = 0
-
-# ── the Content-Security-Policy ──────────────────────────────────────────────
-#
-# The policy itself is not configurable: it is built from `csp-shell` in
-# `apps/web/src/server/csp.rs`, where the directives sit next to the reason each
-# one is what it is. What is configurable is the part that depends on the
-# deployment rather than on the code.
+# The image runs from `/app`, next to `public/`, so the default resolves without anything
+# being set.
+# Type: PathBuf
+# Also from: PORTFOLIO_ASSETS__DIST_DIR, PORTFOLIO_ASSETS__DIST_DIR_FILE=/path/to/file,
+#   assets__dist_dir in the secrets directory
+# dist_dir = "public"
 
 [csp]
-# Derive a `'sha256-…'` source for every inline <script> in the document being
-# served, instead of admitting all inline script with `'unsafe-inline'`. The
-# hashes are computed from the response body itself, so they cannot drift from
-# what is sent — Dioxus renders its hydration data inline, and its text is only
-# known per response.
+# Hash every inline `<script>` in the document being served instead of admitting all inline
+# script with `'unsafe-inline'`.
 #
-# Set to false as an escape hatch, not as a preference: it restores
-# `'unsafe-inline'`, which admits an injected <script> exactly as readily as the
-# hydration bootstrap. It exists because the opposite failure is silent — an
-# inline script the scanner does not see is refused by the browser and the page
-# renders blank — and because a development server that injects its own
-# live-reload script downstream of this process is outside what can be hashed
-# here. Turning it off also requires turning `csp.cloudflare.script_nonce` off:
-# a browser ignores `'unsafe-inline'` as soon as the policy carries any nonce,
-# so the combination fails the boot rather than serving a blank page.
-hash_inline_scripts = true
+# On — the default — the server hashes the response body it is about to send, so the only
+# inline scripts that run are the ones it rendered itself. That is the whole point of the
+# exercise: `'unsafe-inline'` admits an injected `<script>` just as readily as the Dioxus
+# hydration bootstrap.
+#
+# Off is the escape hatch, and it exists because the failure mode is silent: an inline
+# script the scanner does not see is refused by the browser, and the evidence is a blank
+# page and a console message nobody is watching. Turning it off restores `'unsafe-inline'`
+# through an environment variable and a restart rather than a redeploy. Known cases: a
+# development server that injects its own live-reload script downstream of this process,
+# and any future renderer change that emits script this server never sees.
+#
+# The two settings are mutually exclusive in the browser, not merely different: a policy
+# carrying any hash or nonce makes `'unsafe-inline'` inert, which is why there is one switch
+# here rather than two independent ones.
+# Type: bool
+# Also from: PORTFOLIO_CSP__HASH_INLINE_SCRIPTS,
+#   PORTFOLIO_CSP__HASH_INLINE_SCRIPTS_FILE=/path/to/file, csp__hash_inline_scripts in the secrets
+#   directory
+# hash_inline_scripts = true
 
 [csp.cloudflare]
-# Reserve a per-response nonce in `script-src` for the inline <script>
-# Cloudflare's bot products (Bot Fight Mode, JavaScript Detections, the
-# challenge platform) inject at the edge — after this server has hashed what it
-# renders, so no hash can cover it. Without the nonce, `script-src` refuses it
-# and the detection silently never runs: bot management looks enabled and does
-# nothing. Cloudflare reads the nonce out of the response header and copies it
-# onto what it injects, so nothing is stamped into the document.
+# Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge.
 #
-# On by default because this site is delivered through a Cloudflare Tunnel with
-# those products active. Two conditions come with it: every document is served
-# `Cache-Control: no-cache` (the server does this), and **no Cloudflare Cache
-# Rule may cache the shell** — a "Cache Everything" rule overrides the origin's
-# header and pins one nonce across every reader, which nothing inside this
-# process can detect. That one belongs in the deployment checklist.
-script_nonce = true
+# On by default, because this site is delivered through a Cloudflare Tunnel with the bot
+# products active — the privacy page lists `_cf_bm`, `cf_clearance` and the `cf_chl_rc_*`
+# challenge cookies, which is the observable half of the same feature. Those products inject
+# an inline `<script>` into the HTML *after* it leaves this process, so no hash this server
+# computes can cover it; `script-src` refuses it and the detection silently never runs.
+# Cloudflare's documented answer is to parse the `Content-Security-Policy` response header
+# and copy the nonce onto what it injects, so nothing has to be stamped into the document.
+#
+# It carries one obligation the server discharges (`Cache-Control: no-cache` on every
+# document, so a nonce is never shared between readers) and one it cannot: **no Cloudflare
+# Cache Rule may cache the shell**. A "Cache Everything" rule overrides the origin's
+# `Cache-Control`, satisfying the obligation here and violating it at the edge, and nothing
+# inside this process can see that.
+# Type: bool
+# Also from: PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE,
+#   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE_FILE=/path/to/file, csp__cloudflare__script_nonce in
+#   the secrets directory
+# script_nonce = true
 
-# Admit https://challenges.cloudflare.com in `script-src` *and* `frame-src`, for
-# a Turnstile widget rendered in a page this server serves. Off: this site has
-# no form behind a challenge, and a managed-challenge interstitial is a
-# Cloudflare-served document carrying its own policy.
-turnstile = false
+# Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile
+# widget.
+#
+# Off: this site has no form behind a challenge. A managed-challenge interstitial needs
+# nothing here either — that is a Cloudflare-served document carrying its own policy.
+# Type: bool
+# Also from: PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE,
+#   PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE_FILE=/path/to/file, csp__cloudflare__turnstile in the
+#   secrets directory
+# turnstile = false
 
-# Admit the Cloudflare Web Analytics beacon (https://static.cloudflareinsights.com)
-# and the endpoint it reports to (https://cloudflareinsights.com). Off: this
-# site measures nothing. Only for the manual snippet — the automatic edge
-# injection is an inline script, which is what `script_nonce` above is for.
-web_analytics = false
+# Admit the Cloudflare Web Analytics beacon and the endpoint it reports to.
+#
+# Off: this site measures nothing, which the privacy page states. Only for the *manual*
+# snippet — the automatic edge injection is an inline script and needs `script_nonce`
+# instead.
+# Type: bool
+# Also from: PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS,
+#   PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS_FILE=/path/to/file, csp__cloudflare__web_analytics in
+#   the secrets directory
+# web_analytics = false
 
-# ── the update-repos builder (build time only) ───────────────────────────────
+[isr]
+# Writable directory rendered HTML is cached into. Unset or empty disables ISR.
+#
+# Keep it *outside* the bundled `public/` asset tree so those content-hashed assets stay
+# immutable. The image points it at a sub-directory of `/tmp`, which the deployment already
+# provides as a writable mount even under a read-only root filesystem.
+# Type: PathBuf
+# Also from: PORTFOLIO_ISR__CACHE_DIR, PORTFOLIO_ISR__CACHE_DIR_FILE=/path/to/file, isr__cache_dir
+#   in the secrets directory
+# Unset by default: the value below is only the shape.
+# cache_dir = "<value>"
+
+# Revalidation interval in seconds. Zero means a permanent cache.
+#
+# Every page renders from compile-time data, so the only thing that changes the output is a
+# new build, which starts from an empty cache anyway. A positive value opts into a finite,
+# time-based TTL, which is useful only when a *persistent* cache volume is shared across
+# deploys.
+# Type: u64
+# Also from: PORTFOLIO_ISR__TTL_SECS, PORTFOLIO_ISR__TTL_SECS_FILE=/path/to/file, isr__ttl_secs in
+#   the secrets directory
+# ttl_secs = 0
 
 [github]
-# User whose repositories to list. Unset falls back to the site's own identity
-# from `crates/data`.
+# User whose repositories to list.
 #
-# username = "TimSchoenle"
+# Unset falls back to `portfolio_data::CONFIG`, which is the site's own identity and
+# therefore the only sensible default — resolved by the builder rather than here, so this
+# crate stays a schema and does not depend on the site data.
+# Type: String
+# Also from: PORTFOLIO_GITHUB__USERNAME, PORTFOLIO_GITHUB__USERNAME_FILE=/path/to/file,
+#   github__username in the secrets directory
+# Unset by default: the value below is only the shape.
+# username = "<value>"
 
-# An explicit repository set, bypassing the "every active repository" listing and
-# its archived/blacklisted/stale filtering. Empty lists them all.
-repos = []
+# Bearer token lifting the GitHub API rate limit.
+#
+# Optional: the listing is public, so an unauthenticated build still works, just against the
+# anonymous quota.
+#
+# This is the one secret in the workspace, and the reason the loader is `terrace-config`:
+# supply it as `PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token` (or from a secrets
+# directory) so it never enters the process environment, where `/proc/<pid>/environ`, a
+# crash dump or a `docker inspect` would carry it.
+# Type: SecretString
+# Also from: PORTFOLIO_GITHUB__TOKEN, PORTFOLIO_GITHUB__TOKEN_FILE=/path/to/file, github__token in
+#   the secrets directory
+# Secret: the value below is a placeholder.
+# token = "<secret>"
 
-# Bearer token lifting the GitHub API rate limit. DO NOT put it here.
+# Explicit repository set, bypassing the "every active repository" listing and its filtering.
 #
-# Supply it as a file so it never enters the process environment, where
-# /proc/<pid>/environ, a crash dump, `docker inspect` and every child process
-# would carry it:
-#
-#   PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token
-#
-# or as `github__token` inside $PORTFOLIO_SECRETS_DIR, which is what a Kubernetes
-# Secret volume mounts. In the process it is a `secrecy::SecretString`: no Debug,
-# no Display, and the one place it becomes a `&str` is the Authorization header.
+# Spelled as an array: `repos = ["Portfolio", "actions"]` in TOML, and
+# `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment — figment parses the
+# bracketed form, and a bare comma-separated string is *not* accepted, so the two spellings
+# cannot drift apart.
+# Type: Vec<String>
+# Also from: PORTFOLIO_GITHUB__REPOS, PORTFOLIO_GITHUB__REPOS_FILE=/path/to/file, github__repos in
+#   the secrets directory
+# repos = []
