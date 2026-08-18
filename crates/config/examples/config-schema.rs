@@ -10,6 +10,12 @@
 //! the pull request. Neither document can drift from the types: a key renamed in `crates/config`
 //! is a key renamed in both, in the same commit.
 //!
+//! The same workflow regenerates the two artefacts the image publishes about itself —
+//! `docs/config.contract.json` and the Dockerfile's `dev.terrace.config.*` label block — and the
+//! Config Contract job in `build.yaml` diffs both afterwards. That job is the gate; this is what
+//! keeps a pull request from having to clear it by hand, including the release pull request,
+//! whose only change is the version [`contract`] stamps into the document.
+//!
 //! Nothing here reads the environment, so the output is the same on a developer's machine and on
 //! a runner where none of the variables it describes are set. That is what makes the render
 //! deterministic enough for the action to skip the commit when nothing changed.
@@ -126,8 +132,10 @@ fn render(options: &Options) -> Result<String, Box<dyn Error>> {
             .join("\n")),
         // The block the Dockerfile carries verbatim. All three values are constants for this
         // service, so nothing here is interpolated at build time and nothing has to run on the
-        // host to produce it — which is what makes `verify_labels` the check that matters: the
-        // block is hand-carried, so the only place to catch a wrong one is the built image.
+        // host to produce it. `update-files.yaml` writes this between the Dockerfile's
+        // `terrace-config:labels` markers and commits it, and the Config Contract job diffs the
+        // region afterwards; `verify_labels` is still the check that closes the loop, because a
+        // `LABEL` that is right in the source can still be wrong in the image that was built.
         Format::Dockerfile => Ok(contract()?.to_dockerfile_labels(DEFAULT_PATH)),
         Format::Variables => unreachable!("returned above"),
     }

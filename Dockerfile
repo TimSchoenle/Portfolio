@@ -193,17 +193,25 @@ ARG SOURCE_URL
 # interpolated, and no ARG and no host-side generator run stands between the
 # source and the image.
 #
-# Hand-carried means it can be wrong in ways a source diff cannot see, so the
-# check is on the built image instead:
+# Literal text can be wrong in ways a source diff alone cannot see, so the built
+# image is checked too:
 #
 #   docker inspect -f '{{json .Config.Labels}}' "$image" |
 #     cargo run -p portfolio-config --features config-schema --example verify-labels
 #
-# `--format dockerfile` emits this block, and the Config Contract job diffs the
-# two so the copy here cannot drift from the document it points at.
+# `--format dockerfile` emits the block between the markers below. The Update
+# Files workflow rewrites that region from the generator and commits the result;
+# the Config Contract job diffs it afterwards, so the copy here cannot drift from
+# the document it points at. Edit the types, not these three lines.
+#
+# The markers are what make the region machine-writable: they delimit it by name
+# rather than by line count, so a fourth label added upstream is rewritten like
+# the first three instead of falling silently outside the slice.
+# terrace-config:labels:begin
 LABEL dev.terrace.config.contract.version="1" \
       dev.terrace.config.contract.path="/config/contract.json" \
       dev.terrace.config.prefix="PORTFOLIO_"
+# terrace-config:labels:end
 LABEL org.opencontainers.image.title="portfolio" \
       org.opencontainers.image.description="Dioxus fullstack (SSR + hydration) portfolio served by Axum." \
       org.opencontainers.image.url="https://tim-schoenle.de" \
