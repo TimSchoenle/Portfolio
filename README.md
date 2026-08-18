@@ -2,15 +2,22 @@
 Template for the repository README. CI renders it on every pull request and commits the result
 to README.md, so edit this file — never README.md itself.
 
-One variable, `configTable`, and it is the output of
+Two variables, `serverConfigTable` and `builderConfigTable`, one per binary, from
 
     cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown
+      -- --format markdown --scope server
+    cargo run -p portfolio-config --features config-schema --example config-schema \
+      -- --format markdown --scope builder --no-loader-vars
 
-which walks the `Describe` derives in `crates/config` and emits both Markdown tables: the
-variables the loader reads before the layers exist, then every configuration key with its TOML
-path, type, environment spelling, `_FILE` indirection, default and purpose. It is interpolated
-through a triple-stash, because it is Markdown to be emitted as-is rather than text to escape.
+which walk the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
+binaries actually load — and emit each key with its TOML path, type, environment spelling,
+`_FILE` indirection, default and purpose. The server scope leads with the variables the loader
+reads before any layer exists; the builder scope drops them, because they are the same two.
+Both are interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+
+They are two tables and not one on purpose. A single list of every key reads as though a
+deployment needs a GitHub token; it does not, because `github.*` belongs to a build-time tool
+that exits during the image build.
 
 That is what keeps the configuration reference honest across a rename: the key table is not a
 copy of the types, it is the types, and a pull request that renames a field arrives with the
@@ -165,14 +172,22 @@ fails the boot instead of one silently winning, because a stale environment
 variable shadowing a rotated mounted secret keeps the process running on the old
 credential.
 
-Both tables below are **generated from the types in `crates/config`** — the two
-variables the loader reads before any layer exists, then every key it can carry.
+The tables below are **generated from the aggregates the binaries load** —
+`ServerConfig` and `BuilderConfig` in `crates/config`. They are split the way the
+binaries are, because the two configurations are not one: what a deployment sets
+and what the image build sets have no overlap at all.
+
 Regenerate them with:
 
 ```bash
 cargo run -p portfolio-config --features config-schema --example config-schema \
-  -- --format markdown
+  -- --format markdown --scope server
 ```
+
+#### What the server reads
+
+The two variables the loader itself reads, then every key `apps/web` loads. This
+is the whole surface a **deployment** configures.
 
 | Variable | Role | Default | Purpose |
 |---|---|---|---|
@@ -188,6 +203,16 @@ cargo run -p portfolio-config --features config-schema --example config-schema \
 | `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS_FILE` | `false` | — | Admit the Cloudflare Web Analytics beacon and the endpoint it reports to. |
 | `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | `PORTFOLIO_ISR__CACHE_DIR_FILE` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
 | `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `PORTFOLIO_ISR__TTL_SECS_FILE` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
+
+#### What the `update-repos` builder reads
+
+`github.*` is read only by the build-time repository lister, which runs during the
+image build and exits. **The server never loads it**, so a deployment needs no
+GitHub token and no `github` block — the Docker build supplies the token as a
+BuildKit secret and nothing survives into the image.
+
+| TOML | Type | Environment | File indirection | Default | Flags | Purpose |
+|---|---|---|---|---|---|---|
 | `github.username` | `String` | `PORTFOLIO_GITHUB__USERNAME` | `PORTFOLIO_GITHUB__USERNAME_FILE` | unset (the site's own `CONFIG.github_username`) | — | User whose repositories to list. |
 | `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | `PORTFOLIO_GITHUB__TOKEN_FILE` | unset | secret | Bearer token lifting the GitHub API rate limit. |
 | `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `PORTFOLIO_GITHUB__REPOS_FILE` | `[]` (every active repository the user owns) | — | Explicit repository set, bypassing the "every active repository" listing and its filtering. |

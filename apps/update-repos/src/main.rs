@@ -21,7 +21,7 @@
 //! ```
 //!
 //! Configuration is layered (see `portfolio_config`); the keys this binary reads
-//! are the [`GithubConfig`] block:
+//! are the `github` block of [`BuilderConfig`]:
 //!
 //! ```text
 //! PORTFOLIO_GITHUB__USERNAME    user whose repos to fetch
@@ -46,9 +46,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use portfolio_config::GithubConfig;
+use portfolio_config::BuilderConfig;
 use portfolio_data::CONFIG;
-use serde::Deserialize;
 use time::OffsetDateTime;
 
 use crate::builder::ReposBuilder;
@@ -56,17 +55,6 @@ use crate::error::UpdateReposError;
 
 /// Where `repos.json` is committed, relative to the workspace root.
 const DEFAULT_OUTPUT: &str = "apps/web/repos.json";
-
-/// Everything this builder reads from its configuration.
-///
-/// One block, so the aggregate looks redundant — it is not: it is what fixes the
-/// key path to `github.*`, which is the half of the environment spelling
-/// `portfolio_config` cannot decide on this binary's behalf.
-#[derive(Debug, Deserialize)]
-struct Config {
-    #[serde(default)]
-    github: GithubConfig,
-}
 
 fn main() -> ExitCode {
     match run() {
@@ -138,6 +126,6 @@ fn run() -> Result<(), UpdateReposError> {
 /// unauthenticated fetch: silently dropping the token would turn a typo in a
 /// secret's path into an intermittent rate-limit failure much later, in a job
 /// that has nothing to do with the mistake.
-fn config() -> Result<Config, UpdateReposError> {
+fn config() -> Result<BuilderConfig, UpdateReposError> {
     portfolio_config::load().map_err(UpdateReposError::from)
 }
