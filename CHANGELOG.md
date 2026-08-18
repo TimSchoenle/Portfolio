@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.6.0](https://github.com/TimSchoenle/Portfolio/compare/v2.5.0...v2.6.0) (2026-08-18)
+
+
+### Features
+
+* **config:** publish a configuration contract with the image ([#1115](https://github.com/TimSchoenle/Portfolio/issues/1115)) ([d42024c](https://github.com/TimSchoenle/Portfolio/commit/d42024c23f16d566e486defa330929fd053d975b))
+* **config:** take terrace-config 0.5.0, and generate the example config ([#1114](https://github.com/TimSchoenle/Portfolio/issues/1114)) ([3dade5c](https://github.com/TimSchoenle/Portfolio/commit/3dade5c3fe186e69dc19da1028606f515b3228ae))
+* generate the README from a template and its config table from the types ([#1109](https://github.com/TimSchoenle/Portfolio/issues/1109)) ([d6f740d](https://github.com/TimSchoenle/Portfolio/commit/d6f740db3159c0461b67aedd465b44ea4006fa48))
+
+
+### Code Refactoring
+
+* split the config reference per binary, and own the aggregates ([#1111](https://github.com/TimSchoenle/Portfolio/issues/1111)) ([71bf6b3](https://github.com/TimSchoenle/Portfolio/commit/71bf6b34faaff43f3891d6b7d83763d31ce28b23))
+
+
+### CI
+
+* regenerate the config contract and its labels instead of only gating them ([#1117](https://github.com/TimSchoenle/Portfolio/issues/1117)) ([e79ccd4](https://github.com/TimSchoenle/Portfolio/commit/e79ccd413dddf4b1efd84c32f20960ec06624273))
+
+
+### Miscellaneous
+
+* **deps:** update h2 to 0.4.16 for RUSTSEC-2026-0258 ([#1116](https://github.com/TimSchoenle/Portfolio/issues/1116)) ([19fa378](https://github.com/TimSchoenle/Portfolio/commit/19fa3780a16631b4108cc55dda735b74f8d79b10))
+* **deps:** update step-security/harden-runner action to v2.21.0 ([#1112](https://github.com/TimSchoenle/Portfolio/issues/1112)) ([b90d087](https://github.com/TimSchoenle/Portfolio/commit/b90d08737bc66ce2e3dd68175ef9cf1c6e6c002a))
+
 ## [2.5.0](https://github.com/TimSchoenle/Portfolio/compare/v2.4.1...v2.5.0) (2026-08-17)
 
 
