@@ -33,6 +33,61 @@ jobs:
       - name: Run Check
         uses: TimSchoenle/actions/actions/rust/cargo-check@5798c7bd8d1d98a0c7360114e91a0ac3b86bf145 # tag=actions-rust-cargo-check-v1.1.5
 
+  # The committed contract is what a deployment pipeline reads to check that what a chart renders
+  # is what this image loads, so it has to be the contract these types produce. Regenerating and
+  # diffing makes a configuration change visible in the pull request that makes it: a removed key
+  # shows up in the diff, next to the chart it is about to break.
+  #
+  # A gate rather than a render-and-commit like the README and the example file. Those two are
+  # documentation and a stale one is a stale page; this one is consumed by another repository's
+  # CI, and a copy that arrives one commit late is a gate passing against the wrong document.
+  #
+  # `--revision` and `--created` are deliberately not passed here. They move between builds of the
+  # same source, so the committed copy carries neither and the published one carries both — the
+  # configuration half is what this diff is about.
+  contract:
+    name: Config Contract
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the code
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+
+      - name: Check the committed contract against the types
+        run: |
+          set -euo pipefail
+          cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format contract > docs/config.contract.json
+          if ! git diff --exit-code -- docs/config.contract.json; then
+            echo "::error file=docs/config.contract.json::The configuration surface changed and the committed contract did not. Regenerate it with the command in this step and commit the result." >&2
+            exit 1
+          fi
+
+      # The block is hand-carried, because a `LABEL` key cannot be interpolated from a generator.
+      # This is the half a source diff can see; `examples/verify-labels.rs` is the half it cannot,
+      # and runs against the built image.
+      #
+      # The blank line `println!` leaves after the block is dropped, so the comparison is about
+      # the three labels and not about how each side was captured.
+      - name: Check the Dockerfile's label block against the contract
+        run: |
+          set -euo pipefail
+          cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format dockerfile | sed '/^$/d' > /tmp/labels.expected
+          grep -A2 'LABEL dev.terrace.config' Dockerfile > /tmp/labels.actual
+          diff -u /tmp/labels.expected /tmp/labels.actual
+
   test:
     name: Test
     runs-on: ubuntu-latest

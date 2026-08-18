@@ -51,7 +51,9 @@ use std::process::ExitCode;
 
 use portfolio_config::{BuilderConfig, ServerConfig};
 use serde_json::{Map, Value, json};
-use terrace_config::schema::{Column, Docs, Key, Schema, TomlExample};
+use terrace_config::schema::{
+    App, Column, Contract, DEFAULT_PATH, Docs, External, ExternalVar, Key, Schema, TomlExample,
+};
 
 /// The keys `README.md.hbs` names in prose, under the names it reads them by.
 ///
@@ -113,8 +115,85 @@ fn render(options: &Options) -> Result<String, Box<dyn Error>> {
             Scope::Builder => schema.to_markdown_keys(Column::DEFAULT),
         }),
         Format::Toml => Ok(example_config(&schema)),
+        // Whole-image renderings, so the scope they take is the one binary the image runs. See
+        // `contract` for why that is the server rather than `all`.
+        Format::Contract => Ok(contract()?.to_json()?),
+        Format::Labels => Ok(contract()?
+            .labels(DEFAULT_PATH)
+            .into_iter()
+            .map(|(name, value)| format!("{name}={value}"))
+            .collect::<Vec<_>>()
+            .join("\n")),
+        // The block the Dockerfile carries verbatim. All three values are constants for this
+        // service, so nothing here is interpolated at build time and nothing has to run on the
+        // host to produce it — which is what makes `verify_labels` the check that matters: the
+        // block is hand-carried, so the only place to catch a wrong one is the built image.
+        Format::Dockerfile => Ok(contract()?.to_dockerfile_labels(DEFAULT_PATH)),
         Format::Variables => unreachable!("returned above"),
     }
+}
+
+/// The contract the runtime image publishes: every key the *server* loads, and everything else
+/// the container reads.
+///
+/// # Why the server scope and not `all`
+///
+/// A contract is a claim about one image. This workspace builds one — the `scratch` runtime stage
+/// holding the SSR server — and `github.*` is not in it: `update-repos` runs during the build,
+/// lists repositories and exits, and its token is a build secret a deployment never supplies.
+/// Publishing [`all`] would tell a chart's CI that `PORTFOLIO_GITHUB__TOKEN` is a variable this
+/// image reads, which is exactly the false requirement the scopes exist to avoid.
+///
+/// # The part no derive can see
+///
+/// `PORT`, `IP` and `RUST_LOG` are read by the Dioxus toolchain and by `tracing`, before any
+/// layer of this loader exists, and they carry no `PORTFOLIO_` prefix — so nothing in the types
+/// can report them. Declared here they are checked like any key: a chart passing `PORT: "http"`
+/// fails the same gate that a chart passing `PORTFOLIO_ISR__TTL_SECS: "soon"` fails.
+///
+/// The defaults are the ones the Dockerfile's `ENV` block bakes in, which is where the image's
+/// real behaviour is decided.
+fn contract() -> Result<Contract, Box<dyn Error>> {
+    Ok(server()?
+        .into_contract(
+            // `v`-prefixed, because that is how this repository tags its images and the field
+            // exists to be compared against a tag. `CARGO_PKG_VERSION` yields the bare form.
+            App::new("portfolio")
+                .version(concat!("v", env!("CARGO_PKG_VERSION")))
+                .source("https://github.com/TimSchoenle/Portfolio"),
+        )
+        .external(
+            External::new()
+                .var(
+                    ExternalVar::new("PORT")
+                        .owner("dioxus")
+                        .ty("u16")
+                        .default("8080")
+                        .docs("Bind port. Read by the Dioxus toolchain, not by this loader."),
+                )
+                .var(
+                    ExternalVar::new("IP")
+                        .owner("dioxus")
+                        .ty("IpAddr")
+                        .default("0.0.0.0")
+                        .docs("Bind address. Read by the Dioxus toolchain, not by this loader."),
+                )
+                .var(
+                    ExternalVar::new("RUST_LOG")
+                        .owner("tracing")
+                        .ty("String")
+                        .default("info")
+                        .docs("Verbosity, as `tracing` directives — `info`, `web=debug,info`."),
+                )
+                // What a pod carries that no image asked for, which `Unknown::Reject` names:
+                // the API server's five, and the container runtime's one. An image on `scratch`
+                // contributes none of its own. The third entry on that list — the service links —
+                // is not here and cannot be: their names are built from the release name, so they
+                // belong to `enableServiceLinks: false` on the pod.
+                .ignore("KUBERNETES_*")
+                .ignore("HOSTNAME"),
+        )
+        .build()?)
 }
 
 /// The whole render payload, as the strict JSON the template action takes.
@@ -228,6 +307,12 @@ enum Format {
     Toml,
     /// Everything the templates interpolate, as one strict-JSON object.
     Variables,
+    /// The versioned contract a container build attaches to its image.
+    Contract,
+    /// The image labels that make that contract discoverable, one `NAME=value` per line.
+    Labels,
+    /// The same three as a `LABEL` instruction, for the Dockerfile to carry.
+    Dockerfile,
 }
 
 /// Whose configuration to report.
@@ -255,6 +340,9 @@ impl Options {
                         Some("markdown" | "md") => Format::Markdown,
                         Some("toml") => Format::Toml,
                         Some("variables") => Format::Variables,
+                        Some("contract") => Format::Contract,
+                        Some("labels") => Format::Labels,
+                        Some("dockerfile") => Format::Dockerfile,
                         Some(other) => return Err(format!("unknown format `{other}`; {USAGE}")),
                         None => return Err(format!("--format takes a value; {USAGE}")),
                     };
@@ -279,6 +367,20 @@ impl Options {
             return Err(format!("--format variables covers every scope; {USAGE}"));
         }
 
+        // Same reasoning, one step further: a contract names the image it belongs to, and this
+        // workspace ships one. Its scope is decided by `contract`, not by a caller who could
+        // otherwise publish a document claiming the server reads a build-time credential.
+        if matches!(
+            format,
+            Format::Contract | Format::Labels | Format::Dockerfile
+        ) && scope.is_some()
+        {
+            return Err(format!(
+                "--format contract and --format labels describe the runtime image and fix their \
+                 own scope; {USAGE}"
+            ));
+        }
+
         Ok(Self {
             format,
             scope: scope.unwrap_or(Scope::All),
@@ -286,5 +388,5 @@ impl Options {
     }
 }
 
-const USAGE: &str =
-    "usage: config-schema [--format json|markdown|toml|variables] [--scope all|server|builder]";
+const USAGE: &str = "usage: config-schema \
+     [--format json|markdown|toml|variables|contract|labels|dockerfile]      [--scope all|server|builder]";

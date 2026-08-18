@@ -23,6 +23,27 @@ config-schema = ["terrace-config/schema"]
 name = "config-schema"
 required-features = ["config-schema"]
 
+
+
+
+
+# The post-build check on the image's `LABEL` block. All three values are
+# constants, so the block is written out in the `Dockerfile` rather than
+# generated — which means the ways it goes wrong are invisible to a source diff:
+# a line dropped on a branch nobody read, a base image contributing its own.
+# `Contract::verify_labels` reads back what `docker inspect` reports and names
+# the first label missing or wrong.
+[[example]]
+name = "verify-labels"
+required-features = ["config-schema"]
+
+
+
+
+
+
+
+
 [dependencies]
 serde.workspace = true
 # The loader itself. This crate owns the *schema* and the Portfolio dialect
