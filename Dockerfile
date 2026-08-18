@@ -113,6 +113,21 @@ RUN cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
     && cp /app/resume-out/resume-fingerprint.json apps/web/generated/ \
     && cp /app/resume-out/og-image.png apps/web/generated/
 
+# ── the configuration contract ────────────────────────────────────────────────
+# The document a deployment pipeline reads to check that what it renders is what
+# this image loads: every key in every spelling, the same keys as a JSON Schema,
+# and the variables outside the `PORTFOLIO_` namespace this container reads.
+#
+# On `generate` rather than on a toolchain of its own, and its own stage rather
+# than a step inside `web-builder`: it depends on `crates/config` alone, so it
+# rebuilds when a configuration type changes and stays cached across every
+# change to the site itself. Nothing the `config-schema` feature links —
+# `serde_json`, `syn`, the derive — reaches the binary the runtime stage copies.
+FROM generate AS contract-builder
+RUN mkdir -p /out \
+    && cargo run --locked -p portfolio-config --features config-schema \
+         --example config-schema -- --format contract > /out/contract.json
+
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
 FROM generate AS web-builder
 WORKDIR /app/apps/web
@@ -172,6 +187,23 @@ ARG VCS_REF=unknown
 ARG VERSION=dev
 ARG CREATED=unknown
 ARG SOURCE_URL
+# How anything finds the contract without pulling a layer. All three values are
+# constants for this service — the envelope version, where the file was COPYed,
+# and the loader's prefix — so this block is written out rather than
+# interpolated, and no ARG and no host-side generator run stands between the
+# source and the image.
+#
+# Hand-carried means it can be wrong in ways a source diff cannot see, so the
+# check is on the built image instead:
+#
+#   docker inspect -f '{{json .Config.Labels}}' "$image" |
+#     cargo run -p portfolio-config --features config-schema --example verify-labels
+#
+# `--format dockerfile` emits this block, and the Config Contract job diffs the
+# two so the copy here cannot drift from the document it points at.
+LABEL dev.terrace.config.contract.version="1" \
+      dev.terrace.config.contract.path="/config/contract.json" \
+      dev.terrace.config.prefix="PORTFOLIO_"
 LABEL org.opencontainers.image.title="portfolio" \
       org.opencontainers.image.description="Dioxus fullstack (SSR + hydration) portfolio served by Axum." \
       org.opencontainers.image.url="https://tim-schoenle.de" \
@@ -190,6 +222,11 @@ COPY --from=web-builder /app/target/dx/web/release/web /app
 # It lives under /tmp, which the deployment (Helm chart) already mounts as a
 # writable volume; a plain `docker run` uses this baked-in copy instead.
 COPY --from=web-builder --chown=${USER_ID}:${GROUP_ID} /isr-cache /tmp/isr
+# The offline copy of the contract: what makes the image self-describing with no
+# registry at all — an exported tarball, an air-gapped mirror, an initContainer
+# reading it in-cluster. The canonical copy is the OCI referrer attached to the
+# pushed digest; this one costs a few kilobytes and needs nothing to fetch it.
+COPY --from=contract-builder /out/contract.json /config/contract.json
 WORKDIR /app
 
 # The server reads its own settings through the layered `PORTFOLIO_` config
