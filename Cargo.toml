@@ -39,7 +39,7 @@ portfolio-data = { path = "crates/data" }
 # configuration reference in `README.md`, and `portfolio-config` turns it on
 # through its own off-by-default `config-schema` feature, so `serde_json`, `syn`
 # and the derive stay out of every binary this workspace ships.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.3.0", default-features = false, features = [
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.4.0", default-features = false, features = [
     "loader",
 ] }
 # Keeps the GitHub token out of `Debug` output and off every accidental log

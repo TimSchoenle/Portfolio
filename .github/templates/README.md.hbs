@@ -7,13 +7,16 @@ Two variables, `serverConfigTable` and `builderConfigTable`, one per binary, fro
     cargo run -p portfolio-config --features config-schema --example config-schema \
       -- --format markdown --scope server
     cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown --scope builder --no-loader-vars
+      -- --format markdown --scope builder
 
 which walk the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
 binaries actually load — and emit each key with its TOML path, type, environment spelling,
-`_FILE` indirection, default and purpose. The server scope leads with the variables the loader
-reads before any layer exists; the builder scope drops them, because they are the same two.
-Both are interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+default and purpose. The server scope leads with the variables the loader reads before any layer
+exists; the builder scope renders keys alone, because they are the same two variables. Both are
+interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+
+Neither table has a `_FILE` column: it is the environment spelling plus a constant suffix, which
+the layer list above the tables already states once.
 
 They are two tables and not one on purpose. A single list of every key reads as though a
 deployment needs a GitHub token; it does not, because `github.*` belongs to a build-time tool

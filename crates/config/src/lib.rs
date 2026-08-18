@@ -56,13 +56,13 @@
 //! every build that ships, so `serde_json` and the derive never reach a binary;
 //! `cargo clippy --all-features --all-targets` is what keeps the generator compiling.
 //!
-//! One consequence for anyone editing this crate: **a field's `///` comment is one summary
-//! sentence on one line.** It is copied verbatim into a Markdown table cell, where a second
-//! paragraph becomes a `<br>`. Longer reasoning goes in `//` comments above the field, which is
-//! why the blocks below read the way they do.
+//! Write field documentation as rustdoc asks for it: a summary sentence, a blank line, then as
+//! much reasoning as it takes. Only the summary reaches the Markdown table — `to_json` carries
+//! the whole comment for anything that wants the rest — so nothing has to be kept short for the
+//! README's sake, and nothing has to be annotated twice.
 //!
-//! A new block needs no second registration anywhere — adding it to the aggregate that loads it
-//! is what puts it in the README, because that aggregate is what the generator describes.
+//! A new block needs no registration anywhere — adding it to the aggregate that loads it is what
+//! puts it in the README, because that aggregate is what the generator describes.
 
 mod aggregates;
 mod assets;

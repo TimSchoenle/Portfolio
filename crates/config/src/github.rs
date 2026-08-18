@@ -15,37 +15,41 @@ use serde::Deserialize;
     derive(serde::Serialize, terrace_config::schema::Describe)
 )]
 pub struct GithubConfig {
-    // Unset falls back to `portfolio_data::CONFIG`, which is the site's own identity and
-    // therefore the only sensible default — resolved by the builder rather than here, so this
-    // crate stays a schema and does not depend on the site data.
     /// User whose repositories to list.
+    ///
+    /// Unset falls back to `portfolio_data::CONFIG`, which is the site's own identity and
+    /// therefore the only sensible default — resolved by the builder rather than here, so this
+    /// crate stays a schema and does not depend on the site data.
     #[cfg_attr(
         feature = "config-schema",
         config(note = "the site's own `CONFIG.github_username`")
     )]
     #[serde(default)]
     pub username: Option<String>,
-    // Optional: the listing is public, so an unauthenticated build still works, just against the
-    // anonymous quota.
-    //
-    // This is the one secret in the workspace, and the reason the loader is `terrace-config`:
-    // supply it as `PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token` (or from a secrets
-    // directory) so it never enters the process environment, where `/proc/<pid>/environ`, a
-    // crash dump or a `docker inspect` would carry it.
-    //
-    // `skip_serializing` rather than an impl: `SecretString` deliberately has no `Serialize`, and
-    // the schema generator serialises the default config to read the `Default` column out of it.
-    // The key still appears in the table — the derive reports it either way — with `unset` for a
-    // default it never had, which is both true and the only safe thing to print.
     /// Bearer token lifting the GitHub API rate limit.
-    #[cfg_attr(feature = "config-schema", config(secret), serde(skip_serializing))]
-    #[serde(default)]
+    ///
+    /// Optional: the listing is public, so an unauthenticated build still works, just against the
+    /// anonymous quota.
+    ///
+    /// This is the one secret in the workspace, and the reason the loader is `terrace-config`:
+    /// supply it as `PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token` (or from a secrets
+    /// directory) so it never enters the process environment, where `/proc/<pid>/environ`, a
+    /// crash dump or a `docker inspect` would carry it.
+    ///
+    /// `skip_serializing` rather than an impl: [`SecretString`] deliberately has no `Serialize`,
+    /// and the schema generator serialises the default config to read the `Default` column out of
+    /// it. The key still appears in the table — the derive reports it either way — with `unset`
+    /// for a default it never had, which is both true and the only safe thing to print. This is
+    /// the pattern `terrace-config` documents for a secret-bearing field.
+    #[cfg_attr(feature = "config-schema", config(secret))]
+    #[serde(default, skip_serializing)]
     pub token: Option<SecretString>,
-    // Spelled as an array: `repos = ["Portfolio", "actions"]` in TOML, and
-    // `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment — figment parses the
-    // bracketed form, and a bare comma-separated string is *not* accepted, so the two spellings
-    // cannot drift apart.
     /// Explicit repository set, bypassing the "every active repository" listing and its filtering.
+    ///
+    /// Spelled as an array: `repos = ["Portfolio", "actions"]` in TOML, and
+    /// `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment — figment parses the
+    /// bracketed form, and a bare comma-separated string is *not* accepted, so the two spellings
+    /// cannot drift apart.
     #[cfg_attr(
         feature = "config-schema",
         config(note = "every active repository the user owns")

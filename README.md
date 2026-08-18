@@ -7,13 +7,16 @@ Two variables, `serverConfigTable` and `builderConfigTable`, one per binary, fro
     cargo run -p portfolio-config --features config-schema --example config-schema \
       -- --format markdown --scope server
     cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown --scope builder --no-loader-vars
+      -- --format markdown --scope builder
 
 which walk the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
 binaries actually load — and emit each key with its TOML path, type, environment spelling,
-`_FILE` indirection, default and purpose. The server scope leads with the variables the loader
-reads before any layer exists; the builder scope drops them, because they are the same two.
-Both are interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+default and purpose. The server scope leads with the variables the loader reads before any layer
+exists; the builder scope renders keys alone, because they are the same two variables. Both are
+interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+
+Neither table has a `_FILE` column: it is the environment spelling plus a constant suffix, which
+the layer list above the tables already states once.
 
 They are two tables and not one on purpose. A single list of every key reads as though a
 deployment needs a GitHub token; it does not, because `github.*` belongs to a build-time tool
@@ -194,15 +197,15 @@ is the whole surface a **deployment** configures.
 | `PORTFOLIO_CONFIG` | config | `config.toml` | Names the TOML layer: a file, or a directory whose `*.toml` files are all merged in name order. |
 | `PORTFOLIO_SECRETS_DIR` | secrets dir | — | Names a directory of key-named files — a mounted Kubernetes `Secret` volume. Each file supplies the key its name spells. |
 
-| TOML | Type | Environment | File indirection | Default | Flags | Purpose |
-|---|---|---|---|---|---|---|
-| `assets.dist_dir` | `PathBuf` | `PORTFOLIO_ASSETS__DIST_DIR` | `PORTFOLIO_ASSETS__DIST_DIR_FILE` | `public` | — | Directory holding the `dx bundle` output, relative to the working directory. |
-| `csp.hash_inline_scripts` | `bool` | `PORTFOLIO_CSP__HASH_INLINE_SCRIPTS` | `PORTFOLIO_CSP__HASH_INLINE_SCRIPTS_FILE` | `true` | — | Hash every inline `<script>` in the document being served instead of admitting all inline script with `'unsafe-inline'`. |
-| `csp.cloudflare.script_nonce` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE_FILE` | `true` | — | Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge. |
-| `csp.cloudflare.turnstile` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE_FILE` | `false` | — | Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile widget. |
-| `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS_FILE` | `false` | — | Admit the Cloudflare Web Analytics beacon and the endpoint it reports to. |
-| `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | `PORTFOLIO_ISR__CACHE_DIR_FILE` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
-| `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `PORTFOLIO_ISR__TTL_SECS_FILE` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
+| TOML | Type | Environment | Default | Flags | Purpose |
+|---|---|---|---|---|---|
+| `assets.dist_dir` | `PathBuf` | `PORTFOLIO_ASSETS__DIST_DIR` | `public` | — | Directory holding the `dx bundle` output, relative to the working directory. |
+| `csp.hash_inline_scripts` | `bool` | `PORTFOLIO_CSP__HASH_INLINE_SCRIPTS` | `true` | — | Hash every inline `<script>` in the document being served instead of admitting all inline script with `'unsafe-inline'`. |
+| `csp.cloudflare.script_nonce` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE` | `true` | — | Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge. |
+| `csp.cloudflare.turnstile` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE` | `false` | — | Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile widget. |
+| `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `false` | — | Admit the Cloudflare Web Analytics beacon and the endpoint it reports to. |
+| `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
+| `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
 
 #### What the `update-repos` builder reads
 
@@ -211,11 +214,11 @@ image build and exits. **The server never loads it**, so a deployment needs no
 GitHub token and no `github` block — the Docker build supplies the token as a
 BuildKit secret and nothing survives into the image.
 
-| TOML | Type | Environment | File indirection | Default | Flags | Purpose |
-|---|---|---|---|---|---|---|
-| `github.username` | `String` | `PORTFOLIO_GITHUB__USERNAME` | `PORTFOLIO_GITHUB__USERNAME_FILE` | unset (the site's own `CONFIG.github_username`) | — | User whose repositories to list. |
-| `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | `PORTFOLIO_GITHUB__TOKEN_FILE` | unset | secret | Bearer token lifting the GitHub API rate limit. |
-| `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `PORTFOLIO_GITHUB__REPOS_FILE` | `[]` (every active repository the user owns) | — | Explicit repository set, bypassing the "every active repository" listing and its filtering. |
+| TOML | Type | Environment | Default | Flags | Purpose |
+|---|---|---|---|---|---|
+| `github.username` | `String` | `PORTFOLIO_GITHUB__USERNAME` | unset (the site's own `CONFIG.github_username`) | — | User whose repositories to list. |
+| `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | unset | secret | Bearer token lifting the GitHub API rate limit. |
+| `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `[]` (every active repository the user owns) | — | Explicit repository set, bypassing the "every active repository" listing and its filtering. |
 
 The `config-schema` feature is off in every build that ships, so the derive and
 the `serde_json` it pulls stay out of the image; CI's `--all-features` gates are

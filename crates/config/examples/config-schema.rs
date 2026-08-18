@@ -22,38 +22,22 @@
 //! cannot express which binary reads a key documents an operational requirement that is not real,
 //! so the roots below are split the way the binaries are.
 //!
-//! # There is no documentation-only type here
+//! # No type is declared here at all
 //!
-//! Both scopes describe the aggregates the binaries actually pass to `portfolio_config::load` —
-//! [`ServerConfig`] and [`BuilderConfig`], which live in `crates/config` for exactly this reason.
+//! Every scope describes an aggregate the binaries actually pass to `portfolio_config::load` —
+//! [`ServerConfig`] or [`BuilderConfig`], which live in `crates/config` for exactly this reason.
 //! Nothing is mirrored, so nothing can drift: a block added to what a binary loads is a block in
 //! the README, and there is no second list to remember.
 //!
-//! [`Documented`] is the one type declared here, and it is a *view* rather than a list.
-//! `#[serde(flatten)]` with `#[config(nested)]` contributes a field's keys at the current level
-//! with no segment of its own, so the union produces exactly the key paths its two halves do —
-//! `assets.dist_dir`, not `server.assets.dist_dir`.
+//! `all` is `Schema::merge` of the two rather than a union type, so even the whole-workspace
+//! document is built out of what the binaries load. A key both halves described would be kept
+//! once and a key described *differently* by each would panic, which is the right answer for a
+//! reference that has to have one.
 
 use std::process::ExitCode;
 
 use portfolio_config::{BuilderConfig, ServerConfig};
-use serde::Serialize;
-use terrace_config::schema::Describe;
-
-/// Every key the workspace can be configured with, in one document.
-///
-/// A flattened view of the two aggregates, for the machine-readable contract — the audience that
-/// wants one document rather than one per binary. See the module docs for why it cannot disagree
-/// with its halves.
-#[derive(Default, Serialize, Describe)]
-struct Documented {
-    #[config(nested)]
-    #[serde(flatten)]
-    server: ServerConfig,
-    #[config(nested)]
-    #[serde(flatten)]
-    builder: BuilderConfig,
-}
+use terrace_config::schema::{Column, Schema};
 
 fn main() -> ExitCode {
     let options = match Options::from_args() {
@@ -85,39 +69,42 @@ fn main() -> ExitCode {
 /// The `Default` column comes from a value built here, not from the process environment: the
 /// documentation job runs where none of these variables exist, and that is the point.
 fn render(options: &Options) -> Result<String, portfolio_config::ConfigError> {
-    let terrace = portfolio_config::terrace();
-    let mut schema = match options.scope {
-        Scope::All => terrace
-            .schema::<Documented>()
-            .with_defaults_from(&Documented::default())?,
-        Scope::Server => terrace
-            .schema::<ServerConfig>()
-            .with_defaults_from(&ServerConfig::default())?,
-        Scope::Builder => terrace
-            .schema::<BuilderConfig>()
-            .with_defaults_from(&BuilderConfig::default())?,
+    let schema = match options.scope {
+        Scope::All => server()?.merge(builder()?),
+        Scope::Server => server()?,
+        Scope::Builder => builder()?,
     };
-
-    // `to_markdown` emits the loader-variable table whenever there is one, and there is no way to
-    // ask for that table on its own. The two variables apply to every binary, so a README
-    // printing them above each scope would repeat itself; clearing them is how a second table
-    // says "these are keys, the variables are up there".
-    if !options.loader_vars {
-        schema.loader.clear();
-    }
 
     match options.format {
         Format::Json => schema.to_json(),
-        Format::Markdown => Ok(schema.to_markdown()),
+        // The loader variables lead the server table and are absent from every other one. They
+        // apply to both binaries, so a page repeating them above each scope would say the same
+        // thing twice; the server scope is where an operator setting a deployment up will be.
+        Format::Markdown => Ok(match options.scope {
+            Scope::All | Scope::Server => schema.to_markdown(),
+            Scope::Builder => schema.to_markdown_keys(Column::DEFAULT),
+        }),
     }
+}
+
+/// The keys the SSR server loads, with the defaults it starts from.
+fn server() -> Result<Schema, portfolio_config::ConfigError> {
+    portfolio_config::terrace()
+        .schema::<ServerConfig>()
+        .with_defaults_from(&ServerConfig::default())
+}
+
+/// The keys the `update-repos` builder loads, with the defaults it starts from.
+fn builder() -> Result<Schema, portfolio_config::ConfigError> {
+    portfolio_config::terrace()
+        .schema::<BuilderConfig>()
+        .with_defaults_from(&BuilderConfig::default())
 }
 
 /// What to emit, and how much of it.
 struct Options {
     format: Format,
     scope: Scope,
-    /// Whether to lead with the variables the loader reads before any layer exists.
-    loader_vars: bool,
 }
 
 /// Which rendering to emit.
@@ -139,12 +126,11 @@ enum Scope {
 }
 
 impl Options {
-    /// Everything, as JSON, with the loader variables: the output that loses nothing.
+    /// Everything, as JSON: the output that loses nothing.
     fn from_args() -> Result<Self, String> {
         let mut options = Self {
             format: Format::Json,
             scope: Scope::All,
-            loader_vars: true,
         };
         let mut args = std::env::args().skip(1);
         while let Some(flag) = args.next() {
@@ -166,7 +152,6 @@ impl Options {
                         None => return Err(format!("--scope takes a value; {USAGE}")),
                     };
                 }
-                "--no-loader-vars" => options.loader_vars = false,
                 other => return Err(format!("unknown argument `{other}`; {USAGE}")),
             }
         }
@@ -174,5 +159,4 @@ impl Options {
     }
 }
 
-const USAGE: &str =
-    "usage: config-schema [--format json|markdown] [--scope all|server|builder] [--no-loader-vars]";
+const USAGE: &str = "usage: config-schema [--format json|markdown] [--scope all|server|builder]";
