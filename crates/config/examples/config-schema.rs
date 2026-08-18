@@ -2,50 +2,57 @@
 //!
 //! ```text
 //! cargo run -p portfolio-config --features config-schema --example config-schema \
-//!   -- --format markdown
+//!   -- --format markdown --scope server
 //! ```
 //!
-//! `.github/workflows/update-files.yaml` runs exactly that, feeds the result to
-//! `.github/templates/README.md.hbs` as the `configTable` variable, and commits the rendered
-//! `README.md` back to the pull request. The table therefore cannot drift from the types: a key
-//! renamed in `crates/config` is a key renamed in the README, in the same commit.
+//! `.github/workflows/update-files.yaml` runs it once per scope, feeds the results to
+//! `.github/templates/README.md.hbs`, and commits the rendered `README.md` back to the pull
+//! request. The tables therefore cannot drift from the types: a key renamed in `crates/config`
+//! is a key renamed in the README, in the same commit.
 //!
 //! Nothing here reads the environment, so the output is the same on a developer's machine and on
 //! a runner where none of the variables it describes are set. That is what makes the render
 //! deterministic enough for the action to skip the commit when nothing changed.
 //!
-//! # Why the root type is here and not in the crate
+//! # Why there are scopes
 //!
-//! `portfolio-config` deliberately owns *blocks* rather than one aggregate: each binary declares
-//! the struct it actually reads, so a field is evidence that something consumes it. A root type
-//! in the library would be a fourth aggregate nobody loads, and would quietly become the place
-//! fields are added "so they appear somewhere".
+//! One flat table of every key says that a deployment needs a GitHub token. It does not.
+//! `github.*` belongs to `update-repos`, a build-time tool that lists repositories and exits
+//! during the image build; the SSR server never loads it and never sees it. A reference that
+//! cannot express which binary reads a key documents an operational requirement that is not real,
+//! so the roots below are split the way the binaries are.
 //!
-//! The documentation still needs one root, because the operator setting this workspace up reads
-//! one file and one environment — not three. [`Documented`] is that root and only that: it exists
-//! under the `config-schema` feature, it is never loaded, and it is the one place a new block has
-//! to be listed to reach the README.
+//! # There is no documentation-only type here
+//!
+//! Both scopes describe the aggregates the binaries actually pass to `portfolio_config::load` —
+//! [`ServerConfig`] and [`BuilderConfig`], which live in `crates/config` for exactly this reason.
+//! Nothing is mirrored, so nothing can drift: a block added to what a binary loads is a block in
+//! the README, and there is no second list to remember.
+//!
+//! [`Documented`] is the one type declared here, and it is a *view* rather than a list.
+//! `#[serde(flatten)]` with `#[config(nested)]` contributes a field's keys at the current level
+//! with no segment of its own, so the union produces exactly the key paths its two halves do —
+//! `assets.dist_dir`, not `server.assets.dist_dir`.
 
 use std::process::ExitCode;
 
-use portfolio_config::{AssetsConfig, CspConfig, GithubConfig, IsrConfig};
+use portfolio_config::{BuilderConfig, ServerConfig};
 use serde::Serialize;
 use terrace_config::schema::Describe;
 
-/// Every block this workspace can be configured with, under the path an operator spells it at.
+/// Every key the workspace can be configured with, in one document.
 ///
-/// The union of what the SSR server reads (`assets`, `csp`, `isr`) and what the `update-repos`
-/// builder reads (`github`). No binary loads this type; see the module docs.
+/// A flattened view of the two aggregates, for the machine-readable contract — the audience that
+/// wants one document rather than one per binary. See the module docs for why it cannot disagree
+/// with its halves.
 #[derive(Default, Serialize, Describe)]
 struct Documented {
     #[config(nested)]
-    assets: AssetsConfig,
+    #[serde(flatten)]
+    server: ServerConfig,
     #[config(nested)]
-    csp: CspConfig,
-    #[config(nested)]
-    isr: IsrConfig,
-    #[config(nested)]
-    github: GithubConfig,
+    #[serde(flatten)]
+    builder: BuilderConfig,
 }
 
 fn main() -> ExitCode {
@@ -78,10 +85,26 @@ fn main() -> ExitCode {
 /// The `Default` column comes from a value built here, not from the process environment: the
 /// documentation job runs where none of these variables exist, and that is the point.
 fn render(options: &Options) -> Result<String, portfolio_config::ConfigError> {
-    let schema = portfolio_config::terrace()
-        .schema::<Documented>()
-        .with_defaults_from(&Documented::default())?
-        .subset(&options.only);
+    let terrace = portfolio_config::terrace();
+    let mut schema = match options.scope {
+        Scope::All => terrace
+            .schema::<Documented>()
+            .with_defaults_from(&Documented::default())?,
+        Scope::Server => terrace
+            .schema::<ServerConfig>()
+            .with_defaults_from(&ServerConfig::default())?,
+        Scope::Builder => terrace
+            .schema::<BuilderConfig>()
+            .with_defaults_from(&BuilderConfig::default())?,
+    };
+
+    // `to_markdown` emits the loader-variable table whenever there is one, and there is no way to
+    // ask for that table on its own. The two variables apply to every binary, so a README
+    // printing them above each scope would repeat itself; clearing them is how a second table
+    // says "these are keys, the variables are up there".
+    if !options.loader_vars {
+        schema.loader.clear();
+    }
 
     match options.format {
         Format::Json => schema.to_json(),
@@ -92,8 +115,9 @@ fn render(options: &Options) -> Result<String, portfolio_config::ConfigError> {
 /// What to emit, and how much of it.
 struct Options {
     format: Format,
-    /// The subtree to keep. Empty means the whole configuration.
-    only: String,
+    scope: Scope,
+    /// Whether to lead with the variables the loader reads before any layer exists.
+    loader_vars: bool,
 }
 
 /// Which rendering to emit.
@@ -104,12 +128,23 @@ enum Format {
     Markdown,
 }
 
+/// Whose configuration to report.
+enum Scope {
+    /// Every key in the workspace, which is what a machine-readable contract wants.
+    All,
+    /// The keys the SSR server loads.
+    Server,
+    /// The keys the `update-repos` builder loads.
+    Builder,
+}
+
 impl Options {
-    /// JSON and everything, unless asked otherwise: those are the outputs that lose nothing.
+    /// Everything, as JSON, with the loader variables: the output that loses nothing.
     fn from_args() -> Result<Self, String> {
         let mut options = Self {
             format: Format::Json,
-            only: String::new(),
+            scope: Scope::All,
+            loader_vars: true,
         };
         let mut args = std::env::args().skip(1);
         while let Some(flag) = args.next() {
@@ -122,11 +157,16 @@ impl Options {
                         None => return Err(format!("--format takes a value; {USAGE}")),
                     };
                 }
-                "--only" => {
-                    options.only = args
-                        .next()
-                        .ok_or_else(|| format!("--only takes a key prefix; {USAGE}"))?;
+                "--scope" => {
+                    options.scope = match args.next().as_deref() {
+                        Some("all") => Scope::All,
+                        Some("server") => Scope::Server,
+                        Some("builder") => Scope::Builder,
+                        Some(other) => return Err(format!("unknown scope `{other}`; {USAGE}")),
+                        None => return Err(format!("--scope takes a value; {USAGE}")),
+                    };
                 }
+                "--no-loader-vars" => options.loader_vars = false,
                 other => return Err(format!("unknown argument `{other}`; {USAGE}")),
             }
         }
@@ -134,4 +174,5 @@ impl Options {
     }
 }
 
-const USAGE: &str = "usage: config-schema [--format json|markdown] [--only <key-prefix>]";
+const USAGE: &str =
+    "usage: config-schema [--format json|markdown] [--scope all|server|builder] [--no-loader-vars]";

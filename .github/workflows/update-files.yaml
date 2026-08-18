@@ -115,18 +115,28 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
 
+      # One run per binary, because the reference is two tables: what a deployment configures
+      # (`ServerConfig`) and what the image build configures (`BuilderConfig`). A single table
+      # would read as though every deployment needs a GitHub token, which none does. The builder
+      # scope drops the loader variables — they are the same two the server scope already listed.
+      #
       # The generator reads nothing from the environment, so it produces the same tables here as
       # on a developer's machine — which is what lets the render step below skip its commit when
       # the configuration has not changed. Cargo's progress goes to stderr, so stdout is the
-      # document and nothing else; `$(…)` drops its trailing newline, and `--arg` makes it a JSON
-      # string, so the payload is strict JSON on one line whatever the table contains.
+      # document and nothing else; `$(…)` drops its trailing newline, and `--arg` makes each a
+      # JSON string, so the payload is strict JSON on one line whatever the tables contain.
       - name: Generate the configuration reference
         id: config-schema
         run: |
           set -euo pipefail
-          table="$(cargo run -q -p portfolio-config --features config-schema \
-            --example config-schema -- --format markdown)"
-          variables="$(jq -cn --arg table "$table" '{configTable: $table}')"
+          generate() {
+            cargo run -q -p portfolio-config --features config-schema \
+              --example config-schema -- --format markdown "$@"
+          }
+          server="$(generate --scope server)"
+          builder="$(generate --scope builder --no-loader-vars)"
+          variables="$(jq -cn --arg server "$server" --arg builder "$builder" \
+            '{serverConfigTable: $server, builderConfigTable: $builder}')"
           echo "variables=${variables}" >> "$GITHUB_OUTPUT"
 
       - name: Render and commit the README
