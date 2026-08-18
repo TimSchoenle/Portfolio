@@ -50,23 +50,30 @@ cargo clippy -p portfolio-data -p resume-generator -p update-repos -- -D warning
 template, never the README. CI renders it on every pull request and commits the
 result back to the branch, so there is no toolchain to install locally.
 
-Its one variable is the configuration reference, generated from the `Describe`
-derives on the blocks in `crates/config`:
+Its variables are the configuration reference — one table per binary, generated
+from the `Describe` derives on `ServerConfig` and `BuilderConfig` in
+`crates/config`:
 
 ```bash
 cargo run -p portfolio-config --features config-schema --example config-schema \
-  -- --format markdown   # the tables the README embeds
+  -- --format markdown --scope server
+cargo run -p portfolio-config --features config-schema --example config-schema \
+  -- --format markdown --scope builder
 cargo run -p portfolio-config --features config-schema --example config-schema
-                         # the same thing as the versioned JSON contract
+                         # every key, as the versioned JSON contract
 ```
 
-Two rules follow from the table being generated:
+The split is deliberate: `github.*` is read only by the build-time `update-repos`
+tool, and one flat table would tell an operator their deployment needs a GitHub
+token. It does not.
 
-- A field's `///` comment is **one summary sentence on one line** — it is copied
-  verbatim into a Markdown table cell. Longer reasoning goes in `//` comments
-  above the field.
-- A new config block only reaches the README once it is listed in the
-  `Documented` aggregate in `crates/config/examples/config-schema.rs`.
+Document fields the way rustdoc asks: a summary sentence, a blank line, then as
+much reasoning as it takes. Only the summary reaches the table, so nothing has to
+be kept short for the README's sake.
+
+A new config block needs no registration. Add it to the aggregate the binary
+loads and it is in the README, because that aggregate is what the generator
+describes.
 
 The `config-schema` feature is off by default and is never enabled by a build
 that ships; `cargo clippy --all-features --all-targets` is what keeps the

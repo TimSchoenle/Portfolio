@@ -24,9 +24,8 @@ use axum::{
     routing::get,
 };
 use dioxus::server::{DioxusRouterExt, IncrementalRendererConfig, ServeConfig};
-use portfolio_config::{AssetsConfig, CspConfig, IsrConfig};
+use portfolio_config::{AssetsConfig, IsrConfig, ServerConfig};
 use portfolio_data::LANGUAGES;
-use serde::Deserialize;
 use tower_http::{
     compression::{
         CompressionLayer,
@@ -38,25 +37,6 @@ use tower_http::{
 
 /// Everything this server reads from its configuration.
 ///
-/// The blocks belong to `portfolio-config`, which owns the layering; the
-/// aggregate belongs here, so a field exists exactly when this binary consumes
-/// it. See that crate's docs for the layers and their precedence.
-///
-/// Notably absent: the listen address. `IP`, `PORT` and `RUST_LOG` are the
-/// Dioxus toolchain's contract with the binary — `dx serve` sets them to tell a
-/// development build which port it is being proxied on — so folding them into
-/// the `PORTFOLIO_` namespace would take a name the framework still reads and
-/// leave two sources of truth for one socket.
-#[derive(Debug, Deserialize)]
-struct ServerConfig {
-    #[serde(default)]
-    assets: AssetsConfig,
-    #[serde(default)]
-    csp: CspConfig,
-    #[serde(default)]
-    isr: IsrConfig,
-}
-
 /// Exit code for a configuration the process cannot start with (`EX_CONFIG`
 /// from `sysexits.h`), so an operator can tell a bad config apart from a crash
 /// without reading the logs.

@@ -13,11 +13,14 @@
 //!
 //! # What each binary composes
 //!
-//! This crate owns the *blocks* and the dialect; each binary declares the aggregate it actually
-//! reads, so a struct field is evidence that something consumes it:
+//! This crate owns the *blocks*, the dialect, and one aggregate per binary naming the blocks that
+//! binary reads — so a struct field is evidence that something consumes it:
 //!
-//! - the SSR server ([`AssetsConfig`], [`CspConfig`], [`IsrConfig`]),
-//! - the `update-repos` builder ([`GithubConfig`]).
+//! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`IsrConfig`]),
+//! - the `update-repos` builder, [`BuilderConfig`] ([`GithubConfig`]).
+//!
+//! The aggregates live here rather than in the binaries so the generated configuration reference
+//! can describe the types those binaries actually load; see [`aggregates`].
 //!
 //! # Why the loader half only
 //!
@@ -46,28 +49,29 @@
 //!
 //! # The configuration reference in `README.md` is generated from these types
 //!
-//! Every block above derives `terrace_config::schema::Describe` under the off-by-default
-//! `config-schema` feature, and `examples/config-schema.rs` walks it into the table CI renders
-//! into the README. The feature is off in every build that ships, so `serde_json` and the derive
-//! never reach a binary; `cargo clippy --all-features --all-targets` is what keeps the generator
-//! compiling.
+//! Every block and aggregate above derives `terrace_config::schema::Describe` under the
+//! off-by-default `config-schema` feature, and `examples/config-schema.rs` walks them into the
+//! tables CI renders into the README — one per aggregate, so the reference says which binary
+//! reads a key rather than implying every deployment needs all of them. The feature is off in
+//! every build that ships, so `serde_json` and the derive never reach a binary;
+//! `cargo clippy --all-features --all-targets` is what keeps the generator compiling.
 //!
-//! Two consequences for anyone editing this crate:
+//! Write field documentation as rustdoc asks for it: a summary sentence, a blank line, then as
+//! much reasoning as it takes. Only the summary reaches the Markdown table — `to_json` carries
+//! the whole comment for anything that wants the rest — so nothing has to be kept short for the
+//! README's sake, and nothing has to be annotated twice.
 //!
-//! - **A field's `///` comment is one summary sentence on one line.** It is copied verbatim into
-//!   a Markdown table cell, where a second paragraph becomes a `<br>`. Longer reasoning goes in
-//!   `//` comments above the field, which is why the blocks below read the way they do.
-//! - **A new block is not documented until it is added to the example's aggregate.** This crate
-//!   deliberately has no root config type — each binary declares the aggregate it reads — so the
-//!   generator declares one of its own, and nothing but that file can notice a block missing
-//!   from it.
+//! A new block needs no registration anywhere — adding it to the aggregate that loads it is what
+//! puts it in the README, because that aggregate is what the generator describes.
 
+mod aggregates;
 mod assets;
 mod csp;
 mod github;
 mod isr;
 mod loader;
 
+pub use aggregates::{BuilderConfig, ServerConfig};
 pub use assets::AssetsConfig;
 pub use csp::{CloudflareConfig, CspConfig, CspConfigError};
 pub use github::GithubConfig;

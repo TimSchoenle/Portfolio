@@ -2,51 +2,42 @@
 //!
 //! ```text
 //! cargo run -p portfolio-config --features config-schema --example config-schema \
-//!   -- --format markdown
+//!   -- --format markdown --scope server
 //! ```
 //!
-//! `.github/workflows/update-files.yaml` runs exactly that, feeds the result to
-//! `.github/templates/README.md.hbs` as the `configTable` variable, and commits the rendered
-//! `README.md` back to the pull request. The table therefore cannot drift from the types: a key
-//! renamed in `crates/config` is a key renamed in the README, in the same commit.
+//! `.github/workflows/update-files.yaml` runs it once per scope, feeds the results to
+//! `.github/templates/README.md.hbs`, and commits the rendered `README.md` back to the pull
+//! request. The tables therefore cannot drift from the types: a key renamed in `crates/config`
+//! is a key renamed in the README, in the same commit.
 //!
 //! Nothing here reads the environment, so the output is the same on a developer's machine and on
 //! a runner where none of the variables it describes are set. That is what makes the render
 //! deterministic enough for the action to skip the commit when nothing changed.
 //!
-//! # Why the root type is here and not in the crate
+//! # Why there are scopes
 //!
-//! `portfolio-config` deliberately owns *blocks* rather than one aggregate: each binary declares
-//! the struct it actually reads, so a field is evidence that something consumes it. A root type
-//! in the library would be a fourth aggregate nobody loads, and would quietly become the place
-//! fields are added "so they appear somewhere".
+//! One flat table of every key says that a deployment needs a GitHub token. It does not.
+//! `github.*` belongs to `update-repos`, a build-time tool that lists repositories and exits
+//! during the image build; the SSR server never loads it and never sees it. A reference that
+//! cannot express which binary reads a key documents an operational requirement that is not real,
+//! so the roots below are split the way the binaries are.
 //!
-//! The documentation still needs one root, because the operator setting this workspace up reads
-//! one file and one environment — not three. [`Documented`] is that root and only that: it exists
-//! under the `config-schema` feature, it is never loaded, and it is the one place a new block has
-//! to be listed to reach the README.
+//! # No type is declared here at all
+//!
+//! Every scope describes an aggregate the binaries actually pass to `portfolio_config::load` —
+//! [`ServerConfig`] or [`BuilderConfig`], which live in `crates/config` for exactly this reason.
+//! Nothing is mirrored, so nothing can drift: a block added to what a binary loads is a block in
+//! the README, and there is no second list to remember.
+//!
+//! `all` is `Schema::merge` of the two rather than a union type, so even the whole-workspace
+//! document is built out of what the binaries load. A key both halves described would be kept
+//! once and a key described *differently* by each would panic, which is the right answer for a
+//! reference that has to have one.
 
 use std::process::ExitCode;
 
-use portfolio_config::{AssetsConfig, CspConfig, GithubConfig, IsrConfig};
-use serde::Serialize;
-use terrace_config::schema::Describe;
-
-/// Every block this workspace can be configured with, under the path an operator spells it at.
-///
-/// The union of what the SSR server reads (`assets`, `csp`, `isr`) and what the `update-repos`
-/// builder reads (`github`). No binary loads this type; see the module docs.
-#[derive(Default, Serialize, Describe)]
-struct Documented {
-    #[config(nested)]
-    assets: AssetsConfig,
-    #[config(nested)]
-    csp: CspConfig,
-    #[config(nested)]
-    isr: IsrConfig,
-    #[config(nested)]
-    github: GithubConfig,
-}
+use portfolio_config::{BuilderConfig, ServerConfig};
+use terrace_config::schema::{Column, Schema};
 
 fn main() -> ExitCode {
     let options = match Options::from_args() {
@@ -78,22 +69,42 @@ fn main() -> ExitCode {
 /// The `Default` column comes from a value built here, not from the process environment: the
 /// documentation job runs where none of these variables exist, and that is the point.
 fn render(options: &Options) -> Result<String, portfolio_config::ConfigError> {
-    let schema = portfolio_config::terrace()
-        .schema::<Documented>()
-        .with_defaults_from(&Documented::default())?
-        .subset(&options.only);
+    let schema = match options.scope {
+        Scope::All => server()?.merge(builder()?),
+        Scope::Server => server()?,
+        Scope::Builder => builder()?,
+    };
 
     match options.format {
         Format::Json => schema.to_json(),
-        Format::Markdown => Ok(schema.to_markdown()),
+        // The loader variables lead the server table and are absent from every other one. They
+        // apply to both binaries, so a page repeating them above each scope would say the same
+        // thing twice; the server scope is where an operator setting a deployment up will be.
+        Format::Markdown => Ok(match options.scope {
+            Scope::All | Scope::Server => schema.to_markdown(),
+            Scope::Builder => schema.to_markdown_keys(Column::DEFAULT),
+        }),
     }
+}
+
+/// The keys the SSR server loads, with the defaults it starts from.
+fn server() -> Result<Schema, portfolio_config::ConfigError> {
+    portfolio_config::terrace()
+        .schema::<ServerConfig>()
+        .with_defaults_from(&ServerConfig::default())
+}
+
+/// The keys the `update-repos` builder loads, with the defaults it starts from.
+fn builder() -> Result<Schema, portfolio_config::ConfigError> {
+    portfolio_config::terrace()
+        .schema::<BuilderConfig>()
+        .with_defaults_from(&BuilderConfig::default())
 }
 
 /// What to emit, and how much of it.
 struct Options {
     format: Format,
-    /// The subtree to keep. Empty means the whole configuration.
-    only: String,
+    scope: Scope,
 }
 
 /// Which rendering to emit.
@@ -104,12 +115,22 @@ enum Format {
     Markdown,
 }
 
+/// Whose configuration to report.
+enum Scope {
+    /// Every key in the workspace, which is what a machine-readable contract wants.
+    All,
+    /// The keys the SSR server loads.
+    Server,
+    /// The keys the `update-repos` builder loads.
+    Builder,
+}
+
 impl Options {
-    /// JSON and everything, unless asked otherwise: those are the outputs that lose nothing.
+    /// Everything, as JSON: the output that loses nothing.
     fn from_args() -> Result<Self, String> {
         let mut options = Self {
             format: Format::Json,
-            only: String::new(),
+            scope: Scope::All,
         };
         let mut args = std::env::args().skip(1);
         while let Some(flag) = args.next() {
@@ -122,10 +143,14 @@ impl Options {
                         None => return Err(format!("--format takes a value; {USAGE}")),
                     };
                 }
-                "--only" => {
-                    options.only = args
-                        .next()
-                        .ok_or_else(|| format!("--only takes a key prefix; {USAGE}"))?;
+                "--scope" => {
+                    options.scope = match args.next().as_deref() {
+                        Some("all") => Scope::All,
+                        Some("server") => Scope::Server,
+                        Some("builder") => Scope::Builder,
+                        Some(other) => return Err(format!("unknown scope `{other}`; {USAGE}")),
+                        None => return Err(format!("--scope takes a value; {USAGE}")),
+                    };
                 }
                 other => return Err(format!("unknown argument `{other}`; {USAGE}")),
             }
@@ -134,4 +159,4 @@ impl Options {
     }
 }
 
-const USAGE: &str = "usage: config-schema [--format json|markdown] [--only <key-prefix>]";
+const USAGE: &str = "usage: config-schema [--format json|markdown] [--scope all|server|builder]";

@@ -4764,8 +4764,8 @@ dependencies = [
 
 [[package]]
 name = "terrace-config"
-version = "0.3.0"
-source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.3.0#7db6ed052dd340ea0e98f500a6c8dba0cebea3ae"
+version = "0.4.0"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.4.0#ac5c8e31bc384075de00099f8838c375c1df8c23"
 dependencies = [
  "figment",
  "serde",
@@ -4776,8 +4776,8 @@ dependencies = [
 
 [[package]]
 name = "terrace-config-macros"
-version = "0.3.0"
-source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.3.0#7db6ed052dd340ea0e98f500a6c8dba0cebea3ae"
+version = "0.4.0"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.4.0#ac5c8e31bc384075de00099f8838c375c1df8c23"
 dependencies = [
  "proc-macro2",
  "quote",
