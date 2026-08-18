@@ -38,9 +38,12 @@ jobs:
   # diffing makes a configuration change visible in the pull request that makes it: a removed key
   # shows up in the diff, next to the chart it is about to break.
   #
-  # A gate rather than a render-and-commit like the README and the example file. Those two are
-  # documentation and a stale one is a stale page; this one is consumed by another repository's
-  # CI, and a copy that arrives one commit late is a gate passing against the wrong document.
+  # The gate stays now that `update-files.yaml` regenerates both artefacts and commits them: the
+  # two answer different questions. That workflow makes a pull request converge on the contract
+  # its types produce; this one refuses to let one merge before it has. A copy that arrives a
+  # commit late is a gate passing against the wrong document, and this job is what makes "late"
+  # observable — which is also why it belongs in the repository's required checks and not only
+  # in the run list.
   #
   # `--revision` and `--created` are deliberately not passed here. They move between builds of the
   # same source, so the committed copy carries neither and the published one carries both — the
@@ -70,22 +73,33 @@ jobs:
           cargo run -q -p portfolio-config --features config-schema \
             --example config-schema -- --format contract > docs/config.contract.json
           if ! git diff --exit-code -- docs/config.contract.json; then
-            echo "::error file=docs/config.contract.json::The configuration surface changed and the committed contract did not. Regenerate it with the command in this step and commit the result." >&2
+            echo "::error file=docs/config.contract.json::The configuration surface changed and the committed contract did not. The Update Files workflow regenerates and commits it; wait for its push, or run the command in this step and commit the result yourself." >&2
             exit 1
           fi
 
-      # The block is hand-carried, because a `LABEL` key cannot be interpolated from a generator.
-      # This is the half a source diff can see; `examples/verify-labels.rs` is the half it cannot,
-      # and runs against the built image.
+      # The block sits in the Dockerfile as literal text, because a `LABEL` key cannot be
+      # interpolated from a generator. This is the half a source diff can see;
+      # `examples/verify-labels.rs` is the half it cannot, and runs against the built image.
+      #
+      # Cut at the `terrace-config:labels` markers rather than at a fixed line count, so the
+      # comparison covers whatever the region currently holds — and it is the same region
+      # `update-files.yaml` rewrites, which is what stops the check and the fix from disagreeing
+      # about where the block ends. An empty slice means the markers are gone, which `diff`
+      # would otherwise report as three deleted lines rather than as the missing region it is.
       #
       # The blank line `println!` leaves after the block is dropped, so the comparison is about
-      # the three labels and not about how each side was captured.
+      # the labels and not about how each side was captured.
       - name: Check the Dockerfile's label block against the contract
         run: |
           set -euo pipefail
           cargo run -q -p portfolio-config --features config-schema \
             --example config-schema -- --format dockerfile | sed '/^$/d' > /tmp/labels.expected
-          grep -A2 'LABEL dev.terrace.config' Dockerfile > /tmp/labels.actual
+          sed -n '/^# terrace-config:labels:begin$/,/^# terrace-config:labels:end$/p' Dockerfile \
+            | sed '1d;$d' > /tmp/labels.actual
+          if [ ! -s /tmp/labels.actual ]; then
+            echo "::error file=Dockerfile::the terrace-config:labels region is missing or empty; the generated label block has nowhere to go" >&2
+            exit 1
+          fi
           diff -u /tmp/labels.expected /tmp/labels.actual
 
   test:

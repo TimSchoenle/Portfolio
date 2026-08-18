@@ -185,3 +185,143 @@ jobs:
               issue_number: context.issue.number,
               body: `Re-rendered from the configuration types in \`crates/config\`:\n\n${rendered}`
             })
+
+  # The two artefacts the image publishes about its own configuration: `docs/config.contract.json`,
+  # which a chart's CI reads to check that what it renders is what this image loads, and the
+  # `LABEL` block that makes that document discoverable on the image without pulling a layer.
+  #
+  # Both were gate-only, and the gate had a case it could not clear on its own. `app.version` in
+  # the contract is `CARGO_PKG_VERSION`, so a release pull request — which moves the version and
+  # nothing else — makes the committed contract stale by construction, and release-please has no
+  # step that would regenerate it. Every release was therefore red on Config Contract until
+  # someone pushed the regenerated file by hand, and the check is not a required one, so the
+  # alternative outcome was worse: a release merging with a contract naming the previous version,
+  # published to the chart repository as the description of an image that does not match it.
+  #
+  # Regenerating here fixes the general case as well as that one, and on the same terms as the
+  # documents above: the generator reads nothing from the environment, so a pull request that did
+  # not touch the configuration surface produces no commit.
+  #
+  # A job of its own, after `render-generated-files`, for the reason given there — one pusher on
+  # the head ref at a time. The gate in `build.yaml` stays: this makes the branch converge, that
+  # refuses to let it merge before it has.
+  sync-config-contract:
+    name: Ensure the Config Contract and its Labels Match the Types
+    needs: render-generated-files
+    environment:
+      name: ci
+      deployment: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to push the regenerated contract and label block
+      pull-requests: write # to comment on PRs
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Generate Bot Token
+        id: generate_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+
+      # `--revision` and `--created` are deliberately not passed, exactly as in the gate: they
+      # move between builds of the same source, so the committed copy carries neither and the
+      # copy the image publishes carries both. What is committed here is the configuration half.
+      - name: Regenerate the configuration contract
+        run: |
+          set -euo pipefail
+          cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format contract > docs/config.contract.json
+
+      # Rewritten between the markers the Dockerfile carries, so this replaces the region by name
+      # rather than by line count: `sed '…/q'` prints through the opening marker and stops, the
+      # generated block goes in, and the second `sed` resumes at the closing marker. A block that
+      # grows a fourth key upstream lands the same way the first three do.
+      #
+      # Refuses rather than writes when a marker is missing: with no opening marker the first
+      # `sed` prints the whole file and the result would be a Dockerfile with the block appended
+      # to its end. Only the region is generated, so the file must already say where it is.
+      #
+      # Both intermediates live in `RUNNER_TEMP` rather than beside the Dockerfile, so a step
+      # that dies halfway through leaves the working tree as it found it.
+      - name: Rewrite the Dockerfile's contract labels
+        run: |
+          set -euo pipefail
+          begin='# terrace-config:labels:begin'
+          end='# terrace-config:labels:end'
+          for marker in "$begin" "$end"; do
+            if ! grep -qxF -- "$marker" Dockerfile; then
+              echo "::error file=Dockerfile::no '$marker' line; nothing marks where the generated label block belongs" >&2
+              exit 1
+            fi
+          done
+          cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format dockerfile \
+            | sed '/^$/d' > "${RUNNER_TEMP}/labels.generated"
+          {
+            sed "/^${begin}\$/q" Dockerfile
+            cat "${RUNNER_TEMP}/labels.generated"
+            sed -n "/^${end}\$/,\$p" Dockerfile
+          } > "${RUNNER_TEMP}/Dockerfile.next"
+          mv "${RUNNER_TEMP}/Dockerfile.next" Dockerfile
+
+      # Two commits rather than one: a change to the build recipe and a change to a published
+      # document are different things to review, and the version bump that motivates most of
+      # these touches only the contract. `file_pattern` keeps each commit to its own file.
+      - name: Commit the regenerated contract
+        id: contract
+        uses: TimSchoenle/actions/actions/common/commit-changes@0a6ad3014d13b1baa2e6ab1966603fe88ed5887b # tag=actions-common-commit-changes-v1.3.1
+        with:
+          commit_message: 'docs: regenerate the configuration contract'
+          file_pattern: 'docs/config.contract.json'
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Commit the Dockerfile's contract labels
+        id: labels
+        uses: TimSchoenle/actions/actions/common/commit-changes@0a6ad3014d13b1baa2e6ab1966603fe88ed5887b # tag=actions-common-commit-changes-v1.3.1
+        with:
+          commit_message: 'build: sync the Dockerfile contract labels'
+          file_pattern: 'Dockerfile'
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Comment on PR
+        if: >-
+          github.event_name == 'pull_request'
+          && (steps.contract.outputs.changes_detected == 'true'
+          || steps.labels.outputs.changes_detected == 'true')
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          CONTRACT_CHANGED: ${{ steps.contract.outputs.changes_detected }}
+          LABELS_CHANGED: ${{ steps.labels.outputs.changes_detected }}
+        with:
+          github-token: ${{ steps.generate_token.outputs.token }}
+          script: |
+            const regenerated = [
+              ['docs/config.contract.json', '--format contract', process.env.CONTRACT_CHANGED],
+              ['Dockerfile', '--format dockerfile', process.env.LABELS_CHANGED],
+            ]
+              .filter(([, , changed]) => changed === 'true')
+              .map(([output, format]) => `- \`${output}\`, from \`config-schema ${format}\``)
+              .join('\n');
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Regenerated from the configuration types in \`crates/config\`:\n\n${regenerated}\n\nThe \`Config Contract\` job in **Build** gates these, and runs again on this push.`
+            })
