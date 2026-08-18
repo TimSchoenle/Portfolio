@@ -30,26 +30,34 @@ portfolio-data = { path = "crates/data" }
 # update to the loader is a deliberate commit here rather than whatever `main`
 # happened to be at build time.
 #
-# `loader` only, and `default-features = false` to say so: the crate's other
-# half is a supervisor that rebuilds a running service when its files change,
-# which would link tokio, notify and tracing into every consumer. Nothing here
-# needs it — see `crates/config/src/lib.rs` for why.
+# `default-features = false`, then back exactly what is used. The crate is five
+# features and this workspace takes two of them:
 #
-# The third feature, `schema`, is not taken here either. It is what generates the
-# configuration reference in `README.md`, and `portfolio-config` turns it on
-# through its own off-by-default `config-schema` feature, so `serde_json`, `syn`
-# and the derive stay out of every binary this workspace ships.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.4.0", default-features = false, features = [
+# - `loader` is the layering above, and the reason the dependency exists.
+# - `explain` is the report `load` cannot give: which layer supplied each key,
+#   and which keys more than one supplied. It costs no dependency at all — only
+#   the code that walks the layers a second time and renders it — and it is what
+#   both binaries print when a configuration is refused, where the error names
+#   the key and this names the mount it came from.
+#
+# `reload` is left out: it is a supervisor that rebuilds a running service when
+# its files change, and taking it would link tokio, notify and tracing into
+# every consumer for a reload this workspace cannot use — see
+# `crates/config/src/lib.rs` for the two reasons.
+#
+# `schema` is left out here and turned on by `portfolio-config`'s own
+# off-by-default `config-schema` feature, so `serde_json`, `syn` and the derive
+# reach the documentation generator and never a binary this workspace ships.
+# `testing` is left out for the same reason and taken as a dev-dependency in
+# `crates/config`, which is the only crate that loads anything.
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.5.0", default-features = false, features = [
     "loader",
+    "explain",
 ] }
 # Keeps the GitHub token out of `Debug` output and off every accidental log
 # line: a `SecretString` has no `Display`, and reading it is the explicit
 # `expose_secret()` call at the one place it is put on the wire.
 secrecy = { version = "0.10", features = ["serde"] }
-# `figment::Jail` sets and restores process-wide environment state, which is how
-# the config tests avoid `env::set_var` in a threaded test binary. Same figment
-# `terrace-config` resolves, plus its `test` feature.
-figment = { version = "0.10", features = ["test"] }
 
 # Dioxus 0.7 fullstack. `fullstack` enables server functions + hydration
 # serialization on both targets; `router` re-exports dioxus-router. The

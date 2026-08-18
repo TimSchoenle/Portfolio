@@ -2,18 +2,28 @@
 Template for the repository README. CI renders it on every pull request and commits the result
 to README.md, so edit this file — never README.md itself.
 
-Two variables, `serverConfigTable` and `builderConfigTable`, one per binary, from
+Every variable comes from one command:
 
     cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown --scope server
-    cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format markdown --scope builder
+      -- --format variables
 
-which walk the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
-binaries actually load — and emit each key with its TOML path, type, environment spelling,
-default and purpose. The server scope leads with the variables the loader reads before any layer
-exists; the builder scope renders keys alone, because they are the same two variables. Both are
-interpolated through a triple-stash, being Markdown to emit as-is rather than escape.
+which walks the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
+binaries actually load — and prints the whole payload as strict JSON:
+
+  - `serverConfigTable` and `builderConfigTable`, one Markdown table per binary, each key with
+    its TOML path, type, environment spelling, default and purpose. The server scope leads with
+    the variables the loader reads before any layer exists; the builder scope renders keys alone,
+    because they would be the same two variables. Both go through a triple-stash, being Markdown
+    to emit as-is rather than escape.
+  - `loader`, the dialect: the prefix, the nesting separator, the indirection suffix and the two
+    variables naming the layers.
+  - `keys`, the spellings of the handful of keys the prose below names — `keys.githubToken.env`,
+    `keys.githubToken.envFile`, and so on.
+
+Prefer an injected value to a typed one anywhere the two would say the same thing. A rename in
+`crates/config` then reaches the sentences as well as the tables, and a key the prose names and
+the types no longer have fails the generator instead of rendering a blank. `KEYS` in
+`crates/config/examples/config-schema.rs` is where a key joins that set.
 
 Neither table has a `_FILE` column: it is the environment spelling plus a constant suffix, which
 the layer list above the tables already states once.
@@ -180,7 +190,7 @@ The tables below are **generated from the aggregates the binaries load** —
 binaries are, because the two configurations are not one: what a deployment sets
 and what the image build sets have no overlap at all.
 
-Regenerate them with:
+Regenerate one on its own with:
 
 ```bash
 cargo run -p portfolio-config --features config-schema --example config-schema \
@@ -225,8 +235,16 @@ the `serde_json` it pulls stay out of the image; CI's `--all-features` gates are
 what keep the generator compiling.
 
 An empty value counts as unset everywhere, because container platforms routinely
-inject `KEY=` for a declared-but-unset variable. See
-[`config.example.toml`](./config.example.toml) for a commented starting point.
+inject `KEY=` for a declared-but-unset variable.
+[`config.example.toml`](./config.example.toml) is a commented starting point, and
+is generated from the same types as the tables above — every key at its default,
+commented out, so a copy of it and an empty file mean the same thing to the
+loader:
+
+```bash
+cargo run -p portfolio-config --features config-schema --example config-schema \
+  -- --format toml
+```
 
 `IP`, `PORT` and `RUST_LOG` are deliberately **outside** this namespace: they are
 the Dioxus toolchain's contract with the binary (`dx serve` sets them to tell a
@@ -400,10 +418,11 @@ PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repo
 Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
 development setup and the checks that must pass before opening a pull request.
 
-**This file is generated.** Edit
-[`.github/templates/README.md.hbs`](./.github/templates/README.md.hbs) instead —
-CI renders it on every pull request and commits the result back to the branch, so
-there is no toolchain to install locally.
+**This file is generated**, as is
+[`config.example.toml`](./config.example.toml). Edit the templates under
+[`.github/templates/`](./.github/templates) instead — CI renders both on every
+pull request and commits the results back to the branch, so there is no toolchain
+to install locally.
 
 ## Security
 

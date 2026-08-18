@@ -9,7 +9,7 @@
 //! stale environment variable shadowing a rotated mounted secret keeps the process running on
 //! the old credential.
 //!
-//! Call [`load`], which is the only entry point.
+//! Call [`load`], which is the only entry point, and [`provenance`] when it fails.
 //!
 //! # What each binary composes
 //!
@@ -24,9 +24,17 @@
 //!
 //! # Why the loader half only
 //!
-//! `terrace-config` also ships a supervisor that rebuilds a running service when the files its
-//! configuration came from change. This workspace deliberately does not take it, for two
-//! reasons that both have to hold before it would be worth the tokio/notify/`inotify` weight:
+//! Two of `terrace-config`'s five features are taken: `loader`, which is the layering above, and
+//! `explain`, which is [`provenance`] — the report naming which layer supplied each key, printed
+//! beside the error when a boot is refused. `explain` costs no dependency at all, and it is what
+//! answers the question the error cannot: an operator inside a distroless image with no shell
+//! cannot otherwise see that the variable they thought they removed is still shadowing the
+//! `Secret` they mounted.
+//!
+//! `reload` is the one deliberately left on the table. It is a supervisor that rebuilds a
+//! running service when the files its configuration came from change, and this workspace does
+//! not take it, for two reasons that both have to hold before it would be worth the
+//! tokio/notify/`inotify` weight:
 //!
 //! 1. **The server holds no secrets.** Rotation is what the supervisor exists to survive, and
 //!    the only secret in the workspace ([`GithubConfig::token`]) belongs to a one-shot build
@@ -40,6 +48,10 @@
 //!
 //! Both halves of that reasoning are recorded here rather than in a commit message because the
 //! second one changes the moment Dioxus grows a cancellable `serve`.
+//!
+//! The remaining two are development-time only: `schema` behind this crate's own off-by-default
+//! `config-schema` feature (see below), and `testing` as a dev-dependency, which is what the
+//! loader tests in `src/loader.rs` arrange their mounts through.
 //!
 //! # Blank means unset
 //!
@@ -76,4 +88,4 @@ pub use assets::AssetsConfig;
 pub use csp::{CloudflareConfig, CspConfig, CspConfigError};
 pub use github::GithubConfig;
 pub use isr::IsrConfig;
-pub use loader::{ConfigError, load, terrace};
+pub use loader::{ConfigError, load, provenance, terrace};

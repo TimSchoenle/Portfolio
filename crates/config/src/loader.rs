@@ -49,11 +49,41 @@ pub fn load<T: DeserializeOwned>() -> Result<T, ConfigError> {
     terrace().load()
 }
 
+/// Which layer supplied each key, as a block to print beside a failure.
+///
+/// [`load`]'s error names the key; this names the mount. Between them they answer the question
+/// an operator is actually asking — *why is the value not the one I set* — without a debugger,
+/// a rebuild, or a shell in an image that has none.
+///
+/// Assembled independently of the shadow policy, so the configuration this is most useful for
+/// is the one it can still report: a key supplied twice appears once with both of its sources
+/// rather than stopping the report the way it stopped the boot.
+///
+/// # Nothing here holds a value
+///
+/// The report records *where* each key came from and never *what* it was — a property of
+/// `terrace-config`'s `Explanation` type, which has no field to leak, rather than of remembering
+/// to redact. That is what makes printing one into a log that is shipped and retained safe by
+/// default, and it is why [`GithubConfig::token`](crate::GithubConfig::token) needs no special
+/// handling here.
+///
+/// Returns text whatever happens, the failure to assemble it included: this is called on a path
+/// that is already ending the process, and a diagnostic with an error of its own to handle would
+/// not be one.
+#[must_use]
+pub fn provenance() -> String {
+    match terrace().explain() {
+        Ok(explanation) => explanation.to_string(),
+        Err(err) => format!("the configuration layers could not be reported: {err}"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{CspConfig, GithubConfig, IsrConfig, load};
+    use crate::{CspConfig, GithubConfig, IsrConfig, terrace};
     use secrecy::ExposeSecret as _;
     use serde::Deserialize;
+    use terrace_config::testing::Harness;
 
     #[derive(Debug, Deserialize)]
     struct Sample {
@@ -65,25 +95,31 @@ mod tests {
         isr: IsrConfig,
     }
 
+    /// A sandbox over the loader [`terrace`] builds, so every name a test arranges is derived
+    /// from the dialect under test rather than typed out beside it. That is the half worth
+    /// pinning here: `terrace-config` owns the layering and tests it, and what this crate adds
+    /// is the wiring to the names an operator actually sets.
+    fn harness() -> Harness {
+        Harness::over(terrace())
+    }
+
     /// The dialect end to end: the prefix, the `__` nesting, and the defaults that fill in
-    /// around what the environment supplied. `terrace-config` owns the layering and tests it;
-    /// what this pins is that this crate wires it to the names an operator actually sets.
+    /// around what the environment supplied.
+    ///
+    /// The variables are spelled out rather than derived through `Jail::env_key`, because the
+    /// spelling *is* the assertion — a `PORTFOLIO_` prefix and `__` for nesting are what
+    /// `README.md` and every deployment manifest state, and a derived name would agree with the
+    /// loader however the loader changed.
     #[test]
-    // `figment::Jail::expect_with` fixes the closure's error type to the large `figment::Error`.
-    #[expect(
-        clippy::result_large_err,
-        reason = "figment::Jail::expect_with fixes the closure's error type"
-    )]
     fn the_environment_layer_speaks_the_documented_names() {
-        figment::Jail::expect_with(|jail| {
-            jail.clear_env();
-            jail.set_env("PORTFOLIO_GITHUB__USERNAME", "TimSchoenle");
-            jail.set_env("PORTFOLIO_ISR__TTL_SECS", "3600");
+        harness().run(|jail| {
+            jail.env("PORTFOLIO_GITHUB__USERNAME", "TimSchoenle");
+            jail.env("PORTFOLIO_ISR__TTL_SECS", "3600");
             // Two levels of nesting, which is the deepest key this workspace has and the one
             // spelling a README table could quietly get wrong.
-            jail.set_env("PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE", "true");
+            jail.env("PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE", "true");
 
-            let config: Sample = load().map_err(|e| e.to_string()).unwrap();
+            let config: Sample = jail.load()?;
             assert_eq!(config.github.username(), Some("TimSchoenle"));
             assert!(config.csp.cloudflare.turnstile);
             // Its siblings keep their defaults rather than being reset by the nested override.
@@ -100,29 +136,14 @@ mod tests {
     }
 
     /// A mounted secret outranks the TOML layer, so a `ConfigMap` carrying a placeholder cannot
-    /// win over the `Secret` that carries the real token — through the variable names *this*
-    /// crate configures, which is the half a dependency cannot pin.
+    /// win over the `Secret` that carries the real token.
     #[test]
-    #[expect(
-        clippy::result_large_err,
-        reason = "figment::Jail::expect_with fixes the closure's error type"
-    )]
     fn a_secrets_directory_outranks_the_toml_layer() {
-        figment::Jail::expect_with(|jail| {
-            jail.clear_env();
-            jail.create_file("config.toml", "[github]\ntoken = \"placeholder\"\n")?;
-            jail.create_dir("secrets")?;
-            jail.create_file("secrets/github__token", "ghp_real\n")?;
-            jail.set_env(
-                "PORTFOLIO_CONFIG",
-                jail.directory().join("config.toml").display(),
-            );
-            jail.set_env(
-                "PORTFOLIO_SECRETS_DIR",
-                jail.directory().join("secrets").display(),
-            );
+        harness().run(|jail| {
+            jail.config("[github]\ntoken = \"placeholder\"\n")?;
+            jail.secret_key("github.token", "ghp_real\n")?;
 
-            let config: Sample = load().map_err(|e| e.to_string()).unwrap();
+            let config: Sample = jail.load()?;
             let token = config
                 .github
                 .into_token()
@@ -137,25 +158,43 @@ mod tests {
     /// figment: a `GITHUB_TOKEN` left behind by a half-finished migration must not keep the
     /// build running on a credential the operator believes they rotated.
     #[test]
-    #[expect(
-        clippy::result_large_err,
-        reason = "figment::Jail::expect_with fixes the closure's error type"
-    )]
     fn one_key_supplied_twice_is_refused() {
-        figment::Jail::expect_with(|jail| {
-            jail.clear_env();
-            jail.create_dir("secrets")?;
-            jail.create_file("secrets/github__token", "ghp_from_file")?;
-            jail.set_env(
-                "PORTFOLIO_SECRETS_DIR",
-                jail.directory().join("secrets").display(),
-            );
-            jail.set_env("PORTFOLIO_GITHUB__TOKEN", "ghp_from_env");
+        harness().run(|jail| {
+            jail.secret_key("github.token", "ghp_from_file")?;
+            jail.env_key("github.token", "ghp_from_env");
 
-            let error = load::<Sample>().expect_err("two sources for one key must not load");
+            let error = jail
+                .load::<Sample>()
+                .expect_err("two sources for one key must not load");
             assert!(
                 error.to_string().contains("github.token"),
                 "the error must name the key: {error}"
+            );
+            Ok(())
+        });
+    }
+
+    /// The report an operator gets when the boot above is refused: both mounts named, neither
+    /// value shown. [`crate::provenance`] is what prints it, and what it prints has to be the
+    /// contested key rather than a summary that omits it.
+    #[test]
+    fn the_report_names_every_layer_that_supplied_a_contested_key() {
+        harness().run(|jail| {
+            jail.secret_key("github.token", "ghp_from_file")?;
+            jail.env_key("github.token", "ghp_from_env");
+
+            let report = jail.explain()?.to_string();
+            assert!(
+                report.contains("github.token"),
+                "the report must name the key: {report}"
+            );
+            assert!(
+                report.contains("PORTFOLIO_GITHUB__TOKEN"),
+                "the report must name the variable that shadowed the mount: {report}"
+            );
+            assert!(
+                !report.contains("ghp_from_file") && !report.contains("ghp_from_env"),
+                "the report must carry no value: {report}"
             );
             Ok(())
         });

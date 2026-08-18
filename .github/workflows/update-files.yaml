@@ -71,24 +71,25 @@ jobs:
               body: 'Cargo.lock has been updated to match Cargo.toml.'
             })
 
-  # `README.md` is rendered from `.github/templates/README.md.hbs`, whose variables are the
-  # configuration reference generated out of the `Describe` derives in `crates/config`. The tables
-  # therefore cannot drift from the types: renaming a key renames it in the README, in the same
-  # pull request.
+  # `README.md` and `config.example.toml` are both rendered from templates under
+  # `.github/templates/`, and both are interpolated from the same payload: the configuration
+  # reference generated out of the `Describe` derives in `crates/config`. Neither document can
+  # drift from the types — renaming a key renames it in the tables, in the prose that names it,
+  # and in the example file, all in the same pull request.
   #
   # A job of its own rather than more steps above, and `needs:` rather than parallel, for one
   # reason: both push to the head branch, and two jobs racing on one ref is a lost commit or a
   # rejected push. Sequencing also means this renders against the tree the lock-file commit left
   # behind, so a dependency bump that changes nothing here still produces no second commit.
-  render-readme:
-    name: Ensure README is Rendered from its Template
+  render-generated-files:
+    name: Ensure the Generated Files are Rendered from their Templates
     needs: update-lock-file
     environment:
       name: ci
       deployment: false
     runs-on: ubuntu-latest
     permissions:
-      contents: write # to push the rendered README
+      contents: write # to push the rendered files
       pull-requests: write # to comment on PRs
     steps:
       - name: Harden Runner
@@ -115,31 +116,27 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
 
-      # One run per binary, because the reference is two tables: what a deployment configures
-      # (`ServerConfig`) and what the image build configures (`BuilderConfig`). A single table
-      # would read as though every deployment needs a GitHub token, which none does. The builder
-      # scope renders its keys alone, since the loader variables it would otherwise repeat are the
-      # same two the server scope already listed.
+      # One run, one payload, both templates. The names the templates read are declared beside
+      # the schema that produces them (`--format variables` in `examples/config-schema.rs`), so
+      # widening what the documents interpolate is a change to that file rather than to a shell
+      # snippet embedded here — and an unread name costs a template nothing, because strict mode
+      # fails on a reference the payload does not define, never on a definition nothing reads.
       #
-      # The generator reads nothing from the environment, so it produces the same tables here as
-      # on a developer's machine — which is what lets the render step below skip its commit when
-      # the configuration has not changed. Cargo's progress goes to stderr, so stdout is the
-      # document and nothing else; `$(…)` drops its trailing newline, and `--arg` makes each a
-      # JSON string, so the payload is strict JSON on one line whatever the tables contain.
-      - name: Generate the configuration reference
+      # The generator reads nothing from the environment, so it produces the same payload here as
+      # on a developer's machine, which is what lets the steps below skip their commits when the
+      # configuration has not changed. Cargo's progress goes to stderr, so stdout is the payload
+      # and nothing else; it is already strict JSON on one line, and `$(…)` drops the newline
+      # `println!` puts after it.
+      - name: Generate the configuration payload
         id: config-schema
         run: |
           set -euo pipefail
-          generate() {
-            cargo run -q -p portfolio-config --features config-schema \
-              --example config-schema -- --format markdown "$@"
-          }
-          server="$(generate --scope server)"
-          builder="$(generate --scope builder)"
-          variables="$(jq -cn --arg server "$server" --arg builder "$builder" \
-            '{serverConfigTable: $server, builderConfigTable: $builder}')"
+          variables="$(cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format variables)"
           echo "variables=${variables}" >> "$GITHUB_OUTPUT"
 
+      # Each render commits only its own output — `file_pattern` defaults to it — so a document
+      # that did not change produces no commit, and neither can carry the other along.
       - name: Render and commit the README
         id: readme
         uses: TimSchoenle/actions/actions/common/render-template-and-commit@15d83f02081c9dc8a844646199c63792dcccdfa8 # tag=actions-common-render-template-and-commit-v1.1.3
@@ -150,15 +147,41 @@ jobs:
           token: ${{ steps.generate_token.outputs.token }}
           commit_message: 'docs: render README from its template'
 
+      - name: Render and commit the example configuration
+        id: example-config
+        uses: TimSchoenle/actions/actions/common/render-template-and-commit@15d83f02081c9dc8a844646199c63792dcccdfa8 # tag=actions-common-render-template-and-commit-v1.1.3
+        with:
+          template: .github/templates/config.example.toml.hbs
+          output: config.example.toml
+          variables: ${{ steps.config-schema.outputs.variables }}
+          token: ${{ steps.generate_token.outputs.token }}
+          commit_message: 'docs: render the example configuration from its template'
+
+      # One comment for both, naming only what actually changed. Two comment steps would post
+      # twice on the pull request that renames a key, which is precisely the one where both
+      # documents move together.
       - name: Comment on PR
-        if: steps.readme.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request'
+          && (steps.readme.outputs.changes_detected == 'true'
+          || steps.example-config.outputs.changes_detected == 'true')
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          README_CHANGED: ${{ steps.readme.outputs.changes_detected }}
+          EXAMPLE_CHANGED: ${{ steps.example-config.outputs.changes_detected }}
         with:
           github-token: ${{ steps.generate_token.outputs.token }}
           script: |
+            const rendered = [
+              ['README.md', '.github/templates/README.md.hbs', process.env.README_CHANGED],
+              ['config.example.toml', '.github/templates/config.example.toml.hbs', process.env.EXAMPLE_CHANGED],
+            ]
+              .filter(([, , changed]) => changed === 'true')
+              .map(([output, template]) => `- \`${output}\`, from \`${template}\``)
+              .join('\n');
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: 'README.md has been re-rendered from `.github/templates/README.md.hbs`.'
+              body: `Re-rendered from the configuration types in \`crates/config\`:\n\n${rendered}`
             })

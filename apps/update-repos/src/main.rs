@@ -61,6 +61,13 @@ fn main() -> ExitCode {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
             eprintln!("update-repos: {err}");
+            // Only for the failure the report is about. The token this tool carries is the one
+            // secret in the workspace and arrives as a mounted file, so "which layer supplied
+            // `github.token`" is the question a failed build asks — and the report answers it
+            // without printing the value, which is why it can be in CI output at all.
+            if matches!(err, UpdateReposError::Config(_)) {
+                eprintln!("{}", portfolio_config::provenance());
+            }
             ExitCode::FAILURE
         }
     }
