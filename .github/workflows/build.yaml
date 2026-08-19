@@ -45,9 +45,11 @@ jobs:
   # observable — which is also why it belongs in the repository's required checks and not only
   # in the run list.
   #
-  # `--revision` and `--created` are deliberately not passed here. They move between builds of the
-  # same source, so the committed copy carries neither and the published one carries both — the
-  # configuration half is what this diff is about.
+  # Both halves of it are now one step. Six repositories carried a hand-written variant of this
+  # check and disagreed on the thing that matters most — how to cut the generated `LABEL` block
+  # back out of a Dockerfile — so the checking lives in `rust/config-contract` and `justfile`
+  # holds the writing. The two cannot drift apart, because neither one is a second opinion about
+  # the other: the action renders and compares, `just regenerate` renders and writes.
   contract:
     name: Config Contract
     runs-on: ubuntu-latest
@@ -67,40 +69,17 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
 
-      - name: Check the committed contract against the types
-        run: |
-          set -euo pipefail
-          cargo run -q -p portfolio-config --features config-schema \
-            --example config-schema -- --format contract > docs/config.contract.json
-          if ! git diff --exit-code -- docs/config.contract.json; then
-            echo "::error file=docs/config.contract.json::The configuration surface changed and the committed contract did not. The Update Files workflow regenerates and commits it; wait for its push, or run the command in this step and commit the result yourself." >&2
-            exit 1
-          fi
-
-      # The block sits in the Dockerfile as literal text, because a `LABEL` key cannot be
-      # interpolated from a generator. This is the half a source diff can see;
-      # `examples/verify-labels.rs` is the half it cannot, and runs against the built image.
-      #
-      # Cut at the `terrace-config:labels` markers rather than at a fixed line count, so the
-      # comparison covers whatever the region currently holds — and it is the same region
-      # `update-files.yaml` rewrites, which is what stops the check and the fix from disagreeing
-      # about where the block ends. An empty slice means the markers are gone, which `diff`
-      # would otherwise report as three deleted lines rather than as the missing region it is.
-      #
-      # The blank line `println!` leaves after the block is dropped, so the comparison is about
-      # the labels and not about how each side was captured.
-      - name: Check the Dockerfile's label block against the contract
-        run: |
-          set -euo pipefail
-          cargo run -q -p portfolio-config --features config-schema \
-            --example config-schema -- --format dockerfile | sed '/^$/d' > /tmp/labels.expected
-          sed -n '/^# terrace-config:labels:begin$/,/^# terrace-config:labels:end$/p' Dockerfile \
-            | sed '1d;$d' > /tmp/labels.actual
-          if [ ! -s /tmp/labels.actual ]; then
-            echo "::error file=Dockerfile::the terrace-config:labels region is missing or empty; the generated label block has nowhere to go" >&2
-            exit 1
-          fi
-          diff -u /tmp/labels.expected /tmp/labels.actual
+      # One render, both comparisons: the committed `docs/config.contract.json` and the
+      # Dockerfile's `terrace-config:labels` region, cut at the markers rather than by line
+      # count. `image` is empty, so the two checks that need a built image are skipped and this
+      # job stays the cheap half — the labels an image actually carries are a question for a job
+      # that has one.
+      - name: Verify the configuration contract
+        uses: TimSchoenle/actions/actions/rust/config-contract@99c83581b3486a8a9f28e43226b8f02025fcdf9a # tag=actions-rust-config-contract-v1.1.0
+        with:
+          package: portfolio-config
+          features: config-schema
+          image: ''
 
   test:
     name: Test
