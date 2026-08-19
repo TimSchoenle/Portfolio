@@ -30,7 +30,7 @@ portfolio-data = { path = "crates/data" }
 # update to the loader is a deliberate commit here rather than whatever `main`
 # happened to be at build time.
 #
-# `default-features = false`, then back exactly what is used. The crate is five
+# `default-features = false`, then back exactly what is used. The crate is six
 # features and this workspace takes two of them:
 #
 # - `loader` is the layering above, and the reason the dependency exists.
@@ -45,12 +45,13 @@ portfolio-data = { path = "crates/data" }
 # every consumer for a reload this workspace cannot use — see
 # `crates/config/src/lib.rs` for the two reasons.
 #
-# `schema` is left out here and turned on by `portfolio-config`'s own
-# off-by-default `config-schema` feature, so `serde_json`, `syn` and the derive
-# reach the documentation generator and never a binary this workspace ships.
+# `schema` and `schema-cli` are left out here and turned on together by
+# `portfolio-config`'s own off-by-default `config-schema` feature, so
+# `serde_json`, `syn`, the derive and the generator's argument parser reach the
+# documentation generator and never a binary this workspace ships.
 # `testing` is left out for the same reason and taken as a dev-dependency in
 # `crates/config`, which is the only crate that loads anything.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.6.0", default-features = false, features = [
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.9.0", default-features = false, features = [
     "loader",
     "explain",
 ] }

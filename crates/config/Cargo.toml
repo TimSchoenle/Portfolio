@@ -4,17 +4,22 @@ version = "2.6.0"
 edition.workspace = true
 publish.workspace = true
 
-# Off by default, and it has to stay that way: `terrace-config/schema` links
+# Off by default, and it has to stay that way: `terrace-config/schema-cli` links
 # `serde_json` and compiles a proc macro, neither of which a running binary has
 # any use for. Only `cargo run --example config-schema` and the `--all-features`
 # CI gates ever turn it on, so nothing it costs reaches the image — the
 # Dockerfile builds no feature flags at all.
 #
+# `schema-cli` rather than `schema`: it is the half of the generator every
+# consumer of `schema` was writing by hand — the `--format` vocabulary, the
+# argument parsing and the dispatch — and it pulls no dependency `schema` did
+# not already. `examples/config-schema.rs` is what is left after taking it.
+#
 # The `#[config(...)]` helper attributes are gated with it rather than left in
 # place: they are the derive's, so a build without the derive fails with
 # `cannot find attribute config` the moment one is unconditional.
 [features]
-config-schema = ["terrace-config/schema"]
+config-schema = ["terrace-config/schema-cli"]
 
 # The generator that renders the configuration reference in `README.md`. Listed
 # so `cargo clippy --all-targets --all-features` compiles it, which is the only

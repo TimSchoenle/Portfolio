@@ -25,6 +25,7 @@ Dockerfile.*
 docker-compose*.yml
 cst.yaml
 goss.yaml
+justfile
 hadolint*.yaml
 .trivyignore
 image.tar

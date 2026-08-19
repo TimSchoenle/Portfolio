@@ -75,6 +75,23 @@ A new config block needs no registration. Add it to the aggregate the binary
 loads and it is in the README, because that aggregate is what the generator
 describes.
 
+Two more files come out of the same types and are committed rather than
+rendered on demand: `docs/config.contract.json`, which a chart's CI reads to
+check that what it renders is what this image loads, and the
+`terrace-config:labels` region in the `Dockerfile`, which is what makes that
+document discoverable on the image without pulling a layer. Rewrite both with:
+
+```bash
+just regenerate
+```
+
+That recipe writes and never checks. The checking is
+`TimSchoenle/actions/actions/rust/config-contract`, which the `Config Contract`
+job in **Build** runs on every pull request — so there is exactly one
+implementation of each, and they cannot disagree about where the region ends.
+`just --list` has the rest, including `just render <format>` for reading one
+rendering without redirecting it anywhere.
+
 The `config-schema` feature is off by default and is never enabled by a build
 that ships; `cargo clippy --all-features --all-targets` is what keeps the
 generator compiling.
