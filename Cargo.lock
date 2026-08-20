@@ -3576,7 +3576,7 @@ checksum = "05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85"
 
 [[package]]
 name = "portfolio-config"
-version = "2.7.0"
+version = "2.7.1"
 dependencies = [
  "secrecy",
  "serde",
@@ -3586,7 +3586,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-data"
-version = "2.7.0"
+version = "2.7.1"
 dependencies = [
  "schemars",
  "serde",
@@ -3595,7 +3595,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-platform"
-version = "2.7.0"
+version = "2.7.1"
 
 [[package]]
 name = "postcard"
@@ -4024,7 +4024,7 @@ dependencies = [
 
 [[package]]
 name = "resume-generator"
-version = "2.7.0"
+version = "2.7.1"
 dependencies = [
  "portfolio-data",
  "serde_json",
@@ -5803,7 +5803,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "update-repos"
-version = "2.7.0"
+version = "2.7.1"
 dependencies = [
  "portfolio-config",
  "portfolio-data",
@@ -6146,7 +6146,7 @@ dependencies = [
 
 [[package]]
 name = "web"
-version = "2.7.0"
+version = "2.7.1"
 dependencies = [
  "axum",
  "csp-shell",
