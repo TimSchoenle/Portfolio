@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.7.0](https://github.com/TimSchoenle/Portfolio/compare/v2.6.0...v2.7.0) (2026-08-20)
+
+
+### Features
+
+* **config:** take terrace-config v0.9.0, the shared check and a justfile ([#1120](https://github.com/TimSchoenle/Portfolio/issues/1120)) ([01d9147](https://github.com/TimSchoenle/Portfolio/commit/01d9147c1d65cef4f0b5199f465ac5883cc18490))
+* **web:** generate the third-party licences page with cargo-about ([#1121](https://github.com/TimSchoenle/Portfolio/issues/1121)) ([3cf2750](https://github.com/TimSchoenle/Portfolio/commit/3cf2750a7039de6f95ba3d0104f76e8c2b5c0922))
+
+
+### Miscellaneous
+
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.3.2 ([#1118](https://github.com/TimSchoenle/Portfolio/issues/1118)) ([2a84640](https://github.com/TimSchoenle/Portfolio/commit/2a846403b3aebbb50699b9c32ab7131b68d71189))
+
 ## [2.6.0](https://github.com/TimSchoenle/Portfolio/compare/v2.5.0...v2.6.0) (2026-08-18)
 
 
