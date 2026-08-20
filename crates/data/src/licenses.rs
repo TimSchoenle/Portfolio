@@ -12,28 +12,34 @@
 //!
 //! [`cargo-about`]: https://github.com/EmbarkStudios/cargo-about
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 /// The generated licence inventory: one entry per licence in [`Self::summary`],
 /// one per distinct licence *file* in [`Self::texts`], one per dependency in
 /// [`Self::crates`].
 ///
-/// The three views overlap on purpose. A dependency list answers "what does this
-/// site link", the texts answer "under which terms", and neither is derivable
-/// from the other: a crate offering `MIT OR Apache-2.0` names two licences and
-/// ships under one, and a single SPDX identifier covers as many distinct texts as
-/// there are copyright holders using it.
+/// Stored normalised — a licence text appears once, however many dependencies
+/// ship it — and joined back into one row per dependency by
+/// [`Self::dependencies`], which is the shape the page renders. Keeping the
+/// document normalised is what holds it to 340 KB in the binary: the same data
+/// denormalised, with each shared Apache text repeated under every crate using
+/// it, is half again as large.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LicensesFile {
     /// Every licence the dependency set resolves to, with the number of crates
     /// under it. Ordered by cargo-about, most-used first.
     #[serde(default)]
     pub summary: Vec<LicenseSummary>,
-    /// Every distinct licence file found, with the crates it covers.
+    /// Every distinct licence file found, each naming the crates it covers.
     ///
     /// Distinct by text, not by identifier: two crates under MIT ship two files
     /// that differ in their copyright line, and reproducing that line is what MIT
     /// asks for. Hence 100-odd entries over a handful of identifiers.
+    ///
+    /// `used_by` is the join, not something the page prints — [`Self::dependencies`]
+    /// inverts it so each dependency carries its own texts.
     #[serde(default)]
     pub texts: Vec<LicenseText>,
     /// Every crate in the resolved graph, as cargo resolved it for the targets
@@ -62,6 +68,39 @@ impl LicensesFile {
         self.crates.iter().filter(|c| c.source.is_some())
     }
 
+    /// Every third-party dependency with the licence texts that cover it, in the
+    /// document's own order.
+    ///
+    /// The inversion of [`LicenseText::used_by`], done once here rather than by
+    /// scanning every text for every dependency while rendering — that is 175
+    /// texts against 335 dependencies on each server render, for a join whose
+    /// answer never changes within a build.
+    ///
+    /// A dependency usually has exactly one text. It has several when it is
+    /// licensed `A AND B`, or when it vendors code under notices of its own:
+    /// `ring` carries eighteen, which are eighteen genuinely different copyright
+    /// notices rather than eighteen copies of one.
+    pub fn dependencies(&self) -> Vec<DependencyLicenses<'_>> {
+        let mut covered: BTreeMap<(&str, &str), Vec<&LicenseText>> = BTreeMap::new();
+        for text in &self.texts {
+            for used in &text.used_by {
+                covered
+                    .entry((used.name.as_str(), used.version.as_str()))
+                    .or_default()
+                    .push(text);
+            }
+        }
+
+        self.third_party()
+            .map(|dependency| DependencyLicenses {
+                texts: covered
+                    .remove(&(dependency.name.as_str(), dependency.version.as_str()))
+                    .unwrap_or_default(),
+                dependency,
+            })
+            .collect()
+    }
+
     /// `true` when there is nothing to attribute — a `cargo check` or a `cargo
     /// test` outside the image build, where `cargo about` has not run and
     /// `build.rs` embedded the empty default. The page renders its unavailable
@@ -69,6 +108,15 @@ impl LicensesFile {
     pub fn is_empty(&self) -> bool {
         self.third_party().next().is_none()
     }
+}
+
+/// One dependency and the licence texts it ships under: a row of the page.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DependencyLicenses<'a> {
+    pub dependency: &'a CrateLicense,
+    /// Empty only if the generator found no licence file for it at all, which is
+    /// worth showing as such rather than hiding the dependency.
+    pub texts: Vec<&'a LicenseText>,
 }
 
 /// One licence and how many crates resolve to it.
@@ -185,6 +233,50 @@ mod tests {
         let third_party: Vec<&str> = parsed.third_party().map(|c| c.name.as_str()).collect();
         assert_eq!(third_party, ["anyhow", "terrace-config"]);
         assert!(!parsed.is_empty());
+    }
+
+    /// The join the page reads: every dependency carries the texts naming it,
+    /// a shared text reaches every dependency that ships it, and a dependency
+    /// with several notices keeps all of them.
+    #[test]
+    fn dependencies_carry_the_texts_that_name_them() {
+        let parsed: LicensesFile = serde_json::from_str(
+            r#"{"summary":[],
+                "texts":[
+                  {"id":"MIT","name":"MIT License","text":"shared",
+                   "used_by":[{"name":"a","version":"1.0.0"},{"name":"b","version":"2.0.0"}]},
+                  {"id":"ISC","name":"ISC License","text":"vendored",
+                   "used_by":[{"name":"b","version":"2.0.0"}]}],
+                "crates":[
+                  {"name":"a","version":"1.0.0","license":"MIT","source":"registry+x"},
+                  {"name":"b","version":"2.0.0","license":"MIT AND ISC","source":"registry+x"},
+                  {"name":"c","version":"3.0.0","license":"MIT","source":"registry+x"},
+                  {"name":"web","version":"2.6.0","license":"Unknown"}]}"#,
+        )
+        .expect("valid");
+
+        let rows = parsed.dependencies();
+        let named: Vec<&str> = rows.iter().map(|r| r.dependency.name.as_str()).collect();
+        assert_eq!(
+            named,
+            ["a", "b", "c"],
+            "path dependencies stay off the page"
+        );
+
+        assert_eq!(rows[0].texts.len(), 1, "a shared text reaches each user");
+        assert_eq!(rows[0].texts[0].text, "shared");
+
+        let both: Vec<&str> = rows[1].texts.iter().map(|t| t.id.as_str()).collect();
+        assert_eq!(
+            both,
+            ["MIT", "ISC"],
+            "every notice is kept, in document order"
+        );
+
+        assert!(
+            rows[2].texts.is_empty(),
+            "a dependency no text names is still listed"
+        );
     }
 
     /// An inventory holding nothing but this repository's own crates is as empty

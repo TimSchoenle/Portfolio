@@ -408,11 +408,19 @@ repository is fetched directly (without filtering):
 
 ## Third-Party Licenses
 
-`/licenses` lists every third-party crate the shipped artefacts link, the licence
-each is distributed under, and the verbatim text of every licence file found. It
-is a Dioxus route like any other — inside the app shell, translated, server-side
-rendered, reachable from the footer and the command palette — and it reads a
-document compiled into the binary rather than anything fetched at runtime.
+`/licenses` lists every third-party dependency the shipped artefacts link, the
+licence each is distributed under, and the verbatim text of every licence file
+found. One row per dependency, and the row is the disclosure control: opening it
+shows that dependency's licence text and a link to its repository. There is no
+separate list of texts, because such a list could only repeat these same names to
+say which text belonged to which.
+
+It is a Dioxus route like any other — inside the app shell, translated,
+server-side rendered, reachable from the footer and the command palette — and it
+reads a document compiled into the binary rather than anything fetched at
+runtime. That document stays normalised, one entry per distinct licence file
+rather than one per dependency; the join happens while rendering
+(`LicensesFile::dependencies`), which is what keeps it to 340 KB in the binary.
 
 That document is produced by
 [cargo-about](https://github.com/EmbarkStudios/cargo-about) during the image

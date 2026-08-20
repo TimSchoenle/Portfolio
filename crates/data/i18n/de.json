@@ -194,8 +194,8 @@
     "intro": "Diese Seite baut auf Open Source auf. Jede Abhängigkeit, die der Server und der WebAssembly-Client einbinden, ist unten aufgeführt — mit der Lizenz, unter der sie verteilt wird, und deren vollständigem Text.",
     "summaryHeading": "Verwendete Lizenzen",
     "dependenciesHeading": "Abhängigkeiten",
-    "textsHeading": "Lizenztexte",
     "dependencyUnit": "Abhängigkeiten",
+    "noText": "Für diese Abhängigkeit wurde keine Lizenzdatei gefunden; sie wird unter dem oben genannten Ausdruck verteilt.",
     "unavailable": "Dieser Build enthält kein Lizenzverzeichnis."
   },
   "imprint": {

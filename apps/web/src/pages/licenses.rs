@@ -5,8 +5,10 @@
 //! the same fact. Nothing here is fetched at runtime and nothing is
 //! hand-maintained: adding a dependency changes this page on the next build.
 //!
-//! Three views, in the order a reader needs them — which licences are involved,
-//! which dependencies are involved, and the texts themselves.
+//! Two views: which licences are involved, then every dependency — each one
+//! expanding to the licence text it ships under. The texts are not a section of
+//! their own, because that section could only have listed the same dependency
+//! names a second time to say which text belonged to which.
 
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, licenses::LicensesFile};
@@ -44,7 +46,7 @@ pub fn Licenses() -> Element {
     }
 }
 
-/// The three views over a present inventory.
+/// The two views over a present inventory.
 ///
 /// A separate component so the page above reads as one decision — there is an
 /// inventory or there is not — and so everything below can take the document as
@@ -54,9 +56,8 @@ fn Inventory(file: &'static LicensesFile) -> Element {
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
 
-    // Collected once: the heading needs the count and the list needs the items,
-    // and `third_party` is a filter over the whole graph rather than a field.
-    let dependencies: Vec<_> = file.third_party().collect();
+    // The join, done once: each dependency with the licence texts naming it.
+    let dependencies = file.dependencies();
 
     let unit = t("licenses.dependencyUnit");
     let dependencies_heading = format!(
@@ -64,7 +65,6 @@ fn Inventory(file: &'static LicensesFile) -> Element {
         t("licenses.dependenciesHeading"),
         dependencies.len()
     );
-    let texts_heading = format!("{} ({})", t("licenses.textsHeading"), file.texts.len());
 
     rsx! {
         section { class: "licenses-block",
@@ -82,54 +82,54 @@ fn Inventory(file: &'static LicensesFile) -> Element {
 
         section { class: "licenses-block",
             h2 { "{dependencies_heading}" }
-            ul { class: "license-deps",
-                {dependencies.iter().map(|c| rsx! {
-                    li { key: "{c.name} {c.version}", class: "license-dep",
-                        // Unlinked when the crate declares no repository, rather
-                        // than an anchor with nowhere to go.
-                        if let Some(url) = c.repository.as_deref() {
-                            a {
-                                class: "license-dep-name",
-                                href: "{url}",
-                                target: "_blank",
-                                rel: "noopener noreferrer",
-                                "{c.name}"
+            // One row per dependency, the whole row a disclosure control: the
+            // licence text belongs to the dependency that ships it, and a
+            // separate list of texts could only have repeated these names to say
+            // which text was whose.
+            //
+            // Collapsed, not deferred — `details` hides its contents, it does not
+            // withhold them — so Ctrl+F and a crawler still reach every word of
+            // every licence.
+            div { class: "license-deps",
+                {dependencies.iter().map(|row| {
+                    let dep = row.dependency;
+                    rsx! {
+                        details { key: "{dep.name} {dep.version}", class: "license-dep",
+                            summary {
+                                span { class: "license-dep-name", "{dep.name}" }
+                                span { class: "license-dep-version", "{dep.version}" }
+                                span { class: "license-dep-spdx", "{dep.license}" }
                             }
-                        } else {
-                            span { class: "license-dep-name", "{c.name}" }
+                            div { class: "license-dep-body",
+                                // Inside the body rather than in the summary: a
+                                // link there would swallow the click on the one
+                                // word a reader aims at to open the row.
+                                if let Some(url) = dep.repository.as_deref() {
+                                    a {
+                                        class: "license-dep-repo",
+                                        href: "{url}",
+                                        target: "_blank",
+                                        rel: "noopener noreferrer",
+                                        {url.trim_start_matches("https://").trim_start_matches("http://")}
+                                    }
+                                }
+                                {row.texts.iter().enumerate().map(|(i, l)| rsx! {
+                                    div { key: "{i}", class: "license-text",
+                                        p { class: "license-text-head",
+                                            span { class: "license-text-name", "{l.name}" }
+                                            span { class: "license-text-id", "{l.id}" }
+                                        }
+                                        pre { "{l.text}" }
+                                    }
+                                })}
+                                if row.texts.is_empty() {
+                                    p { class: "license-text-missing", {t("licenses.noText")} }
+                                }
+                            }
                         }
-                        span { class: "license-dep-version", "{c.version}" }
-                        span { class: "license-dep-spdx", "{c.license}" }
                     }
                 })}
             }
-        }
-
-        section { class: "licenses-block",
-            h2 { "{texts_heading}" }
-            // Collapsed by default: the texts are the reason the page exists, but
-            // a hundred-odd of them expanded is not a page anyone can read. They
-            // are in the document either way — `details` hides them, it does not
-            // defer them — so Ctrl+F and a crawler still find every word.
-            {file.texts.iter().enumerate().map(|(i, l)| {
-                let used_by = l.used_by
-                    .iter()
-                    .map(|c| format!("{} {}", c.name, c.version))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                rsx! {
-                    details { key: "{i}", class: "license-text",
-                        summary {
-                            span { class: "license-text-name", "{l.name}" }
-                            span { class: "license-text-id", "{l.id}" }
-                        }
-                        div { class: "license-text-body",
-                            p { class: "license-text-usedby", "{used_by}" }
-                            pre { "{l.text}" }
-                        }
-                    }
-                }
-            })}
         }
     }
 }

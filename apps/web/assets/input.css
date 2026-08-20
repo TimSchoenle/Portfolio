@@ -614,7 +614,7 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 
 /* Third-party licenses (/licenses) — the generated attribution page.
    Wider than the legal pages: those are prose at a reading measure, this is a
-   250-row inventory, and squeezing crate + version + SPDX expression into 760px
+   300-row inventory, and squeezing name + version + SPDX expression into 760px
    wraps every third line. The licence texts themselves stay in a monospace
    block at their original wrapping. */
 .licenses-page { max-width: 1040px; margin: 0 auto; padding: 60px var(--side-pad) 80px; }
@@ -636,38 +636,45 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 .license-chip-name { color: rgba(232, 236, 242, 0.85); }
 .license-chip-count { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: var(--muted); }
 
-.license-deps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.license-dep {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
-  gap: 8px 16px; align-items: baseline;
-  padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 14px;
+.license-deps { border-top: 1px solid var(--line); }
+
+/* Each dependency is a disclosure row: the summary is the whole clickable
+   surface, so nothing inside it is a link — the repository anchor lives in the
+   body, where it cannot swallow the click that opens the row. */
+.license-dep { border-bottom: 1px solid var(--line); }
+.license-dep > summary {
+  display: grid; grid-template-columns: 14px minmax(0, 1fr) auto minmax(0, 1.2fr);
+  gap: 4px 16px; align-items: baseline;
+  padding: 10px 2px; cursor: pointer; list-style: none; font-size: 14px;
+  transition: color 0.15s ease;
 }
+.license-dep > summary::-webkit-details-marker { display: none; }
+.license-dep > summary::before { content: "+"; color: var(--muted); }
+.license-dep[open] > summary::before { content: "−"; }
+.license-dep > summary:hover,
+.license-dep > summary:focus-visible { color: var(--accent); }
 .license-dep-name { overflow-wrap: anywhere; }
-a.license-dep-name { transition: color 0.15s ease; }
-a.license-dep-name:hover { color: var(--accent); text-decoration: underline; }
 .license-dep-version,
 .license-dep-spdx {
   font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--muted);
 }
 .license-dep-spdx { text-align: right; overflow-wrap: anywhere; }
 
-.license-text { border-bottom: 1px solid var(--line); }
-.license-text > summary {
-  display: flex; align-items: baseline; gap: 12px;
-  padding: 12px 2px; cursor: pointer; list-style: none; font-size: 14px;
+.license-dep-body { padding: 2px 0 22px 30px; display: flex; flex-direction: column; gap: 14px; }
+.license-dep-repo {
+  align-self: start;
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
+  color: var(--muted); overflow-wrap: anywhere; transition: color 0.15s ease;
 }
-.license-text > summary::-webkit-details-marker { display: none; }
-.license-text > summary::before { content: "+"; color: var(--muted); width: 12px; flex: none; }
-.license-text[open] > summary::before { content: "−"; }
-.license-text > summary:hover { color: var(--accent); }
-.license-text-name { flex: 1 1 auto; min-width: 0; }
-.license-text-id,
-.license-text-usedby {
+.license-dep-repo:hover { color: var(--accent); text-decoration: underline; }
+
+.license-text-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; font-size: 13px; }
+.license-text-name { color: rgba(232, 236, 242, 0.9); }
+.license-text-id {
   font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--muted);
 }
-.license-text-body { padding: 0 0 20px 24px; }
-.license-text-usedby { margin: 0 0 12px; overflow-wrap: anywhere; line-height: 1.6; }
-.license-text-body pre {
+.license-text-missing { margin: 0; color: var(--muted); font-size: 13px; }
+.license-text pre {
   margin: 0; padding: 16px 18px; max-height: 60vh; overflow: auto;
   border: 1px solid var(--line); border-radius: 3px; background: var(--bg-card);
   font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; line-height: 1.6;
@@ -677,9 +684,9 @@ a.license-dep-name:hover { color: var(--accent); text-decoration: underline; }
 @media (max-width: 720px) {
   /* The SPDX expression drops to its own full-width row rather than being
      crushed into a third column that wraps mid-identifier. */
-  .license-dep { grid-template-columns: minmax(0, 1fr) auto; }
-  .license-dep-spdx { grid-column: 1 / -1; text-align: left; }
-  .license-text-body { padding-left: 0; }
+  .license-dep > summary { grid-template-columns: 14px minmax(0, 1fr) auto; }
+  .license-dep-spdx { grid-column: 2 / -1; text-align: left; }
+  .license-dep-body { padding-left: 0; }
 }
 
 /* 404 */

@@ -182,8 +182,8 @@
     "intro": "This site is built on open source. Every dependency the server and the WebAssembly client link is listed below, together with the licence it is distributed under and the full text of that licence.",
     "summaryHeading": "Licences in use",
     "dependenciesHeading": "Dependencies",
-    "textsHeading": "Licence texts",
     "dependencyUnit": "dependencies",
+    "noText": "No licence file was found for this dependency; it is distributed under the expression above.",
     "unavailable": "This build carries no licence inventory."
   },
   "imprint": {
