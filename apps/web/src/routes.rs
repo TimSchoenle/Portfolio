@@ -3,7 +3,7 @@
 use dioxus::prelude::*;
 
 use crate::github::ReposState;
-use crate::pages::{Home, Imprint, NotFound, Privacy};
+use crate::pages::{Home, Imprint, Licenses, NotFound, Privacy};
 use crate::ui::footer::Footer;
 use crate::ui::masthead::Masthead;
 use crate::ui::palette::CommandPalette;
@@ -19,6 +19,8 @@ pub enum Route {
     Imprint {},
     #[route("/privacy")]
     Privacy {},
+    #[route("/licenses")]
+    Licenses {},
     #[route("/:..segments")]
     NotFound { segments: Vec<String> },
 }

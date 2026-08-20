@@ -8,6 +8,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 - Rust (stable) with the `wasm32-unknown-unknown` target: `rustup target add wasm32-unknown-unknown`
 - [Dioxus CLI](https://dioxuslabs.com) (`dx`): `cargo install dioxus-cli` (or `cargo binstall dioxus-cli`)
+- [cargo-about](https://github.com/EmbarkStudios/cargo-about) (only to render the third-party licences page): `cargo install --locked cargo-about`
 - Node.js (only for the Tailwind CSS build step)
 - Docker (optional, for containerized builds)
 
@@ -20,7 +21,15 @@ Thank you for your interest in contributing! This document provides guidelines a
    cd Portfolio
    ```
 
-2. Run the web dev server (SSR + hydration):
+2. Render the third-party licence inventory the `/licenses` page reads
+   (optional — without it `build.rs` embeds an empty default and the page says
+   it has nothing to show):
+
+   ```bash
+   just licenses
+   ```
+
+3. Run the web dev server (SSR + hydration):
 
    ```bash
    cd apps/web
@@ -28,7 +37,7 @@ Thank you for your interest in contributing! This document provides guidelines a
    dx serve --platform web
    ```
 
-3. Open [http://localhost:8080](http://localhost:8080) in your browser.
+4. Open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ## Checks
 

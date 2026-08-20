@@ -64,10 +64,13 @@ fn sitemap_xml() -> String {
     format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
          <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n\
-         {}{}{}</urlset>\n",
+         {}{}{}{}</urlset>\n",
         entry("/", "weekly", "1.0"),
         entry("/imprint", "monthly", "0.5"),
         entry("/privacy", "monthly", "0.5"),
+        // Regenerated from the dependency set on every build, so it changes as
+        // often as the site is deployed rather than as rarely as a legal text.
+        entry("/licenses", "weekly", "0.3"),
     )
 }
 
@@ -110,13 +113,13 @@ mod tests {
     fn sitemap_lists_every_public_route() {
         let xml = sitemap_xml();
         assert!(xml.starts_with("<?xml"));
-        for path in ["/", "/imprint", "/privacy"] {
+        for path in ["/", "/imprint", "/privacy", "/licenses"] {
             assert!(
                 xml.contains(&format!("<loc>{}{path}</loc>", CONFIG.url)),
                 "sitemap missing route {path}"
             );
         }
-        assert_eq!(xml.matches("<url>").count(), 3);
+        assert_eq!(xml.matches("<url>").count(), 4);
     }
 
     #[test]

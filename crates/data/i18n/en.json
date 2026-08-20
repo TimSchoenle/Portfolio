@@ -157,12 +157,14 @@
     "downloadResume": "Download resume (PDF)",
     "imprint": "Imprint",
     "privacy": "Privacy policy",
+    "licenses": "Third-party licenses",
     "dialogLabel": "Command palette"
   },
   "footer": {
     "credit": "Designed and built by Tim Schönle.",
     "imprint": "Imprint",
     "privacy": "Privacy Policy",
+    "licenses": "Licenses",
     "colophon": "Colophon",
     "built": "Built with care"
   },
@@ -174,6 +176,15 @@
   "legal": {
     "emailLabel": "Email",
     "contactFormLabel": "Contact form"
+  },
+  "licenses": {
+    "title": "Third-Party Licenses",
+    "intro": "This site is built on open source. Every dependency the server and the WebAssembly client link is listed below, together with the licence it is distributed under and the full text of that licence.",
+    "summaryHeading": "Licences in use",
+    "dependenciesHeading": "Dependencies",
+    "dependencyUnit": "dependencies",
+    "noText": "No licence file was found for this dependency; it is distributed under the expression above.",
+    "unavailable": "This build carries no licence inventory."
   },
   "imprint": {
     "title": "Imprint",

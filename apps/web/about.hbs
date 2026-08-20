@@ -1,0 +1,32 @@
+{{!--
+  The document `cargo about generate` writes to `generated/licenses.json`, which
+  `build.rs` embeds into the binary and the `/licenses` route renders. Its schema
+  is `portfolio_data::licenses::LicensesFile` — keep the two in step.
+
+  JSON rather than the HTML page cargo-about ships by default: the page this site
+  serves is a Dioxus route inside the app shell — masthead, footer, i18n,
+  client-side navigation, one stylesheet — not a separate document bolted next to
+  it. What the tool is needed for is the *data*: which crates the shipped
+  artefacts link, under which licence, and the exact text of every licence file
+  it found.
+
+  `--format json` carries the same data plus the entire `cargo metadata` record
+  of every crate — dependency graphs, feature tables, target lists, manifest
+  paths — which is 3.8 MB of which the page reads about 8%. This template is that
+  document with the fields the page needs and nothing else.
+
+  Handlebars renders `{{json x}}` as a JSON literal and cargo-about disables HTML
+  escaping, so licence texts survive verbatim, quotes and angle brackets and all.
+  Every newline below falls between JSON tokens, never inside a string.
+--}}
+{
+"summary":[
+{{#each overview}}{"id":{{json this.id}},"name":{{json this.name}},"crates":{{this.count}}}{{#unless @last}},{{/unless}}
+{{/each}}],
+"texts":[
+{{#each licenses}}{"id":{{json this.id}},"name":{{json this.name}},"text":{{json this.text}},"used_by":[{{#each this.used_by}}{"name":{{json this.crate.name}},"version":{{json this.crate.version}}}{{#unless @last}},{{/unless}}{{/each}}]}{{#unless @last}},{{/unless}}
+{{/each}}],
+"crates":[
+{{#each crates}}{"name":{{json this.package.name}},"version":{{json this.package.version}},"license":{{json this.license}},"source":{{json this.package.source}},"repository":{{json this.package.repository}}}{{#unless @last}},{{/unless}}
+{{/each}}]
+}

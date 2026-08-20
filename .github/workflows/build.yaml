@@ -333,6 +333,16 @@ jobs:
           expect_status /robots.txt 200
           expect_status /favicon.svg 200
 
+          # ── The attribution page carries a real inventory ─────────────────────
+          # The one way this part of the pipeline fails quietly: `cargo about`
+          # did not run, or its output never reached `build.rs`, and the route
+          # answers 200 anyway — with the "nothing to show" state in place of the
+          # licences the image is obliged to publish. So assert a licence text and
+          # a crate name, not just the status.
+          expect_status /licenses 200
+          expect_body_contains /licenses 'Permission is hereby granted, free of charge'
+          expect_body_contains /licenses 'MIT License'
+
           # ── The social card is a raster, and it is actually in the image ──────
           # `og:image` pointed at the SVG favicon for a while, which every
           # unfurler refuses; the tag looked correct and produced no preview

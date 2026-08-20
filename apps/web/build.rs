@@ -1,12 +1,13 @@
-//! Embeds `repos.json`, `resume-fingerprint.json` and the resume PDFs into the
-//! binary.
+//! Embeds `repos.json`, `licenses.json`, `resume-fingerprint.json` and the
+//! resume PDFs into the binary.
 //!
-//! `repos.json` is regenerated from the GitHub API by the `update-repos` crate
-//! and `resume-fingerprint.json` + the PDFs by the resume generator. When any of
+//! `repos.json` is regenerated from the GitHub API by the `update-repos` crate,
+//! `licenses.json` by `cargo about` (see `about.toml`) and
+//! `resume-fingerprint.json` + the PDFs by the resume generator. When any of
 //! them is absent (dev builds, `cargo clippy`, `cargo test`), an empty default is
-//! substituted so the `include_str!`/`include_bytes!`s in `src/github.rs` and
-//! `src/server/assets.rs` always resolve — on both the wasm client and the
-//! native server target.
+//! substituted so the `include_str!`/`include_bytes!`s in `src/github.rs`,
+//! `src/licenses.rs` and `src/server/assets.rs` always resolve — on both the wasm
+//! client and the native server target.
 //!
 //! The PDFs are embedded (rather than served from an on-disk `public/resume`
 //! directory) so the SSR server stays a single self-contained binary: the
@@ -21,6 +22,7 @@ use portfolio_data::{OG_IMAGE_FILE, RESUME_FILES};
 
 const EMPTY_MANIFEST: &str = r#"{"algorithm":"","generated_at":"","files":{}}"#;
 const EMPTY_REPOS: &str = r#"{"generated_at":"","user":"","repos":[]}"#;
+const EMPTY_LICENSES: &str = r#"{"summary":[],"texts":[],"crates":[]}"#;
 
 fn embed(source: &Path, out_dir: &str, name: &str, default: &str) {
     let dest = Path::new(out_dir).join(name);
@@ -73,6 +75,19 @@ fn main() {
 
     let repos_source = Path::new(&manifest_dir).join("repos.json");
     embed(&repos_source, &out_dir, "repos.json", EMPTY_REPOS);
+
+    // The third-party licence inventory, written by `cargo about generate` (see
+    // `about.toml` / `about.hbs`, the `licenses` recipe in the justfile and the
+    // `generate` stage of the Dockerfile) and rendered by the `/licenses` route.
+    //
+    // Embedded rather than fetched so the page is part of the server-side render
+    // like every other route, and so the attribution a build publishes is the
+    // attribution for the dependency set that build actually linked — the two
+    // cannot drift apart when they are the same artefact.
+    let licenses_source = Path::new(&manifest_dir)
+        .join("generated")
+        .join("licenses.json");
+    embed(&licenses_source, &out_dir, "licenses.json", EMPTY_LICENSES);
 
     // Resume PDFs, embedded under their canonical `RESUME_FILES` names. The
     // resume generator writes them into `generated/resume/` (see the Dockerfile);

@@ -6,6 +6,8 @@ ARG GROUP_ID=1001
 # Pinned build-tool versions. Bump alongside the base image digests and the
 # committed Cargo.lock / package-lock.json.
 ARG DIOXUS_CLI_VERSION=0.7.9
+# renovate: datasource=crate depName=cargo-about
+ARG CARGO_ABOUT_VERSION=0.9.2
 
 # ── shared build tools ────────────────────────────────────────────────────────
 # Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
@@ -18,6 +20,7 @@ ARG DIOXUS_CLI_VERSION=0.7.9
 FROM --platform=$BUILDPLATFORM rust:1.97-slim@sha256:8e8cf8f7fd54a2d23d5a743b3a03f56e26b6c774276c33fa0595111704ebb15c AS tools
 
 ARG DIOXUS_CLI_VERSION
+ARG CARGO_ABOUT_VERSION
 ARG TARGETARCH
 # Honoured by tooling that supports it so embedded timestamps stay deterministic.
 ARG SOURCE_DATE_EPOCH
@@ -56,18 +59,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # wasm32 for the client; musl for a fully static SSR server (see runtime stage).
 RUN rustup target add wasm32-unknown-unknown "$(cat /etc/rust-target)"
 
-# Pin the binstalled Dioxus CLI for reproducible builds.
+# Pin the binstalled Dioxus CLI and cargo-about for reproducible builds.
 #
 # The bootstrap script is pinned to a commit, not to `main`: it is piped
 # straight into a shell, so fetching whatever `main` happens to hold would make
 # every build depend on the current state of a repository we do not control —
 # the one unpinned input in a file where the base images, actions and CLI
 # version are all pinned. Renovate tracks the SHA via the annotation below.
+#
+# `cargo-about` renders the third-party licence inventory the `/licenses` page is
+# built from (see the `generate` stage). A build tool like `dx`: it runs once
+# during the image build and nothing it links reaches the runtime image.
 # renovate: datasource=github-tags depName=cargo-bins/cargo-binstall
 ARG CARGO_BINSTALL_REF=e00d2c94cc0067b77737821097a62d91c0301baa # tag=v1.21.1
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
     "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${CARGO_BINSTALL_REF}/install-from-binstall-release.sh" | bash \
-    && cargo binstall --no-confirm --locked "dioxus-cli@${DIOXUS_CLI_VERSION}"
+    && cargo binstall --no-confirm --locked "dioxus-cli@${DIOXUS_CLI_VERSION}" \
+    && cargo binstall --no-confirm --locked "cargo-about@${CARGO_ABOUT_VERSION}"
 
 WORKDIR /app
 
@@ -103,6 +111,27 @@ RUN --mount=type=secret,id=gh_token \
     cp /repos-cache/repos.json apps/web/repos.json 2>/dev/null || true; \
     CI=1 cargo run --profile tools --locked -p update-repos -- apps/web/repos.json \
     && cp apps/web/repos.json /repos-cache/repos.json
+# The third-party licence inventory, embedded by build.rs and rendered by the
+# `/licenses` route. Runs here rather than being committed for the same reason
+# repos.json is not committed: the attribution a build publishes has to describe
+# the dependency set that build linked, and the only place both are known is the
+# build itself.
+#
+# `--all-features` covers both halves of the fullstack app in one pass — the
+# wasm client's web-sys and the SSR server's axum are behind the crate's platform
+# features, and a run without them attributes neither. `--locked` asserts the
+# committed Cargo.lock resolves unchanged, so the inventory describes the same
+# graph `dx bundle` is about to compile.
+#
+# This step is also the licence gate: `accepted` in apps/web/about.toml lists the
+# terms this site ships under, and a dependency arriving with anything else exits
+# non-zero here — the image fails to build rather than being published with a
+# licences page that does not mention it.
+RUN mkdir -p apps/web/generated \
+    && cargo about generate --locked --all-features \
+         --manifest-path apps/web/Cargo.toml \
+         --output-file apps/web/generated/licenses.json \
+         apps/web/about.hbs
 # Resume PDFs + resume-fingerprint.json, both embedded into the web binary by
 # build.rs (the PDFs are served at /resume/ from memory; the fingerprint is shown
 # on the contact card). Embedding keeps the runtime a single self-contained
