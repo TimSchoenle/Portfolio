@@ -2,7 +2,7 @@
   "terrace_contract": 1,
   "app": {
     "name": "portfolio",
-    "version": "v2.6.0",
+    "version": "v2.7.0",
     "source": "https://github.com/TimSchoenle/Portfolio"
   },
   "schema": {
