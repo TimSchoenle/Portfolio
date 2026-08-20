@@ -2,12 +2,14 @@
 //!
 //! All user-visible prose lives in the embedded translation files ([`I18N_EN`],
 //! [`I18N_DE`]); this crate only holds facts (names, dates, URLs, confidence
-//! values) and the schema for `repos.json`.
+//! values) and the schemas for the build-time generated documents — `repos.json`
+//! and the third-party licence inventory in [`licenses`].
 
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+pub mod licenses;
 pub mod profile;
 
 /// English translations, embedded at compile time.

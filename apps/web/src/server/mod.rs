@@ -309,7 +309,7 @@ const _: () = {
 /// simply by requesting `/1`, `/2`, … until the cache volume filled up. Routes
 /// outside the list still render normally; their output is just never stored
 /// (see [`isr_map_path`]).
-const CACHEABLE_PATHS: [&str; 3] = ["/", "/imprint", "/privacy"];
+const CACHEABLE_PATHS: [&str; 4] = ["/", "/imprint", "/privacy", "/licenses"];
 
 /// Whether a request path is one of the [`CACHEABLE_PATHS`].
 fn is_cacheable_path(path: &str) -> bool {
@@ -1119,7 +1119,7 @@ mod tests {
 
     #[test]
     fn only_allowlisted_pages_are_cacheable() {
-        for path in ["/", "/imprint", "/privacy"] {
+        for path in ["/", "/imprint", "/privacy", "/licenses"] {
             assert!(is_cacheable_path(path), "{path} should be cacheable");
         }
         // The catch-all 404 route matches unboundedly many URLs; caching them

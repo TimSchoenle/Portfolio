@@ -70,6 +70,12 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
         hint: "/privacy".into(),
         action: Action::Goto(Route::Privacy {}),
     });
+    entries.push(Entry {
+        group: g_nav.clone(),
+        label: t("palette.licenses"),
+        hint: "/licenses".into(),
+        action: Action::Goto(Route::Licenses {}),
+    });
 
     for r in repos.repos().iter().filter(|r| !r.fork && !r.archived) {
         entries.push(Entry {

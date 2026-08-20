@@ -65,6 +65,7 @@ a distroless container.
   - [Content-Security-Policy](#content-security-policy)
   - [Reproducible Builds](#reproducible-builds)
 - [Project Data (`repos.json`)](#project-data-reposjson)
+- [Third-Party Licenses](#third-party-licenses)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -98,7 +99,7 @@ applications.
 
 ## Features
 
-- Routes: `/` (single-page sections `s1`-`s5`), `/imprint`, `/privacy`, and a 404 page
+- Routes: `/` (single-page sections `s1`-`s5`), `/imprint`, `/privacy`, `/licenses`, and a 404 page
 - Hero with a two-line display name, scroll parallax, and a live meta card
 - Fixed chapter rail with scroll tracking and staggered reveal-on-scroll blocks
 - Stack section: an interactive skill radar (per-skill hover tooltips, category
@@ -112,6 +113,9 @@ applications.
 - Localized, single-page, ATS-readable resume PDFs with SHA-256 fingerprints on the contact card. The
   generator scales typography down until the content fits one A4 page.
 - Legal pages (imprint, privacy policy) localized and rendered from the translation files
+- Third-party licences page generated at build time by cargo-about: every crate
+  the client and the server link, the licence it ships under, and the verbatim
+  text of every licence file found
 - Server-side rendering with WASM hydration; per-route `<head>` metadata, JSON-LD,
   and server-negotiated locale for the first paint
 - SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, and a web manifest
@@ -128,6 +132,8 @@ applications.
   `rustup target add wasm32-unknown-unknown`
 - [Dioxus CLI](https://dioxuslabs.com) (`dx`): `cargo install dioxus-cli`
   (or `cargo binstall dioxus-cli`)
+- [cargo-about](https://github.com/EmbarkStudios/cargo-about) (only to render the
+  third-party licences page): `cargo install --locked cargo-about`
 - Node.js (required only for the Tailwind CSS build step)
 - Docker (optional, for containerized builds)
 
@@ -137,6 +143,10 @@ applications.
 # Resume PDFs + resume-fingerprint.json. Run BEFORE the web build so the
 # fingerprint is embedded (build.rs) and the PDFs are served from public/resume/.
 cargo run -p resume-generator -- apps/web/generated
+
+# Third-party licence inventory for the /licenses page (build.rs embeds it).
+# Optional: without it the page renders its "nothing to show" state.
+just licenses
 
 # Web dev server (SSR + hydration, http://localhost:8080)
 cd apps/web
@@ -411,6 +421,44 @@ PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
 # Override the repo set for a one-off run (figment's bracketed array syntax,
 # so the environment and the TOML spelling stay the same shape)
 PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repos
+```
+
+## Third-Party Licenses
+
+`/licenses` lists every third-party crate the shipped artefacts link, the licence
+each is distributed under, and the verbatim text of every licence file found. It
+is a Dioxus route like any other — inside the app shell, translated, server-side
+rendered, reachable from the footer and the command palette — and it reads a
+document compiled into the binary rather than anything fetched at runtime.
+
+That document is produced by
+[cargo-about](https://github.com/EmbarkStudios/cargo-about) during the image
+build, from [`apps/web/about.toml`](./apps/web/about.toml) (which licences are
+acceptable, which targets are built) and
+[`apps/web/about.hbs`](./apps/web/about.hbs) (the JSON it writes).
+`apps/web/build.rs` embeds the result the same way it embeds `repos.json`, and
+substitutes an empty default when it is absent — so a `cargo check` outside the
+image build still compiles, and the page simply says it has nothing to show.
+
+Running it against `apps/web/Cargo.toml` rather than the workspace is deliberate:
+what it reports is the dependency set a visitor actually receives — the wasm
+client and the SSR server — and not the resume generator's typst tree or the
+repo-list builder's HTTP client, neither of which is shipped. `--all-features`
+covers both halves of the fullstack crate in one pass, since the client's
+`web-sys` and the server's axum sit behind its platform features.
+
+The `accepted` list in `about.toml` is a gate, not a description: `cargo about`
+exits non-zero on a licence that is not on it, and that fails the image build. A
+dependency arriving under terms this site cannot ship stops the build rather than
+being published under a licences page that does not mention it — and adding an
+entry to that list is a deliberate decision to ship under those terms.
+
+```bash
+# Render the inventory locally; the image build runs the same command.
+just licenses
+
+# …which is:
+cargo about generate --locked --all-features   --manifest-path apps/web/Cargo.toml   --output-file apps/web/generated/licenses.json   apps/web/about.hbs
 ```
 
 ## Contributing

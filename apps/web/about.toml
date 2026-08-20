@@ -1,0 +1,79 @@
+# cargo-about configuration for the crate this site actually ships.
+#
+#     https://github.com/EmbarkStudios/cargo-about
+#
+# `cargo about generate` runs against this manifest — not the workspace — so
+# what it reports is the dependency set the served binary and the wasm client
+# link, and not the resume generator's typst tree or the repo-list builder's
+# HTTP client, neither of which reaches a visitor. See the `licenses` recipe in
+# the justfile and the `generate` stage of the Dockerfile.
+
+# Every architecture and every renderer the shipped artefacts are built for.
+# cargo resolves target-specific dependencies per triple, so a list short of one
+# of these silently drops the crates only that build links — `web-sys` and
+# `wasm-bindgen` on the client, `ring`'s musl paths on the server.
+targets = [
+    "wasm32-unknown-unknown",
+    "x86_64-unknown-linux-musl",
+    "aarch64-unknown-linux-musl",
+]
+
+# The licences this site is willing to ship, in priority order: a crate offering
+# `MIT OR Apache-2.0` is attributed under the first entry below that it names.
+# MIT leads deliberately — its text is short and carries the copyright holder,
+# so the page reproduces the notice the licence asks for rather than 11 KB of
+# boilerplate repeated per crate.
+#
+# The list is a policy gate, not a description: `cargo about generate` exits
+# non-zero on a licence that is not on it, so a dependency arriving with terms
+# this site cannot accept — anything reciprocal, anything unlicensed — fails the
+# image build instead of being published under a footer that does not mention
+# it. Adding an entry here is a deliberate decision to ship under those terms.
+accepted = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "0BSD",
+    "Zlib",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unlicense",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CDLA-Permissive-2.0",
+    "OpenSSL",
+]
+
+# Build scripts and test harnesses run on the builder and are thrown away with
+# it; nothing they link is distributed, so neither is attributed.
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+# `workarounds` — cargo-about's built-in clarifications for crates whose real
+# licensing cannot be read off the manifest — is deliberately not set. Of the
+# crates it covers, this graph contains `ring`, `rustls`, `rustix` and
+# `linux-raw-sys`, and all four already declare an SPDX expression that resolves
+# on its own; enabling them changed nothing in the generated document. The
+# fifteen ISC entries `ring` contributes are not noise to be clarified away:
+# they are fifteen genuinely different copyright notices — Intel's, and Brian
+# Smith's over four different year ranges — carried by the files ring vendors,
+# and reproducing each is what the licence asks for.
+
+# `private.ignore` is deliberately left off (its default is `false`).
+#
+# It reads as the right switch — "skip the workspace's own unpublished crates" —
+# but it keys off `publish = false` on any crate in the graph, not on workspace
+# membership, and one of this site's dependencies is an unpublished crate pinned
+# by git tag. Turning it on dropped that crate from the inventory silently: an
+# MIT-licensed dependency the server binary links, with a copyright notice that
+# licence requires be reproduced, missing from the page whose job is to
+# reproduce it.
+#
+# The cost of leaving it off is three warnings per run — `web`, `portfolio-data`
+# and `portfolio-config` have no `license` field, because they are not licensed
+# to anyone — and three entries in the generated document with the licence
+# `Unknown` and no source. The page filters those out by source rather than by
+# name (see `LicensesFile::third_party`), so a fourth workspace crate needs no
+# change anywhere.

@@ -17,6 +17,8 @@ mod github;
 #[cfg(feature = "web")]
 mod hooks;
 mod i18n;
+/// The third-party licence inventory embedded at build time (`cargo about`).
+mod licenses;
 mod pages;
 mod routes;
 mod sections;

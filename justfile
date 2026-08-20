@@ -13,8 +13,8 @@
 # built image actually carries. A second implementation here would be a second opinion, and the
 # whole point of the shared action is that there is only one.
 
-# The generator, and where its output belongs. These five lines are the only per-repository part
-# of this file.
+# The configuration generator, and where its output belongs. These five lines are the only
+# per-repository part of the contract recipes below.
 example := "config-schema"
 features := "config-schema"
 package := "portfolio-config"
@@ -83,6 +83,31 @@ dockerfile-labels:
     } > "$rewritten"
     mv "$rewritten" "{{ dockerfile }}"
     echo "wrote the LABEL region in {{ dockerfile }}"
+
+# The third-party licence inventory the `/licenses` page renders. Not a committed artefact: the
+# image build runs this same command in its `generate` stage (see the Dockerfile), because the
+# attribution a build publishes has to describe the dependency set that build linked. This recipe
+# is here so a developer can render the page locally — without it `cargo run` embeds the empty
+# default and the page says it has nothing to show.
+#
+#     cargo install --locked cargo-about
+#
+# `--all-features` is not optional: the crate's platform features are what pull in the wasm
+# client's `web-sys` and the server's axum, and a run without them attributes neither. The
+# accepted-licence list in apps/web/about.toml is a gate — an unlisted licence exits non-zero
+# here and fails the image build there.
+
+[doc('Render the third-party licence inventory the /licenses page is built from')]
+[group('generate')]
+licenses:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p apps/web/generated
+    cargo about generate --locked --all-features \
+        --manifest-path apps/web/Cargo.toml \
+        --output-file apps/web/generated/licenses.json \
+        apps/web/about.hbs
+    echo "wrote apps/web/generated/licenses.json"
 
 [doc('Format, lint and test — what a pull request is going to run anyway')]
 [group('check')]

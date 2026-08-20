@@ -37,6 +37,7 @@ pub fn Footer() -> Element {
                         span { class: "mono text-muted", "LEGAL" }
                         Link { to: Route::Imprint {}, {t("footer.imprint")} }
                         Link { to: Route::Privacy {}, {t("footer.privacy")} }
+                        Link { to: Route::Licenses {}, {t("footer.licenses")} }
                         a { href: CONFIG.repository, target: "_blank", rel: "noreferrer", {t("footer.colophon")} }
                     }
                     div { class: "footer-col",

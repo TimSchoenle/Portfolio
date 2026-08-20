@@ -169,12 +169,14 @@
     "downloadResume": "Lebenslauf herunterladen (PDF)",
     "imprint": "Impressum",
     "privacy": "Datenschutzerklärung",
+    "licenses": "Lizenzen Dritter",
     "dialogLabel": "Befehlspalette"
   },
   "footer": {
     "credit": "Entworfen und gebaut von Tim Schönle.",
     "imprint": "Impressum",
     "privacy": "Datenschutz",
+    "licenses": "Lizenzen",
     "colophon": "Kolophon",
     "built": "Mit Sorgfalt gebaut"
   },
@@ -186,6 +188,15 @@
   "legal": {
     "emailLabel": "E-Mail",
     "contactFormLabel": "Kontaktformular"
+  },
+  "licenses": {
+    "title": "Lizenzen Dritter",
+    "intro": "Diese Seite baut auf Open Source auf. Jede Abhängigkeit, die der Server und der WebAssembly-Client einbinden, ist unten aufgeführt — mit der Lizenz, unter der sie verteilt wird, und deren vollständigem Text.",
+    "summaryHeading": "Verwendete Lizenzen",
+    "dependenciesHeading": "Abhängigkeiten",
+    "textsHeading": "Lizenztexte",
+    "dependencyUnit": "Abhängigkeiten",
+    "unavailable": "Dieser Build enthält kein Lizenzverzeichnis."
   },
   "imprint": {
     "title": "Impressum",
