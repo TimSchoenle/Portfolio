@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.1](https://github.com/TimSchoenle/Portfolio/compare/v2.7.0...v2.7.1) (2026-08-20)
+
+
+### Miscellaneous
+
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.32 ([#1122](https://github.com/TimSchoenle/Portfolio/issues/1122)) ([592208d](https://github.com/TimSchoenle/Portfolio/commit/592208d5070b42b26cf4313480c50f9f1e6a443c))
+
 ## [2.7.0](https://github.com/TimSchoenle/Portfolio/compare/v2.6.0...v2.7.0) (2026-08-20)
 
 
