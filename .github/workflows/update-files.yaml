@@ -135,15 +135,35 @@ jobs:
             --example config-schema -- --format variables)"
           echo "variables=${variables}" >> "$GITHUB_OUTPUT"
 
+      # The other half of the README's payload: name, description, version, licence, toolchain and
+      # the `docs/` index, read out of the root `Cargo.toml` and a walk of `docs/`. The
+      # configuration payload above is handed to it as `extra` and deep-merged over what it
+      # derived, which is safe here because the generator emits no key this action also emits —
+      # `serverConfigTable`, `builderConfigTable`, `exampleConfig`, `loader` and `keys` against
+      # `repo`, `release`, `toolchain` and `docs`. A same-named key would replace, not merge, so
+      # adding one to the generator means checking that list first.
+      #
+      # `branch` is pinned to the default branch rather than left at its `github.ref_name` default,
+      # which on a pull_request event is `<number>/merge`: the badge and permalink URLs would then
+      # differ between this render and the gate that re-renders on `main`, and every merge would
+      # fail that gate for a reason absent from its diff.
+      - name: Collect the README payload
+        id: readme-variables
+        uses: TimSchoenle/actions/actions/common/readme-variables@b5b5c9e047f00ffa00b7772536c8bdb4f158f706 # tag=actions-common-readme-variables-v1.1.0
+        with:
+          branch: ${{ github.event.repository.default_branch }}
+          extra: ${{ steps.config-schema.outputs.variables }}
+
       # Each render commits only its own output — `file_pattern` defaults to it — so a document
-      # that did not change produces no commit, and neither can carry the other along.
+      # that did not change produces no commit, and neither can carry the other along. The example
+      # configuration stays on the raw generator payload: it interpolates nothing the merge adds.
       - name: Render and commit the README
         id: readme
         uses: TimSchoenle/actions/actions/common/render-template-and-commit@15d83f02081c9dc8a844646199c63792dcccdfa8 # tag=actions-common-render-template-and-commit-v1.1.3
         with:
           template: .github/templates/README.md.hbs
           output: README.md
-          variables: ${{ steps.config-schema.outputs.variables }}
+          variables: ${{ steps.readme-variables.outputs.variables }}
           token: ${{ steps.generate_token.outputs.token }}
           commit_message: 'docs: render README from its template'
 

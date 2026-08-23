@@ -13,11 +13,25 @@ version = "2.1.0"
 edition = "2024"
 publish = false
 
+# The five fields below `name` are what the README payload action
+# (`TimSchoenle/actions/actions/common/readme-variables`) reads. It refuses to
+# take the description from the GitHub API on purpose: one edited in the web UI
+# would change the rendered README with no commit behind it, and the next
+# unrelated pull request would then fail the README drift gate for a reason
+# absent from its own diff. The description, the homepage and the licence are
+# the same three strings the image's OCI labels carry.
+#
+# `rust-version` is the toolchain the image is built with — `rust:1.97-slim` in
+# the Dockerfile — and not a floor anything tests below.
 [package]
 name = "portfolio-platform"
 version = "2.7.1"
 publish = false
 edition = "2024"
+rust-version = "1.97"
+description = "Dioxus fullstack (SSR + hydration) portfolio served by Axum."
+homepage = "https://tim-schoenle.de"
+license = "LicenseRef-Proprietary"
 
 [workspace.dependencies]
 portfolio-config = { path = "crates/config" }

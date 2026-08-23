@@ -1,216 +1,185 @@
 <!--
-Template for the repository README. CI renders it on every pull request and commits the result
-to README.md, so edit this file — never README.md itself.
+Generated from .github/templates/README.md.hbs. Edit that file, never this one.
 
-Every variable comes from one command:
+Two payloads are merged into one render. The repository's own facts — name, description, version,
+licence, toolchain and the docs/ index — come from
+TimSchoenle/actions/actions/common/readme-variables, which reads the root Cargo.toml and walks
+docs/. It deliberately does not read the description from the GitHub API: one edited in the web UI
+would change this file with no commit behind it, and the next unrelated pull request would fail the
+drift gate for a reason absent from its own diff.
 
-    cargo run -p portfolio-config --features config-schema --example config-schema \
-      -- --format variables
+The configuration half comes from one command:
 
-which walks the `Describe` derives on `ServerConfig` and `BuilderConfig` — the aggregates the two
-binaries actually load — and prints the whole payload as strict JSON:
+    cargo run -q -p portfolio-config --features config-schema \
+      --example config-schema -- --format variables
 
-  - `serverConfigTable` and `builderConfigTable`, one Markdown table per binary, each key with
-    its TOML path, type, environment spelling, default and purpose. The server scope leads with
-    the variables the loader reads before any layer exists; the builder scope renders keys alone,
-    because they would be the same two variables. Both go through a triple-stash, being Markdown
-    to emit as-is rather than escape.
-  - `loader`, the dialect: the prefix, the nesting separator, the indirection suffix and the two
-    variables naming the layers.
-  - `keys`, the spellings of the handful of keys the prose below names — `keys.githubToken.env`,
-    `keys.githubToken.envFile`, and so on.
-
-Prefer an injected value to a typed one anywhere the two would say the same thing. A rename in
-`crates/config` then reaches the sentences as well as the tables, and a key the prose names and
-the types no longer have fails the generator instead of rendering a blank. `KEYS` in
-`crates/config/examples/config-schema.rs` is where a key joins that set.
-
-Neither table has a `_FILE` column: it is the environment spelling plus a constant suffix, which
-the layer list above the tables already states once.
-
-They are two tables and not one on purpose. A single list of every key reads as though a
-deployment needs a GitHub token; it does not, because `github.*` belongs to a build-time tool
+which walks the `Describe` derives on `ServerConfig` and `BuilderConfig`, the aggregates the two
+binaries actually load, and prints both tables, the example configuration and the spellings the
+prose below names. The two tables are two on purpose: one list of every key reads as though a
+deployment needs a GitHub token, and it does not, because `github.*` belongs to a build-time tool
 that exits during the image build.
 
-That is what keeps the configuration reference honest across a rename: the key table is not a
-copy of the types, it is the types, and a pull request that renames a field arrives with the
-README already saying so. `.github/workflows/update-files.yaml` is the job that does it.
+The Update Files workflow renders this on every pull request and commits the result back to the
+branch. The README job in Build re-renders with `check: true` and fails when the committed file
+does not match it, so a README edited by hand does not merge.
 
-This is an HTML comment, not a template one, so Handlebars parses it like any other line and it
-survives into README.md — which is the point, since that is where someone about to edit the
-wrong file will be. Nothing in it may contain a mustache that is not a real reference.
+Prefer an injected value to a typed one anywhere the two would say the same thing. A rename in
+`crates/config` then reaches the sentences as well as the tables, and a key the prose names and the
+types no longer have fails the generator instead of rendering a blank. `KEYS` in
+`crates/config/examples/config-schema.rs` is where a key joins that set.
+
+Nothing in this comment may contain a mustache that is not a real reference.
 -->
+
 # Portfolio
 
-Personal portfolio at [tim-schoenle.de](https://tim-schoenle.de).
+Dioxus fullstack (SSR + hydration) portfolio served by Axum.
 
-A **Rust + Dioxus** fullstack application (server-side rendered with WASM
-hydration) styled with **Tailwind CSS**, served by an **Axum** server running from
-a distroless container.
+[![Release](https://img.shields.io/github/v/release/TimSchoenle/Portfolio?sort=semver)](https://github.com/TimSchoenle/Portfolio/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/TimSchoenle/Portfolio/build.yaml?branch=main)](https://github.com/TimSchoenle/Portfolio/actions/workflows/build.yaml)
+[![License](https://img.shields.io/badge/license-LicenseRef--Proprietary-blue)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.97-orange)](https://www.rust-lang.org)
 
-## Table of Contents
+## What this is
 
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
+The source of <https://tim-schoenle.de>, as one Rust workspace.
+
+`apps/web` is a single crate with two feature-selected builds. The `server` build is a native Axum
+binary that renders every route. The `web` build is a WASM bundle that hydrates it in the browser.
+The Dioxus CLI produces both.
+
+The configuration tables below are generated, not written. They come out of the Rust types that
+load the configuration, as do `config.example.toml` and the contract document the image publishes
+about itself, so renaming a field corrects all three in the commit that renames it.
+
+## Quick start
+
+```bash
+docker run --rm -p 8080:8080 timschoenle/portfolio:v2.7.1
+```
+
+Then open <http://localhost:8080>. The runtime image is `FROM scratch`: one statically linked
+binary, the client bundle beside it, and the configuration contract at `/config/contract.json`. It
+runs as `1001:1001` and needs nothing writable.
+
+## Table of contents
+
 - [Features](#features)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Development](#development)
-  - [Production Build](#production-build)
-  - [Container](#container)
+- [Installation](#installation)
+- [Usage](#usage)
 - [Configuration](#configuration)
-- [Deployment](#deployment)
-  - [Probe Endpoints](#probe-endpoints)
-  - [Read-only and Security Posture](#read-only-and-security-posture)
-  - [Content-Security-Policy](#content-security-policy)
-  - [Reproducible Builds](#reproducible-builds)
-- [Project Data (`repos.json`)](#project-data-reposjson)
-- [Third-Party Licenses](#third-party-licenses)
+- [Operations](#operations)
+- [Compatibility](#compatibility)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
 
-## Architecture
-
-The project is a Cargo workspace composed of one shared library crate and three
-applications.
-
-| Crate | Purpose |
-| --- | --- |
-| `crates/config` | The typed configuration blocks every binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader (see [Configuration](#configuration)) |
-| `crates/data` | Shared, language-neutral data (config, skills, experience, repos schema) plus embedded `i18n/{en,de}.json` translations |
-| `apps/web` | Dioxus 0.7 fullstack app: a single crate that compiles to both the WASM client (`web` feature) and the native Axum SSR server (`server` feature), with the JSON API, SEO documents, security headers, and probe endpoints |
-| `apps/resume-generator` | Generates `resume/{en,de}.pdf` and `resume-fingerprint.json` (Typst, embedded subset of Liberation Sans) |
-| `apps/update-repos` | Builder that fetches the user's active GitHub repositories (skipping archived, blacklisted, and >1-year-stale ones) and refreshes `apps/web/repos.json` using the shared `Repo`/`ReposFile` models |
-
-## Technology Stack
-
-- **App:** Rust, [Dioxus](https://dioxuslabs.com) 0.7 fullstack (Axum SSR + WASM
-  hydration) with the built-in Dioxus router
-- **Internationalization:** EN/DE via [i18nrs](https://crates.io/crates/i18nrs).
-  Translations live in `crates/data/i18n/`; the active language is persisted in
-  `localStorage` (`lang`) and detected from the browser language on first visit.
-  A unit test in `crates/data` enforces key parity between both languages.
-- **Styling:** Tailwind CSS v4 with custom design tokens
-- **Build:** the [Dioxus CLI](https://dioxuslabs.com) (`dx`)
-- **Data:** `apps/web/repos.json` is regenerated at build time from the GitHub
-  API (all active repositories — archived, blacklisted, and >1-year-stale ones
-  excluded) and embedded into the binary by `apps/web/build.rs`
-
 ## Features
 
-- Routes: `/` (single-page sections `s1`-`s5`), `/imprint`, `/privacy`, `/licenses`, and a 404 page
-- Hero with a two-line display name, scroll parallax, and a live meta card
-- Fixed chapter rail with scroll tracking and staggered reveal-on-scroll blocks
-- Stack section: an interactive skill radar (per-skill hover tooltips, category
-  filtering/dimming) and a chip matrix with confidence bars
-- Projects: a GitHub statistics strip, language filter, and loading skeletons fed
-  by `repos.json`
-- Experience accordion with year badges and animated bodies (real career data)
-- Contact: a terminal with a type-in `ssh` animation, oversized email, and action buttons
-- Command palette (Cmd+K / Ctrl+K) with fuzzy search and keyboard navigation
-- Language switcher (EN/DE) — every visible string is translated
-- Localized, single-page, ATS-readable resume PDFs with SHA-256 fingerprints on the contact card. The
-  generator scales typography down until the content fits one A4 page.
-- Legal pages (imprint, privacy policy) localized and rendered from the translation files
-- Third-party licences page generated at build time by cargo-about: every crate
-  the client and the server link, the licence it ships under, and the verbatim
-  text of every licence file found
-- Server-side rendering with WASM hydration; per-route `<head>` metadata, JSON-LD,
-  and server-negotiated locale for the first paint
-- SEO: meta/OG tags, JSON-LD, `robots.txt`, `sitemap.xml`, and a web manifest
-- Security headers set by the server: HSTS, `Referrer-Policy`, `Permissions-Policy`,
-  and a Content-Security-Policy built per document from the inline scripts it
-  actually carries, with a per-response nonce for Cloudflare's edge injection
-- WASM client tuned for size: `opt-level = "z"`, LTO, and a single codegen unit
+- Every route renders on the server and then hydrates. Per-route `<head>` metadata and JSON-LD ship
+  in the first response, and the locale is negotiated from request headers before the document is
+  serialised, so nothing arrives in the wrong language and gets swapped a moment later.
+- EN and DE throughout, including both legal pages and both resumes. `translation_key_sets_match`
+  in `crates/data` fails the build when the two translation files disagree on a key, which
+  otherwise shows up as one English string in a German page rather than as an error.
+- **The resumes are typeset during the build.** Typst lays out one A4 page per language, scaling
+  the type down and re-typesetting until the content fits, and each PDF carries a SHA-256
+  fingerprint that the contact card shows.
+- **The Content-Security-Policy is built per response.** The server hashes the inline scripts that
+  document actually carries and reserves a nonce for the script Cloudflare injects at the edge, so
+  `script-src` needs no `'unsafe-inline'`.
+- `/licenses` lists every crate the client and the server link, the licence it ships under, and the
+  verbatim text of every licence file found. cargo-about produces it during the image build, and an
+  unlisted licence fails that build.
+- The project list is fetched from the GitHub API at build time, with archived, blacklisted and
+  year-stale repositories dropped, then embedded into the binary by `build.rs`.
+- Cmd+K opens a command palette with fuzzy search and keyboard navigation. The stack section is a
+  skill radar with per-skill tooltips and category filtering.
 
-## Getting Started
+## Installation
 
-### Prerequisites
-
-- Rust (stable) with the `wasm32-unknown-unknown` target:
-  `rustup target add wasm32-unknown-unknown`
-- [Dioxus CLI](https://dioxuslabs.com) (`dx`): `cargo install dioxus-cli`
-  (or `cargo binstall dioxus-cli`)
-- [cargo-about](https://github.com/EmbarkStudios/cargo-about) (only to render the
-  third-party licences page): `cargo install --locked cargo-about`
-- Node.js (required only for the Tailwind CSS build step)
-- Docker (optional, for containerized builds)
-
-### Development
+### Docker
 
 ```bash
-# Resume PDFs + resume-fingerprint.json. Run BEFORE the web build so the
-# fingerprint is embedded (build.rs) and the PDFs are served from public/resume/.
-cargo run -p resume-generator -- apps/web/generated
-
-# Third-party licence inventory for the /licenses page (build.rs embeds it).
-# Optional: without it the page renders its "nothing to show" state.
-just licenses
-
-# Web dev server (SSR + hydration, http://localhost:8080)
-cd apps/web
-npm ci && npm run build:css
-dx serve --platform web
-
-# Tests (including i18n key parity)
-cargo test -p portfolio-data
-cargo test -p web --no-default-features --features server
+docker pull timschoenle/portfolio:v2.7.1
 ```
 
-### Production Build
+Both architectures are pushed as one manifest list, so `docker pull` resolves the right image per
+node. The push carries an SBOM and max-mode provenance and is signed with cosign. Pin by digest in
+production. The Helm chart does.
+
+### Helm
 
 ```bash
-cargo run --release -p resume-generator -- apps/web/generated
-cd apps/web && npm ci && npm run build:css && dx bundle --platform web --release
+helm repo add timschoenle https://timschoenle.github.io/helm-charts
+helm install portfolio timschoenle/portfolio
 ```
 
-### Container
+The chart is in
+[TimSchoenle/helm-charts](https://github.com/TimSchoenle/helm-charts/tree/main/charts/portfolio) and
+each release bumps it to the new image digest.
 
-The container performs all of the above and serves the result on port 8080:
+### From source
 
 ```bash
-docker build -t portfolio .
+rustup target add wasm32-unknown-unknown
+cargo install --locked dioxus-cli cargo-about
+git clone https://github.com/TimSchoenle/Portfolio.git
+cd Portfolio
 ```
+
+Node.js is needed for the Tailwind step, and `just` runs every recipe CI runs.
+
+## Usage
+
+Two artefacts have to exist before the web build, because `apps/web/build.rs` embeds both. Without
+them it substitutes empty defaults and the pages render their empty state.
+
+```bash
+cargo run -p resume-generator -- apps/web/generated   # resume PDFs, fingerprints, social card
+just licenses                                         # third-party inventory for /licenses
+cd apps/web && npm ci && npm run build:css
+dx serve --platform web                               # SSR + hydration on http://localhost:8080
+```
+
+Run the checks CI runs, in one recipe:
+
+```bash
+just verify   # fmt, lint, test
+```
+
+Refresh the project list from the GitHub API:
+
+```bash
+PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
+  cargo run --release -p update-repos -- apps/web/repos.json
+```
+
+Without a token the run still works, against the anonymous rate limit.
+[docs/PROJECT_DATA.md](docs/PROJECT_DATA.md) has the filtering rules and the caching.
 
 ## Configuration
 
-Configuration is **layered and file-first**, via
-[terrace-config](https://github.com/TimSchoenle/terrace-config). `crates/config`
-owns the typed blocks and the `PORTFOLIO_` dialect; each binary declares the
-aggregate it actually reads. Sources are merged in this order, lowest precedence
-first:
+Values are resolved in five layers, each overriding the one above it. The last three are mutually
+exclusive per key: a key supplied by two of them fails the boot rather than letting one win,
+because a stale environment variable shadowing a rotated mounted secret keeps the process running
+on the old credential.
 
-1. **Struct defaults** — the `serde` defaults in `crates/config`.
-2. **TOML** at `$PORTFOLIO_CONFIG` — a file, or every `*.toml` inside it when it
-   names a directory (so a `ConfigMap` can be split into fragments).
+1. **Defaults** — the `serde` defaults of each typed block.
+2. **TOML** at `$PORTFOLIO_CONFIG` — a file, or every `*.toml` inside it when it names a directory.
 3. **Environment** — `PORTFOLIO_`-prefixed variables, `__` for nesting.
-4. **Secrets directory** at `$PORTFOLIO_SECRETS_DIR` — one file per key, named
-   after it (`github__token`); this is what a Kubernetes `Secret` volume mounts.
-5. **File indirection** — `PORTFOLIO_<KEY>_FILE=/path` names a file holding the
-   value.
+4. **Secrets directory** at `$PORTFOLIO_SECRETS_DIR` — one file per key, named after it
+   (`github__token`). This is what a Kubernetes `Secret` volume mounts.
+5. **File indirection** — `PORTFOLIO_<KEY>_FILE=/path` names a file holding the value.
 
-The last three are **mutually exclusive per key**: a key supplied by two of them
-fails the boot instead of one silently winning, because a stale environment
-variable shadowing a rotated mounted secret keeps the process running on the old
-credential.
+An empty value counts as unset in every layer, because container platforms routinely inject `KEY=`
+for a declared-but-unset variable.
 
-The tables below are **generated from the aggregates the binaries load** —
-`ServerConfig` and `BuilderConfig` in `crates/config`. They are split the way the
-binaries are, because the two configurations are not one: what a deployment sets
-and what the image build sets have no overlap at all.
+### Server
 
-Regenerate one on its own with:
-
-```bash
-cargo run -p portfolio-config --features config-schema --example config-schema \
-  -- --format markdown --scope server
-```
-
-#### What the server reads
-
-The two variables the loader itself reads, then every key `apps/web` loads. This
-is the whole surface a **deployment** configures.
+The two variables the loader reads before any layer exists, then every key `apps/web` loads. Each
+environment spelling also accepts a `_FILE` suffix naming a file that holds the value.
 
 | Variable | Role | Default | Purpose |
 |---|---|---|---|
@@ -227,12 +196,10 @@ is the whole surface a **deployment** configures.
 | `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
 | `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
 
-#### What the `update-repos` builder reads
+### Builder
 
-`github.*` is read only by the build-time repository lister, which runs during the
-image build and exits. **The server never loads it**, so a deployment needs no
-GitHub token and no `github` block — the Docker build supplies the token as a
-BuildKit secret and nothing survives into the image.
+What `update-repos` loads. It runs during the image build and exits. The server never reads these
+keys, so a deployment needs no GitHub token. That is why there are two tables and not one.
 
 | TOML | Type | Environment | Default | Flags | Purpose |
 |---|---|---|---|---|---|
@@ -240,252 +207,75 @@ BuildKit secret and nothing survives into the image.
 | `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | unset | secret | Bearer token lifting the GitHub API rate limit. |
 | `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `[]` (every active repository the user owns) | — | Explicit repository set, bypassing the "every active repository" listing and its filtering. |
 
-The `config-schema` feature is off in every build that ships, so the derive and
-the `serde_json` it pulls stay out of the image; CI's `--all-features` gates are
-what keep the generator compiling.
+`github.token` is the only secret in the workspace, and it should arrive as a file
+rather than as an environment variable. `/proc/<pid>/environ`, a crash dump and `docker inspect` all
+carry the environment, and child processes inherit it. The Docker build mounts it as a BuildKit
+secret and hands `update-repos` the path.
 
-An empty value counts as unset everywhere, because container platforms routinely
-inject `KEY=` for a declared-but-unset variable.
-[`config.example.toml`](./config.example.toml) is a commented starting point, and
-is generated from the same types as the tables above — every key at its default,
-commented out, so a copy of it and an empty file mean the same thing to the
-loader:
+`IP`, `PORT` and `RUST_LOG` sit outside this namespace deliberately. They are the Dioxus toolchain's
+contract with the binary, and it keeps reading them itself.
 
-```bash
-cargo run -p portfolio-config --features config-schema --example config-schema \
-  -- --format toml
-```
+[`config.example.toml`](config.example.toml) carries every key at its default, commented out, and is
+rendered from the same payload as these tables.
 
-`IP`, `PORT` and `RUST_LOG` are deliberately **outside** this namespace: they are
-the Dioxus toolchain's contract with the binary (`dx serve` sets them to tell a
-development build which port it is proxied on), so the framework keeps reading
-them itself. `CI` likewise belongs to the CI provider.
+## Operations
 
-### Secrets
-
-`github.token` is the only secret in the workspace, and it should arrive as a
-**file**, never as an environment variable — `/proc/<pid>/environ`, a crash dump
-and `docker inspect` all carry the environment, and child processes inherit it:
-
-```bash
-PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token cargo run --release -p update-repos
-```
-
-The Docker build already does this: the `gh_token` BuildKit secret is mounted as
-a file and handed to `update-repos` by path. In the process it is a
-`secrecy::SecretString`, so it has no `Debug` or `Display` and the one place it
-becomes a `&str` is the `Authorization` header.
-
-Only the loader half of `terrace-config` is used; its hot-reload supervisor is
-not. The reasoning — the server holds no secrets, and `dioxus::serve` owns an
-accept loop with no shutdown handle — is recorded in `crates/config/src/lib.rs`.
-
-## Deployment
-
-The image is built on a `distroless/cc` base holding the dynamically linked
-`server` binary plus its sibling read-only `public/` assets under `/app` — no
-shell, package manager, or writable system paths. The Helm chart lives in a
-separate repository; the application and image here are prepared to run under a
-hardened pod spec out of the box.
-
-### Probe Endpoints
+### Probes
 
 | Endpoint | Alias | Purpose |
 | --- | --- | --- |
-| `GET /api/health` | — | General health report with the current UTC time |
-| `GET /api/health/live` | `GET /livez` | **Liveness** — process is running; failure restarts the container |
-| `GET /api/health/ready` | `GET /readyz` | **Readiness** — the client bundle (`index.html` under `assets.dist_dir`, default `public/`) is present and servable; failure removes the pod from the Service endpoints |
+| `GET /api/health` | — | Health report with the current UTC time |
+| `GET /api/health/live` | `GET /livez` | **Liveness** — the process is running; failure restarts the container |
+| `GET /api/health/ready` | `GET /readyz` | **Readiness** — `index.html` under `assets.dist_dir` (default `public/`) is present and servable; failure removes the pod from the Service endpoints |
 
-All probe responses are `no-store` (never cached). Readiness returns `503` until
-the assets are present.
+All probe responses are `no-store`. Readiness returns `503` until the assets are there.
 
-### Read-only and Security Posture
+### Runtime posture
 
-The server only reads from its bundle directory (the sibling `public/` dir) and
-writes logs to stdout, so it runs unchanged with a fully read-only root
-filesystem (no
-writable volume, not even `/tmp`). It is built to satisfy the restricted Pod
-Security Standard:
+The server reads its bundle directory and writes to stdout. It runs as numeric non-root
+`1001:1001`, so `runAsNonRoot` verifies statically, and it satisfies the restricted Pod Security
+Standard with a read-only root filesystem, no privilege escalation, every capability dropped and
+`seccompProfile: RuntimeDefault`.
 
-- runs as numeric non-root `1001:1001` (so `runAsNonRoot` verifies statically)
-- `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`
-- all Linux capabilities dropped, `seccompProfile: RuntimeDefault`
-- HTTP security headers (CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`, `Permissions-Policy`) set on every response — see
-  [Content-Security-Policy](#content-security-policy)
-- listens on `:$PORT` (default `8080`); graceful shutdown on `SIGTERM`
+Incremental static regeneration is the one thing that wants a writable path. The image points the
+cache at `/tmp/isr` and bakes an empty one owned by the runtime user; where that path is not
+writable, every request is rendered fresh instead.
 
-Everything else the server reads comes from the layered configuration described
-under [Configuration](#configuration), so a `ConfigMap` fragment or a `Secret`
-volume is a first-class source rather than something a chart has to flatten into
-environment variables.
+## Compatibility
 
-### Content-Security-Policy
+| | Supported |
+| --- | --- |
+| Rust | 1.97 (edition 2024) |
+| Platforms | `linux/amd64`, `linux/arm64` |
+| Pod Security Standard | restricted |
 
-Built with [csp-shell](https://github.com/TimSchoenle/csp-shell) rather than
-written out as a string, in `apps/web/src/server/csp.rs`. Two policies leave the
-server:
+## Documentation
 
-- **Documents** get one derived from the bytes they carry. Dioxus renders its
-  hydration data inline (`window.initial_dioxus_hydration_data="…"`), so its text
-  is only known per response — the body is buffered anyway to stamp `<html lang>`,
-  and each inline script is hashed out of that same string. `'unsafe-inline'` is
-  therefore gone from `script-src`: an injected `<script>` no longer runs just
-  because the hydration bootstrap has to.
-- **Everything else** — assets, the JSON API, the SEO documents — gets a policy
-  that admits no inline script at all, because none of them has any.
-
-`'unsafe-eval'` remains, and only for the one reason it has ever been here:
-`dioxus-web`'s document provider applies `document::Title`, `document::Stylesheet`
-and friends through `new Function(…)`, which throws an uncaught `EvalError`
-without it and freezes client-side navigation.
-
-**Cloudflare.** The bot products in front of this origin (Bot Fight Mode,
-JavaScript Detections, the challenge platform — the `_cf_bm`, `cf_clearance` and
-`cf_chl_rc_*` cookies the privacy page lists) inject an inline `<script>` at the
-edge, after this server has hashed what it rendered. No hash can cover it; a
-nonce can, because Cloudflare parses the `Content-Security-Policy` response
-header and copies the nonce onto what it injects. That is
-`csp.cloudflare.script_nonce`, on by default, and it brings one obligation the
-server discharges — every document is `Cache-Control: no-cache`, so a nonce is
-never shared between readers — and one it cannot:
-
-> **Deployment checklist:** no Cloudflare Cache Rule may cache the shell. A
-> "Cache Everything" rule overrides the origin's `Cache-Control`, pinning one
-> nonce across every reader for the lifetime of the cache entry, and nothing
-> inside this process can see that happening.
-
-Turnstile and Web Analytics are off; switching either on admits its origins in
-the directives that product actually needs them in (Turnstile in `script-src`
-**and** `frame-src` — admitting only the first renders an empty box).
-
-**If a page ever renders blank**, that is the failure mode this design has:
-`PORTFOLIO_CSP__HASH_INLINE_SCRIPTS=false` together with
-`PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE=false` restores `'unsafe-inline'` on a
-restart rather than a redeploy. The two must move together — a browser ignores
-`'unsafe-inline'` as soon as the policy carries a nonce — and supplying one
-without the other fails the boot with a message saying so.
-
-### Reproducible Builds
-
-The build is pinned end-to-end so the image is reproducible:
-
-- base images pinned by digest; Rust toolchain pinned via the base image
-- the Dioxus CLI (`dx`) is pinned to an exact version (build arg
-  `DIOXUS_CLI_VERSION`)
-- `cargo` / `dx bundle` build `--locked` against the committed `Cargo.lock`; the
-  Tailwind toolchain uses `npm ci` against `package-lock.json`
-- pass `SOURCE_DATE_EPOCH` (and the OCI metadata build args `VCS_REF`, `VERSION`,
-  `CREATED`, `SOURCE_URL`) for deterministic, self-describing images:
-
-```bash
-docker build \
-  --build-arg SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) \
-  --build-arg VCS_REF=$(git rev-parse HEAD) \
-  --build-arg VERSION=$(git describe --tags --always) \
-  -t portfolio .
-```
-
-## Project Data (`repos.json`)
-
-The projects section reads `repos.json`, which is embedded into the binary at
-build time via `include_str!` (see `apps/web/build.rs`). The file is **generated
-during the build**: the `update-repos` builder runs before the web build and
-refreshes `apps/web/repos.json`. When it is absent (dev builds, `cargo check`),
-`build.rs` substitutes an empty default so the `include_str!` always resolves.
-
-To avoid hitting the GitHub API on every rebuild (and its rate limits), the
-builder reuses the existing file while it is still fresh, deciding from its own
-`generated_at` timestamp: the fetch is skipped when the file is younger than the
-cache TTL — **10 hours on CI** (when the `CI` environment variable is set) and
-**60 minutes** otherwise. CI additionally persists the file across runs with
-`actions/cache` (keyed by a ~10-hour window) so a fresh copy is restored before
-the build.
-
-When it does run, the builder lists every repository the user owns
-(`GET /users/{user}/repos`, paginated), drops the archived ones, the repositories
-blacklisted in `CONFIG.blacklisted_repos`, and any repository with no update in
-the last 365 days. It deserializes the rest directly into the shared
-`portfolio_data::Repo`/`ReposFile` models and writes the pretty-printed JSON,
-surfacing failures through a dedicated `UpdateReposError` model. An explicit
-repository set can be requested via `github.repos`, in which case each named
-repository is fetched directly (without filtering):
-
-```bash
-# Defaults: user = CONFIG.github_username, repos = all active repos
-#           (archived/blacklisted/>1y-stale excluded),
-#           output = apps/web/repos.json
-PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
-  cargo run --release -p update-repos -- apps/web/repos.json
-
-# Override the repo set for a one-off run (figment's bracketed array syntax,
-# so the environment and the TOML spelling stay the same shape)
-PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repos
-```
-
-## Third-Party Licenses
-
-`/licenses` lists every third-party dependency the shipped artefacts link, the
-licence each is distributed under, and the verbatim text of every licence file
-found. One row per dependency, and the row is the disclosure control: opening it
-shows that dependency's licence text and a link to its repository. There is no
-separate list of texts, because such a list could only repeat these same names to
-say which text belonged to which.
-
-It is a Dioxus route like any other — inside the app shell, translated,
-server-side rendered, reachable from the footer and the command palette — and it
-reads a document compiled into the binary rather than anything fetched at
-runtime. That document stays normalised, one entry per distinct licence file
-rather than one per dependency; the join happens while rendering
-(`LicensesFile::dependencies`), which is what keeps it to 340 KB in the binary.
-
-That document is produced by
-[cargo-about](https://github.com/EmbarkStudios/cargo-about) during the image
-build, from [`apps/web/about.toml`](./apps/web/about.toml) (which licences are
-acceptable, which targets are built) and
-[`apps/web/about.hbs`](./apps/web/about.hbs) (the JSON it writes).
-`apps/web/build.rs` embeds the result the same way it embeds `repos.json`, and
-substitutes an empty default when it is absent — so a `cargo check` outside the
-image build still compiles, and the page simply says it has nothing to show.
-
-Running it against `apps/web/Cargo.toml` rather than the workspace is deliberate:
-what it reports is the dependency set a visitor actually receives — the wasm
-client and the SSR server — and not the resume generator's typst tree or the
-repo-list builder's HTTP client, neither of which is shipped. `--all-features`
-covers both halves of the fullstack crate in one pass, since the client's
-`web-sys` and the server's axum sit behind its platform features.
-
-The `accepted` list in `about.toml` is a gate, not a description: `cargo about`
-exits non-zero on a licence that is not on it, and that fails the image build. A
-dependency arriving under terms this site cannot ship stops the build rather than
-being published under a licences page that does not mention it — and adding an
-entry to that list is a deliberate decision to ship under those terms.
-
-```bash
-# Render the inventory locally; the image build runs the same command.
-just licenses
-
-# …which is:
-cargo about generate --locked --all-features   --manifest-path apps/web/Cargo.toml   --output-file apps/web/generated/licenses.json   apps/web/about.hbs
-```
+| Document | Purpose |
+| --- | --- |
+| [Architecture](docs/ARCHITECTURE.md) | Six packages in one Cargo workspace: two libraries every binary reads, three binaries, and a placeholder at the root that exists so release-please has a version to move. |
+| [Deployment](docs/DEPLOYMENT.md) | What the image contains, how it is built reproducibly, what it publishes about its own configuration, and where the chart that runs it lives. |
+| [Project data](docs/PROJECT_DATA.md) | How apps/web/repos.json is fetched, filtered, cached and embedded, and what the projects section reads out of it. |
+| [Security posture](docs/SECURITY_POSTURE.md) | The Content-Security-Policy the server builds per response, the headers around it, and what the process needs from the filesystem it runs on. |
+| [docs/config.contract.json](docs/config.contract.json) | — |
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
-development setup and the checks that must pass before opening a pull request.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the development setup, the commit convention and the checks
+a pull request has to pass. Note what the licence grants before you fork: reading the source and
+running it locally, and nothing about redistributing or deploying it.
 
-**This file is generated**, as is
-[`config.example.toml`](./config.example.toml). Edit the templates under
-[`.github/templates/`](./.github/templates) instead — CI renders both on every
-pull request and commits the results back to the branch, so there is no toolchain
-to install locally.
+Several files here are generated, this one included. Each says so in its opening lines, and an edit
+made to the output instead of to the template is replaced by the next render.
 
 ## Security
 
-To report a vulnerability, please follow the process described in
-[SECURITY.md](./SECURITY.md).
+Do not open a public issue for a vulnerability. [SECURITY.md](SECURITY.md) has the reporting route
+and the supported versions.
 
 ## License
 
-Proprietary. See [LICENSE](./LICENSE). The bundled Liberation Sans fonts are
-licensed under the SIL OFL (see `apps/resume-generator/fonts/LICENSE`).
+`LicenseRef-Proprietary`. Viewing the source and running it locally for personal, non-commercial
+evaluation is granted. Copying, modifying, redistributing, deploying and training on it are not.
+[LICENSE](LICENSE) has the terms. The bundled fonts keep their own: Inter and Liberation Sans are
+both under the SIL Open Font License, in `apps/resume-generator/fonts/`.
