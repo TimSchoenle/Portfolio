@@ -81,6 +81,59 @@ jobs:
           features: config-schema
           image: ''
 
+  # The same arrangement as `contract` above, for the other generated document. Update Files
+  # renders `README.md` on a pull request and commits it back to the branch; this re-renders it
+  # from the same two payloads and fails when the committed file differs, so a README edited by
+  # hand cannot merge and a template change cannot merge without its output.
+  #
+  # It lives here rather than in Update Files because that workflow only runs on `pull_request`,
+  # and a gate that never sees `main` is not a gate. The convergence and the refusal are two jobs
+  # on purpose: that one makes the branch right, this one declines to let it merge before it is.
+  readme:
+    name: README
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the code
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+
+      # The two steps Update Files runs, with the same inputs. `branch` is the default branch in
+      # both places: left at its `github.ref_name` default it would be `<number>/merge` on a pull
+      # request and `main` here, and the badge URLs alone would then fail every merge.
+      - name: Generate the configuration payload
+        id: config-schema
+        run: |
+          set -euo pipefail
+          variables="$(cargo run -q -p portfolio-config --features config-schema \
+            --example config-schema -- --format variables)"
+          echo "variables=${variables}" >> "$GITHUB_OUTPUT"
+
+      - name: Collect the README payload
+        id: readme-variables
+        uses: TimSchoenle/actions/actions/common/readme-variables@b5b5c9e047f00ffa00b7772536c8bdb4f158f706 # tag=actions-common-readme-variables-v1.1.0
+        with:
+          branch: ${{ github.event.repository.default_branch }}
+          extra: ${{ steps.config-schema.outputs.variables }}
+
+      - name: Verify README.md is current
+        uses: TimSchoenle/actions/actions/common/render-template@3b7d152374ee63e720e7c16bed8b088b40554911 # tag=actions-common-render-template-v1.1.1
+        with:
+          template: .github/templates/README.md.hbs
+          output: README.md
+          variables: ${{ steps.readme-variables.outputs.variables }}
+          check: 'true'
+
   test:
     name: Test
     runs-on: ubuntu-latest
