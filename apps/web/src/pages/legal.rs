@@ -11,6 +11,9 @@ use crate::i18n::use_i18n;
 use crate::routes::Route;
 use crate::ui::canonical::Canonical;
 
+/// Frames a legal page: back link, title, last-updated line, then `children` as its sections.
+///
+/// `last_updated` is printed verbatim after the localized label, neither parsed nor reformatted.
 #[component]
 pub fn LegalPage(
     title: String,
@@ -41,6 +44,11 @@ pub fn LegalPage(
     }
 }
 
+/// One numbered section of a legal page.
+///
+/// `body` is a raw translation string, run through the paragraph and list splitting below.
+/// `children` render after it, for the sections that need markup a translation string cannot
+/// carry.
 #[component]
 pub fn LegalSection(
     heading: String,

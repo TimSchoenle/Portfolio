@@ -7,6 +7,7 @@ use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
 
+/// Renders the about section from the translation context.
 #[component]
 pub fn About() -> Element {
     let i18n = use_i18n().i18n;

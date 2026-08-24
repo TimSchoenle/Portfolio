@@ -12,6 +12,7 @@ use crate::ui::radar::Radar;
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
 
+/// Renders the stack section, with the quadrant chips and the radar sharing one selection.
 #[component]
 pub fn Skills() -> Element {
     let i18n = use_i18n().i18n;

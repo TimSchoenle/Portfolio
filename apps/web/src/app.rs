@@ -30,6 +30,10 @@ const PRELOADED_FONTS: [&str; 2] = [
     "/fonts/jetbrains-mono-latin-400-normal.woff2",
 ];
 
+/// Provides the i18n context and the parsed repository listing, then renders the router.
+///
+/// Every component that calls [`crate::i18n::use_i18n`] or reads [`crate::github::ReposState`]
+/// out of context has to sit under this one.
 #[component]
 pub fn App() -> Element {
     let translations = HashMap::from([("en", I18N_EN), ("de", I18N_DE)]);

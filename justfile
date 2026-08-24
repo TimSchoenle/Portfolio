@@ -111,7 +111,7 @@ licenses:
 
 [doc('Format, lint and test — what a pull request is going to run anyway')]
 [group('check')]
-verify: fmt lint test
+verify: fmt lint docs test
 
 [group('check')]
 fmt:
@@ -120,6 +120,17 @@ fmt:
 [group('check')]
 lint:
     cargo clippy --all-features --all-targets -- -D warnings
+
+# `--workspace` because the workspace root is a package, so without it cargo builds the
+# release-please placeholder in `src/lib.rs` and nothing else. `RUSTDOCFLAGS` is where the
+# `[workspace.lints.rustdoc]` table is actually enforced: `cargo check` never runs those lints.
+
+[doc('Build the API documentation with the rustdoc lints denied')]
+[group('check')]
+docs:
+    RUSTDOCFLAGS='-D warnings' cargo doc --workspace --all-features --no-deps
+    RUSTDOCFLAGS='-D warnings' cargo doc -p web --no-default-features --features web --no-deps
+    cargo test --workspace --doc --all-features
 
 [group('check')]
 test:

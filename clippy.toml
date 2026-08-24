@@ -1,0 +1,5 @@
+# `clippy::doc_markdown` reads a CamelCase word in prose as an identifier someone forgot to
+# backtick, and it carries a default list of the ones that are really product names. `..` keeps
+# that list and adds the names this repository writes that are not on it. Backticking them
+# instead would render a company as code.
+doc-valid-idents = ["LinkedIn", "OpenGraph", ".."]

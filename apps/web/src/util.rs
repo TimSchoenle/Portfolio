@@ -1,4 +1,4 @@
-//! Small cross-target helpers.
+//! Reading the wall clock, which the two build targets do differently.
 //!
 //! The "current date" is read from the JS `Date` on the wasm client and from the
 //! system clock (`time`) on the server. The two use different zones — the client

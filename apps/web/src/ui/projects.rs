@@ -66,6 +66,12 @@ fn base_lists(state: &ReposState) -> (Vec<Repo>, Vec<String>) {
     (repos, langs)
 }
 
+/// Renders the section from `state` and keeps the chosen chip and page in its own signals.
+///
+/// Opens on [`Filter::Favorites`], and falls back to the full list when nothing featured
+/// survived the build's fetch, so the section is never empty on its own first view. A
+/// [`ReposState::Failed`] `state` says so in the status line and renders no cards: the embedded
+/// listing did not parse, so there is nothing to fall back to.
 #[component]
 pub fn Projects(state: ReposState) -> Element {
     let i18n = use_i18n().i18n;

@@ -14,6 +14,7 @@ use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
 
+/// Renders the contact section, linking the resume for the language currently selected.
 #[component]
 pub fn Contact() -> Element {
     let i18n = use_i18n().i18n;

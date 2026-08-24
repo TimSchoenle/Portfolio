@@ -18,6 +18,8 @@ use crate::licenses::load_licenses;
 use crate::routes::Route;
 use crate::ui::canonical::Canonical;
 
+/// Renders the inventory `cargo about` produced for this build, or a localized notice when the
+/// build produced none.
 #[component]
 pub fn Licenses() -> Element {
     let i18n = use_i18n().i18n;

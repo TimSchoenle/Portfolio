@@ -3,7 +3,7 @@
 //! readable sizes. The order is: prefer detail, then tighten density
 //! (Comfortable → Compact), and only then ease the type scale.
 //!
-//! Page count comes straight from Typst's compiled [`PagedDocument`]
+//! Page count comes straight from Typst's compiled [`typst_layout::PagedDocument`]
 //! (`pages.len()`), so fitting needs no PDF parsing; the PDF is exported only
 //! for the scale that actually fits.
 
@@ -32,6 +32,14 @@ pub(crate) enum Detail {
 }
 
 impl Detail {
+    /// How many bullets the entry at `entry_index` of the sorted work history renders at this
+    /// detail level.
+    ///
+    /// `entry_index` is the position in [`portfolio_data::experiences_sorted`], so "recent" means
+    /// the first two of that order rather than the two most recent by date.
+    ///
+    /// [`Experience::resume_bullet_cap`](portfolio_data::Experience::resume_bullet_cap) is applied
+    /// last and only ever lowers the result, so a capped entry stays capped at every level.
     pub(crate) fn bullet_count(self, entry_index: usize, e: &portfolio_data::Experience) -> u8 {
         let recent = entry_index < 2;
         let ongoing = e.end.is_none();
@@ -47,6 +55,7 @@ impl Detail {
         n.min(e.resume_bullet_cap.unwrap_or(u8::MAX))
     }
 
+    /// The phrase the generator prints for this level, for the line naming what it took to fit.
     pub(crate) fn describe(self) -> &'static str {
         match self {
             Detail::Full => "full detail",
@@ -56,10 +65,15 @@ impl Detail {
     }
 }
 
+/// A resume that fit on one page, and what it cost to get there.
 pub(crate) struct Fitted {
+    /// The exported PDF.
     pub(crate) bytes: Vec<u8>,
+    /// The type scale it fit at, between [`ABSOLUTE_MIN_SCALE`] and `1.0`.
     pub(crate) scale: f64,
+    /// Whether the Compact spacing preset was needed.
     pub(crate) dense: bool,
+    /// How much of the experience section survived.
     pub(crate) detail: Detail,
 }
 

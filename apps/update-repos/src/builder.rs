@@ -1,15 +1,13 @@
-//! A small builder for fetching a user's GitHub repositories and assembling
-//! them into the shared [`portfolio_data::ReposFile`] model.
+//! The GitHub half of `update-repos`: what is listed, what is kept, and what is thrown away.
 //!
-//! By default it lists every repository the user owns (paginated) and keeps
-//! only the active ones: not archived, not blacklisted and updated within the
-//! last [`MAX_AGE_DAYS`] days. An explicit set of repository names may also be
-//! supplied (via `github.repos`), in which case each is fetched by name without
-//! filtering.
+//! Two modes, and they are not variations of one another. With no explicit names the builder
+//! pages through everything the user owns and then filters: archived, blacklisted, or untouched
+//! for [`MAX_AGE_DAYS`] days is dropped. With names supplied it fetches each one and filters
+//! nothing, because a repository somebody asked for by name is not one that needs judging.
 //!
-//! [`ReposBuilder::fetch`] performs the network calls; [`ReposBuilder::assemble`]
-//! is a pure step (timestamp + user + repos) so it can be unit-tested without
-//! network access.
+//! Only [`ReposBuilder::fetch`] and the two functions under it touch the network. Everything the
+//! tests care about — the filter, the assembly — is reachable without it, which is why
+//! `active_repos` takes `now` as an argument instead of reading the clock.
 
 use std::time::Duration;
 
@@ -42,7 +40,11 @@ pub struct ReposBuilder {
 }
 
 impl ReposBuilder {
-    /// Starts a builder for the given GitHub `user`.
+    /// A builder against the public GitHub API, unauthenticated, with no repository named.
+    ///
+    /// The agent it constructs has a 30-second global timeout covering connect, send and read
+    /// together. `update-repos` runs inside an image build, where a hung socket is a hung build
+    /// and no retry is attempted.
     pub fn new(user: impl Into<String>) -> Self {
         let agent: ureq::Agent = ureq::Agent::config_builder()
             .timeout_global(Some(Duration::from_secs(30)))
@@ -58,20 +60,24 @@ impl ReposBuilder {
         }
     }
 
-    /// Sets the bearer token used to authenticate API requests (lifts the rate
-    /// limit). A `None` or empty token leaves requests unauthenticated, which
-    /// is the normal case on a fork's pull request.
+    /// Authenticates every subsequent request, lifting the API rate limit.
     ///
-    /// Kept wrapped rather than taken as a `String`: the token arrives from a
-    /// mounted file and is never printed, so the only place it becomes a `&str`
-    /// is [`Self::get`], where it goes onto the wire.
+    /// `None` or an all-empty token leaves the requests unauthenticated. That is the normal case
+    /// on a fork's pull request, where there is no secret to pass, rather than a misconfiguration
+    /// worth failing over.
+    ///
+    /// Kept wrapped rather than taken as a `String`: the token arrives from a mounted file and is
+    /// never printed, so the only place it becomes a `&str` is [`Self::get`], where it goes onto
+    /// the wire.
     pub fn token(mut self, token: Option<SecretString>) -> Self {
         self.token = token.filter(|token| !token.expose_secret().is_empty());
         self
     }
 
-    /// Sets the exact list of repository names to fetch (empty names are
-    /// ignored). Their order is preserved in the resulting [`ReposFile`].
+    /// Names the repositories to fetch, in place of listing the account.
+    ///
+    /// Blank names are dropped. The rest keep their order all the way into the [`ReposFile`], and
+    /// none of them are filtered for age, archival or the blacklist.
     pub fn repos<I, S>(mut self, repos: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -85,9 +91,9 @@ impl ReposBuilder {
         self
     }
 
-    /// Sets the list of repository names that must never appear in the result
-    /// when listing all of the user's repositories (empty names are ignored).
-    /// Matched case-insensitively by name.
+    /// Excludes repositories by name, case-insensitively, when the account is listed.
+    ///
+    /// Ignored entirely by [`Self::repos`], which fetches what it was asked for.
     pub fn blacklist<I, S>(mut self, blacklist: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -160,10 +166,11 @@ impl ReposBuilder {
         ))
     }
 
-    /// Pure filter step: drops archived repositories, blacklisted repositories
-    /// (matched case-insensitively by name) and repositories that have not been
-    /// updated within [`MAX_AGE_DAYS`] days of `now`. Keeps API order.
-    /// Exposed for unit testing without network access.
+    /// The active repositories out of `repos`, in the order they arrived.
+    ///
+    /// Archived, blacklisted, and last updated more than [`MAX_AGE_DAYS`] days before `now` are
+    /// each dropped. A repository whose `updated_at` is missing or unparsable is kept. `now` is a
+    /// parameter rather than a clock read so the age boundary is a thing a test can stand on.
     fn active_repos(repos: Vec<Repo>, blacklist: &[String], now: OffsetDateTime) -> Vec<Repo> {
         let cutoff = now - time::Duration::days(MAX_AGE_DAYS);
         repos
@@ -216,8 +223,10 @@ impl ReposBuilder {
         Ok(repo)
     }
 
-    /// Pure assembly step: stamps the current time and wraps the repositories
-    /// in a [`ReposFile`]. Exposed for unit testing without network access.
+    /// The listing, stamped with the current UTC time in RFC 3339.
+    ///
+    /// That stamp is what the next build's freshness check reads, so it is taken after the fetch
+    /// rather than when the builder was created.
     pub fn assemble(&self, repos: Vec<Repo>) -> Result<ReposFile, UpdateReposError> {
         let generated_at = OffsetDateTime::now_utc().format(&Rfc3339)?;
         Ok(ReposFile {

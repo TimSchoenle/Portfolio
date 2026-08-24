@@ -17,6 +17,7 @@ const SECTIONS: [(&str, &str); 9] = [
     ("privacy.noTrackingHeading", "privacy.noTrackingBody"),
 ];
 
+/// Renders the privacy notice through [`LegalPage`], dated by `CONFIG.legal.privacy_last_change`.
 #[component]
 pub fn Privacy() -> Element {
     let i18n = use_i18n().i18n;

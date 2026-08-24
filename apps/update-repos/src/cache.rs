@@ -1,12 +1,8 @@
-//! Build-time caching for `repos.json`.
+//! When a `repos.json` already on disk is good enough to skip the API call.
 //!
-//! `repos.json` is generated during the build, so to avoid hitting the GitHub
-//! API (and its rate limits) on every rebuild, a freshly generated file is
-//! reused while it is still "fresh". The freshness window is longer on CI than
-//! on a developer machine.
-//!
-//! Freshness is derived purely from the file's own `generated_at` timestamp, so
-//! it works whether the file was produced locally or restored from a CI cache.
+//! Freshness comes from the file's own `generated_at` stamp and nothing else — not the mtime,
+//! not a marker file — so a listing restored from a CI cache is judged by when it was generated
+//! rather than by when it was unpacked.
 
 use std::fs;
 use std::path::Path;
@@ -16,14 +12,13 @@ use time::Duration;
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
-/// How long a generated `repos.json` stays fresh on CI.
+/// How long a generated `repos.json` stays fresh on CI: ten hours, so one listing serves the
+/// image builds of a working day.
 pub const CI_TTL: Duration = Duration::hours(10);
 /// How long a generated `repos.json` stays fresh on a developer machine.
 pub const LOCAL_TTL: Duration = Duration::minutes(60);
 
-/// Returns the cache time-to-live for the current environment: [`CI_TTL`] when
-/// running on CI (the `CI` env var is set to a non-empty value), [`LOCAL_TTL`]
-/// otherwise.
+/// [`CI_TTL`] on CI, [`LOCAL_TTL`] anywhere else.
 pub fn ttl_for_env() -> Duration {
     if is_ci() { CI_TTL } else { LOCAL_TTL }
 }
@@ -34,9 +29,10 @@ fn is_ci() -> bool {
     std::env::var("CI").map(|v| !v.is_empty()).unwrap_or(false)
 }
 
-/// Reads the cached `repos.json` at `path` and reports whether it is still fresh
-/// relative to `now` and `ttl`. A missing or malformed file is treated as stale
-/// (returns `false`) so the caller falls back to fetching.
+/// Whether the `repos.json` at `path` was generated within `ttl` of `now`.
+///
+/// Missing, unreadable and malformed all answer `false`, so every way of having no usable
+/// listing leads to the same fetch.
 pub fn is_cached_fresh(path: &Path, now: OffsetDateTime, ttl: Duration) -> bool {
     let Ok(contents) = fs::read_to_string(path) else {
         return false;
@@ -47,9 +43,13 @@ pub fn is_cached_fresh(path: &Path, now: OffsetDateTime, ttl: Duration) -> bool 
     is_fresh(&file.generated_at, now, ttl)
 }
 
-/// Pure freshness check: `true` when `generated_at` (an RFC 3339 timestamp) is
-/// within `ttl` of `now`. A missing or unparsable timestamp is treated as stale
-/// (returns `false`), forcing a refetch.
+/// Whether `generated_at`, an RFC 3339 timestamp, is less than `ttl` before `now`.
+///
+/// Exactly `ttl` old is stale. A timestamp in the future is fresh, so clock skew between the
+/// machine that wrote the file and the one reading it does not cost an API call.
+///
+/// An unparsable stamp is stale, which is the reading that refetches rather than the one that
+/// trusts a file nothing can date.
 pub fn is_fresh(generated_at: &str, now: OffsetDateTime, ttl: Duration) -> bool {
     match OffsetDateTime::parse(generated_at, &Rfc3339) {
         Ok(generated) => now - generated < ttl,

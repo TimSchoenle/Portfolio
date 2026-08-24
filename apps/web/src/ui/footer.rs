@@ -7,6 +7,7 @@ use crate::i18n::use_i18n;
 use crate::routes::Route;
 use crate::util::current_year;
 
+/// Renders the footer. The copyright year is read from the clock at render time.
 #[component]
 pub fn Footer() -> Element {
     let i18n = use_i18n().i18n;

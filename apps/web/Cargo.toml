@@ -84,3 +84,6 @@ server = [
     "dep:http",
     "dep:portfolio-config",
 ]
+
+[lints]
+workspace = true

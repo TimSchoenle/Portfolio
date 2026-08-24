@@ -11,6 +11,10 @@ use crate::ui::hero::Hero;
 use crate::ui::projects::Projects;
 use crate::ui::skills::Skills;
 
+/// The `/` route: the chapter rail beside the six stacked sections.
+///
+/// Takes the repository listing from context rather than a prop, so it renders only under
+/// [`crate::app::App`].
 #[component]
 pub fn Home() -> Element {
     let repos = use_context::<ReposState>();

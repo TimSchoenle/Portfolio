@@ -74,3 +74,6 @@ terrace-config = { workspace = true, features = ["testing"] }
 # dependency, so it stays where `terrace-config/schema` already puts it — in
 # the generator — and out of every binary this workspace ships.
 serde_json.workspace = true
+
+[lints]
+workspace = true
