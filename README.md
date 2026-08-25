@@ -55,7 +55,7 @@ about itself, so renaming a field corrects all three in the commit that renames 
 ## Quick start
 
 ```bash
-docker run --rm -p 8080:8080 timschoenle/portfolio:v2.8.0
+docker run --rm -p 8080:8080 timschoenle/portfolio:v2.9.0
 ```
 
 Then open <http://localhost:8080>. The runtime image is `FROM scratch`: one statically linked
@@ -102,7 +102,7 @@ runs as `1001:1001` and needs nothing writable.
 ### Docker
 
 ```bash
-docker pull timschoenle/portfolio:v2.8.0
+docker pull timschoenle/portfolio:v2.9.0
 ```
 
 Both architectures are pushed as one manifest list, so `docker pull` resolves the right image per
