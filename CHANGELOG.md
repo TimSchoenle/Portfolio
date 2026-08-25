@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.8.0](https://github.com/TimSchoenle/Portfolio/compare/v2.7.1...v2.8.0) (2026-08-25)
+
+
+### Features
+
+* **resume:** rebuild both sheets on the print design ([#1134](https://github.com/TimSchoenle/Portfolio/issues/1134)) ([29b5f87](https://github.com/TimSchoenle/Portfolio/commit/29b5f87424e618ed89e407eea6e85583f0a25912))
+
+
+### Documentation
+
+* bring the crates onto the estate doc-comment standard ([#1130](https://github.com/TimSchoenle/Portfolio/issues/1130)) ([9779d9a](https://github.com/TimSchoenle/Portfolio/commit/9779d9a119b43ff3c1f8442ad62c52e591d576aa))
+* bring the README onto the shared standard ([#1127](https://github.com/TimSchoenle/Portfolio/issues/1127)) ([a38aa2d](https://github.com/TimSchoenle/Portfolio/commit/a38aa2d578c4ffee3bf48a2fe8999371bd48e94b))
+
+
+### Miscellaneous
+
+* **deps:** update docker/setup-buildx-action digest to 37fe631 ([#1126](https://github.com/TimSchoenle/Portfolio/issues/1126)) ([2779b64](https://github.com/TimSchoenle/Portfolio/commit/2779b648c7786f5f6f570e496d7b991794c8fa55))
+* **deps:** update github/codeql-action action to v4.37.8 ([#1131](https://github.com/TimSchoenle/Portfolio/issues/1131)) ([1425bc5](https://github.com/TimSchoenle/Portfolio/commit/1425bc556772d6f073011fccdf9185e80c27cfc3))
+* **deps:** update rust docker tag to v1.98 ([#1128](https://github.com/TimSchoenle/Portfolio/issues/1128)) ([7bc04b9](https://github.com/TimSchoenle/Portfolio/commit/7bc04b9ca136b72eed05bccf76badfe13b8f38b9))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.21 ([#1124](https://github.com/TimSchoenle/Portfolio/issues/1124)) ([06de05d](https://github.com/TimSchoenle/Portfolio/commit/06de05dcd8eb442aae7959ebad12b008a6ae2bc7))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.3.3 ([#1132](https://github.com/TimSchoenle/Portfolio/issues/1132)) ([3130fc1](https://github.com/TimSchoenle/Portfolio/commit/3130fc1d8d61a5a1d4c888b00392179ce8ae70b6))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1129](https://github.com/TimSchoenle/Portfolio/issues/1129)) ([2cbc513](https://github.com/TimSchoenle/Portfolio/commit/2cbc5130dcf14563d9a43602d1483cc67cfef24c))
+
 ## [2.7.1](https://github.com/TimSchoenle/Portfolio/compare/v2.7.0...v2.7.1) (2026-08-20)
 
 
