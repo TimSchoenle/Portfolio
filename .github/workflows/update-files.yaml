@@ -52,7 +52,7 @@ jobs:
 
       - name: Commit and Push if changed
         id: auto-commit
-        uses: TimSchoenle/actions/actions/common/commit-changes@76719ba61e9b9cf1ffafdc3cb895308055a7f3bd # tag=actions-common-commit-changes-v1.3.2
+        uses: TimSchoenle/actions/actions/common/commit-changes@57e5492e68be560bddac3c6fc9ba0a944cfee961 # tag=actions-common-commit-changes-v1.3.3
         with:
           commit_message: 'build: update Cargo.lock'
           file_pattern: 'Cargo.lock'
@@ -283,7 +283,7 @@ jobs:
       # these touches only the contract. `file_pattern` keeps each commit to its own file.
       - name: Commit the regenerated contract
         id: contract
-        uses: TimSchoenle/actions/actions/common/commit-changes@76719ba61e9b9cf1ffafdc3cb895308055a7f3bd # tag=actions-common-commit-changes-v1.3.2
+        uses: TimSchoenle/actions/actions/common/commit-changes@57e5492e68be560bddac3c6fc9ba0a944cfee961 # tag=actions-common-commit-changes-v1.3.3
         with:
           commit_message: 'docs: regenerate the configuration contract'
           file_pattern: 'docs/config.contract.json'
@@ -291,7 +291,7 @@ jobs:
 
       - name: Commit the Dockerfile's contract labels
         id: labels
-        uses: TimSchoenle/actions/actions/common/commit-changes@76719ba61e9b9cf1ffafdc3cb895308055a7f3bd # tag=actions-common-commit-changes-v1.3.2
+        uses: TimSchoenle/actions/actions/common/commit-changes@57e5492e68be560bddac3c6fc9ba0a944cfee961 # tag=actions-common-commit-changes-v1.3.3
         with:
           commit_message: 'build: sync the Dockerfile contract labels'
           file_pattern: 'Dockerfile'
