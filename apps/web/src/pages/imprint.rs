@@ -1,9 +1,15 @@
+//! `/imprint` — the operator disclosure §5 DDG requires of a German site.
+//!
+//! The facts come from [`CONFIG`]`.legal`; the labels and the boilerplate around them come from
+//! the translation files, because the obligation is to state them in the reader's language.
+
 use dioxus::prelude::*;
 use portfolio_data::CONFIG;
 
 use super::legal::{AddressBlock, LegalPage, LegalSection};
 use crate::i18n::use_i18n;
 
+/// Renders the disclosure through [`LegalPage`], dated by `CONFIG.legal.imprint_last_change`.
 #[component]
 pub fn Imprint() -> Element {
     let i18n = use_i18n().i18n;

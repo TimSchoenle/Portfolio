@@ -1,7 +1,9 @@
-//! SEO documents served from `portfolio_data::CONFIG` — the single source of
-//! truth for site facts. Ported from the former build-time `site-meta` crate;
-//! the `<head>` block it also produced is now rendered per-route via Dioxus
-//! `document::` elements in the app, so only these three files remain.
+//! `robots.txt`, `sitemap.xml` and `site.webmanifest`, built from [`CONFIG`].
+//!
+//! Three whole documents a crawler fetches by a fixed path, which is what separates them from
+//! the rest of the site's metadata. Anything a crawler reads *inside* a page — the title, the
+//! canonical link, the Open Graph tags — is a `document::` element in the component that owns
+//! the route, so it is rendered with the page rather than assembled beside it.
 
 use std::sync::LazyLock;
 

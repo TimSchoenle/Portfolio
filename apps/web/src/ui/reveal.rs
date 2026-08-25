@@ -8,6 +8,11 @@
 
 use dioxus::prelude::*;
 
+/// Wraps `children` so they fade in when scrolled to, `delay` milliseconds after the block
+/// above them.
+///
+/// Stagger a row by giving each item a larger `delay`. Nothing is delayed on the server or under
+/// reduced motion, where the children stay visible.
 #[component]
 pub fn Reveal(#[props(default = 0)] delay: u32, children: Element) -> Element {
     // Empty on the server and on the first client render (identical to the SSR

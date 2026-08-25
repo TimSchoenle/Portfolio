@@ -4,6 +4,9 @@
 //! [`I18N_DE`]); this crate only holds facts (names, dates, URLs, confidence
 //! values) and the schemas for the build-time generated documents — `repos.json`
 //! and the third-party licence inventory in [`licenses`].
+//!
+//! Nothing here is read at run time. Every item is a compile-time constant or a schema for a
+//! document produced during the image build, so changing any of it is a redeploy.
 
 use std::collections::BTreeMap;
 
@@ -42,6 +45,12 @@ pub const OG_IMAGE_FILE: &str = "og-image.png";
 pub const OG_IMAGE_SIZE: (u32, u32) = (1200, 630);
 
 /// The resume file name for a language code, falling back to English.
+///
+/// ```
+/// # use portfolio_data::resume_file;
+/// assert_eq!(resume_file("de"), "Tim-Schönle-Lebenslauf.pdf");
+/// assert_eq!(resume_file("fr"), resume_file("en"));
+/// ```
 pub fn resume_file(lang: &str) -> &'static str {
     RESUME_FILES
         .iter()
@@ -80,23 +89,40 @@ impl ResumeFingerprints {
 
 // ---------- Site configuration ----------
 
+/// A processor the privacy policy has to name.
+///
+/// Nothing renders one. The GDPR wants these facts in the reader's own language, so the prose
+/// that states them is in the translation files; this is the copy that prose is checked against.
 pub struct ExternalService {
+    /// The legal entity, spelled as it appears in its own imprint.
     pub name: &'static str,
+    /// Registered seat, in the format that country writes addresses in.
     pub address: &'static str,
+    /// The processor's own privacy policy, which the prose links to.
     pub policy_url: &'static str,
 }
 
+/// What the imprint and privacy pages are obliged to state.
+///
+/// Five of these reach a rendered page. The rest is duplicated inside the translated prose for
+/// the reason [`ExternalService`] gives, and is kept here so there is one place to correct when
+/// a provider moves or a retention period changes.
 pub struct Legal {
     /// Postal address used in the imprint and as GDPR controller address.
     pub address_lines: &'static [&'static str],
+    /// VAT identification number. German law obliges the imprint to show it.
     pub vat_id: &'static str,
     /// Second contact channel required by the imprint service.
     pub second_contact_url: &'static str,
+    /// Who runs the machine the site is served from.
     pub hosting: ExternalService,
+    /// Who runs the edge the site is delivered through.
     pub cloudflare: ExternalService,
+    /// How long access logs are kept before deletion.
     pub log_retention_days: u32,
-    /// ISO dates shown as "last updated" on the legal pages.
+    /// ISO date shown as "last updated" on the imprint page.
     pub imprint_last_change: &'static str,
+    /// ISO date shown as "last updated" on the privacy page.
     pub privacy_last_change: &'static str,
     /// Supervisory authority for data-protection complaints.
     pub authority_url: &'static str,
@@ -104,31 +130,53 @@ pub struct Legal {
     pub odr_url: &'static str,
 }
 
+/// Who the site is about, and every address that identifies them.
+///
+/// One value exists, [`CONFIG`]. Everything that names the person behind the site reads it: the
+/// document head, the resume PDF, the social card and the profile API.
 pub struct Config {
+    /// Name as it is set in print: the resume header, the social card, `og:site_name`.
     pub full_name: &'static str,
+    /// Given name alone, which is what the profile API's `name` carries.
     pub name: &'static str,
+    /// Full document title, `"{full_name} — {job_title}"`, used verbatim for `og:title`.
     pub title: &'static str,
     /// Role on its own, e.g. for schema.org `jobTitle` (the full document
     /// `title` is `"{full_name} — {job_title}"`).
     pub job_title: &'static str,
     /// Contact country exposed by the profile API and structured metadata.
     pub location: &'static str,
+    /// Published contact address, on the contact card and in the profile API.
     pub email: &'static str,
+    /// Canonical origin, with a scheme and no trailing slash. Every absolute URL the site emits
+    /// is built by appending a path to it.
     pub url: &'static str,
+    /// GitHub profile page. Contains [`github_username`](Self::github_username), which a test
+    /// asserts, because the two are rendered as one link.
     pub github: &'static str,
+    /// The account `update-repos` lists repositories for unless `github.username` names another.
     pub github_username: &'static str,
+    /// LinkedIn profile page, linked from the imprint and from the resume sidebar.
     pub linkedin: &'static str,
+    /// This repository, which the footer colophon links to.
     pub repository: &'static str,
+    /// The sentence that becomes `meta description`, `og:description` and the social card's last
+    /// line. Written to survive being cut at about 155 characters, which is where search results
+    /// truncate it.
     pub description: &'static str,
+    /// `meta keywords`, joined with `, `.
     pub keywords: &'static [&'static str],
+    /// Repositories pinned to the front of the projects section, matched case-insensitively.
     pub featured_repos: &'static [&'static str],
     /// Repositories that must never appear in `repos.json`, regardless of their
     /// activity. Matched case-insensitively by name when listing all of the
     /// user's repositories in `update-repos`.
     pub blacklisted_repos: &'static [&'static str],
+    /// The imprint and privacy facts.
     pub legal: Legal,
 }
 
+/// The site's own identity. No configuration key reaches any of it: changing one is a redeploy.
 pub const CONFIG: Config = Config {
     full_name: "Tim Schönle",
     name: "Tim",
@@ -193,11 +241,19 @@ pub const CONFIG: Config = Config {
 /// Skills below this confidence are hidden from the matrix and the resume.
 pub const MIN_CONFIDENCE: f32 = 0.6;
 
+/// A region of the tech radar, which is also a group of the skill matrix.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Quadrant {
+    /// Programming languages, and the markup and configuration formats filed with them
+    /// (`Markdown`, `TOML`, `Dockerfile`).
     Languages,
+    /// Libraries and frameworks. A datastore's client library is filed here and the datastore
+    /// itself under [`Infra`](Self::Infra): `sqlx` and `Prisma` against `PostgreSQL`.
     Frameworks,
+    /// Build, test and repository tooling. The one quadrant the profile API withholds; see
+    /// [`profile::ProfileSkills`].
     Build,
+    /// Runtimes, datastores and the deployment machinery around them.
     Infra,
 }
 
@@ -222,6 +278,7 @@ impl Quadrant {
         }
     }
 
+    /// Every quadrant, in the order the radar draws them.
     pub fn all() -> [Quadrant; 4] {
         [
             Quadrant::Languages,
@@ -232,9 +289,12 @@ impl Quadrant {
     }
 }
 
+/// One entry of the skill inventory.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Skill {
+    /// Shown as written, in both languages. A tool's name is not translated.
     pub name: &'static str,
+    /// Which radar region it is plotted in, and which matrix group it is listed under.
     pub quadrant: Quadrant,
     /// 0.0..=1.0, mirrored from the original portfolio's skills data.
     pub confidence: f32,
@@ -243,7 +303,20 @@ pub struct Skill {
 }
 
 impl Skill {
-    /// Proficiency level 1..=5 derived from confidence.
+    /// Confidence scaled by five and rounded to the nearest integer.
+    ///
+    /// Clamped at both ends, so a skill nobody would list still comes back as a 1 rather than a
+    /// 0 the star row would render as nothing.
+    ///
+    /// ```
+    /// # use portfolio_data::{Quadrant, Skill};
+    /// # fn skill(confidence: f32) -> Skill {
+    /// #     Skill { name: "x", quadrant: Quadrant::Languages, confidence, radar_only: false }
+    /// # }
+    /// assert_eq!(skill(0.95).level(), 5);
+    /// assert_eq!(skill(0.70).level(), 4);
+    /// assert_eq!(skill(0.05).level(), 1);
+    /// ```
     pub fn level(&self) -> u8 {
         ((self.confidence * 5.0).round() as u8).clamp(1, 5)
     }
@@ -419,9 +492,15 @@ pub fn matrix_skills() -> Vec<Skill> {
 
 // ---------- Experience & education ----------
 
+/// A month on the experience and education timelines.
+///
+/// Deliberately no day. Every date this site renders is `Mon YYYY` or `YYYY`, so a start day
+/// would be a fact nobody publishes and nothing corrects.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct YearMonth {
+    /// Four-digit calendar year.
     pub year: u16,
+    /// `1..=12`. [`format_period`] indexes the localized month names with it.
     pub month: u8,
 }
 
@@ -429,13 +508,18 @@ const fn ym(year: u16, month: u8) -> YearMonth {
     YearMonth { year, month }
 }
 
+/// One role in the work history.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Experience {
     /// Stable id used as translation key segment (`experience.entries.<id>`).
     /// The localized role, organisation and bullets live in the i18n files.
     pub id: &'static str,
+    /// Where the role is worked from, e.g. `Remote`. Not localized.
     pub location: &'static str,
+    /// First month of the role.
     pub start: YearMonth,
+    /// Last month, or `None` while the role is ongoing. Ongoing roles sort ahead of every ended
+    /// one in [`experiences_sorted`], however recently the ended one started.
     pub end: Option<YearMonth>,
     /// Number of localized bullets (`…bullets.b1` ..= `…bullets.b<n>`).
     pub bullet_count: u8,
@@ -444,13 +528,15 @@ pub struct Experience {
     /// bullet via [`bullet_count`](Self::bullet_count). Used to drop a redundant
     /// third bullet from the two oldest roles on the resume.
     pub resume_bullet_cap: Option<u8>,
+    /// The chip run under the entry, in the order given.
     pub tech: &'static [&'static str],
 }
 
-/// Raw work-history entries. The declaration order here is *not* significant:
-/// the site and resume never read this slice directly but go through
-/// [`experiences_sorted`], which derives the canonical order. Localized
-/// roles/bullets live in the i18n files.
+/// Raw work-history entries, in no meaningful order.
+///
+/// The site and the resume never read this slice directly. Both go through
+/// [`experiences_sorted`], which derives the rendering order from the dates, so an entry appended
+/// here lands wherever its dates put it. Localized roles and bullets live in the i18n files.
 pub const EXPERIENCE: &[Experience] = &[
     Experience {
         id: "sixtwenty",
@@ -506,11 +592,11 @@ pub const EXPERIENCE: &[Experience] = &[
     },
 ];
 
-/// Work history in the canonical order the site and resume render: ongoing
-/// roles first (no end date), then the rest in reverse-chronological order by
-/// start date, with the most recent end date breaking equal-start ties. The
-/// order is derived entirely from the dates, so an ongoing role can outrank an
-/// ended one that started later.
+/// Work history in the order the site and the resume render it.
+///
+/// Ongoing roles first, then the rest by descending start date, with the most recent end date
+/// breaking equal starts. All of that comes from the dates, so an ongoing role outranks an ended
+/// one that started later.
 pub fn experiences_sorted() -> Vec<&'static Experience> {
     let mut out: Vec<&'static Experience> = EXPERIENCE.iter().collect();
     out.sort_by(|a, b| {
@@ -529,11 +615,14 @@ pub fn experiences_sorted() -> Vec<&'static Experience> {
     out
 }
 
+/// One entry of the education history. Degree and institution are localized.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Education {
     /// Stable id used as translation key segment (`resume.education.<id>`).
     pub id: &'static str,
+    /// First month of the programme.
     pub start: YearMonth,
+    /// Last month, or `None` while it is ongoing.
     pub end: Option<YearMonth>,
 }
 
@@ -551,10 +640,28 @@ pub const EDUCATION: &[Education] = &[
     },
 ];
 
-/// Formats a date range like "Nov 2018 – Jan 2023" from localized month names.
+/// A date range in the caller's language, e.g. `Nov 2018 – Jan 2023`.
 ///
-/// `months` must contain the twelve localized month abbreviations (Jan..Dec);
-/// `present` is the localized label for open-ended ranges.
+/// `months` are the twelve month abbreviations in order, and `present` is the label an
+/// open-ended range gets in place of an end date. A month above twelve, or a `months` shorter
+/// than twelve, renders the month blank; month `0` renders the first entry of `months`.
+///
+/// ```
+/// # use portfolio_data::{YearMonth, format_period};
+/// let months: Vec<String> = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+///                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+///     .iter().map(|m| (*m).to_owned()).collect();
+/// let ym = |year, month| YearMonth { year, month };
+///
+/// assert_eq!(
+///     format_period(ym(2018, 11), Some(ym(2023, 1)), &months, "Present"),
+///     "Nov 2018 – Jan 2023",
+/// );
+/// assert_eq!(
+///     format_period(ym(2026, 3), None, &months, "Present"),
+///     "Mar 2026 – Present",
+/// );
+/// ```
 pub fn format_period(
     start: YearMonth,
     end: Option<YearMonth>,
@@ -586,32 +693,57 @@ pub fn format_period_years(start: YearMonth, end: Option<YearMonth>, now: &str) 
 
 // ---------- repos.json schema ----------
 
+/// One repository, as `update-repos` read it out of the GitHub REST API.
+///
+/// This deserializes GitHub's own response, which is why the field names are GitHub's and why
+/// all but three default rather than failing the listing. The same type is then written to
+/// `repos.json` and read back by the web binary, so the projects section and the API response
+/// cannot describe different documents.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Repo {
+    /// Repository name without the owner, e.g. `Portfolio`.
     pub name: String,
+    /// `owner/name`.
     #[serde(default)]
     pub full_name: String,
+    /// GitHub's own description. `None` for a repository that declares none, and the card then
+    /// renders without a summary line.
     pub description: Option<String>,
+    /// The repository page the card links to.
     pub html_url: String,
+    /// GitHub's primary-language guess, coloured by [`lang_color`]. `None` for an empty
+    /// repository.
     #[serde(default)]
     pub language: Option<String>,
+    /// Stars when the listing was taken, not live.
     #[serde(default)]
     pub stargazers_count: u32,
+    /// Forks at that same moment.
     #[serde(default)]
     pub forks_count: u32,
+    /// RFC 3339 timestamp of the last push. `update-repos` drops anything older than a year.
     #[serde(default)]
     pub updated_at: String,
+    /// GitHub topics, rendered as chips.
     #[serde(default)]
     pub topics: Vec<String>,
+    /// Whether the repository is a fork. Carried but never filtered on, so a fork in a generated
+    /// listing is one that was meant to be there.
     #[serde(default)]
     pub fork: bool,
+    /// Whether GitHub has archived it. `false` for every repository an account listing produced,
+    /// since that is what the filtering removes; a repository named in `github.repos` is written
+    /// through unfiltered.
     #[serde(default)]
     pub archived: bool,
+    /// The site the repository declares, linked beside the source link.
     #[serde(default)]
     pub homepage: Option<String>,
 }
 
 impl Repo {
+    /// Whether [`CONFIG`] pins this repository to the front of the projects section. Matched
+    /// case-insensitively by name.
     pub fn is_featured(&self) -> bool {
         CONFIG
             .featured_repos
@@ -620,14 +752,23 @@ impl Repo {
     }
 }
 
+/// The generated `repos.json`.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ReposFile {
+    /// RFC 3339 timestamp the listing was taken at. `update-repos` reads it back on the next
+    /// build to decide whether the file is fresh enough to skip the API call.
     pub generated_at: String,
+    /// The account the repositories were listed for.
     pub user: String,
+    /// The repositories. Most recently updated first when the account was listed, and in the
+    /// configured order when `github.repos` named them.
     pub repos: Vec<Repo>,
 }
 
-/// GitHub-style language color for a repo card.
+/// The colour GitHub paints a language in, for the dot on a repository card.
+///
+/// The values are linguist's, copied rather than fetched, so a card matches what a visitor sees
+/// on github.com. An unrecognised language gets a neutral grey rather than no dot.
 pub fn lang_color(lang: &str) -> &'static str {
     match lang {
         "Rust" => "#dea584",

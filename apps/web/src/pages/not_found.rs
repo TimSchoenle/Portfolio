@@ -1,8 +1,15 @@
+//! The catch-all page every unrouted URL lands on.
+
 use dioxus::prelude::*;
 
 use crate::i18n::use_i18n;
 use crate::routes::Route;
 
+/// Answers any path no other route claimed.
+///
+/// `segments` is what the catch-all captured, and nothing reads it. The page is deliberately
+/// identical for every unknown URL, which is also what makes it safe to render one that a
+/// visitor did not type.
 #[component]
 pub fn NotFound(segments: Vec<String>) -> Element {
     let _ = segments;

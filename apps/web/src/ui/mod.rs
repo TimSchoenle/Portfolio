@@ -1,4 +1,11 @@
-//! UI components (ported from the v4 Yew design to Dioxus rsx).
+//! The components the pages are assembled from.
+//!
+//! Every one of them renders the same markup on the server and on the client, and reaches for
+//! the browser only inside a `#[cfg(feature = "web")]` effect that runs after hydration. A
+//! component whose server render differs from its first client render tears the hydration, so
+//! the animated ones start at their finished state and step backwards once the client is live.
+//!
+//! Routing and the document head are not here; those are `crate::routes` and `crate::app`.
 
 pub mod about;
 pub mod canonical;

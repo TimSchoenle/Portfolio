@@ -8,12 +8,15 @@
 //! Implemented as a response middleware that only sets `Cache-Control` when a
 //! handler has not already done so, so the API's own headers win.
 //!
-//! NOTE: `is_content_hashed` recognises the `dx`/`manganis` hash format, in which
-//! the asset filename stem ends in a `dxh`-prefixed hex segment (e.g.
-//! `tailwind-dxh31cffa1cc71c7bb.css`). `dx bundle` puts the whole client bundle
-//! under those names — the loader *and* the wasm binary — so everything in
-//! `public/assets/` is immutable. Nothing is served from `/wasm/`; that path
-//! exists only inside the build tree, before bundling renames and hashes it.
+//! What counts as content-hashed is the `dx`/`manganis` naming: a filename stem ending in a
+//! `dxh`-prefixed hex segment, as in `tailwind-dxh31cffa1cc71c7bb.css`. `dx bundle` puts the
+//! whole client bundle under those names, the loader and the wasm binary alike, so everything
+//! under `public/assets/` is immutable. The hex run is not fixed-width — plain hex comes out
+//! fifteen digits about as often as sixteen — and a rule that assumed sixteen served the two
+//! largest files on the page uncached.
+//!
+//! Nothing is served from `/wasm/`. That path exists inside the build tree only, before
+//! bundling renames and hashes it.
 
 use axum::{
     extract::Request,

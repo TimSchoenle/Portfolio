@@ -23,6 +23,8 @@ fn years_badge(start: u16, end: Option<u16>) -> String {
     }
 }
 
+/// Renders the accordion with the most recent role open. One row is open at a time, and clicking
+/// the open one collapses it.
 #[component]
 pub fn Experience() -> Element {
     let i18n = use_i18n().i18n;

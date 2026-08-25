@@ -33,6 +33,42 @@ description = "Dioxus fullstack (SSR + hydration) portfolio served by Axum."
 homepage = "https://tim-schoenle.de"
 license = "LicenseRef-Proprietary"
 
+# Inherited by every member with `[lints] workspace = true`.
+#
+# `missing_docs` only fires on an effectively-exported item, so it reaches
+# `crates/config` and `crates/data` and nothing in `apps/`: all three binaries
+# declare their modules privately, which makes every item in them unexported as
+# far as the lint is concerned. The rustdoc link lints below do fire inside a
+# private module, so the `doc` job still gates the binaries; what is not linted
+# there is coverage, and that is a review criterion.
+#
+# `clippy::missing_docs_in_private_items` is deliberately absent. A private
+# helper whose body is six obvious lines has nothing to say; the private
+# constant whose value came out of a rate limit has everything to say, and no
+# lint tells those apart.
+[workspace.lints.rust]
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# Already inside `pedantic`. Named again so the next reader can see they are
+# deliberate rather than swept in with the group.
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+doc_markdown = "warn"
+too_long_first_doc_paragraph = "warn"
+doc_link_with_quotes = "warn"
+doc_broken_link = "warn"
+doc_include_without_cfg = "warn"
+
+# Denied rather than warned: a broken link renders as the literal text
+# ``[`Foo`]`` on the page, so it is invisible to the person reading the rendered
+# output and visible only to the person who no longer needs it.
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "warn"
+unescaped_backticks = "warn"
+
 [workspace.dependencies]
 portfolio-config = { path = "crates/config" }
 portfolio-data = { path = "crates/data" }
@@ -212,3 +248,6 @@ opt-level = 1
 lto = false
 codegen-units = 16
 strip = true
+
+[lints]
+workspace = true

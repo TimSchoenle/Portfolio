@@ -127,6 +127,11 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
     (named, filler)
 }
 
+/// The radar itself: named dots for real skills, seeded filler dots for texture.
+///
+/// `active` dims every quadrant but one; `None` shows all four at full strength. `on_hover`
+/// fires with the skill under the cursor and with `None` when it leaves, so the caller owns the
+/// tooltip and this component owns only the geometry.
 #[component]
 pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
     let i18n = use_i18n().i18n;

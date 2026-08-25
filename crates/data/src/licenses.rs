@@ -113,6 +113,7 @@ impl LicensesFile {
 /// One dependency and the licence texts it ships under: a row of the page.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DependencyLicenses<'a> {
+    /// The crate being attributed.
     pub dependency: &'a CrateLicense,
     /// Empty only if the generator found no licence file for it at all, which is
     /// worth showing as such rather than hiding the dependency.
@@ -147,16 +148,23 @@ pub struct LicenseText {
 }
 
 /// A crate named from a licence text's coverage list.
+///
+/// Name and version together, because a dependency graph can hold two versions of the same crate
+/// under two different copyright lines.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CrateRef {
+    /// Crate name as published.
     pub name: String,
+    /// The exact version cargo resolved.
     pub version: String,
 }
 
 /// One crate in the resolved dependency graph.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CrateLicense {
+    /// Crate name as published.
     pub name: String,
+    /// The exact version cargo resolved, which is what the page prints beside the name.
     pub version: String,
     /// The SPDX *expression* the crate declares, e.g. `MIT OR Apache-2.0` —
     /// what it offers, which is not always the single licence it was resolved

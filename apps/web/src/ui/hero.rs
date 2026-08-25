@@ -50,6 +50,8 @@ fn hero_name_lines() -> Element {
     }
 }
 
+/// Renders the hero. The years-of-experience figure comes from [`EXPERIENCE`] against the current
+/// date, so it advances without an edit here.
 #[component]
 pub fn Hero() -> Element {
     let i18n = use_i18n().i18n;

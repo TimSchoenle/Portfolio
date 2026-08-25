@@ -20,7 +20,7 @@
 //! - the `update-repos` builder, [`BuilderConfig`] ([`GithubConfig`]).
 //!
 //! The aggregates live here rather than in the binaries so the generated configuration reference
-//! can describe the types those binaries actually load; see [`aggregates`].
+//! can describe the types those binaries actually load.
 //!
 //! # Why the loader half only
 //!

@@ -31,6 +31,11 @@ struct Entry {
     action: Action,
 }
 
+/// The ⌘K overlay: one search field over sections, repositories, pages and languages.
+///
+/// Mounted only while open, so it holds no visibility state of its own and starts each time
+/// with an empty query. `on_close` fires on Escape, on a click outside, and after any action
+/// that navigates.
 #[component]
 pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element {
     let ctx = use_i18n();

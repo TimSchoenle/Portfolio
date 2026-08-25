@@ -338,18 +338,17 @@ fn cacheable_path(path: &str) -> Option<&'static str> {
 /// (including its serialized hydration route) for a different unknown URL.
 const ISR_UNCACHEABLE_SENTINEL: &str = ".uncacheable";
 
-/// The Dioxus SSR/asset router, with incremental static regeneration enabled
-/// when the configuration names a writable cache directory.
+/// The Dioxus SSR and asset router, and whether it came back with the incremental cache on.
 ///
-/// Dioxus's incremental renderer keys its cache by request path (and query)
-/// only. This site negotiates locale per request (cookie / `Accept-Language`,
-/// see `crate::i18n::detect_locale`), so a naive per-path cache would serve
-/// whichever language rendered a URL first to every visitor. To keep ISR
-/// correct, [`tag_locale_for_isr`] appends the negotiated locale to the request
-/// URI and [`isr_map_path`] nests each render under its locale, giving one cache
-/// entry per language per path.
-/// Returns the Dioxus router and whether ISR is enabled (so the caller can add
-/// the locale-tagging middleware only when the cache is active).
+/// The cache is on only when the configured directory turns out to be writable, so the caller
+/// layers the locale-tagging half of [`localize_page`] onto the returned router only when the
+/// flag is `true`.
+///
+/// Dioxus's incremental renderer keys on the request path and query alone, and this site
+/// negotiates the locale per request, so a per-path cache would serve whichever language
+/// rendered a URL first to everyone who asked for it afterwards.
+/// [`with_locale_query`] puts the negotiated locale on the URI and [`isr_map_path`] nests each
+/// render under it, which is what makes the key one entry per language per path.
 fn dioxus_app_router(isr: &IsrConfig) -> (Router, bool) {
     match incremental_config(isr) {
         Some(cfg) => (

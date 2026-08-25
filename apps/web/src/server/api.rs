@@ -1,6 +1,11 @@
-//! Public JSON API handlers, mirroring the original Next.js portfolio plus
-//! Kubernetes probe endpoints. Every response derives solely from compile-time
-//! data, so the documents only change on redeploy.
+//! The public JSON API, and the two probes Kubernetes calls.
+//!
+//! The two profile documents are functions of compile-time data, so each is rendered once into a
+//! `&'static str` and changes on redeploy or not at all. The probes carry a live timestamp and
+//! are built per request. Nothing here touches the database this site does not have.
+//!
+//! The profile endpoint's shape is a contract with consumers older than this crate; see
+//! [`portfolio_data::profile`].
 
 use std::path::Path;
 use std::sync::LazyLock;
@@ -72,8 +77,10 @@ struct HealthResponse {
     timestamp: String,
 }
 
-/// ISO 8601 / RFC 3339 timestamp with millisecond precision and a `Z` suffix,
-/// matching the original endpoint's `new Date().toISOString()`.
+/// The current UTC time as `YYYY-MM-DDTHH:MM:SS.sssZ`.
+///
+/// Millisecond precision and a literal `Z`, which is what `Date.prototype.toISOString` emits and
+/// therefore what anything already parsing this endpoint expects.
 fn now_iso8601() -> String {
     let format =
         format_description!("[year]-[month]-[day]T[hour]:[minute]:[second].[subsecond digits:3]Z");

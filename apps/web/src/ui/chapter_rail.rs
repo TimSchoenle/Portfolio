@@ -1,6 +1,7 @@
-//! Fixed left-hand chapter rail: roman-numeral dots that reveal the section
-//! name. The active-chapter scroll tracking is a client enhancement (Phase 4);
-//! for SSR/no-JS the first chapter renders active.
+//! Fixed left-hand chapter rail: roman-numeral dots that reveal the section name.
+//!
+//! Which chapter is active is scroll position, so the server has no answer for it and renders
+//! the first one active. The client takes over after hydration.
 
 use dioxus::prelude::*;
 
@@ -83,6 +84,7 @@ fn active_chapter() -> usize {
     current
 }
 
+/// Renders the rail. Each dot is a plain `#id` anchor, so the rail navigates without JavaScript.
 #[component]
 pub fn ChapterRail() -> Element {
     let i18n = use_i18n().i18n;

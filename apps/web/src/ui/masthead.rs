@@ -29,6 +29,10 @@ pub fn goto_section(on_home: bool, id: String) {
     }
 }
 
+/// Renders the fixed top bar and raises `on_open_palette` when the palette trigger is clicked.
+///
+/// The ⌘K shortcut is a window listener in [`crate::routes`], which owns the palette's open
+/// state, so this component never learns whether the palette is showing.
 #[component]
 pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
     let ctx = use_i18n();
