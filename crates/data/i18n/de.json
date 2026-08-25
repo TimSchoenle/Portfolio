@@ -119,7 +119,7 @@
         "role": "Selbstständiger Softwareentwickler",
         "org": "Selbstständig",
         "bullets": {
-          "b1": "Vollständige Produkte für Kunden umgesetzt, von REST- und gRPC-Backends über Web-Frontends bis zu nativen Windows-Anwendungen.",
+          "b1": "Vollständige Produkte für Kunden umgesetzt, von REST- und gRPC-Backends über Web-Frontends bis zu nativen OS-Anwendungen.",
           "b2": "Dependency-Updates, Security-Scans, Dokumentation und zeitgesteuerte Releases vollständig über CI automatisiert, sodass Projekte sich ohne manuellen Eingriff aktuell hielten.",
           "b3": "Gehärtetes, hochperformantes Kubernetes auf Talos Linux betrieben, per GitOps ausgeliefert und mit Metriken, Logs und Traces instrumentiert."
         }

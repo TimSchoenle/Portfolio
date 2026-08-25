@@ -107,7 +107,7 @@
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Owned entire products for customers, from REST and gRPC backends through the web frontends and native Windows applications built on them.",
+          "b1": "Owned entire products for customers, from REST and gRPC backends through the web frontends and native OS applications built on them.",
           "b2": "Automated dependency updates, security scanning, documentation and scheduled releases in CI, so projects kept themselves current without manual intervention.",
           "b3": "Ran hardened, high-performance Kubernetes on Talos Linux, delivered by GitOps and instrumented with metrics, logs and traces."
         }
