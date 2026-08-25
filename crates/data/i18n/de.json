@@ -38,12 +38,12 @@
     "statusLabel": "STATUS",
     "status": "Offen für Senior-Positionen in Backend und Plattform",
     "tagline": "Ich entwickle Backend-Systeme und betreibe sie in Produktion.",
-    "taglineSub": "Java- und Rust-Services auf Kubernetes, per GitOps ausgeliefert."
+    "taglineSub": "Java, Rust und TypeScript auf Kubernetes, per GitOps ausgeliefert."
   },
   "about": {
     "title": "Über mich",
     "intro": "Ich baue zuverlässige Software, End-to-End.",
-    "body": "Ich bin Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Java ist mein Kernstack, dazu Rust. Ich verantworte die Kette von der Entwicklung bis zum Betrieb, über containerisierte Services, Kubernetes, Helm und GitOps. Mir sind sauberer Code, klare Abstraktionen und gut getestete Systeme wichtig, die sich unkompliziert betreiben und erweitern lassen.",
+    "body": "Ich bin Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Den Kern bilden Java und Spring Boot, dazu Rust und TypeScript. Ich verantworte die Kette von der Entwicklung bis zum Betrieb, über containerisierte Services, Kubernetes, Helm und GitOps. Mir sind sauberer Code, klare Abstraktionen und gut getestete Systeme wichtig, die sich unkompliziert betreiben und erweitern lassen.",
     "focusLabel": "Schwerpunkte",
     "focus": {
       "f1": {
@@ -241,7 +241,7 @@
   },
   "resume": {
     "summaryTitle": "Professionelle Zusammenfassung",
-    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java, dazu Rust. Durchgängige Verantwortung von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Fokus auf sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
+    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java und Spring Boot, dazu Rust und TypeScript. Durchgängige Verantwortung von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Fokus auf sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
     "experienceTitle": "Berufserfahrung",
     "skillsTitle": "Technische Fähigkeiten",
     "educationTitle": "Ausbildung",
