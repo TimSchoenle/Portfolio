@@ -25,7 +25,7 @@ publish = false
 # the Dockerfile — and not a floor anything tests below.
 [package]
 name = "portfolio-platform"
-version = "2.8.0"
+version = "2.9.0"
 publish = false
 edition = "2024"
 rust-version = "1.97"

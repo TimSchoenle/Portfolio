@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/TimSchoenle/Portfolio/compare/v2.8.0...v2.9.0) (2026-08-25)
+
+
+### Features
+
+* **content:** rewrite the site copy and centralize the identity it states ([#1135](https://github.com/TimSchoenle/Portfolio/issues/1135)) ([5e6916b](https://github.com/TimSchoenle/Portfolio/commit/5e6916b739735926b306cd65f6b330d7be058583))
+
 ## [2.8.0](https://github.com/TimSchoenle/Portfolio/compare/v2.7.1...v2.8.0) (2026-08-25)
 
 
