@@ -119,7 +119,7 @@
         "role": "Selbstständiger Softwareentwickler",
         "org": "Selbstständig",
         "bullets": {
-          "b1": "Freiberufliche Backend-Services und Datenpipelines neben der Festanstellung geliefert, in Java (Spring Boot), TypeScript/Node.js und Rust.",
+          "b1": "Backend-Systeme für Kunden durchgängig umgesetzt, von der Architektur bis in den Produktivbetrieb, in Java (Spring Boot), TypeScript/Node.js und Rust.",
           "b2": "REST- und gRPC-APIs mit expliziten Contracts und strikter Validierung entworfen und deren Tests, Security-Checks und Releases über GitHub Actions automatisiert.",
           "b3": "Die dahinterliegenden Datenbanken, Broker, Caches und Reverse Proxies als Code bereitgestellt und betrieben, mit Monitoring, das Fehler diagnostizierbar machte."
         }
@@ -130,14 +130,14 @@
         "bullets": {
           "b1": "Gameplay- und Backend-Features für stark frequentierte Minecraft-Minispiele ausgeliefert und jede Änderung an Stabilität und Spielererlebnis gemessen.",
           "b2": "Produktionsfehler über mehrere Plugins und Services hinweg diagnostiziert und unklare Meldungen in reproduzierbare Fälle und Fixes überführt.",
-          "b3": "Gameplay-Features gemeinsam mit Product, Community und Operations geplant und umgesetzt und Spielerfeedback in die Roadmap überführt."
+          "b3": "Gemeinsam mit Product, Community und Operations Gameplay-Features geplant und umgesetzt und Spielerfeedback in die Roadmap überführt."
         }
       },
       "mineplex-qa": {
         "role": "Qualitätssicherung",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Gameplay- und Backend-Fehler in einem stark frequentierten Minecraft-Netzwerk reproduziert und eingegrenzt und Entwicklern Ursachen statt Symptome übergeben.",
+          "b1": "Fehler in Gameplay und Backend eines stark frequentierten Minecraft-Netzwerks reproduziert und eingegrenzt und Entwicklern Ursachen statt Symptome übergeben.",
           "b2": "Live-Incidents aus Spielermeldungen und internem Monitoring triagiert, Auswirkungen bewertet und kritische Fehler bis zur Behebung verfolgt.",
           "b3": "Fixes für kritische Produktionsfehler gemeinsam mit Entwickler- und Community-Team verifiziert."
         }

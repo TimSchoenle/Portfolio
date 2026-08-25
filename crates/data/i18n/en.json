@@ -107,7 +107,7 @@
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Delivered freelance backend services and data pipelines alongside full-time employment, in Java (Spring Boot), TypeScript/Node.js and Rust.",
+          "b1": "Owned client backend systems end to end, from architecture through production, in Java (Spring Boot), TypeScript/Node.js and Rust.",
           "b2": "Designed REST and gRPC APIs with explicit contracts and strict validation, and automated their tests, security checks and releases through GitHub Actions.",
           "b3": "Provisioned and operated the databases, brokers, caches and reverse proxies behind them as code, with monitoring that made failures diagnosable."
         }
