@@ -3,6 +3,7 @@
     "country": "Germany",
     "region": "Baden-Württemberg",
     "openToRemote": "Open to remote · CET (UTC+1)",
+    "jobTitle": "Senior Software Developer",
     "present": "Present",
     "now": "now",
     "lastUpdated": "Last updated",
@@ -34,39 +35,37 @@
     "languageToggle": "Switch language to German"
   },
   "hero": {
-    "eyebrow": "Java · Rust · Next.js",
-    "jobTitle": "Senior Software Developer",
     "statusLabel": "STATUS",
-    "status": "Open to software developer roles",
-    "tagline": "Passionate about building great software.",
-    "taglineSub": "Specialising in scalable, high-performance backend systems."
+    "status": "Open to senior backend and platform roles",
+    "tagline": "I build backend systems and operate them in production.",
+    "taglineSub": "Java, Rust and TypeScript on Kubernetes, deployed by GitOps."
   },
   "about": {
     "title": "About Me",
     "intro": "I build reliable software, end to end.",
-    "body": "I'm a Software Developer specializing in scalable, high-performance backend systems. My core stack is Java, with growing experience in Rust and Next.js. I work end-to-end from code to production using containerized services, Kubernetes, Helm, and GitOps-focused workflows. I care about clean code, clear abstractions, and well-tested, reliable systems that are easy to operate and evolve.",
+    "body": "I am a senior software developer specializing in scalable, high-performance backend systems. Java and Spring Boot are my core, with Rust and TypeScript alongside them. I own the path from code to production, across containerized services, Kubernetes, Helm and GitOps. I care about clean code, clear abstractions, and well-tested systems that stay straightforward to operate and extend.",
     "focusLabel": "Key Competencies",
     "focus": {
-      "f1": { "k": "Backend Architecture", "v": "Java & Spring Boot · domain modelling" },
+      "f1": { "k": "Backend Architecture", "v": "Java & Spring Boot · domain modeling" },
       "f2": { "k": "Scalability & Performance", "v": "High-throughput, reliable systems" },
-      "f3": { "k": "Kubernetes, Helm & GitOps", "v": "ArgoCD · containerised infra · Docker" },
+      "f3": { "k": "Kubernetes, Helm & GitOps", "v": "ArgoCD · containerized infra · Docker" },
       "f4": { "k": "Clean, Maintainable Code", "v": "Clear abstractions · well-tested" }
     }
   },
   "skills": {
     "title": "Stack",
-    "intro": "The tools I reach for, sized by confidence.",
+    "intro": "The tools I work with, sized by hands-on depth.",
     "languages": "Languages",
     "frameworks": "Frameworks",
     "build": "Build & Tools",
     "infrastructure": "Infrastructure",
-    "confidenceLabel": "Confidence",
+    "confidenceLabel": "Depth",
     "hoverHint": "Hover a dot",
-    "radarLabel": "Skill radar: technologies plotted by category, positioned further from the centre the more confident I am with them."
+    "radarLabel": "Skill radar: technologies plotted by category, positioned further from the center the more hands-on depth I have with them."
   },
   "projects": {
-    "title": "Selected Work",
-    "intro": "A few things I've built.",
+    "title": "Work",
+    "intro": "What I build and maintain in the open.",
     "statRepos": "REPOSITORIES",
     "statStars": "TOTAL STARS",
     "statForks": "TOTAL FORKS",
@@ -77,7 +76,7 @@
     "offline": "offline",
     "viewAll": "View all repos on GitHub",
     "emptyTitle": "Repositories refreshing…",
-    "emptyBody": "Public GitHub repos are loaded from repos.json, rebuilt daily by a scheduled GitHub Actions workflow.",
+    "emptyBody": "The repository list is rebuilt from GitHub once a day and is not yet available. The GitHub profile lists them in the meantime.",
     "featured": "★ FEATURED",
     "favorites": "★ Favorites",
     "prevPage": "Previous projects",
@@ -85,57 +84,57 @@
   },
   "experience": {
     "title": "Experience",
-    "intro": "My career, in order.",
+    "intro": "From QA to backend and platform work.",
     "entries": {
       "sixtwenty": {
         "role": "Senior Software Developer",
         "org": "SixTwenty Cloud LLC",
         "bullets": {
-          "b1": "Built and maintained CI/CD and GitOps workflows on Kubernetes-based infrastructure, standardizing deployments, release strategies and configuration across multiple services and environments.",
-          "b2": "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
+          "b1": "Maintain and further develop the white-label software solutions running on the platform.",
+          "b2": "Develop the generalized framework they are built from, so each new partner product starts from shared code."
         }
       },
       "mineplex-studios": {
         "role": "Senior Software Developer",
         "org": "Mineplex Studios LLC",
         "bullets": {
-          "b1": "Implemented core front-end and back-end engine components for an internal and external development platform in Java, TypeScript and Rust, enabling teams to build and integrate services consistently across the stack.",
-          "b2": "Built and maintained CI/CD and GitOps workflows on Kubernetes-based infrastructure, standardizing deployments, release strategies and configuration across multiple services and environments.",
-          "b3": "Implemented partner-specific features and integrations as white-labeled solutions on top of the platform, allowing partners to deliver customised products while relying on the shared core infrastructure and tooling."
+          "b1": "Implemented the frontend and backend engine of an internal and external development platform, so teams built and integrated services consistently across the stack.",
+          "b2": "Standardized deployments, release strategies and configuration across services and environments with CI/CD and GitOps workflows on Kubernetes.",
+          "b3": "Delivered partner-specific features as white-label solutions, so partners shipped customized products on shared core infrastructure and tooling."
         }
       },
       "self-employed": {
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Designed and implemented backend services and data-processing pipelines primarily in Java (e.g. Spring Boot) and TypeScript/Node.js, with selected components in Rust where performance or safety was critical, exposing REST and gRPC APIs with clear contracts and strong validation.",
-          "b2": "Built and maintained CI/CD pipelines (e.g. GitHub Actions) and Kubernetes-based deployments, automating tests, security checks and releases for multiple services.",
-          "b3": "Provisioned and operated backend infrastructure (databases, message brokers, caches and reverse proxies), using infrastructure-as-code and monitoring to keep systems reliable, observable and easy to debug."
+          "b1": "Owned entire products for customers, from REST and gRPC backends through the web frontends and native OS applications built on them.",
+          "b2": "Automated dependency updates, security scanning, documentation and scheduled releases in CI, so projects kept themselves current without manual intervention.",
+          "b3": "Ran hardened, high-performance Kubernetes on Talos Linux, delivered by GitOps and instrumented with metrics, logs and traces."
         }
       },
       "mineplex-dev": {
         "role": "Software Developer",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Implemented and maintained gameplay and backend features for large-scale Minecraft minigames, with a focus on stability, debuggability and player impact.",
-          "b2": "Investigated complex production bugs across multiple plugins and services, turning vague reports into reproducible cases and concrete fixes in the codebase.",
-          "b3": "Worked closely with product, community and operations teams to plan and deliver gameplay features, incorporating player feedback into the development roadmap."
+          "b1": "Shipped gameplay and backend features for high-traffic Minecraft minigames, weighing each change against stability and player impact.",
+          "b2": "Diagnosed production failures spanning multiple plugins and services, converting vague reports into reproducible cases and fixes.",
+          "b3": "Planned and delivered gameplay features with product, community and operations, folding player feedback into the roadmap."
         }
       },
       "mineplex-qa": {
         "role": "Quality Assurance",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Investigated and reproduced gameplay and backend issues on a large-scale Minecraft server network, helping developers diagnose root causes and improve overall stability over time.",
-          "b2": "Handled live incident reports from players and internal monitoring, quickly reproducing issues, assessing impact and ensuring critical problems were escalated and tracked to resolution.",
-          "b3": "Collaborated closely with developers and community staff to reproduce, triage and verify fixes for critical production issues."
+          "b1": "Reproduced and isolated gameplay and backend failures across a high-traffic Minecraft network, handing developers root causes instead of symptoms.",
+          "b2": "Triaged live incidents from player reports and internal monitoring, assessing impact and tracking critical failures to resolution.",
+          "b3": "Verified fixes for critical production issues with developers and community staff."
         }
       }
     }
   },
   "contact": {
     "title": "Contact",
-    "intro": "Get in touch.",
+    "intro": "Email is the fastest way to reach me.",
     "copy": "Copy",
     "copied": "Copied ✓",
     "write": "Write",
@@ -170,8 +169,7 @@
   },
   "notFound": {
     "title": "Page Not Found",
-    "description": "The requested coordinates do not correspond to any known sector in this system.",
-    "home": "Return to Base"
+    "description": "No page answers this address. The link may be out of date, or the path may be mistyped."
   },
   "legal": {
     "emailLabel": "Email",
@@ -179,12 +177,12 @@
   },
   "licenses": {
     "title": "Third-Party Licenses",
-    "intro": "This site is built on open source. Every dependency the server and the WebAssembly client link is listed below, together with the licence it is distributed under and the full text of that licence.",
-    "summaryHeading": "Licences in use",
+    "intro": "This site is built on open source. Every dependency the server and the WebAssembly client link is listed below, together with the license it is distributed under and the full text of that license.",
+    "summaryHeading": "Licenses in use",
     "dependenciesHeading": "Dependencies",
     "dependencyUnit": "dependencies",
-    "noText": "No licence file was found for this dependency; it is distributed under the expression above.",
-    "unavailable": "This build carries no licence inventory."
+    "noText": "No license file was found for this dependency; it is distributed under the expression above.",
+    "unavailable": "This build carries no license inventory."
   },
   "imprint": {
     "title": "Imprint",
@@ -231,7 +229,7 @@
   },
   "resume": {
     "summaryTitle": "Professional Summary",
-    "summary": "Software developer specializing in scalable, high-performance backend systems. Core stack Java, with growing Rust and Next.js. Works end-to-end from code to production with containerized services, Kubernetes, Helm, and GitOps. Values clean code, clear abstractions, and well-tested, operable systems.",
+    "summary": "Senior software developer specializing in scalable, high-performance backend systems. Java and Spring Boot at the core, with Rust and TypeScript. End-to-end ownership from code to production: containerized services, Kubernetes, Helm and GitOps. Focused on clean code, clear abstractions, and well-tested systems that stay straightforward to operate and evolve.",
     "experienceTitle": "Professional Experience",
     "skillsTitle": "Technical Skills",
     "educationTitle": "Education",

@@ -91,7 +91,9 @@ pub(crate) fn build_typ(
     photo: Option<Photo<'_>>,
 ) -> String {
     let region = if lang == "de" { "de" } else { "us" };
-    let title = format!("{} — {}", CONFIG.full_name, t.get("hero.jobTitle"));
+    // The *localized* document title: same shape as `CONFIG.title`, which is its English result,
+    // but built from the translated role so the German PDF is titled in German.
+    let title = portfolio_data::document_title(&t.get("common.jobTitle"));
     let (top_edge, bottom_edge) = Layout::edges(style::LH_NORMAL);
     let photo = if lang == "de" { photo } else { None };
 
@@ -151,7 +153,7 @@ fn header_band(t: &Translations, l: &Layout) -> String {
             style::FS_HEADLINE,
             style::W_MEDIUM,
             style::ACCENT,
-            &esc(&t.get("hero.jobTitle")),
+            &esc(&t.get("common.jobTitle")),
         ),
     );
 

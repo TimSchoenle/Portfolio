@@ -24,30 +24,42 @@ const ABSOLUTE_MIN_SCALE: f64 = 0.80;
 pub(crate) enum Detail {
     /// Every bullet of every role.
     Full,
-    /// Ended roles beyond the two most recent keep their two strongest bullets;
-    /// ongoing engagements stay full.
+    /// The three leading roles keep every bullet; the rest keep two.
     Condensed,
-    /// Every role beyond the two most recent keeps two bullets.
+    /// The two leading roles keep every bullet; the rest keep two.
     Compact,
 }
 
 impl Detail {
+    /// How many leading entries of the sorted work history keep every bullet at this level.
+    ///
+    /// The two condensing levels differed by whether a role was ongoing rather than by how many
+    /// roles they protected. That exemption never fired — both ongoing entries already sort into
+    /// the first two positions — and it ranked the wrong role: the freelance engagement is the
+    /// ongoing one, and the senior employment trimmed in its place is not. Protecting a count
+    /// instead makes the two levels a gradient, and moves the most recent senior role out of the
+    /// first thing the ladder cuts.
+    fn protected(self) -> usize {
+        match self {
+            Detail::Full => usize::MAX,
+            Detail::Condensed => 3,
+            Detail::Compact => 2,
+        }
+    }
+
     /// How many bullets the entry at `entry_index` of the sorted work history renders at this
     /// detail level.
     ///
-    /// `entry_index` is the position in [`portfolio_data::experiences_sorted`], so "recent" means
-    /// the first two of that order rather than the two most recent by date.
+    /// `entry_index` is the position in [`portfolio_data::experiences_sorted`], so "leading" means
+    /// the front of that order rather than the most recent by date.
     ///
     /// [`Experience::resume_bullet_cap`](portfolio_data::Experience::resume_bullet_cap) is applied
     /// last and only ever lowers the result, so a capped entry stays capped at every level.
     pub(crate) fn bullet_count(self, entry_index: usize, e: &portfolio_data::Experience) -> u8 {
-        let recent = entry_index < 2;
-        let ongoing = e.end.is_none();
-        let n = match self {
-            Detail::Full => e.bullet_count,
-            Detail::Condensed if recent || ongoing => e.bullet_count,
-            Detail::Compact if recent => e.bullet_count,
-            _ => e.bullet_count.min(2),
+        let n = if entry_index < self.protected() {
+            e.bullet_count
+        } else {
+            e.bullet_count.min(2)
         };
         // Apply the resume-only bullet cap from the shared config: some older
         // roles render fewer bullets in the PDF, while the website still shows
@@ -59,8 +71,8 @@ impl Detail {
     pub(crate) fn describe(self) -> &'static str {
         match self {
             Detail::Full => "full detail",
-            Detail::Condensed => "older ended roles condensed",
-            Detail::Compact => "older roles condensed",
+            Detail::Condensed => "roles after the third condensed",
+            Detail::Compact => "roles after the second condensed",
         }
     }
 }
@@ -199,23 +211,35 @@ mod tests {
     }
 
     #[test]
-    fn condensed_trims_older_ended_roles_to_two() {
+    fn condensed_protects_the_first_three_roles() {
         let detail = Detail::Condensed;
-        // Recent (index < 2) ended role keeps all bullets.
         assert_eq!(detail.bullet_count(0, &entry(3, None, false)), 3);
-        // Ongoing role keeps all bullets even when old in the list.
-        assert_eq!(detail.bullet_count(5, &entry(3, None, true)), 3);
-        // Older ended role is condensed to two.
-        assert_eq!(detail.bullet_count(5, &entry(3, None, false)), 2);
+        // The third entry is the most recent senior employment, and it is what Compact cuts
+        // first. Condensed is the rung that still keeps it whole.
+        assert_eq!(detail.bullet_count(2, &entry(3, None, false)), 3);
+        assert_eq!(detail.bullet_count(3, &entry(3, None, false)), 2);
     }
 
     #[test]
-    fn compact_trims_every_older_role_including_ongoing() {
+    fn compact_protects_only_the_first_two_roles() {
         let detail = Detail::Compact;
-        // Recent role stays full.
-        assert_eq!(detail.bullet_count(1, &entry(3, None, true)), 3);
-        // Older ongoing role is now also condensed to two.
-        assert_eq!(detail.bullet_count(4, &entry(3, None, true)), 2);
+        assert_eq!(detail.bullet_count(1, &entry(3, None, false)), 3);
+        assert_eq!(detail.bullet_count(2, &entry(3, None, false)), 2);
+    }
+
+    /// Whether a role is ongoing no longer changes how much of it survives; only its position
+    /// does. Both levels are checked at the index where they differ.
+    #[test]
+    fn condensing_ignores_whether_a_role_is_ongoing() {
+        for detail in [Detail::Condensed, Detail::Compact] {
+            for index in [0, 2, 5] {
+                assert_eq!(
+                    detail.bullet_count(index, &entry(3, None, true)),
+                    detail.bullet_count(index, &entry(3, None, false)),
+                    "ongoing changed the count at index {index}",
+                );
+            }
+        }
     }
 
     #[test]

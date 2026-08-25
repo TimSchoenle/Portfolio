@@ -130,6 +130,55 @@ pub struct Legal {
     pub odr_url: &'static str,
 }
 
+/// The name, as a bare literal.
+///
+/// A macro rather than a `const` because [`CONFIG`]`.title` is `concat!`-ed from this and
+/// [`job_title`], and `concat!` takes literals only. Nothing outside this module should expand
+/// it: [`CONFIG`]`.full_name` is the same bytes and is the field everything reads.
+macro_rules! full_name {
+    () => {
+        "Tim Schönle"
+    };
+}
+
+/// The role, as a bare literal, for the reason [`full_name`] gives.
+///
+/// This is the *English* spelling and the one canonical statement of the seniority. Three
+/// surfaces are derived from it without restating it — [`CONFIG`]`.job_title` for schema.org and
+/// the profile API, [`CONFIG`]`.title` for `og:title` and the document head, and `common.jobTitle`
+/// in [`I18N_EN`], which the `english_job_title_matches_config` test holds equal to it. The German
+/// translation of the same fact is `common.jobTitle` in [`I18N_DE`].
+///
+/// Before this was one literal it was three, and they disagreed: the resume PDF said "Senior
+/// Software Developer" while `og:title`, the profile API and the summary all said "Software
+/// Developer".
+macro_rules! job_title {
+    () => {
+        "Senior Software Developer"
+    };
+}
+
+/// What separates the name from the role in a document title, as a literal, so the `concat!` in
+/// [`CONFIG`] and the `format!` in [`document_title`] cannot punctuate the same fact differently.
+macro_rules! title_separator {
+    () => {
+        " — "
+    };
+}
+
+/// What separates the name from the role in a document title.
+pub const TITLE_SEPARATOR: &str = title_separator!();
+
+/// `"{full_name}{TITLE_SEPARATOR}{role}"`, for a title in the caller's language.
+///
+/// [`CONFIG`]`.title` is this function's English result, folded at compile time;
+/// the `document_title_matches_config` test holds the two together. The resume generator calls
+/// this with the *translated* role, so the German PDF carries a German document title.
+#[must_use]
+pub fn document_title(role: &str) -> String {
+    format!("{}{TITLE_SEPARATOR}{role}", CONFIG.full_name)
+}
+
 /// Who the site is about, and every address that identifies them.
 ///
 /// One value exists, [`CONFIG`]. Everything that names the person behind the site reads it: the
@@ -140,6 +189,9 @@ pub struct Config {
     /// Given name alone, which is what the profile API's `name` carries.
     pub name: &'static str,
     /// Full document title, `"{full_name} — {job_title}"`, used verbatim for `og:title`.
+    ///
+    /// `concat!`-ed from the same two literals the other two fields are, so it cannot state a
+    /// name or a seniority that they do not.
     pub title: &'static str,
     /// Role on its own, e.g. for schema.org `jobTitle` (the full document
     /// `title` is `"{full_name} — {job_title}"`).
@@ -164,6 +216,15 @@ pub struct Config {
     /// line. Written to survive being cut at about 155 characters, which is where search results
     /// truncate it.
     pub description: &'static str,
+    /// The three technologies the site leads with, in the order the hero prints them.
+    ///
+    /// Rendered as the hero eyebrow, joined with ` · `. It was a translation key until it became
+    /// this field, and the two translation files held byte-identical values for it — a tool's
+    /// name is not translated, so it was never prose. Every entry must also appear in
+    /// [`keywords`](Self::keywords), which
+    /// the `headline_tech_is_covered_by_keywords` test enforces, so the line a visitor reads and
+    /// the line a crawler reads cannot name different stacks.
+    pub headline_tech: &'static [&'static str],
     /// `meta keywords`, joined with `, `.
     pub keywords: &'static [&'static str],
     /// Repositories pinned to the front of the projects section, matched case-insensitively.
@@ -178,10 +239,10 @@ pub struct Config {
 
 /// The site's own identity. No configuration key reaches any of it: changing one is a redeploy.
 pub const CONFIG: Config = Config {
-    full_name: "Tim Schönle",
+    full_name: full_name!(),
     name: "Tim",
-    title: "Tim Schönle — Software Developer",
-    job_title: "Software Developer",
+    title: concat!(full_name!(), title_separator!(), job_title!()),
+    job_title: job_title!(),
     location: "Germany",
     email: "contact@tim-schoenle.de",
     url: "https://tim-schoenle.de",
@@ -189,16 +250,25 @@ pub const CONFIG: Config = Config {
     github_username: "timschoenle",
     linkedin: "https://www.linkedin.com/in/tim-schoenle",
     repository: "https://github.com/timschoenle/Portfolio",
-    description: "Portfolio of Tim Schönle — Software Developer specializing in Java, \
-                  Rust and Next.js. Open-source contributor and passionate about building \
-                  great software.",
+    description: concat!(
+        full_name!(),
+        title_separator!(),
+        job_title!(),
+        " building scalable backend systems in Java, Rust and TypeScript, shipped end to end on \
+         Kubernetes.",
+    ),
+    headline_tech: &["Java", "Rust", "TypeScript", "Kubernetes"],
     keywords: &[
-        "Tim",
-        "Software Developer",
+        "Tim Schönle",
+        job_title!(),
         "Java",
+        "Spring Boot",
         "Rust",
-        "Next.js",
-        "Portfolio",
+        "TypeScript",
+        "SQL",
+        "Kubernetes",
+        "Backend Engineering",
+        "GitOps",
         "Open Source",
         "Germany",
     ],
@@ -407,6 +477,7 @@ pub const SKILLS: &[Skill] = &{
         s("JUnit", Build, 0.85),
         s("Mockito", Build, 0.85),
         s("Maven", Build, 0.80),
+        s("just", Build, 0.70),
         s("Playwright", Build, 0.60),
         r("pnpm", Build, 0.85),
         r("Checkstyle", Build, 0.85),
@@ -439,6 +510,7 @@ pub const SKILLS: &[Skill] = &{
         s("ArgoCD", Infra, 0.80),
         s("PostgreSQL", Infra, 0.80),
         s("Helm", Infra, 0.80),
+        s("Talos Linux", Infra, 0.80),
         s("Linux", Infra, 0.75),
         s("TimescaleDB", Infra, 0.75),
         s("MongoDB", Infra, 0.65),
@@ -570,6 +642,8 @@ pub const EXPERIENCE: &[Experience] = &[
             "Node.js",
             "Rust",
             "gRPC",
+            "Kubernetes",
+            "Talos Linux",
         ],
     },
     Experience {
@@ -826,6 +900,230 @@ mod tests {
         let mut keys = BTreeSet::new();
         collect_keys(&value, "", &mut keys);
         keys
+    }
+
+    /// Every string in a translation document, keyed by its dotted path.
+    fn strings_of(json: &str) -> BTreeMap<String, String> {
+        fn walk(value: &Value, prefix: &str, out: &mut BTreeMap<String, String>) {
+            match value {
+                Value::Object(map) => {
+                    for (k, v) in map {
+                        let path = if prefix.is_empty() {
+                            k.clone()
+                        } else {
+                            format!("{prefix}.{k}")
+                        };
+                        walk(v, &path, out);
+                    }
+                }
+                Value::String(s) => {
+                    out.insert(prefix.to_string(), s.clone());
+                }
+                other => panic!("unsupported JSON value at '{prefix}': {other:?}"),
+            }
+        }
+        let value: Value = serde_json::from_str(json).expect("translation file is valid JSON");
+        let mut out = BTreeMap::new();
+        walk(&value, "", &mut out);
+        out
+    }
+
+    /// The English translation of the role must be the one [`CONFIG`] publishes.
+    ///
+    /// `common.jobTitle` is what the hero and the resume PDF print; `CONFIG.job_title` is what
+    /// schema.org, the profile API and `og:title` carry. They are the same fact in two
+    /// representations — one localizable, one not — and they disagreed before this test existed.
+    #[test]
+    fn english_job_title_matches_config() {
+        assert_eq!(
+            strings_of(I18N_EN)
+                .get("common.jobTitle")
+                .map(String::as_str),
+            Some(CONFIG.job_title),
+            "en.json's common.jobTitle must equal CONFIG.job_title",
+        );
+    }
+
+    /// German must translate the role rather than inherit the English one.
+    #[test]
+    fn german_job_title_is_translated() {
+        let de = strings_of(I18N_DE);
+        let role = de
+            .get("common.jobTitle")
+            .expect("de.json has common.jobTitle");
+        assert_ne!(
+            role, CONFIG.job_title,
+            "de.json's common.jobTitle is still the English string",
+        );
+    }
+
+    /// [`CONFIG::title`] and [`document_title`] must punctuate and order the same way.
+    #[test]
+    fn document_title_matches_config() {
+        assert_eq!(document_title(CONFIG.job_title), CONFIG.title);
+    }
+
+    /// The stack a visitor reads in the hero and the stack a crawler reads in `meta keywords`
+    /// must be the same stack.
+    #[test]
+    fn headline_tech_is_covered_by_keywords() {
+        for tech in CONFIG.headline_tech {
+            assert!(
+                CONFIG.keywords.contains(tech),
+                "headline tech '{tech}' is missing from CONFIG.keywords",
+            );
+        }
+    }
+
+    /// The description is cut at roughly 155 characters in a search result, and the sentence has
+    /// to still say something there.
+    #[test]
+    fn description_survives_serp_truncation() {
+        let chars = CONFIG.description.chars().count();
+        assert!(
+            (110..=160).contains(&chars),
+            "description is {chars} characters; aim for 110-160",
+        );
+    }
+
+    /// No two experience bullets may be byte-identical, in either language.
+    ///
+    /// Two roles once shared two bullets word for word, which read as copy-paste on the resume
+    /// and left the current role with no distinct content of its own.
+    #[test]
+    fn experience_bullets_are_distinct() {
+        for (lang, json) in [("en", I18N_EN), ("de", I18N_DE)] {
+            let mut seen: BTreeMap<String, String> = BTreeMap::new();
+            for (key, text) in strings_of(json) {
+                let Some(rest) = key.strip_prefix("experience.entries.") else {
+                    continue;
+                };
+                if !rest.contains(".bullets.") {
+                    continue;
+                }
+                if let Some(first) = seen.insert(text.clone(), key.clone()) {
+                    panic!("{lang}: {key} repeats {first} verbatim: {text:?}");
+                }
+            }
+        }
+    }
+
+    /// The English copy is en-US throughout.
+    ///
+    /// It was previously both: `containerised` and `containerized` appeared five lines apart,
+    /// and `Specialising` sat above `specializing`.
+    #[test]
+    fn english_copy_uses_us_spelling() {
+        // Whole words, not suffixes: `-ising` as a substring also matches `advertising`, which is
+        // the American spelling and appears in the privacy policy.
+        const BRITISH: [(&str, &str); 20] = [
+            ("specialising", "specializing"),
+            ("specialised", "specialized"),
+            ("containerised", "containerized"),
+            ("customised", "customized"),
+            ("customisation", "customization"),
+            ("standardised", "standardized"),
+            ("standardising", "standardizing"),
+            ("organisation", "organization"),
+            ("organisational", "organizational"),
+            ("optimisation", "optimization"),
+            ("prioritise", "prioritize"),
+            ("prioritised", "prioritized"),
+            ("recognise", "recognize"),
+            ("summarise", "summarize"),
+            ("utilise", "utilize"),
+            ("analyse", "analyze"),
+            ("centre", "center"),
+            ("licence", "license"),
+            ("licences", "licenses"),
+            ("modelling", "modeling"),
+        ];
+        let mut offences = Vec::new();
+        for (key, text) in strings_of(I18N_EN) {
+            let words: BTreeSet<String> = text
+                .split(|c: char| !c.is_alphabetic())
+                .filter(|w| !w.is_empty())
+                .map(str::to_lowercase)
+                .collect();
+            for (british, american) in BRITISH {
+                if words.contains(british) {
+                    offences.push(format!("{key}: '{british}' -> '{american}'"));
+                }
+            }
+        }
+        assert!(
+            offences.is_empty(),
+            "en-GB spellings in en.json:\n  {}",
+            offences.join("\n  "),
+        );
+    }
+
+    /// No experience bullet may outgrow two printed lines.
+    ///
+    /// The cap is words rather than characters because the PDF sets them at one size in one
+    /// column, so length in words is what decides the wrap. A bullet over it costs the fit ladder
+    /// a rung: the generator condenses roles and then shrinks the type to win back the line, which
+    /// is a worse trade than editing the sentence. One bullet ran to 38 words in a single sentence
+    /// before this existed.
+    #[test]
+    fn experience_bullets_stay_within_two_lines() {
+        const MAX_WORDS: usize = 24;
+        let mut offences = Vec::new();
+        for (lang, json) in [("en", I18N_EN), ("de", I18N_DE)] {
+            for (key, text) in strings_of(json) {
+                let Some(rest) = key.strip_prefix("experience.entries.") else {
+                    continue;
+                };
+                if !rest.contains(".bullets.") {
+                    continue;
+                }
+                let words = text.split_whitespace().count();
+                if words > MAX_WORDS {
+                    offences.push(format!("{lang}/{key}: {words} words"));
+                }
+            }
+        }
+        assert!(
+            offences.is_empty(),
+            "bullets over {MAX_WORDS} words:\n  {}",
+            offences.join("\n  "),
+        );
+    }
+
+    /// Phrases that describe an attitude instead of a capability, banned from both languages.
+    ///
+    /// The first six were in the copy: the hero called itself "passionate about building great
+    /// software", and both the about text and the resume summary said "growing experience in
+    /// Rust" beside a workspace written in Rust. The last two have never appeared here and are
+    /// listed because they are the next two of the same kind.
+    #[test]
+    fn copy_avoids_hedges() {
+        const BANNED: [&str; 8] = [
+            "passionate",
+            "leidenschaftlich",
+            "great software",
+            "growing experience",
+            "wachsende erfahrung",
+            "a few things",
+            "team player",
+            "think outside",
+        ];
+        let mut offences = Vec::new();
+        for (lang, json) in [("en", I18N_EN), ("de", I18N_DE)] {
+            for (key, text) in strings_of(json) {
+                let lower = text.to_lowercase();
+                for phrase in BANNED {
+                    if lower.contains(phrase) {
+                        offences.push(format!("{lang}/{key}: {phrase:?}"));
+                    }
+                }
+            }
+        }
+        assert!(
+            offences.is_empty(),
+            "hedging copy:\n  {}",
+            offences.join("\n  ")
+        );
     }
 
     /// i18nrs falls back to an arbitrary language for missing keys, so both
