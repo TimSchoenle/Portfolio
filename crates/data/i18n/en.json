@@ -43,7 +43,7 @@
   "about": {
     "title": "About Me",
     "intro": "I build reliable software, end to end.",
-    "body": "I am a senior software developer specializing in scalable, high-performance backend systems. Java is my core stack, and I run Rust in production. I own the path from code to production, across containerized services, Kubernetes, Helm and GitOps. I care about clean code, clear abstractions, and well-tested systems that stay straightforward to operate and extend.",
+    "body": "I am a senior software developer specializing in scalable, high-performance backend systems. Java is my core stack, alongside Rust. I own the path from code to production, across containerized services, Kubernetes, Helm and GitOps. I care about clean code, clear abstractions, and well-tested systems that stay straightforward to operate and extend.",
     "focusLabel": "Key Competencies",
     "focus": {
       "f1": { "k": "Backend Architecture", "v": "Java & Spring Boot · domain modeling" },
@@ -229,7 +229,7 @@
   },
   "resume": {
     "summaryTitle": "Professional Summary",
-    "summary": "Senior software developer specializing in scalable, high-performance backend systems. Core stack Java, with production Rust. Owns the path from code to production: containerized services, Kubernetes, Helm and GitOps. Writes clean, well-tested systems that are straightforward to operate and evolve.",
+    "summary": "Senior software developer specializing in scalable, high-performance backend systems. Core stack Java, with Rust. Owns the path from code to production: containerized services, Kubernetes, Helm and GitOps. Writes clean, well-tested systems that are straightforward to operate and evolve.",
     "experienceTitle": "Professional Experience",
     "skillsTitle": "Technical Skills",
     "educationTitle": "Education",

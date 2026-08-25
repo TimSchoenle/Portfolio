@@ -43,7 +43,7 @@
   "about": {
     "title": "Über mich",
     "intro": "Ich baue zuverlässige Software, End-to-End.",
-    "body": "Ich bin Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Java ist mein Kernstack, und ich setze Rust produktiv ein. Der Weg vom Code bis in die Produktion liegt bei mir, über containerisierte Services, Kubernetes, Helm und GitOps. Mir sind sauberer Code, klare Abstraktionen und gut getestete Systeme wichtig, die sich unkompliziert betreiben und erweitern lassen.",
+    "body": "Ich bin Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Java ist mein Kernstack, dazu Rust. Ich verantworte die Kette von der Entwicklung bis zum Betrieb, über containerisierte Services, Kubernetes, Helm und GitOps. Mir sind sauberer Code, klare Abstraktionen und gut getestete Systeme wichtig, die sich unkompliziert betreiben und erweitern lassen.",
     "focusLabel": "Schwerpunkte",
     "focus": {
       "f1": {
@@ -241,7 +241,7 @@
   },
   "resume": {
     "summaryTitle": "Professionelle Zusammenfassung",
-    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java, dazu Rust in Produktion. Verantwortet den Weg vom Code bis in die Produktion: containerisierte Services, Kubernetes, Helm und GitOps. Schreibt sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
+    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java, dazu Rust. Verantwortet die Kette von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Schreibt sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
     "experienceTitle": "Berufserfahrung",
     "skillsTitle": "Technische Fähigkeiten",
     "educationTitle": "Ausbildung",
