@@ -90,26 +90,26 @@
         "role": "Senior Software Developer",
         "org": "SixTwenty Cloud LLC",
         "bullets": {
-          "b1": "Standardize deployment and release across the platform's services and environments, running GitOps on Kubernetes.",
-          "b2": "Ship white-label partner integrations on the shared core, so partners launch distinct products without maintaining a fork."
+          "b1": "Maintain and further develop the white-label software solutions running on the platform.",
+          "b2": "Develop the generalized framework they are built from, so each new partner product starts from shared code."
         }
       },
       "mineplex-studios": {
         "role": "Senior Software Developer",
         "org": "Mineplex Studios LLC",
         "bullets": {
-          "b1": "Built the engine components behind an internal and partner-facing development platform in Java, TypeScript and Rust, giving teams one way to integrate services.",
-          "b2": "Consolidated per-service deployment and release handling into one CI/CD and GitOps path on Kubernetes, covering every environment.",
-          "b3": "Delivered partner-specific features as white-label products, keeping partners on shared infrastructure instead of forks."
+          "b1": "Implemented the frontend and backend engine of an internal and external development platform, so teams built and integrated services consistently across the stack.",
+          "b2": "Standardized deployments, release strategies and configuration across services and environments with CI/CD and GitOps workflows on Kubernetes.",
+          "b3": "Delivered partner-specific features as white-label solutions, so partners shipped customized products on shared core infrastructure and tooling."
         }
       },
       "self-employed": {
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Owned client backend systems end to end, from architecture through production, in Java (Spring Boot), TypeScript/Node.js and Rust.",
-          "b2": "Designed REST and gRPC APIs with explicit contracts and strict validation, and automated their tests, security checks and releases through GitHub Actions.",
-          "b3": "Provisioned and operated the databases, brokers, caches and reverse proxies behind them as code, with monitoring that made failures diagnosable."
+          "b1": "Owned client backend systems end to end, exposing REST and gRPC APIs behind explicit contracts in Java (Spring Boot), TypeScript/Node.js and Rust.",
+          "b2": "Automated dependency updates, security scanning, documentation and releases through CI, leaving no manual step between commit and deployment.",
+          "b3": "Ran hardened, high-performance Kubernetes on Talos Linux, delivered by GitOps and instrumented with metrics, logs and traces."
         }
       },
       "mineplex-dev": {
