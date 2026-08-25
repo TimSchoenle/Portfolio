@@ -90,44 +90,44 @@
         "role": "Senior Software Developer",
         "org": "SixTwenty Cloud LLC",
         "bullets": {
-          "b1": "Own the deployment path for the platform: GitOps on Kubernetes, with release strategy and configuration held identical across every service and environment.",
-          "b2": "Build partner-facing white-label integrations on the shared core, so each partner ships a distinct product without forking the platform."
+          "b1": "Standardize deployment and release across the platform's services and environments, running GitOps on Kubernetes.",
+          "b2": "Ship white-label partner integrations on the shared core, so partners launch distinct products without maintaining a fork."
         }
       },
       "mineplex-studios": {
         "role": "Senior Software Developer",
         "org": "Mineplex Studios LLC",
         "bullets": {
-          "b1": "Built the core frontend and backend engine components of an internal and partner-facing development platform in Java, TypeScript and Rust, so teams integrated services the same way across the stack.",
-          "b2": "Replaced per-service deployment and release handling with one standardized CI/CD and GitOps path on Kubernetes, covering every environment.",
-          "b3": "Delivered partner-specific features as white-label products on that platform, keeping partners on shared infrastructure and tooling instead of forks."
+          "b1": "Built the engine components behind an internal and partner-facing development platform in Java, TypeScript and Rust, giving teams one way to integrate services.",
+          "b2": "Consolidated per-service deployment and release handling into one CI/CD and GitOps path on Kubernetes, covering every environment.",
+          "b3": "Delivered partner-specific features as white-label products, keeping partners on shared infrastructure instead of forks."
         }
       },
       "self-employed": {
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Delivered freelance backend services and data pipelines alongside full-time employment, in Java (Spring Boot) and TypeScript/Node.js, with Rust where performance or memory safety mattered.",
-          "b2": "Exposed REST and gRPC APIs behind explicit contracts and strict validation, and automated their tests, security checks and releases through GitHub Actions onto Kubernetes.",
-          "b3": "Provisioned and operated the databases, message brokers, caches and reverse proxies behind them as code, with monitoring that kept failures observable and quick to diagnose."
+          "b1": "Delivered freelance backend services and data pipelines alongside full-time employment, in Java (Spring Boot), TypeScript/Node.js and Rust.",
+          "b2": "Designed REST and gRPC APIs with explicit contracts and strict validation, and automated their tests, security checks and releases through GitHub Actions.",
+          "b3": "Provisioned and operated the databases, brokers, caches and reverse proxies behind them as code, with monitoring that made failures diagnosable."
         }
       },
       "mineplex-dev": {
         "role": "Software Developer",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Shipped gameplay and backend features for high-traffic Minecraft minigames, weighing every change against stability, debuggability and player impact.",
-          "b2": "Turned vague production reports into reproducible cases and concrete fixes, across plugins and services that failed in combination rather than alone.",
-          "b3": "Planned and delivered gameplay features with product, community and operations, folding player feedback back into the roadmap."
+          "b1": "Shipped gameplay and backend features for high-traffic Minecraft minigames, weighing each change against stability and player impact.",
+          "b2": "Diagnosed production failures spanning multiple plugins and services, converting vague reports into reproducible cases and fixes.",
+          "b3": "Planned and delivered gameplay features with product, community and operations, folding player feedback into the roadmap."
         }
       },
       "mineplex-qa": {
         "role": "Quality Assurance",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Reproduced and isolated gameplay and backend failures on a high-traffic Minecraft server network, handing developers root causes instead of symptom reports.",
-          "b2": "Handled live incidents from player reports and internal monitoring: reproduced quickly, assessed impact, and tracked the critical ones through to resolution.",
-          "b3": "Worked with developers and community staff to triage and verify fixes for critical production issues."
+          "b1": "Reproduced and isolated gameplay and backend failures across a high-traffic Minecraft network, handing developers root causes instead of symptoms.",
+          "b2": "Triaged live incidents from player reports and internal monitoring, assessing impact and tracking critical failures to resolution.",
+          "b3": "Verified fixes for critical production issues with developers and community staff."
         }
       }
     }
@@ -229,7 +229,7 @@
   },
   "resume": {
     "summaryTitle": "Professional Summary",
-    "summary": "Senior software developer specializing in scalable, high-performance backend systems. Core stack Java, with Rust. Owns the path from code to production: containerized services, Kubernetes, Helm and GitOps. Writes clean, well-tested systems that are straightforward to operate and evolve.",
+    "summary": "Senior software developer specializing in scalable, high-performance backend systems. Core stack Java, with Rust. End-to-end ownership from code to production across containerized services, Kubernetes, Helm and GitOps. Focused on clean code, clear abstractions, and well-tested systems that stay straightforward to operate and evolve.",
     "experienceTitle": "Professional Experience",
     "skillsTitle": "Technical Skills",
     "educationTitle": "Education",

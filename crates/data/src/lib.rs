@@ -1051,6 +1051,38 @@ mod tests {
         );
     }
 
+    /// No experience bullet may outgrow two printed lines.
+    ///
+    /// The cap is words rather than characters because the PDF sets them at one size in one
+    /// column, so length in words is what decides the wrap. A bullet over it costs the fit ladder
+    /// a rung: the generator condenses roles and then shrinks the type to win back the line, which
+    /// is a worse trade than editing the sentence. One bullet ran to 38 words in a single sentence
+    /// before this existed.
+    #[test]
+    fn experience_bullets_stay_within_two_lines() {
+        const MAX_WORDS: usize = 24;
+        let mut offences = Vec::new();
+        for (lang, json) in [("en", I18N_EN), ("de", I18N_DE)] {
+            for (key, text) in strings_of(json) {
+                let Some(rest) = key.strip_prefix("experience.entries.") else {
+                    continue;
+                };
+                if !rest.contains(".bullets.") {
+                    continue;
+                }
+                let words = text.split_whitespace().count();
+                if words > MAX_WORDS {
+                    offences.push(format!("{lang}/{key}: {words} words"));
+                }
+            }
+        }
+        assert!(
+            offences.is_empty(),
+            "bullets over {MAX_WORDS} words:\n  {}",
+            offences.join("\n  "),
+        );
+    }
+
     /// Phrases that describe an attitude instead of a capability, banned from both languages.
     ///
     /// The first six were in the copy: the hero called itself "passionate about building great

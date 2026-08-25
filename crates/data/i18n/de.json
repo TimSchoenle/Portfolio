@@ -102,44 +102,44 @@
         "role": "Senior Softwareentwickler",
         "org": "SixTwenty Cloud LLC",
         "bullets": {
-          "b1": "Verantworte den Deployment-Pfad der Plattform: GitOps auf Kubernetes, mit identischer Release-Strategie und Konfiguration über alle Services und Umgebungen hinweg.",
-          "b2": "Entwickle partnerseitige White-Label-Integrationen auf dem gemeinsamen Kern, sodass jeder Partner ein eigenes Produkt ausliefert, ohne die Plattform zu forken."
+          "b1": "Standardisiere Deployment und Release über alle Services und Umgebungen der Plattform hinweg, mit GitOps auf Kubernetes.",
+          "b2": "Entwickle White-Label-Integrationen für Partner auf dem gemeinsamen Kern, sodass Partner eigene Produkte ausliefern, ohne die Plattform zu forken."
         }
       },
       "mineplex-studios": {
         "role": "Senior Softwareentwickler",
         "org": "Mineplex Studios LLC",
         "bullets": {
-          "b1": "Die zentralen Frontend- und Backend-Engine-Komponenten einer internen und partnerseitigen Entwicklungsplattform in Java, TypeScript und Rust gebaut, sodass Teams Services über den gesamten Stack hinweg einheitlich integrierten.",
-          "b2": "Deployment- und Release-Handling pro Service durch einen standardisierten CI/CD- und GitOps-Pfad auf Kubernetes ersetzt, über alle Umgebungen hinweg.",
-          "b3": "Partnerspezifische Funktionen als White-Label-Produkte auf dieser Plattform ausgeliefert und Partner damit auf gemeinsamer Infrastruktur und gemeinsamem Tooling gehalten statt auf Forks."
+          "b1": "Frontend- und Backend-Engine einer internen und partnerseitigen Entwicklungsplattform in Java, TypeScript und Rust gebaut und Teams damit einen einheitlichen Integrationsweg gegeben.",
+          "b2": "Deployment und Release pro Service zu einem standardisierten CI/CD- und GitOps-Pfad auf Kubernetes zusammengeführt, über alle Umgebungen hinweg.",
+          "b3": "Partnerspezifische Funktionen als White-Label-Produkte ausgeliefert und Partner auf gemeinsamer Infrastruktur statt auf Forks gehalten."
         }
       },
       "self-employed": {
         "role": "Selbstständiger Softwareentwickler",
         "org": "Selbstständig",
         "bullets": {
-          "b1": "Freiberufliche Backend-Services und Datenpipelines neben der Festanstellung geliefert, in Java (Spring Boot) und TypeScript/Node.js, mit Rust dort, wo Performance oder Speichersicherheit zählten.",
-          "b2": "REST- und gRPC-APIs hinter expliziten Contracts und strikter Validierung bereitgestellt und deren Tests, Security-Checks und Releases über GitHub Actions nach Kubernetes automatisiert.",
-          "b3": "Die dahinterliegenden Datenbanken, Message-Broker, Caches und Reverse Proxies als Code bereitgestellt und betrieben, mit Monitoring, das Fehler sichtbar und schnell diagnostizierbar hielt."
+          "b1": "Freiberufliche Backend-Services und Datenpipelines neben der Festanstellung geliefert, in Java (Spring Boot), TypeScript/Node.js und Rust.",
+          "b2": "REST- und gRPC-APIs mit expliziten Contracts und strikter Validierung entworfen und deren Tests, Security-Checks und Releases über GitHub Actions automatisiert.",
+          "b3": "Die dahinterliegenden Datenbanken, Broker, Caches und Reverse Proxies als Code bereitgestellt und betrieben, mit Monitoring, das Fehler diagnostizierbar machte."
         }
       },
       "mineplex-dev": {
         "role": "Softwareentwickler",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Gameplay- und Backend-Features für stark frequentierte Minecraft-Minispiele ausgeliefert und jede Änderung an Stabilität, Debuggability und Spielererlebnis gemessen.",
-          "b2": "Unklare Fehlermeldungen aus der Produktion in reproduzierbare Fälle und konkrete Fixes überführt, über Plugins und Services hinweg, die erst im Zusammenspiel versagten.",
-          "b3": "Gameplay-Features gemeinsam mit Product, Community und Operations geplant und umgesetzt und Spielerfeedback zurück in die Roadmap geführt."
+          "b1": "Gameplay- und Backend-Features für stark frequentierte Minecraft-Minispiele ausgeliefert und jede Änderung an Stabilität und Spielererlebnis gemessen.",
+          "b2": "Produktionsfehler über mehrere Plugins und Services hinweg diagnostiziert und unklare Meldungen in reproduzierbare Fälle und Fixes überführt.",
+          "b3": "Gameplay-Features gemeinsam mit Product, Community und Operations geplant und umgesetzt und Spielerfeedback in die Roadmap überführt."
         }
       },
       "mineplex-qa": {
         "role": "Qualitätssicherung",
         "org": "Mineplex LLC",
         "bullets": {
-          "b1": "Gameplay- und Backend-Fehler in einem stark frequentierten Minecraft-Servernetzwerk reproduziert und eingegrenzt und Entwicklern Ursachen statt Symptommeldungen übergeben.",
-          "b2": "Live-Incidents aus Spielermeldungen und internem Monitoring bearbeitet: schnell reproduziert, Auswirkungen bewertet und die kritischen bis zur Behebung nachverfolgt.",
-          "b3": "Gemeinsam mit Entwickler- und Community-Team kritische Produktionsfehler priorisiert und deren Behebung verifiziert."
+          "b1": "Gameplay- und Backend-Fehler in einem stark frequentierten Minecraft-Netzwerk reproduziert und eingegrenzt und Entwicklern Ursachen statt Symptome übergeben.",
+          "b2": "Live-Incidents aus Spielermeldungen und internem Monitoring triagiert, Auswirkungen bewertet und kritische Fehler bis zur Behebung verfolgt.",
+          "b3": "Fixes für kritische Produktionsfehler gemeinsam mit Entwickler- und Community-Team verifiziert."
         }
       }
     }
@@ -241,7 +241,7 @@
   },
   "resume": {
     "summaryTitle": "Professionelle Zusammenfassung",
-    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java, dazu Rust. Verantwortet die Kette von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Schreibt sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
+    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java, dazu Rust. Durchgängige Verantwortung von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Fokus auf sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
     "experienceTitle": "Berufserfahrung",
     "skillsTitle": "Technische Fähigkeiten",
     "educationTitle": "Ausbildung",
