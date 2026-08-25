@@ -10,6 +10,7 @@ typst.workspace = true
 typst-layout.workspace = true
 typst-pdf.workspace = true
 typst-render.workspace = true
+qrcode.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 time.workspace = true
