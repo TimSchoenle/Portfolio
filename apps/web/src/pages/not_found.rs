@@ -29,7 +29,7 @@ pub fn NotFound(segments: Vec<String>) -> Element {
                 h1 { {t("notFound.title")} }
                 p { {t("notFound.description")} }
                 Link { to: Route::Home {}, class: "btn-accent",
-                    span { class: "mono", {t("notFound.home")} }
+                    span { class: "mono", {t("common.backToHome")} }
                 }
             }
         }

@@ -152,14 +152,16 @@ pub fn Hero() -> Element {
             div { class: "hero-eyebrow",
                 div { class: "bracket-line" }
                 span { class: "mono text-accent", {section_label("identity")} }
-                span { class: "mono text-muted", {t("hero.eyebrow")} }
+                // Not a translation key: a tool's name is the same in both languages, and when
+                // this was one the two files held identical values that could still drift.
+                span { class: "mono text-muted", {CONFIG.headline_tech.join(" · ")} }
 
                 div { class: "hero-meta",
                     div { class: "hero-meta-card",
                         span { class: "mono text-muted", "§ {identity_num}.a" }
                         dl { class: "meta-dl",
                             dt { span { class: "mono text-muted", "ROLE" } }
-                            dd { {t("hero.jobTitle")} }
+                            dd { {t("common.jobTitle")} }
                             dt { span { class: "mono text-muted", "LOC" } }
                             dd { {t("common.country")} }
                             dt { span { class: "mono text-muted", "YRS" } }
