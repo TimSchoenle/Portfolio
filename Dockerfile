@@ -136,7 +136,20 @@ RUN mkdir -p apps/web/generated \
 # build.rs (the PDFs are served at /resume/ from memory; the fingerprint is shown
 # on the contact card). Embedding keeps the runtime a single self-contained
 # binary with no on-disk asset tree.
-RUN cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
+#
+# The `resume_photo` secret is the application photo the German sheet puts at
+# the top of its sidebar. It is optional and deliberately not a build context
+# file: a portrait is personal data that has no business in the repository or in
+# an image layer, so it arrives as a secret mount that exists only for this RUN.
+# Without it both sheets render exactly as they do today.
+#
+#     docker build --secret id=resume_photo,src=./photo.jpg .
+#
+# The generator reads the format from the file's own header, so the mount having
+# no extension is fine.
+RUN --mount=type=secret,id=resume_photo \
+    cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
+      $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
     && mkdir -p apps/web/generated/resume \
     && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
     && cp /app/resume-out/resume-fingerprint.json apps/web/generated/ \

@@ -8,9 +8,9 @@
 //! for the scale that actually fits.
 
 use crate::style::Layout;
-use crate::template::build_typ;
+use crate::template::{Photo, build_typ};
 use crate::translations::Translations;
-use crate::world;
+use crate::world::{self, Asset};
 
 /// Preferred lower bound while at Comfortable density: keeps the body type close
 /// to its 10 pt design size. The ladder switches to Compact density before
@@ -80,7 +80,12 @@ pub(crate) struct Fitted {
 /// Fitting ladder: full detail at Comfortable density, then condensed, then
 /// Compact density, condensing further, and only last letting the scale drift
 /// toward the floor.
-pub(crate) fn fit_single_page(t: &Translations, lang: &str) -> Result<Fitted, String> {
+pub(crate) fn fit_single_page(
+    t: &Translations,
+    lang: &str,
+    photo: Option<Photo<'_>>,
+    assets: &[Asset],
+) -> Result<Fitted, String> {
     // (dense, detail, lo, hi)
     let attempts = [
         (false, Detail::Full, PREFERRED_MIN_SCALE, 1.0),
@@ -96,7 +101,9 @@ pub(crate) fn fit_single_page(t: &Translations, lang: &str) -> Result<Fitted, St
         ),
     ];
     for (dense, detail, lo, hi) in attempts {
-        if let Some((bytes, scale)) = largest_fitting_scale(t, lang, dense, detail, lo, hi)? {
+        if let Some((bytes, scale)) =
+            largest_fitting_scale(t, lang, dense, detail, lo, hi, photo, assets)?
+        {
             return Ok(Fitted {
                 bytes,
                 scale,
@@ -110,6 +117,10 @@ pub(crate) fn fit_single_page(t: &Translations, lang: &str) -> Result<Fitted, St
 
 /// Binary-searches the largest scale within `[lo, hi]` that renders as a single
 /// page. Returns `Ok(None)` if even `lo` overflows; `Err` on a compile failure.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "one search over the ladder's own coordinates, all of which vary per attempt"
+)]
 fn largest_fitting_scale(
     t: &Translations,
     lang: &str,
@@ -117,11 +128,13 @@ fn largest_fitting_scale(
     detail: Detail,
     lo: f64,
     hi: f64,
+    photo: Option<Photo<'_>>,
+    assets: &[Asset],
 ) -> Result<Option<(Vec<u8>, f64)>, String> {
     // Compile + export at `scale`, returning whether it fit on one page.
     let render_at = |scale: f64| -> Result<(bool, Vec<u8>), String> {
-        let source = build_typ(t, Layout { scale, dense }, detail, lang);
-        let (pages, bytes) = world::render(source)?;
+        let source = build_typ(t, Layout { scale, dense }, detail, lang, photo);
+        let (pages, bytes) = world::render(source, assets)?;
         Ok((pages <= 1, bytes))
     };
 

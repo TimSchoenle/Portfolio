@@ -211,6 +211,11 @@ typst-pdf = "0.15"
 # and typst is already here, with the brand font embedded and a layout engine,
 # so the card is a second tiny document rather than a new toolchain.
 typst-render = "0.15"
+
+# The header's QR code. Pure Rust and taken without its default features: the
+# `image` and `svg` renderers it ships would pull a decoder stack in for output
+# this generator does not use, since the modules are emitted as Typst vectors.
+qrcode = { version = "0.14", default-features = false }
 sha2 = "0.11"
 # Exact-pinned because 0.3.52 changed `Parsable::parse`'s signature, which broke
 # `cookie 0.18.1` (pulled transitively via dioxus-fullstack → reqwest →
