@@ -134,7 +134,7 @@
         }
       },
       "mineplex-qa": {
-        "role": "QA-Analyst",
+        "role": "Qualitätssicherung",
         "org": "Mineplex LLC",
         "bullets": {
           "b1": "Gameplay- und Backend-Fehler in einem stark frequentierten Minecraft-Servernetzwerk reproduziert und eingegrenzt und Entwicklern Ursachen statt Symptommeldungen übergeben.",

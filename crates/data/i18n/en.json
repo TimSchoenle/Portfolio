@@ -122,7 +122,7 @@
         }
       },
       "mineplex-qa": {
-        "role": "QA Analyst",
+        "role": "Quality Assurance",
         "org": "Mineplex LLC",
         "bullets": {
           "b1": "Reproduced and isolated gameplay and backend failures on a high-traffic Minecraft server network, handing developers root causes instead of symptom reports.",
