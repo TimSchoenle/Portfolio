@@ -180,10 +180,15 @@
   "licenses": {
     "title": "Third-Party Licenses",
     "intro": "This site is built on open source. Every dependency the server and the WebAssembly client link is listed below, together with the licence it is distributed under and the full text of that licence.",
+    "note": "A dependency offering a choice of terms is attributed under one of them, chosen once by the accepted list the inventory is generated from: a crate offered as MIT OR Apache-2.0 appears under MIT only, and permits terms not printed here. Identical notices are reproduced once and name every dependency shipping them; two that differ only in a copyright line stay two, because that line is the part the licence asks be reproduced.",
     "summaryHeading": "Licences in use",
+    "noticesHeading": "Licence texts",
     "dependenciesHeading": "Dependencies",
-    "dependencyUnit": "dependencies",
-    "noText": "No licence file was found for this dependency; it is distributed under the expression above.",
+    "dependencyOne": "dependency",
+    "dependencyMany": "dependencies",
+    "noticeOne": "licence text",
+    "noticeMany": "licence texts",
+    "noText": "no licence file found",
     "unavailable": "This build carries no licence inventory."
   },
   "imprint": {

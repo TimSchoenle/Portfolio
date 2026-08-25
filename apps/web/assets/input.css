@@ -619,6 +619,7 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
    block at their original wrapping. */
 .licenses-page { max-width: 1040px; margin: 0 auto; padding: 60px var(--side-pad) 80px; }
 .licenses-intro { max-width: 68ch; margin: 20px 0 0; color: rgba(232, 236, 242, 0.85); line-height: 1.65; }
+.licenses-note { max-width: 68ch; margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
 .licenses-unavailable { margin-top: 48px; color: var(--muted); }
 .licenses-block { margin-top: 56px; }
 .licenses-block > h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 18px; }
@@ -636,57 +637,84 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 .license-chip-name { color: rgba(232, 236, 242, 0.85); }
 .license-chip-count { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: var(--muted); }
 
-.license-deps { border-top: 1px solid var(--line); }
+/* One block per licence, each holding the distinct notices reproduced under it.
+   The heading carries the coverage the summary chip above states, so a reader
+   who scrolled past the chips still knows how much of the graph this section
+   accounts for. */
+.license-group + .license-group { margin-top: 40px; }
+.license-group-head {
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px;
+  margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  font-size: 15px; font-weight: 600;
+}
+.license-group-count {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
+  font-weight: 400; color: var(--muted);
+}
 
-/* Each dependency is a disclosure row: the summary is the whole clickable
-   surface, so nothing inside it is a link — the repository anchor lives in the
-   body, where it cannot swallow the click that opens the row. */
-.license-dep { border-bottom: 1px solid var(--line); }
-.license-dep > summary {
-  display: grid; grid-template-columns: 14px minmax(0, 1fr) auto minmax(0, 1.2fr);
-  gap: 4px 16px; align-items: baseline;
+/* Each notice is a disclosure row whose summary is the list of dependencies
+   shipping it — collapsed, the section reads as an index of the graph; opened,
+   it is the licence file verbatim. */
+.license-notice { border-bottom: 1px solid var(--line); }
+.license-notice > summary {
+  display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 4px 14px; align-items: baseline;
   padding: 10px 2px; cursor: pointer; list-style: none; font-size: 14px;
   transition: color 0.15s ease;
 }
-.license-dep > summary::-webkit-details-marker { display: none; }
-.license-dep > summary::before { content: "+"; color: var(--muted); }
-.license-dep[open] > summary::before { content: "−"; }
-.license-dep > summary:hover,
-.license-dep > summary:focus-visible { color: var(--accent); }
-.license-dep-name { overflow-wrap: anywhere; }
-.license-dep-version,
-.license-dep-spdx {
-  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--muted);
+.license-notice > summary::-webkit-details-marker { display: none; }
+.license-notice > summary::before { content: "+"; color: var(--muted); }
+.license-notice[open] > summary::before { content: "−"; }
+.license-notice > summary:hover,
+.license-notice > summary:focus-visible { color: var(--accent); }
+/* The dependency names are the row's label, not a detail of it: the notice is
+   identified by what it covers, and a reader looking for one crate finds it
+   without opening 130 rows. */
+.license-notice-crates {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px;
+  overflow-wrap: anywhere;
 }
-.license-dep-spdx { text-align: right; overflow-wrap: anywhere; }
-
-.license-dep-body { padding: 2px 0 22px 30px; display: flex; flex-direction: column; gap: 14px; }
-.license-dep-repo {
-  align-self: start;
+.license-notice-count {
   font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
-  color: var(--muted); overflow-wrap: anywhere; transition: color 0.15s ease;
+  color: var(--muted); white-space: nowrap;
 }
-.license-dep-repo:hover { color: var(--accent); text-decoration: underline; }
 
-.license-text-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; font-size: 13px; }
-.license-text-name { color: rgba(232, 236, 242, 0.9); }
-.license-text-id {
-  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--muted);
-}
-.license-text-missing { margin: 0; color: var(--muted); font-size: 13px; }
-.license-text pre {
-  margin: 0; padding: 16px 18px; max-height: 60vh; overflow: auto;
+.license-notice > pre {
+  margin: 0 0 22px 28px; padding: 16px 18px; max-height: 60vh; overflow: auto;
   border: 1px solid var(--line); border-radius: 3px; background: var(--bg-card);
   font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; line-height: 1.6;
   color: rgba(232, 236, 242, 0.8); white-space: pre-wrap; overflow-wrap: anywhere;
 }
 
+/* The inventory: one flat row per dependency with the terms it offers. Not a
+   disclosure list — the text it resolved to is above, under the licence that
+   owns it, and duplicating it here is what made this page 738 KB. */
+.license-deps { border-top: 1px solid var(--line); }
+.license-dep {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
+  gap: 4px 16px; align-items: baseline;
+  padding: 10px 2px; border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.license-dep-name { overflow-wrap: anywhere; }
+a.license-dep-name { color: inherit; transition: color 0.15s ease; }
+a.license-dep-name:hover,
+a.license-dep-name:focus-visible { color: var(--accent); text-decoration: underline; }
+.license-dep-version,
+.license-dep-spdx,
+.license-dep-note {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--muted);
+}
+.license-dep-spdx { text-align: right; overflow-wrap: anywhere; }
+/* The rare crate cargo-about found no licence file for. A column of its own
+   would be empty on every row but that one, so it wraps under the row it
+   annotates instead. */
+.license-dep-note { grid-column: 1 / -1; font-style: italic; }
+
 @media (max-width: 720px) {
   /* The SPDX expression drops to its own full-width row rather than being
      crushed into a third column that wraps mid-identifier. */
-  .license-dep > summary { grid-template-columns: 14px minmax(0, 1fr) auto; }
-  .license-dep-spdx { grid-column: 2 / -1; text-align: left; }
-  .license-dep-body { padding-left: 0; }
+  .license-dep { grid-template-columns: minmax(0, 1fr) auto; }
+  .license-dep-spdx { grid-column: 1 / -1; text-align: left; }
+  .license-notice > pre { margin-left: 0; }
 }
 
 /* 404 */

@@ -192,10 +192,15 @@
   "licenses": {
     "title": "Lizenzen Dritter",
     "intro": "Diese Seite baut auf Open Source auf. Jede Abhängigkeit, die der Server und der WebAssembly-Client einbinden, ist unten aufgeführt — mit der Lizenz, unter der sie verteilt wird, und deren vollständigem Text.",
+    "note": "Eine Abhängigkeit, die mehrere Lizenzen zur Wahl stellt, erscheint unter einer davon – ausgewählt durch die Liste akzeptierter Lizenzen, aus der das Verzeichnis erzeugt wird. Ein Paket mit MIT OR Apache-2.0 steht also nur unter MIT und erlaubt darüber hinaus Bedingungen, die hier nicht abgedruckt sind. Gleiche Lizenztexte stehen genau einmal hier und nennen jede Abhängigkeit, die sie mitliefert; zwei Texte, die sich nur in der Copyright-Zeile unterscheiden, bleiben zwei – genau diese Zeile verlangt die Lizenz wiederzugeben.",
     "summaryHeading": "Verwendete Lizenzen",
+    "noticesHeading": "Lizenztexte",
     "dependenciesHeading": "Abhängigkeiten",
-    "dependencyUnit": "Abhängigkeiten",
-    "noText": "Für diese Abhängigkeit wurde keine Lizenzdatei gefunden; sie wird unter dem oben genannten Ausdruck verteilt.",
+    "dependencyOne": "Abhängigkeit",
+    "dependencyMany": "Abhängigkeiten",
+    "noticeOne": "Lizenztext",
+    "noticeMany": "Lizenztexte",
+    "noText": "keine Lizenzdatei gefunden",
     "unavailable": "Dieser Build enthält kein Lizenzverzeichnis."
   },
   "imprint": {

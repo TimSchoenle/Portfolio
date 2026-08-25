@@ -22,7 +22,7 @@ use portfolio_data::{OG_IMAGE_FILE, RESUME_FILES};
 
 const EMPTY_MANIFEST: &str = r#"{"algorithm":"","generated_at":"","files":{}}"#;
 const EMPTY_REPOS: &str = r#"{"generated_at":"","user":"","repos":[]}"#;
-const EMPTY_LICENSES: &str = r#"{"summary":[],"texts":[],"crates":[]}"#;
+const EMPTY_LICENSES: &str = r#"{"texts":[],"crates":[]}"#;
 
 fn embed(source: &Path, out_dir: &str, name: &str, default: &str) {
     let dest = Path::new(out_dir).join(name);

@@ -12,17 +12,21 @@
 
   `--format json` carries the same data plus the entire `cargo metadata` record
   of every crate — dependency graphs, feature tables, target lists, manifest
-  paths — which is 3.8 MB of which the page reads about 8%. This template is that
+  paths — which is 3.8 MB of which the page reads about 6%. This template is that
   document with the fields the page needs and nothing else.
+
+  `overview` is deliberately not carried. It counts (licence file, crate) pairs
+  rather than crates — 19 for ISC over a graph holding four, because `ring`
+  vendors fifteen ISC notices of its own — so a summary built from it says
+  "19 dependencies" about four. `LicensesFile::notices` derives the same summary
+  from `texts` instead, where the number beside a licence and the sections
+  beneath it come out of one count.
 
   Handlebars renders `{{json x}}` as a JSON literal and cargo-about disables HTML
   escaping, so licence texts survive verbatim, quotes and angle brackets and all.
   Every newline below falls between JSON tokens, never inside a string.
 --}}
 {
-"summary":[
-{{#each overview}}{"id":{{json this.id}},"name":{{json this.name}},"crates":{{this.count}}}{{#unless @last}},{{/unless}}
-{{/each}}],
 "texts":[
 {{#each licenses}}{"id":{{json this.id}},"name":{{json this.name}},"text":{{json this.text}},"used_by":[{{#each this.used_by}}{"name":{{json this.crate.name}},"version":{{json this.crate.version}}}{{#unless @last}},{{/unless}}{{/each}}]}{{#unless @last}},{{/unless}}
 {{/each}}],

@@ -89,9 +89,10 @@ runs as `1001:1001` and needs nothing writable.
 - **The Content-Security-Policy is built per response.** The server hashes the inline scripts that
   document actually carries and reserves a nonce for the script Cloudflare injects at the edge, so
   `script-src` needs no `'unsafe-inline'`.
-- `/licenses` lists every crate the client and the server link, the licence it ships under, and the
-  verbatim text of every licence file found. cargo-about produces it during the image build, and an
-  unlisted licence fails that build.
+- `/licenses` reproduces the licence of every crate the client and the server link. The notices are
+  grouped by licence and each distinct text is reproduced once, naming the dependencies that ship
+  it, with a flat inventory beneath listing every dependency and the terms it offers. cargo-about
+  produces the data during the image build, and an unlisted licence fails that build.
 - The project list is fetched from the GitHub API at build time, with archived, blacklisted and
   year-stale repositories dropped, then embedded into the binary by `build.rs`.
 - Cmd+K opens a command palette with fuzzy search and keyboard navigation. The stack section is a
