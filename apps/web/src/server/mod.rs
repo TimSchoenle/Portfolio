@@ -913,9 +913,12 @@ mod tests {
             .unwrap()
     }
 
+    async fn bytes(response: axum::response::Response) -> axum::body::Bytes {
+        to_bytes(response.into_body(), usize::MAX).await.unwrap()
+    }
+
     async fn json(response: axum::response::Response) -> Value {
-        let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-        serde_json::from_slice(&bytes).unwrap()
+        serde_json::from_slice(&bytes(response).await).unwrap()
     }
 
     /// The middleware state, with the policy the deployment's defaults produce.
@@ -1047,6 +1050,12 @@ mod tests {
     /// the request-metadata layer sit outside every handler, and a response that goes through them
     /// has to be the response the handler produced, header for header and byte for byte.
     ///
+    /// That comparison only means something over a route whose answer depends on nothing but the
+    /// request, hence `/api/v1/profile`: a `&'static str` rendered once at startup. The probes
+    /// cannot stand in — each stamps the current time to the millisecond, so two of their
+    /// responses differ whenever the clock ticks between the calls, which says nothing about the
+    /// layers.
+    ///
     /// Also the only place the layer *types* are composed the way `router` composes them, so a
     /// version of `sentry-tower` that stops fitting an axum `Router` fails here rather than in the
     /// image build.
@@ -1062,7 +1071,7 @@ mod tests {
 
         let request = || {
             Request::builder()
-                .uri("/api/health")
+                .uri("/api/v1/profile")
                 .body(Body::empty())
                 .unwrap()
         };
@@ -1079,7 +1088,7 @@ mod tests {
 
         assert_eq!(bare.status(), layered.status());
         assert_eq!(bare.headers(), layered.headers());
-        assert_eq!(json(bare).await, json(layered).await);
+        assert_eq!(bytes(bare).await, bytes(layered).await);
     }
 
     /// The other half of the switch: with the block at its default nothing is mounted at all, so a
