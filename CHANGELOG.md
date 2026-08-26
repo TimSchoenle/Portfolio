@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.10.0](https://github.com/TimSchoenle/Portfolio/compare/v2.9.0...v2.10.0) (2026-08-26)
+
+
+### Features
+
+* **observability:** add optional Sentry error reporting and request tracing ([#1137](https://github.com/TimSchoenle/Portfolio/issues/1137)) ([8faa4ba](https://github.com/TimSchoenle/Portfolio/commit/8faa4ba66c6393a33e0bef827a59627c46745884))
+
+
+### Tests
+
+* **web:** pin Sentry layer transparency to a time-invariant route ([#1139](https://github.com/TimSchoenle/Portfolio/issues/1139)) ([1d056a4](https://github.com/TimSchoenle/Portfolio/commit/1d056a464418495ff9152f6ed62e85fe53dc90e4))
+
 ## [2.9.0](https://github.com/TimSchoenle/Portfolio/compare/v2.8.0...v2.9.0) (2026-08-25)
 
 
