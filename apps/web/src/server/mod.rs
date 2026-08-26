@@ -10,6 +10,7 @@ mod assets;
 mod cache;
 mod csp;
 mod seo;
+mod telemetry;
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -52,10 +53,37 @@ const EX_CONFIG: i32 = 78;
 pub fn serve() {
     let config = Arc::new(load_config());
 
+    // Before `dioxus::serve`, and that ordering is the whole of the handover: the framework
+    // installs its own subscriber unless one is already set, and a Sentry layer has to be a
+    // layer *of* the subscriber rather than something added to a finished one. With
+    // `sentry.enabled` off this installs nothing and the framework's subscriber stands.
+    //
+    // The binding is held for the rest of `serve`, which is the rest of the process —
+    // `dioxus::serve` diverges. See `telemetry::TelemetryGuard` for why that means the
+    // drop-time flush is unreachable, and why no key claims otherwise.
+    let _telemetry = match telemetry::init(&config.sentry) {
+        Ok(guard) => guard,
+        Err(err) => refuse(&err),
+    };
+
     dioxus::serve(move || {
         let config = Arc::clone(&config);
         async move { Ok(router(&config)) }
     });
+}
+
+/// Ends the process with [`EX_CONFIG`], naming what could not be started with.
+///
+/// Runs before `dioxus::serve` installs a logger — and, when Sentry is on, before this server
+/// installs one — so `tracing` would discard this; it goes to stderr directly.
+///
+/// The error names the key; the report under it names the layer that supplied it, which is the
+/// half an operator cannot get at from inside a distroless image with no shell. Neither holds a
+/// configuration value, so both are safe in a log that is shipped and retained.
+fn refuse(err: &dyn std::fmt::Display) -> ! {
+    eprintln!("portfolio: cannot start, the configuration is not usable: {err}");
+    eprintln!("{}", portfolio_config::provenance());
+    std::process::exit(EX_CONFIG)
 }
 
 /// Reads the configuration, or ends the process with [`EX_CONFIG`].
@@ -63,25 +91,19 @@ pub fn serve() {
 /// Two ways to be unusable, and both are start-up failures: a value that cannot be *loaded* (a
 /// missing file, an unparseable number, one key supplied by two layers), and a set of values that
 /// load individually but cannot be *served* together — see
-/// [`CspConfig::validate`](portfolio_config::CspConfig::validate). Failing here means the
-/// container never reports ready, rather than serving every visitor a blank page.
+/// [`CspConfig::validate`](portfolio_config::CspConfig::validate) and
+/// [`SentryConfig::validate`](portfolio_config::SentryConfig::validate). Failing here means the
+/// container never reports ready, rather than serving every visitor a blank page or reporting its
+/// errors into a void.
 fn load_config() -> ServerConfig {
-    // Runs before `dioxus::serve` installs the logger, so `tracing` would discard this.
-    //
-    // The error names the key; the report under it names the layer that supplied it, which is
-    // the half an operator cannot get at from inside a distroless image with no shell. It holds
-    // no configuration value, so it is safe in a log that is shipped and retained.
-    let refuse = |err: &dyn std::fmt::Display| -> ! {
-        eprintln!("portfolio: cannot start, the configuration is not usable: {err}");
-        eprintln!("{}", portfolio_config::provenance());
-        std::process::exit(EX_CONFIG)
-    };
-
     let config = match portfolio_config::load::<ServerConfig>() {
         Ok(config) => config,
         Err(err) => refuse(&err),
     };
     if let Err(err) = config.csp.validate() {
+        refuse(&err);
+    }
+    if let Err(err) = config.sentry.validate() {
         refuse(&err);
     }
     config
@@ -118,28 +140,43 @@ fn router(config: &ServerConfig) -> Router {
     // The policy for everything that is not a document, and only where the layer
     // above has not already set a stricter, document-specific one — hence
     // `if_not_present` rather than the `overriding` every other header uses.
-    app.layer(SetResponseHeaderLayer::if_not_present(
-        header::CONTENT_SECURITY_POLICY,
-        policy.subresource(),
-    ))
-    .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
-    .layer(static_header(header::X_FRAME_OPTIONS, "DENY"))
-    .layer(static_header(header::REFERRER_POLICY, "no-referrer"))
-    .layer(static_header(
-        header::STRICT_TRANSPORT_SECURITY,
-        "max-age=31536000; includeSubDomains; preload",
-    ))
-    .layer(static_header(
-        HeaderName::from_static("permissions-policy"),
-        "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-    ))
-    // Compress text assets per Accept-Encoding; already-encoded payloads are
-    // skipped, so this never double-compresses the SSR HTML.
-    .layer(CompressionLayer::new().compress_when(compression_predicate()))
-    // Assign a `Cache-Control` TTL per asset class, but only when a handler
-    // did not already set one (so the API's own headers win). Runs last.
-    .layer(middleware::from_fn(cache::set_cache_control))
-    .layer(TraceLayer::new_for_http())
+    let app = app
+        .layer(SetResponseHeaderLayer::if_not_present(
+            header::CONTENT_SECURITY_POLICY,
+            policy.subresource(),
+        ))
+        .layer(static_header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
+        .layer(static_header(header::X_FRAME_OPTIONS, "DENY"))
+        .layer(static_header(header::REFERRER_POLICY, "no-referrer"))
+        .layer(static_header(
+            header::STRICT_TRANSPORT_SECURITY,
+            "max-age=31536000; includeSubDomains; preload",
+        ))
+        .layer(static_header(
+            HeaderName::from_static("permissions-policy"),
+            "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+        ))
+        // Compress text assets per Accept-Encoding; already-encoded payloads are
+        // skipped, so this never double-compresses the SSR HTML.
+        .layer(CompressionLayer::new().compress_when(compression_predicate()))
+        // Assign a `Cache-Control` TTL per asset class, but only when a handler
+        // did not already set one (so the API's own headers win). Runs last.
+        .layer(middleware::from_fn(cache::set_cache_control));
+
+    // Outside everything that can fail, so a panic or a 500 from any layer above is still
+    // reported with its request attached. Absent entirely when Sentry is off, rather than
+    // present as a no-op: a request must not pay for a feature nobody switched on.
+    //
+    // Two layers, and the order between them matters — the last `.layer` call is the outermost,
+    // so the hub is bound first and the metadata layer below writes onto the hub it bound.
+    // Mounted through `Router::layer`, which runs after routing, which is what puts the
+    // `MatchedPath` extension in place for the route-named transaction.
+    let app = match telemetry::http_layers(&config.sentry) {
+        Some((hub, http)) => app.layer(http).layer(hub),
+        None => app,
+    };
+
+    app.layer(TraceLayer::new_for_http())
 }
 
 /// What [`localize_page`] carries per request.
@@ -1002,6 +1039,54 @@ mod tests {
             get_("/api/does-not-exist").await.status(),
             StatusCode::NOT_FOUND
         );
+    }
+
+    /// The two Sentry middlewares are mounted on the live stack in [`router`], where nothing else
+    /// in this suite reaches — that function builds the Dioxus app router, which wants a bundle on
+    /// disk. What is worth pinning without one is that the pair is transparent: the hub layer and
+    /// the request-metadata layer sit outside every handler, and a response that goes through them
+    /// has to be the response the handler produced, header for header and byte for byte.
+    ///
+    /// Also the only place the layer *types* are composed the way `router` composes them, so a
+    /// version of `sentry-tower` that stops fitting an axum `Router` fails here rather than in the
+    /// image build.
+    #[tokio::test]
+    async fn the_sentry_layers_leave_a_response_untouched() {
+        let config = portfolio_config::SentryConfig {
+            enabled: true,
+            dsn: Some(secrecy::SecretString::from("https://key@sentry.example/42")),
+            ..portfolio_config::SentryConfig::default()
+        };
+        let (hub, http) =
+            telemetry::http_layers(&config).expect("a configured block mounts both layers");
+
+        let request = || {
+            Request::builder()
+                .uri("/api/health")
+                .body(Body::empty())
+                .unwrap()
+        };
+        let bare = api_router(AssetsConfig::default())
+            .oneshot(request())
+            .await
+            .unwrap();
+        let layered = api_router(AssetsConfig::default())
+            .layer(http)
+            .layer(hub)
+            .oneshot(request())
+            .await
+            .unwrap();
+
+        assert_eq!(bare.status(), layered.status());
+        assert_eq!(bare.headers(), layered.headers());
+        assert_eq!(json(bare).await, json(layered).await);
+    }
+
+    /// The other half of the switch: with the block at its default nothing is mounted at all, so a
+    /// deployment that never asked for reporting pays nothing per request.
+    #[test]
+    fn the_default_block_mounts_no_sentry_layer() {
+        assert!(telemetry::http_layers(&portfolio_config::SentryConfig::default()).is_none());
     }
 
     #[tokio::test]

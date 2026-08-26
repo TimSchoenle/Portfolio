@@ -181,6 +181,64 @@ tower-http = { version = "0.7", features = [
     "compression-gzip",
 ] }
 tracing = "0.1"
+# Only reached when `sentry.enabled` is set: the Sentry layer has to be a layer *of* a
+# subscriber, and `dioxus_logger::initialize_default` builds one that cannot be extended after
+# the fact. So the server builds its own — same `RUST_LOG` contract, same formatter — and does it
+# before `dioxus::serve`, which then sees `tracing::dispatcher::has_been_set` and leaves it
+# alone. With Sentry off nothing here is constructed and the framework's subscriber stands.
+#
+# `env-filter` on top of the defaults, which are the `fmt` layer and its ANSI support. Already in
+# the lockfile through `dioxus-logger`, so this pulls nothing new into the graph or into
+# `THIRD-PARTY-NOTICES`.
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error reporting and performance tracing for the SSR server, off unless an operator configures a
+# DSN (`apps/web/src/server/telemetry.rs`). One crate rather than three: `sentry` re-exports
+# `sentry-tracing` and `sentry-tower` under `sentry::integrations::*`, so the three versions
+# cannot drift.
+#
+# `default-features = false`, then back exactly what is used — and the transport is the part
+# worth reading twice.
+#
+# The default is `transport`, which is `reqwest + native-tls`: `native-tls` links OpenSSL, which
+# the `scratch` runtime image ships none of, so the failure would be at exec time in production
+# rather than at build time in CI. The obvious replacement is `reqwest` + `rustls`, and it is the
+# wrong one here: `sentry` pins reqwest 0.13 while the Dioxus fullstack stack builds 0.12, so it
+# would be a *second* async HTTP client — and reqwest 0.13's `rustls` feature means `aws-lc-rs`
+# (a cmake/C build, in an image cross-compiled to musl and built for bit-reproducibility) plus
+# `rustls-platform-verifier`, which looks for an OS trust store that `scratch` does not have.
+#
+# `ureq` is the transport that costs nothing. The crate is already in `Cargo.lock` — the
+# `update-repos` builder calls the GitHub API with it — and ureq's own `rustls` feature is `ring`
+# plus bundled `webpki-roots`, which is exactly the stack the runtime image is built for. It is a
+# blocking client, which is not a compromise: the SDK owns a background transport thread and
+# never sends on a request path.
+#
+# The defaults also include `logs`, `metrics` and `release-health` — three separate Sentry
+# products this site does not use, and each one an egress channel with no key in the
+# configuration reference describing it.
+#
+# What is on: `backtrace`/`debug-images` (stack traces and the module list that symbolicates
+# them), `panic` (the hook that turns a panic into an issue — a panic in a handler unwinds that
+# request's task and leaves the process serving, so without this it is invisible), and the two
+# integrations: `tracing` for the subscriber layer and `tower-axum-matched-path` for one
+# transaction per request named by the matched route rather than by the URI, which is what stops
+# `/api/repos/{name}` becoming one transaction name per repository.
+#
+# `contexts` is deliberately **off**, and it is a default. It adds an OS/host/runtime tag block by
+# pulling `os_info`, which carries a fifteen-crate `objc2` tree for its macOS support — into
+# `Cargo.lock`, and so into the `/licenses` page, for platforms no image here targets. What it
+# would report (kernel version, arch, rustc version) is a constant of the image, which the release
+# tag already names.
+sentry = { version = "0.49", default-features = false, features = [
+    "backtrace",
+    "debug-images",
+    "panic",
+    "ureq",
+    "rustls",
+    "tracing",
+    "tower-axum-matched-path",
+] }
 
 # The Content-Security-Policy the SSR server sends, built from the document it is
 # about to serve rather than from a hand-maintained list of hashes that drifts the

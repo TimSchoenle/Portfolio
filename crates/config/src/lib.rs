@@ -16,7 +16,8 @@
 //! This crate owns the *blocks*, the dialect, and one aggregate per binary naming the blocks that
 //! binary reads — so a struct field is evidence that something consumes it:
 //!
-//! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`IsrConfig`]),
+//! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`IsrConfig`],
+//!   [`SentryConfig`]),
 //! - the `update-repos` builder, [`BuilderConfig`] ([`GithubConfig`]).
 //!
 //! The aggregates live here rather than in the binaries so the generated configuration reference
@@ -36,9 +37,12 @@
 //! not take it, for two reasons that both have to hold before it would be worth the
 //! tokio/notify/`inotify` weight:
 //!
-//! 1. **The server holds no secrets.** Rotation is what the supervisor exists to survive, and
-//!    the only secret in the workspace ([`GithubConfig::token`]) belongs to a one-shot build
-//!    tool that exits in seconds. Every value the *server* reads changes only on a redeploy.
+//! 1. **Neither secret is one a reload could re-point.** Rotation is what the supervisor exists
+//!    to survive. [`GithubConfig::token`] belongs to a one-shot build tool that exits in
+//!    seconds, and [`SentryConfig::dsn`] is read once by `sentry::init`, which binds one client
+//!    to the process for its lifetime — so a rebuilt configuration would carry the new DSN to a
+//!    client that cannot be told about it. Every other value the *server* reads changes only on
+//!    a redeploy.
 //! 2. **The serve loop is not ours to cancel.** `dioxus::serve` owns the listener and the accept
 //!    loop, and offers no shutdown handle, so a rebuild could not stop the previous generation
 //!    before the replacement binds the same address. Taking the supervisor would mean
@@ -82,6 +86,7 @@ mod csp;
 mod github;
 mod isr;
 mod loader;
+mod sentry;
 
 pub use aggregates::{BuilderConfig, ServerConfig};
 pub use assets::AssetsConfig;
@@ -89,3 +94,4 @@ pub use csp::{CloudflareConfig, CspConfig, CspConfigError};
 pub use github::GithubConfig;
 pub use isr::IsrConfig;
 pub use loader::{ConfigError, load, provenance, terrace};
+pub use sentry::{SentryConfig, SentryConfigError, SentryLevel};

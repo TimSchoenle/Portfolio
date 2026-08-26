@@ -4,9 +4,11 @@ The Content-Security-Policy the server builds per response, the headers around i
 
 ## Runtime
 
-The server reads its bundle directory and writes to stdout. Nothing else. It runs with a read-only
-root filesystem and no writable volume, apart from the ISR cache described in
-[DEPLOYMENT.md](DEPLOYMENT.md), which it does without when the path is not writable.
+The server reads its bundle directory and writes to stdout. Nothing else, unless error reporting is
+switched on — the one thing that gives the process an outbound connection, and it is off by
+default; see [Error reporting](#error-reporting). It runs with a read-only root filesystem and no
+writable volume, apart from the ISR cache described in [DEPLOYMENT.md](DEPLOYMENT.md), which it
+does without when the path is not writable.
 
 It is built to satisfy the restricted Pod Security Standard:
 
@@ -81,16 +83,42 @@ That is the failure mode this design has. Setting both `csp.hash_inline_scripts`
 redeploy. The two must move together: a browser ignores `'unsafe-inline'` as soon as the policy
 carries a nonce, and supplying one without the other fails the boot with a message saying so.
 
-## The one secret
+## The two secrets
 
-`github.token` is the only secret in the workspace, and the server never loads it — it belongs to
-the build-time repository lister. In the process it is a `secrecy::SecretString`, which has no
-`Debug` and no `Display`, and the single place it becomes a `&str` is the `Authorization` header.
+`github.token` belongs to the build-time repository lister, which the server never loads.
+`sentry.dsn` belongs to the server and is read only when error reporting is switched on, which no
+default does. Both are a `secrecy::SecretString` in the process — no `Debug`, no `Display` — and
+each has exactly one place it becomes a `&str`: the `Authorization` header for the token, and the
+call to `sentry::init` for the DSN.
 
-Supply it as a file. `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry the
-environment, and child processes inherit it. The Docker build already does this, mounting the
-BuildKit secret and handing `update-repos` the path.
+Supply both as files. `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry the
+environment, and child processes inherit it. The Docker build already does this for the token,
+mounting the BuildKit secret and handing `update-repos` the path; a deployment does it for the DSN
+with `PORTFOLIO_SENTRY__DSN_FILE`, or with `sentry__dsn` in a mounted `Secret` volume.
 
 Only the loader half of `terrace-config` is used; its hot-reload supervisor is not. The reasoning —
-the server holds no secrets, and `dioxus::serve` owns an accept loop with no shutdown handle — is
-recorded in `crates/config/src/lib.rs`.
+neither secret is one a reload could re-point, and `dioxus::serve` owns an accept loop with no
+shutdown handle — is recorded in `crates/config/src/lib.rs`.
+
+## Error reporting
+
+The server sends nothing anywhere until `sentry.enabled` is set with a DSN. Off, no client is
+constructed, no panic hook is installed, no `tracing` layer is added and the two `sentry-tower`
+middlewares are absent from the stack — the default deployment has no egress at all beyond the
+responses it serves.
+
+Switched on, the egress is one destination: the DSN's host, over TLS, from the SDK's own
+background thread. What travels is `tracing` records at or above `sentry.capture_level` (errors
+only, by default), panics, and — at `sentry.traces_sample_rate`, `0.0` by default — request
+transactions named by the matched route rather than by the URI.
+
+`sentry.send_default_pii` is off and is the key to leave alone. On, it attaches the client IP, the
+full request header set including `Cookie`, and the resolved user to every event, and it also
+widens what the HTTP middleware records, because `sentry-tower` reads the same flag to decide
+whether to redact sensitive headers. The privacy page this site publishes says no third-party
+service receives visitor data; that statement survives error reporting being on, and does not
+survive this key being on.
+
+There is no browser SDK. Nothing is loaded by the page, the Content-Security-Policy admits no new
+origin, and a client-side error is still invisible to the operator — which is the trade made
+deliberately, since the alternative is a third-party script on every page load.

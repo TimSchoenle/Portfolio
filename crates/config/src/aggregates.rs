@@ -15,7 +15,7 @@
 
 use serde::Deserialize;
 
-use crate::{AssetsConfig, CspConfig, GithubConfig, IsrConfig};
+use crate::{AssetsConfig, CspConfig, GithubConfig, IsrConfig, SentryConfig};
 
 /// What the SSR server (`apps/web`) loads.
 ///
@@ -41,6 +41,10 @@ pub struct ServerConfig {
     #[cfg_attr(feature = "config-schema", config(nested))]
     #[serde(default)]
     pub isr: IsrConfig,
+    /// Where errors and request traces are reported, if anywhere. Off unless configured.
+    #[cfg_attr(feature = "config-schema", config(nested))]
+    #[serde(default)]
+    pub sentry: SentryConfig,
 }
 
 /// What the `update-repos` builder loads.

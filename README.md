@@ -195,6 +195,21 @@ environment spelling also accepts a `_FILE` suffix naming a file that holds the 
 | `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `false` | — | Admit the Cloudflare Web Analytics beacon and the endpoint it reports to. |
 | `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
 | `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
+| `sentry.enabled` | `bool` | `PORTFOLIO_SENTRY__ENABLED` | `false` | — | Initialise the Sentry client. `false` installs no client, no panic hook, no `tracing` layer and no HTTP middleware, so every other key here is inert and nothing leaves the process. |
+| `sentry.dsn` | `SecretString` | `PORTFOLIO_SENTRY__DSN` | unset | secret | Ingest URL, `https://<key>@<host>/<project>`. |
+| `sentry.environment` | `String` | `PORTFOLIO_SENTRY__ENVIRONMENT` | unset (`production` in a release build, `development` otherwise) | — | Environment tag on every event. |
+| `sentry.release` | `String` | `PORTFOLIO_SENTRY__RELEASE` | unset (`portfolio@` and the built version) | — | Release tag on every event. |
+| `sentry.server_name` | `String` | `PORTFOLIO_SENTRY__SERVER_NAME` | unset | — | Host tag on every event. |
+| `sentry.sample_rate` | `f32` | `PORTFOLIO_SENTRY__SAMPLE_RATE` | `1` | — | Fraction of captured events actually sent, `0.0`–`1.0`. |
+| `sentry.traces_sample_rate` | `f32` | `PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE` | `0` | — | Fraction of request traces recorded, `0.0`–`1.0`. |
+| `sentry.capture_level` | `SentryLevel`: `off` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `PORTFOLIO_SENTRY__CAPTURE_LEVEL` | `error` | — | Least severe `tracing` level reported as a Sentry **issue**. |
+| `sentry.breadcrumb_level` | `SentryLevel`: `off` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `PORTFOLIO_SENTRY__BREADCRUMB_LEVEL` | `info` | — | Least severe `tracing` level kept as a **breadcrumb**, the trail attached to the next issue. |
+| `sentry.max_breadcrumbs` | `usize` | `PORTFOLIO_SENTRY__MAX_BREADCRUMBS` | `100` | — | How many breadcrumbs one event carries. |
+| `sentry.attach_stacktraces` | `bool` | `PORTFOLIO_SENTRY__ATTACH_STACKTRACES` | `true` | — | Attach a stack trace to events that carry none of their own. |
+| `sentry.send_default_pii` | `bool` | `PORTFOLIO_SENTRY__SEND_DEFAULT_PII` | `false` | — | Send personally identifying data with every event: the client IP, the full request header set (`Cookie` included) and the resolved user. |
+| `sentry.http_transactions` | `bool` | `PORTFOLIO_SENTRY__HTTP_TRANSACTIONS` | `true` | — | Record one Sentry transaction per request, named by the *matched route* rather than by the URI — so `/api/repos/{name}` does not become one transaction name per repository. |
+| `sentry.span_attributes` | `bool` | `PORTFOLIO_SENTRY__SPAN_ATTRIBUTES` | `false` | — | Copy `tracing` span fields onto the Sentry span as attributes. |
+| `sentry.debug` | `bool` | `PORTFOLIO_SENTRY__DEBUG` | `false` | — | Print the SDK's own diagnostics to stderr. For proving a DSN works, not for running. |
 
 ### Builder
 
@@ -207,10 +222,14 @@ keys, so a deployment needs no GitHub token. That is why there are two tables an
 | `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | unset | secret | Bearer token lifting the GitHub API rate limit. |
 | `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `[]` (every active repository the user owns) | — | Explicit repository set, bypassing the "every active repository" listing and its filtering. |
 
-`github.token` is the only secret in the workspace, and it should arrive as a file
-rather than as an environment variable. `/proc/<pid>/environ`, a crash dump and `docker inspect` all
-carry the environment, and child processes inherit it. The Docker build mounts it as a BuildKit
-secret and hands `update-repos` the path.
+There are two secrets in the workspace, and each should arrive as a file rather than as an
+environment variable: `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry the
+environment, and child processes inherit it.
+
+`github.token` is the builder's, and the Docker build already mounts it as a
+BuildKit secret and hands `update-repos` the path. `sentry.dsn` is the server's, read
+only when error reporting is switched on — supply it as `PORTFOLIO_SENTRY__DSN_FILE=/path`, or as
+`sentry__dsn` in a mounted `Secret` volume.
 
 `IP`, `PORT` and `RUST_LOG` sit outside this namespace deliberately. They are the Dioxus toolchain's
 contract with the binary, and it keeps reading them itself.
@@ -240,6 +259,22 @@ Standard with a read-only root filesystem, no privilege escalation, every capabi
 Incremental static regeneration is the one thing that wants a writable path. The image points the
 cache at `/tmp/isr` and bakes an empty one owned by the runtime user; where that path is not
 writable, every request is rendered fresh instead.
+
+### Error reporting
+
+Optional, off, and the only thing that would give the process an outbound connection. Set
+`sentry.enabled` with a DSN and the server installs a Sentry client, a panic hook, a
+`tracing` layer feeding it, and one transaction per request named by the matched route. Enabled
+without a usable DSN it refuses to boot, rather than reporting into a dashboard whose emptiness
+looks like a healthy site.
+
+Two keys decide how much goes with it. `sentry.traces_sample_rate` is `0`, so switching reporting on
+does not also switch performance data on. `sentry.send_default_pii` is `false` and should stay
+there: on, every event carries the client IP and the full request header set, `Cookie` included.
+
+While Sentry is off, `RUST_LOG` and the log format are the Dioxus toolchain's as before; while it is
+on, the server installs the subscriber itself — same variable, same default verbosity, plus the
+layer that reports.
 
 ## Compatibility
 

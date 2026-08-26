@@ -29,6 +29,12 @@ tower-http = { workspace = true, optional = true }
 # only: it hashes the response body, and its nonce feature needs an OS CSPRNG.
 csp-shell = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
+# The two halves of the optional error reporting in `src/server/telemetry.rs`: the SDK, and the
+# subscriber it needs a layer on. Native SSR only — the client that would report a wasm panic is
+# a *browser* SDK loaded by the page, which is a different product, a `connect-src` in the
+# Content-Security-Policy and a line in the privacy page, so none of it is this.
+sentry = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
 time = { workspace = true, features = ["macros"], optional = true }
 # Synchronous access to the current request during SSR (for locale negotiation).
@@ -50,6 +56,10 @@ portfolio-data.workspace = true
 # tests compiled under `--features server`.
 tower.workspace = true
 tokio.workspace = true
+# `src/server/telemetry.rs` builds a `SentryConfig` with a deliberately malformed DSN, and the
+# field is a `SecretString` that only this crate can construct. A development dependency: the
+# server itself never wraps a secret, it only reads one `portfolio-config` already wrapped.
+secrecy.workspace = true
 
 [features]
 # No platform by default so a bare `cargo check`/`clippy`/`test` over the
@@ -78,6 +88,13 @@ server = [
     "dep:tower-http",
     "dep:csp-shell",
     "dep:tracing",
+    # Compiled into every server build and switched on by `sentry.enabled`, rather than gated
+    # behind a Cargo feature of its own. A feature would mean an image where
+    # `PORTFOLIO_SENTRY__ENABLED=true` is accepted by the loader and does nothing — a knob that
+    # silently no-ops, which is the failure this workspace already refuses elsewhere. Off, the
+    # cost is one `if` at boot: no client, no hook, no layer, no middleware.
+    "dep:sentry",
+    "dep:tracing-subscriber",
     "dep:schemars",
     "dep:time",
     "dep:dioxus-fullstack-core",

@@ -80,7 +80,7 @@ pub fn provenance() -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{CspConfig, GithubConfig, IsrConfig, terrace};
+    use crate::{CspConfig, GithubConfig, IsrConfig, SentryConfig, terrace};
     use secrecy::ExposeSecret as _;
     use serde::Deserialize;
     use terrace_config::testing::Harness;
@@ -93,6 +93,8 @@ mod tests {
         github: GithubConfig,
         #[serde(default)]
         isr: IsrConfig,
+        #[serde(default)]
+        sentry: SentryConfig,
     }
 
     /// A sandbox over the loader [`terrace`] builds, so every name a test arranges is derived
@@ -149,6 +151,30 @@ mod tests {
                 .into_token()
                 .expect("the secret supplies a token");
             assert_eq!(token.expose_secret(), "ghp_real");
+            Ok(())
+        });
+    }
+
+    /// The other secret in the workspace, through the layer it is meant to arrive on.
+    ///
+    /// `sentry.dsn` is the only key the *server* mounts as a file, so this is where the
+    /// `PORTFOLIO_<KEY>_FILE` indirection stops being a documented feature and becomes a tested
+    /// one. The trailing newline is not incidental: `printf` into a Kubernetes `Secret`, an
+    /// editor and a BuildKit secret all add one, and a DSN that keeps it does not parse.
+    #[test]
+    fn the_dsn_arrives_through_file_indirection_and_loses_its_newline() {
+        harness().run(|jail| {
+            jail.env_key("sentry.enabled", true);
+            jail.indirection("sentry.dsn", "https://key@sentry.example/42\n")?;
+
+            let config: Sample = jail.load()?;
+            assert!(config.sentry.is_active());
+            assert_eq!(config.sentry.dsn(), Some("https://key@sentry.example/42"));
+            assert_eq!(config.sentry.validate(), Ok(()));
+            // The block materialises around what was supplied rather than replacing it: nothing
+            // here turns performance tracing on, and nothing here widens what an event carries.
+            assert!((config.sentry.traces_sample_rate - 0.0).abs() < f32::EPSILON);
+            assert!(!config.sentry.send_default_pii);
             Ok(())
         });
     }
