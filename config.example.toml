@@ -128,6 +128,168 @@
 #   the secrets directory
 # ttl_secs = 0
 
+[sentry]
+# Initialise the Sentry client. `false` installs no client, no panic hook, no `tracing`
+# layer and no HTTP middleware, so every other key here is inert and nothing leaves the
+# process.
+#
+# It also decides who owns the log subscriber. Off — the default — the Dioxus toolchain
+# installs its own, which is the behaviour this server has always had. On, the server
+# installs one first (still reading `RUST_LOG`, still formatting the same way) because a
+# Sentry layer has to be a layer *of* the subscriber, and the framework's is not
+# extensible after the fact.
+# Type: bool
+# Also from: PORTFOLIO_SENTRY__ENABLED, PORTFOLIO_SENTRY__ENABLED_FILE=/path/to/file,
+#   sentry__enabled in the secrets directory
+# enabled = false
+
+# Ingest URL, `https://<key>@<host>/<project>`.
+#
+# The embedded key is a bearer credential for the project's ingest endpoint, so it is held
+# as a `SecretString` — this block is nested in a `ServerConfig` that is printed with `?` on
+# the refusal path. Supply it as `PORTFOLIO_SENTRY__DSN_FILE=/run/secrets/sentry_dsn`, or as
+# `sentry__dsn` inside `$PORTFOLIO_SECRETS_DIR`, so it never enters the process
+# environment — where `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry
+# it, and every child process inherits it.
+#
+# Absent while `sentry.enabled` is set is a boot failure, not a silent no-op.
+# Type: SecretString
+# Also from: PORTFOLIO_SENTRY__DSN, PORTFOLIO_SENTRY__DSN_FILE=/path/to/file, sentry__dsn in the
+#   secrets directory
+# Secret: the value below is a placeholder.
+# dsn = "<secret>"
+
+# Environment tag on every event.
+#
+# Unset resolves to `production` for a release build and `development` otherwise, which is
+# the only distinction this workspace has: it ships one image, and the thing that separates
+# a developer's `dx serve` from the deployed container is the profile it was built with.
+# Type: String
+# Also from: PORTFOLIO_SENTRY__ENVIRONMENT, PORTFOLIO_SENTRY__ENVIRONMENT_FILE=/path/to/file,
+#   sentry__environment in the secrets directory
+# Unset by default: the value below is only the shape.
+# environment = "<value>"
+
+# Release tag on every event.
+#
+# Unset resolves to `portfolio@<version>`, the workspace version the binary was built from
+# — which is what makes a regression attributable to a deploy, since every deploy of this
+# site is a new image cut from a new version.
+# Type: String
+# Also from: PORTFOLIO_SENTRY__RELEASE, PORTFOLIO_SENTRY__RELEASE_FILE=/path/to/file,
+#   sentry__release in the secrets directory
+# Unset by default: the value below is only the shape.
+# release = "<value>"
+
+# Host tag on every event.
+#
+# Left unset, Sentry reports none. The hostname of a replica is infrastructure detail that
+# `sentry.send_default_pii` would otherwise be the gate for, and this site runs one image
+# behind a tunnel, so it identifies nothing an event does not already say.
+# Type: String
+# Also from: PORTFOLIO_SENTRY__SERVER_NAME, PORTFOLIO_SENTRY__SERVER_NAME_FILE=/path/to/file,
+#   sentry__server_name in the secrets directory
+# Unset by default: the value below is only the shape.
+# server_name = "<value>"
+
+# Fraction of captured events actually sent, `0.0`–`1.0`.
+#
+# A blunt volume cap: it drops whole issues rather than repetitions of one, so a rare bug
+# is exactly as likely to be dropped as a noisy one. Leave it at `1.0` unless a quota
+# forces otherwise.
+# Type: f32
+# Also from: PORTFOLIO_SENTRY__SAMPLE_RATE, PORTFOLIO_SENTRY__SAMPLE_RATE_FILE=/path/to/file,
+#   sentry__sample_rate in the secrets directory
+# sample_rate = 1.0
+
+# Fraction of request traces recorded, `0.0`–`1.0`.
+#
+# `0.0` — the default — records none, which is what keeps switching Sentry on for crash
+# reporting from also switching performance data on. `0.05`–`0.2` is an ordinary
+# production figure.
+#
+# This server starts every trace it has: it is the edge, and nothing upstream of it hands
+# it a sampled trace to continue. That is the difference from a service tier, where the
+# rate of whoever *starts* the trace decides whether it exists at all.
+# Type: f32
+# Also from: PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE,
+#   PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE_FILE=/path/to/file, sentry__traces_sample_rate in the
+#   secrets directory
+# traces_sample_rate = 0.0
+
+# Least severe `tracing` level reported as a Sentry **issue**.
+# Type: SentryLevel — one of: off, error, warn, info, debug, trace
+# Also from: PORTFOLIO_SENTRY__CAPTURE_LEVEL, PORTFOLIO_SENTRY__CAPTURE_LEVEL_FILE=/path/to/file,
+#   sentry__capture_level in the secrets directory
+# capture_level = "error"
+
+# Least severe `tracing` level kept as a **breadcrumb**, the trail attached to the next
+# issue.
+#
+# Records at or above `sentry.capture_level` become issues instead, so the two thresholds
+# partition the stream rather than overlapping on it.
+# Type: SentryLevel — one of: off, error, warn, info, debug, trace
+# Also from: PORTFOLIO_SENTRY__BREADCRUMB_LEVEL,
+#   PORTFOLIO_SENTRY__BREADCRUMB_LEVEL_FILE=/path/to/file, sentry__breadcrumb_level in the secrets
+#   directory
+# breadcrumb_level = "info"
+
+# How many breadcrumbs one event carries.
+# Type: usize
+# Also from: PORTFOLIO_SENTRY__MAX_BREADCRUMBS,
+#   PORTFOLIO_SENTRY__MAX_BREADCRUMBS_FILE=/path/to/file, sentry__max_breadcrumbs in the secrets
+#   directory
+# max_breadcrumbs = 100
+
+# Attach a stack trace to events that carry none of their own.
+# Type: bool
+# Also from: PORTFOLIO_SENTRY__ATTACH_STACKTRACES,
+#   PORTFOLIO_SENTRY__ATTACH_STACKTRACES_FILE=/path/to/file, sentry__attach_stacktraces in the
+#   secrets directory
+# attach_stacktraces = true
+
+# Send personally identifying data with every event: the client IP, the full request header
+# set (`Cookie` included) and the resolved user.
+#
+# **Off, and worth leaving off.** A reader's IP address and cookies are exactly what a
+# crash report does not need in order to be actionable, and Sentry is a third party for the
+# purposes of the privacy page this site publishes — a page that currently says no
+# third-party service receives visitor data, which is a statement this key is the one way
+# to falsify. On, it also widens what the HTTP middleware records, because `sentry-tower`
+# reads this same flag to decide whether to redact sensitive request headers.
+# Type: bool
+# Also from: PORTFOLIO_SENTRY__SEND_DEFAULT_PII,
+#   PORTFOLIO_SENTRY__SEND_DEFAULT_PII_FILE=/path/to/file, sentry__send_default_pii in the secrets
+#   directory
+# send_default_pii = false
+
+# Record one Sentry transaction per request, named by the *matched route* rather than by
+# the URI — so `/api/repos/{name}` does not become one transaction name per repository.
+#
+# Whether a started transaction is *kept* is `sentry.traces_sample_rate`'s decision; this is
+# the switch for taking the middleware out entirely.
+# Type: bool
+# Also from: PORTFOLIO_SENTRY__HTTP_TRANSACTIONS,
+#   PORTFOLIO_SENTRY__HTTP_TRANSACTIONS_FILE=/path/to/file, sentry__http_transactions in the
+#   secrets directory
+# http_transactions = true
+
+# Copy `tracing` span fields onto the Sentry span as attributes.
+#
+# Off. Span fields here routinely carry request paths and the negotiated locale, and a
+# transaction is stored under a longer retention than a log line.
+# Type: bool
+# Also from: PORTFOLIO_SENTRY__SPAN_ATTRIBUTES,
+#   PORTFOLIO_SENTRY__SPAN_ATTRIBUTES_FILE=/path/to/file, sentry__span_attributes in the secrets
+#   directory
+# span_attributes = false
+
+# Print the SDK's own diagnostics to stderr. For proving a DSN works, not for running.
+# Type: bool
+# Also from: PORTFOLIO_SENTRY__DEBUG, PORTFOLIO_SENTRY__DEBUG_FILE=/path/to/file, sentry__debug in
+#   the secrets directory
+# debug = false
+
 [github]
 # User whose repositories to list.
 #

@@ -92,6 +92,8 @@ const KEYS: &[(&str, &str)] = &[
     ("cspScriptNonce", "csp.cloudflare.script_nonce"),
     ("githubRepos", "github.repos"),
     ("githubToken", "github.token"),
+    ("sentryEnabled", "sentry.enabled"),
+    ("sentryDsn", "sentry.dsn"),
 ];
 
 /// What this generator adds to the argument list [`USAGE`] describes.

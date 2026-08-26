@@ -18,7 +18,13 @@ Six packages in one Cargo workspace: two libraries every binary reads, three bin
 `apps/web` selects its renderer with a feature rather than splitting into two crates, because the
 route table, the page components and the `<head>` metadata are shared and would otherwise be a
 third crate that both depend on. `web` pulls `dioxus-web` and `web-sys`; `server` pulls axum,
-`tower-http` and `csp-shell`. The Dioxus CLI (`dx`) drives both halves.
+`tower-http`, `csp-shell` and the Sentry SDK. The Dioxus CLI (`dx`) drives both halves.
+
+Sentry is on the server side only, and there is deliberately no browser SDK: reporting a client
+error would mean a third-party script on every page load, a `connect-src` in the
+Content-Security-Policy and a line in the privacy page. It is compiled into every server build and
+switched on by `sentry.enabled` rather than by a Cargo feature, so an image cannot accept the key
+and silently do nothing with it — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
 
 Server-side rendering is not a fallback here. The locale is negotiated from request headers in
 `apps/web/src/i18n.rs` and applied before the document is serialised, so nothing arrives in the

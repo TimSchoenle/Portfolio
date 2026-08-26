@@ -315,6 +315,24 @@ WORKDIR /app
 #   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE=true  # false drops the edge nonce
 #   PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE=false    # admit the Turnstile widget
 #   PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS=false
+#
+# Sentry error reporting is OFF, and nothing here turns it on: a DSN is an egress
+# destination for whatever a log line carries, so it is a per-deployment decision
+# rather than an image default. Nothing below is baked in for the same reason a
+# working default DSN would be a credential in a published Dockerfile. Switched
+# on without a usable DSN the server refuses to start, rather than reporting into
+# a dashboard whose emptiness reads as a healthy site.
+#
+# Mount the DSN rather than setting it: PORTFOLIO_SENTRY__DSN_FILE names a file
+# holding it, and `sentry__dsn` inside $PORTFOLIO_SECRETS_DIR is the same value
+# as a key in a mounted Secret. TRACES_SAMPLE_RATE stays 0 until performance data
+# is wanted; 0.1 is an ordinary production figure. SEND_DEFAULT_PII stays false —
+# on, every event carries the client IP and the full request header set, Cookie
+# included. See README.md § Error reporting.
+#   PORTFOLIO_SENTRY__ENABLED=false
+#   PORTFOLIO_SENTRY__DSN_FILE=/run/secrets/sentry_dsn
+#   PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE=0
+#   PORTFOLIO_SENTRY__SEND_DEFAULT_PII=false
 ENV PORT=8080 \
     IP=0.0.0.0 \
     RUST_LOG=info \
