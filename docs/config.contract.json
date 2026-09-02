@@ -6,7 +6,7 @@
     "source": "https://github.com/TimSchoenle/Portfolio"
   },
   "schema": {
-    "schema_version": 1,
+    "schema_version": 2,
     "dialect": {
       "prefix": "PORTFOLIO_",
       "nesting_separator": "__",
