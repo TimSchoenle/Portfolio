@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.11.0](https://github.com/TimSchoenle/Portfolio/compare/v2.10.0...v2.11.0) (2026-09-02)
+
+
+### Features
+
+* update terrace to 0.10.0 and opt in to new nested feature ([#1159](https://github.com/TimSchoenle/Portfolio/issues/1159)) ([b176ca3](https://github.com/TimSchoenle/Portfolio/commit/b176ca303d2707c10d6ff5af2d1aec4e493bd49d))
+
+
+### Miscellaneous
+
+* **deps:** update github/codeql-action action to v4.37.9 ([#1140](https://github.com/TimSchoenle/Portfolio/issues/1140)) ([60cf7e5](https://github.com/TimSchoenle/Portfolio/commit/60cf7e52e761fd935c839e3ae01c63dc576337e2))
+* **deps:** update rust crate sentry to v0.49.2 ([#1141](https://github.com/TimSchoenle/Portfolio/issues/1141)) ([91da932](https://github.com/TimSchoenle/Portfolio/commit/91da9326b50449438e6a32baa0ebd7d993b729ae))
+* **deps:** update rust crate terrace-config to v0.9.1 ([#1143](https://github.com/TimSchoenle/Portfolio/issues/1143)) ([b1066c0](https://github.com/TimSchoenle/Portfolio/commit/b1066c0bc5a1fe7b84e861a904c9bc3a997c60c6))
+* **deps:** update rust:1.98-slim docker digest to 17d1ba8 ([#1152](https://github.com/TimSchoenle/Portfolio/issues/1152)) ([8b40989](https://github.com/TimSchoenle/Portfolio/commit/8b40989cfb250a5a2648a5b444d684fa4ed0f5f5))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.33 ([#1146](https://github.com/TimSchoenle/Portfolio/issues/1146)) ([ec1104c](https://github.com/TimSchoenle/Portfolio/commit/ec1104c5b339f9014b61184abe4eed9e0c8cca8e))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.4.0 ([#1154](https://github.com/TimSchoenle/Portfolio/issues/1154)) ([8d6015f](https://github.com/TimSchoenle/Portfolio/commit/8d6015f67702e40a95b9b97a20a5054b8c4468f0))
+* **deps:** update timschoenle/actions/actions/common/readme-variables to vactions-common-readme-variables-v1.1.1 ([#1147](https://github.com/TimSchoenle/Portfolio/issues/1147)) ([71c727c](https://github.com/TimSchoenle/Portfolio/commit/71c727ca44827d1fd9855950033702e387cd6ed2))
+* **deps:** update timschoenle/actions/actions/common/render-template to vactions-common-render-template-v1.1.2 ([#1148](https://github.com/TimSchoenle/Portfolio/issues/1148)) ([4e7a9b3](https://github.com/TimSchoenle/Portfolio/commit/4e7a9b365595142b28cdfd8323f568f5c86be12b))
+* **deps:** update timschoenle/actions/actions/common/render-template-and-commit to vactions-common-render-template-and-commit-v1.1.4 ([#1145](https://github.com/TimSchoenle/Portfolio/issues/1145)) ([c948316](https://github.com/TimSchoenle/Portfolio/commit/c948316963242ced056eee3e534bb69e8f6b9057))
+* **deps:** update timschoenle/actions/actions/common/render-template-and-commit to vactions-common-render-template-and-commit-v1.1.5 ([#1156](https://github.com/TimSchoenle/Portfolio/issues/1156)) ([b84554b](https://github.com/TimSchoenle/Portfolio/commit/b84554bac7f28f2c4bd057df2bac604bc979777d))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.4 ([#1144](https://github.com/TimSchoenle/Portfolio/issues/1144)) ([b2da442](https://github.com/TimSchoenle/Portfolio/commit/b2da442b31fa17e14df35645ccac91163c427870))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.5 ([#1157](https://github.com/TimSchoenle/Portfolio/issues/1157)) ([49222d7](https://github.com/TimSchoenle/Portfolio/commit/49222d73020af0c326d772eb4b361fedd4531a89))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.12 ([#1149](https://github.com/TimSchoenle/Portfolio/issues/1149)) ([e4555e2](https://github.com/TimSchoenle/Portfolio/commit/e4555e256641aa7d753eea52a7a5a1c28c2b5652))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.13 ([#1158](https://github.com/TimSchoenle/Portfolio/issues/1158)) ([77ec2d1](https://github.com/TimSchoenle/Portfolio/commit/77ec2d10b184c271414d00ff8bc68ded17aff0ca))
+* **deps:** update timschoenle/actions/actions/rust/cargo-check to vactions-rust-cargo-check-v1.1.6 ([#1150](https://github.com/TimSchoenle/Portfolio/issues/1150)) ([dd62184](https://github.com/TimSchoenle/Portfolio/commit/dd621848b58136cdfe6037a650a1babe62349dbb))
+* **deps:** update timschoenle/actions/actions/rust/clippy to vactions-rust-clippy-v1.1.10 ([#1151](https://github.com/TimSchoenle/Portfolio/issues/1151)) ([8d6903e](https://github.com/TimSchoenle/Portfolio/commit/8d6903e954fdbc2900b5313966abcd4bfee9287f))
+* **deps:** update timschoenle/actions/actions/rust/config-contract to vactions-rust-config-contract-v1.2.0 ([#1155](https://github.com/TimSchoenle/Portfolio/issues/1155)) ([9354cf9](https://github.com/TimSchoenle/Portfolio/commit/9354cf90cc97b38e2a10b7962c4b2024a9f9b233))
+* **deps:** update timschoenle/actions/actions/rust/test to vactions-rust-test-v1.1.2 ([#1153](https://github.com/TimSchoenle/Portfolio/issues/1153)) ([e737493](https://github.com/TimSchoenle/Portfolio/commit/e737493af586c9980319f525bcb0e1cd6a4eaaa7))
+
 ## [2.10.0](https://github.com/TimSchoenle/Portfolio/compare/v2.9.0...v2.10.0) (2026-08-26)
 
 
