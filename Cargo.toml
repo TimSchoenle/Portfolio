@@ -101,7 +101,7 @@ portfolio-data = { path = "crates/data" }
 # documentation generator and never a binary this workspace ships.
 # `testing` is left out for the same reason and taken as a dev-dependency in
 # `crates/config`, which is the only crate that loads anything.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.10.0", default-features = false, features = [
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.11.0", default-features = false, features = [
     "loader",
     "explain",
 ] }

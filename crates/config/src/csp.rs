@@ -16,8 +16,8 @@ use serde::Deserialize;
 /// block at all — produces the policy the site is meant to serve. The knobs exist for the two
 /// situations a redeploy is too slow for: an inline script the scanner does not see, and a
 /// Cloudflare product switched on or off in the dashboard.
-// No `deny_unknown_fields`, for the reason given on `AssetsConfig`: the `_FILE` indirection keys
-// share this namespace.
+// No `deny_unknown_fields`, for the reasons given on `AssetsConfig`: closing a `#[config(nested)]`
+// block narrows what the loader accepts and publishes nothing to the contract.
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",

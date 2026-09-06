@@ -10,11 +10,24 @@ use serde::Deserialize;
 /// which resolves `public/` relative to the binary on its own. What the probe answers is
 /// whether that bundle is actually there, so a pod missing it is removed from the Service
 /// endpoints instead of serving a page with no wasm.
-// No `deny_unknown_fields` on any block in this crate, and it is not an oversight: the
-// `PORTFOLIO_<KEY>_FILE` indirection variables sit inside the same prefixed namespace, so
-// figment's environment layer surfaces `assets.dist_dir_file` alongside the `assets.dist_dir`
-// the file layer supplies. Denying unknown fields would reject exactly the mechanism this
-// migration exists to enable.
+// No `deny_unknown_fields` on any block in this crate, and it is not an oversight — though the
+// reason it used to give was. The `PORTFOLIO_<KEY>_FILE` indirection is *not* the obstacle:
+// terrace-config resolves the suffix into the key it names before anything is deserialised, so a
+// closed struct loads through both the `_FILE` layer and the secrets directory. Two other
+// reasons stand in its place:
+//
+//  1. **The two aggregates share one prefix.** `ServerConfig` and `BuilderConfig` are both
+//     rooted at `PORTFOLIO_`, so a closed `ServerConfig` refuses `PORTFOLIO_GITHUB__TOKEN` —
+//     the build-time credential `update-repos` reads — and any environment carrying both
+//     would fail the server's boot on a key that is simply not its own.
+//  2. **It would publish nothing.** `deny_unknown_fields` reaches the schema as
+//     `additionalProperties: false` only for a type published through `#[config(element)]`,
+//     and every struct here is `#[config(nested)]`, which contributes keys rather than an
+//     object constraint. Closing one changes what the loader accepts at runtime and leaves the
+//     generated contract byte-identical.
+//
+// Hardening the blocks against a misspelt key is still worth doing. It is a deliberate
+// behaviour change and belongs in its own commit, not folded into a schema migration.
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",

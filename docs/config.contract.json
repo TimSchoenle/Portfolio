@@ -337,6 +337,8 @@
         "ty": "f32",
         "values": [],
         "constraint": {
+          "maximum": 1.0,
+          "minimum": 0.0,
           "type": "number"
         },
         "text_form": "unknown",
@@ -360,6 +362,8 @@
         "ty": "f32",
         "values": [],
         "constraint": {
+          "maximum": 1.0,
+          "minimum": 0.0,
           "type": "number"
         },
         "text_form": "unknown",
@@ -757,6 +761,8 @@
           "sample_rate": {
             "default": 1.0,
             "description": "Fraction of captured events actually sent, `0.0`–`1.0`.\n\nA blunt volume cap: it drops whole issues rather than repetitions of one, so a rare bug\nis exactly as likely to be dropped as a noisy one. Leave it at `1.0` unless a quota\nforces otherwise.",
+            "maximum": 1.0,
+            "minimum": 0.0,
             "type": "number"
           },
           "send_default_pii": {
@@ -776,6 +782,8 @@
           "traces_sample_rate": {
             "default": 0.0,
             "description": "Fraction of request traces recorded, `0.0`–`1.0`.\n\n`0.0` — the default — records none, which is what keeps switching Sentry on for crash\nreporting from also switching performance data on. `0.05`–`0.2` is an ordinary\nproduction figure.\n\nThis server starts every trace it has: it is the edge, and nothing upstream of it hands\nit a sampled trace to continue. That is the difference from a service tier, where the\nrate of whoever *starts* the trace decides whether it exists at all.",
+            "maximum": 1.0,
+            "minimum": 0.0,
             "type": "number"
           }
         },
