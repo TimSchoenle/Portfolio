@@ -46,8 +46,8 @@ pub enum SentryLevel {
 /// unmentioned `[sentry]` block produces. Switched on without a usable
 /// [`dsn`](Self::dsn), the boot is refused rather than started with a reporter that reports
 /// nowhere — see [`validate`](Self::validate).
-// No `deny_unknown_fields`, for the reason given on `AssetsConfig`: the `_FILE` indirection keys
-// share this namespace.
+// No `deny_unknown_fields`, for the reasons given on `AssetsConfig`: closing a `#[config(nested)]`
+// block narrows what the loader accepts and publishes nothing to the contract.
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",
@@ -125,6 +125,11 @@ pub struct SentryConfig {
     /// A blunt volume cap: it drops whole issues rather than repetitions of one, so a rare bug
     /// is exactly as likely to be dropped as a noisy one. Leave it at `1.0` unless a quota
     /// forces otherwise.
+    // The bound is [`check_rate`]'s, published rather than restated: `validate` already refuses a
+    // boot outside `0.0..=1.0`, so a schema saying so rejects nothing the loader would have
+    // accepted. Float literals because the field is an `f32` — `min = 0` would publish the
+    // integer `0`, which a consumer walking the keywords reads as a different number.
+    #[cfg_attr(feature = "config-schema", config(range(min = 0.0, max = 1.0)))]
     #[serde(default = "SentryConfig::default_sample_rate")]
     pub sample_rate: f32,
 
@@ -137,6 +142,8 @@ pub struct SentryConfig {
     /// This server starts every trace it has: it is the edge, and nothing upstream of it hands
     /// it a sampled trace to continue. That is the difference from a service tier, where the
     /// rate of whoever *starts* the trace decides whether it exists at all.
+    // Same bound and same source as `sample_rate`: both go through [`check_rate`].
+    #[cfg_attr(feature = "config-schema", config(range(min = 0.0, max = 1.0)))]
     #[serde(default)]
     pub traces_sample_rate: f32,
 
