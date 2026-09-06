@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.12.0](https://github.com/TimSchoenle/Portfolio/compare/v2.11.0...v2.12.0) (2026-09-06)
+
+
+### Features
+
+* update terrace to 0.11.0 ([#1171](https://github.com/TimSchoenle/Portfolio/issues/1171)) ([74b3519](https://github.com/TimSchoenle/Portfolio/commit/74b3519e2a8c4abde85088e002624dcd53cfdfbb))
+
+
+### Miscellaneous
+
+* **deps:** update all non-major action updates ([6e4ae5d](https://github.com/TimSchoenle/Portfolio/commit/6e4ae5d979960bc65eec03ce99611bac952171ab))
+* **deps:** update all non-major action updates ([#1160](https://github.com/TimSchoenle/Portfolio/issues/1160)) ([6e4ae5d](https://github.com/TimSchoenle/Portfolio/commit/6e4ae5d979960bc65eec03ce99611bac952171ab))
+* **deps:** update docker/setup-qemu-action digest to 1f40c72 ([#1163](https://github.com/TimSchoenle/Portfolio/issues/1163)) ([dedbebf](https://github.com/TimSchoenle/Portfolio/commit/dedbebfa5a737d7b33a7f17260a303453eb4aeb6))
+* **deps:** update rust crate tower-http to v0.7.1 ([#1162](https://github.com/TimSchoenle/Portfolio/issues/1162)) ([5ce2299](https://github.com/TimSchoenle/Portfolio/commit/5ce2299fe8ab70de6d039b93f852ca45092a778f))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.22 ([#1164](https://github.com/TimSchoenle/Portfolio/issues/1164)) ([8754e34](https://github.com/TimSchoenle/Portfolio/commit/8754e34047b550a5037f9bb5e064e1bc6ecfafcd))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.34 ([#1165](https://github.com/TimSchoenle/Portfolio/issues/1165)) ([0e86cae](https://github.com/TimSchoenle/Portfolio/commit/0e86caea22dd121a460293bcc2f82772da8d194b))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.4.1 ([#1166](https://github.com/TimSchoenle/Portfolio/issues/1166)) ([d6b90c8](https://github.com/TimSchoenle/Portfolio/commit/d6b90c8737235ae5184edd94b82b02438961082f))
+* **deps:** update timschoenle/actions/actions/common/readme-variables to vactions-common-readme-variables-v1.1.2 ([#1167](https://github.com/TimSchoenle/Portfolio/issues/1167)) ([8c5f93d](https://github.com/TimSchoenle/Portfolio/commit/8c5f93d43e36b21c6e75d9ed3910489630978a81))
+* **deps:** update timschoenle/actions/actions/common/render-template to vactions-common-render-template-v1.1.3 ([#1168](https://github.com/TimSchoenle/Portfolio/issues/1168)) ([1773a4e](https://github.com/TimSchoenle/Portfolio/commit/1773a4e757f6416020ed11aa70effcba803d1c2f))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.6 ([#1169](https://github.com/TimSchoenle/Portfolio/issues/1169)) ([4119df3](https://github.com/TimSchoenle/Portfolio/commit/4119df319ef7a11d911ab45ade2ab4c864d63fae))
+* **deps:** update timschoenle/actions/actions/rust/config-contract to vactions-rust-config-contract-v1.2.1 ([#1170](https://github.com/TimSchoenle/Portfolio/issues/1170)) ([acaa933](https://github.com/TimSchoenle/Portfolio/commit/acaa93384997c12173119693e0a96a06d6093fa2))
+
 ## [2.11.0](https://github.com/TimSchoenle/Portfolio/compare/v2.10.0...v2.11.0) (2026-09-02)
 
 
