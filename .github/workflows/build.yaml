@@ -603,39 +603,15 @@ jobs:
           category: trivy-${{ matrix.arch }}
 
       # One comment per architecture, updated in place on every push instead of
-      # appending a new one. The marker is what makes it findable again; the
+      # appending a new one. The identifier is what makes it findable again; the
       # matrix leg owns only its own comment, so the parallel legs never race.
       - name: Comment image size on PR
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@30bc73a560c7aac65f449b23378b9fd7782f8d39 # tag=actions-common-upsert-pr-comment-v1.1.0
         if: github.event_name == 'pull_request'
-        env:
-          SIZE: ${{ steps.size-check.outputs.size }}
-          ARCH: ${{ matrix.arch }}
-          PLATFORM: ${{ matrix.platform }}
         with:
-          script: |
-            const { SIZE, ARCH, PLATFORM } = process.env;
-            const marker = `<!-- docker-image-size:${ARCH} -->`;
-            const body = `${marker}\n🐳 Docker image size (\`${PLATFORM}\`): **${SIZE}MB**`;
-
-            const { owner, repo } = context.repo;
-            const issue_number = context.issue.number;
-
-            const comments = await github.paginate(
-              github.rest.issues.listComments,
-              { owner, repo, issue_number },
-            );
-            const existing = comments.find((c) => c.body?.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner, repo, comment_id: existing.id, body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner, repo, issue_number, body,
-              });
-            }
+          token: ${{ secrets.GITHUB_TOKEN }}
+          identifier: docker-image-size-${{ matrix.arch }}
+          body: 🐳 Docker image size (`${{ matrix.platform }}`) **${{ steps.size-check.outputs.size }}MB**
 
   dependency-review:
     name: Dependency Review

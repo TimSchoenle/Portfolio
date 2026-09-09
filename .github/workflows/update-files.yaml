@@ -60,16 +60,11 @@ jobs:
 
       - name: Comment on PR
         if: steps.auto-commit.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@30bc73a560c7aac65f449b23378b9fd7782f8d39 # tag=actions-common-upsert-pr-comment-v1.1.0
         with:
-          github-token: ${{ steps.generate_token.outputs.token }}
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: 'Cargo.lock has been updated to match Cargo.toml.'
-            })
+          token: ${{ steps.generate_token.outputs.token }}
+          identifier: cargo-lock-updated
+          body: 'Cargo.lock has been updated to match Cargo.toml.'
 
   # `README.md` and `config.example.toml` are both rendered from templates under
   # `.github/templates/`, and both are interpolated from the same payload: the configuration
@@ -180,17 +175,17 @@ jobs:
       # One comment for both, naming only what actually changed. Two comment steps would post
       # twice on the pull request that renames a key, which is precisely the one where both
       # documents move together.
-      - name: Comment on PR
+      - name: Build comment body
         if: >-
           github.event_name == 'pull_request'
           && (steps.readme.outputs.changes_detected == 'true'
           || steps.example-config.outputs.changes_detected == 'true')
+        id: comment-body
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
           README_CHANGED: ${{ steps.readme.outputs.changes_detected }}
           EXAMPLE_CHANGED: ${{ steps.example-config.outputs.changes_detected }}
         with:
-          github-token: ${{ steps.generate_token.outputs.token }}
           script: |
             const rendered = [
               ['README.md', '.github/templates/README.md.hbs', process.env.README_CHANGED],
@@ -199,12 +194,18 @@ jobs:
               .filter(([, , changed]) => changed === 'true')
               .map(([output, template]) => `- \`${output}\`, from \`${template}\``)
               .join('\n');
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Re-rendered from the configuration types in \`crates/config\`:\n\n${rendered}`
-            })
+            core.setOutput('body', `Re-rendered from the configuration types in \`crates/config\`:\n\n${rendered}`);
+
+      - name: Comment on PR
+        if: >-
+          github.event_name == 'pull_request'
+          && (steps.readme.outputs.changes_detected == 'true'
+          || steps.example-config.outputs.changes_detected == 'true')
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@30bc73a560c7aac65f449b23378b9fd7782f8d39 # tag=actions-common-upsert-pr-comment-v1.1.0
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          identifier: render-generated-files
+          body: ${{ steps.comment-body.outputs.body }}
 
   # The two artefacts the image publishes about its own configuration: `docs/config.contract.json`,
   # which a chart's CI reads to check that what it renders is what this image loads, and the
@@ -297,17 +298,17 @@ jobs:
           file_pattern: 'Dockerfile'
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Comment on PR
+      - name: Build comment body
         if: >-
           github.event_name == 'pull_request'
           && (steps.contract.outputs.changes_detected == 'true'
           || steps.labels.outputs.changes_detected == 'true')
+        id: comment-body
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
           CONTRACT_CHANGED: ${{ steps.contract.outputs.changes_detected }}
           LABELS_CHANGED: ${{ steps.labels.outputs.changes_detected }}
         with:
-          github-token: ${{ steps.generate_token.outputs.token }}
           script: |
             const regenerated = [
               ['docs/config.contract.json', '--format contract', process.env.CONTRACT_CHANGED],
@@ -316,9 +317,15 @@ jobs:
               .filter(([, , changed]) => changed === 'true')
               .map(([output, format]) => `- \`${output}\`, from \`config-schema ${format}\``)
               .join('\n');
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Regenerated from the configuration types in \`crates/config\`:\n\n${regenerated}\n\nThe \`Config Contract\` job in **Build** gates these, and runs again on this push.`
-            })
+            core.setOutput('body', `Regenerated from the configuration types in \`crates/config\`:\n\n${regenerated}\n\nThe \`Config Contract\` job in **Build** gates these, and runs again on this push.`);
+
+      - name: Comment on PR
+        if: >-
+          github.event_name == 'pull_request'
+          && (steps.contract.outputs.changes_detected == 'true'
+          || steps.labels.outputs.changes_detected == 'true')
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@30bc73a560c7aac65f449b23378b9fd7782f8d39 # tag=actions-common-upsert-pr-comment-v1.1.0
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          identifier: config-contract-sync
+          body: ${{ steps.comment-body.outputs.body }}
