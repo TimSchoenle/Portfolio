@@ -1,86 +1,71 @@
-# ---------- Line endings ----------
-# Default to LF for all text files (portable across macOS/Linux/Windows)
-* text=auto eol=lf
-# Keep Windows scripts with CRLF so they run correctly
-*.bat text eol=crlf
-*.cmd text eol=crlf
-# Shell/Unix scripts: always LF
-*.sh  text eol=lf
-# PowerShell generally expects CRLF
-*.ps1 text eol=crlf
+# ---------- Defaults ----------
+# Normalize everything Git considers text to LF in the repository; the
+# checked-out line ending is decided per pattern below.
+* text=auto eol=lf working-tree-encoding=UTF-8
 
-# Optional: enforce UTF-8 for working tree (modern projects)
-* working-tree-encoding=UTF-8
+# ---------- Rust workspace ----------
+*.rs      text eol=lf diff=rust
+Cargo.toml text eol=lf
+# Committed on purpose (this workspace ships binaries, not a library), but
+# it is machine-rewritten by `cargo` and not meant to be reviewed line by
+# line.
+Cargo.lock text eol=lf linguist-generated -diff merge=union
 
-# ---------- Binary vs text ----------
-# Images, fonts, archives, media are binary (no textual diffs)
-*.png  binary
-*.jpg  binary
-*.jpeg binary
-*.gif  binary
-*.webp binary
-*.avif binary
-*.ico  binary
-*.pdf  binary
-*.zip  binary
-*.gz   binary
-*.bz2  binary
-*.7z   binary
-*.tar  binary
-*.mp4  binary
-*.mp3  binary
-*.wav  binary
-*.mov  binary
-*.woff  binary
-*.woff2 binary
-*.ttf   binary
-*.eot   binary
+# ---------- Configuration & structured data ----------
+*.toml text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+config.example.toml text eol=lf linguist-generated
+docs/config.contract.json text eol=lf linguist-generated -diff
 
-# SVG is text—keep it diffable
-*.svg text
+# ---------- Docs & prose ----------
+*.md text eol=lf diff=markdown
+CHANGELOG.md text eol=lf linguist-generated -diff
+docs/**      linguist-documentation
+LICENSE      text eol=lf linguist-documentation
+**/LICENSE*  text eol=lf linguist-documentation
 
-# Source maps are huge/noisy; show as changed but don’t print diffs
-*.map -diff
+# ---------- Templates ----------
+# Handlebars sources rendered by the `update-files` workflow into README.md
+# and config.example.toml.
+*.hbs text eol=lf linguist-language=Handlebars
 
-# TypeScript declarations: readable, keep diffs; maps are noisy
-*.d.ts     text
-*.d.ts.map -diff
+# ---------- Web assets ----------
+*.css text eol=lf
+*.mjs text eol=lf
+*.svg text eol=lf
 
-# ---------- Lockfiles & minified bundles ----------
-# Show lockfiles as single “blob” diffs to reduce PR noise
-yarn.lock        -diff
-pnpm-lock.yaml   -diff
-package-lock.json -diff
-bun.lockb        -diff
+# ---------- Fonts (vendored, binary) ----------
+*.ttf   binary linguist-vendored
+*.woff2 binary linguist-vendored
+apps/resume-generator/fonts/** linguist-vendored
+apps/web/assets/fonts/**       linguist-vendored
 
-# Minified output is machine-generated—don’t diff it
-*.min.js  -diff linguist-generated
-*.min.css -diff linguist-generated
+# ---------- Other binary/media ----------
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
 
-# ---------- Generated/build outputs (if ever present in repo) ----------
-.next/**  -diff linguist-generated
-out/**    -diff linguist-generated
-build/**  -diff linguist-generated
-coverage/** -diff linguist-generated
+# ---------- JS lockfile (Tailwind toolchain only) ----------
+apps/web/package-lock.json text eol=lf linguist-generated -diff
 
-# ---------- GitHub Linguist tuning ----------
-# If you vendored third-party code anywhere:
-vendor/**            linguist-vendored
-public/**/vendor/**  linguist-vendored
-# Mark minified assets in public as generated
-public/**/*.min.*    linguist-generated
-# Docs count as docs, not app code
-docs/**              linguist-documentation
+# ---------- Release automation ----------
+.release-please-manifest.json text eol=lf linguist-generated -diff
 
-# ---------- Archive exports (git archive) ----------
-# Exclude dev-only folders/files from release tarballs
-.github/**    export-ignore
-.vscode/**    export-ignore
-.idea/**      export-ignore
-*.local.*     export-ignore
-.env*         export-ignore
-scripts/**    export-ignore
-docker/**     export-ignore
-**/*.test.*   export-ignore
-**/__tests__/** export-ignore
-**/__mocks__/**  export-ignore
+# ---------- git-archive exports ----------
+# `git archive` output is a source snapshot, not a development checkout.
+.github/**      export-ignore
+.idea/**        export-ignore
+.claude/**      export-ignore
+.serena/**      export-ignore
+.junie/**       export-ignore
+.gitattributes  export-ignore
+.gitignore      export-ignore
+.dockerignore   export-ignore
+CONTRIBUTING.md export-ignore
