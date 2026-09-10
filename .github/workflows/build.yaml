@@ -606,7 +606,7 @@ jobs:
       # appending a new one. The identifier is what makes it findable again; the
       # matrix leg owns only its own comment, so the parallel legs never race.
       - name: Comment image size on PR
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@30bc73a560c7aac65f449b23378b9fd7782f8d39 # tag=actions-common-upsert-pr-comment-v1.1.0
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@cf936b448984595778c82c079af93d0bb5d49297 # tag=actions-common-upsert-pr-comment-v1.1.1
         if: github.event_name == 'pull_request'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
