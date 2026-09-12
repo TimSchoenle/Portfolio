@@ -67,7 +67,7 @@ jobs:
           persist-credentials: false
 
       - name: Install stable toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       # One render, both comparisons: the committed `docs/config.contract.json` and the
       # Dockerfile's `terrace-config:labels` region, cut at the markers rather than by line
@@ -106,7 +106,7 @@ jobs:
           persist-credentials: false
 
       - name: Install stable toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       # The two steps Update Files runs, with the same inputs. `branch` is the default branch in
       # both places: left at its `github.ref_name` default it would be `<number>/merge` on a pull
@@ -161,7 +161,7 @@ jobs:
           persist-credentials: false
 
       - name: Install stable toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       - name: Build the documentation
         run: cargo doc --workspace --all-features --no-deps
