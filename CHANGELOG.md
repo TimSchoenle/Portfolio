@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.12.1](https://github.com/TimSchoenle/Portfolio/compare/v2.12.0...v2.12.1) (2026-09-13)
+
+
+### CI
+
+* migrate comment steps to use actions-common-upsert-pr-comment ([#1183](https://github.com/TimSchoenle/Portfolio/issues/1183)) ([c00e7fc](https://github.com/TimSchoenle/Portfolio/commit/c00e7fc76ab320b5252f03c521a5a1aeb03f1c6f))
+
+
+### Miscellaneous
+
+* add .gitattributes ([605b7da](https://github.com/TimSchoenle/Portfolio/commit/605b7da780f914ecdadb9943d63d86b9e0a7e9f7))
+* **deps:** update actions-rust-lang/setup-rust-toolchain action to v2 ([#1192](https://github.com/TimSchoenle/Portfolio/issues/1192)) ([e6b090d](https://github.com/TimSchoenle/Portfolio/commit/e6b090dca0af352ea336b9d4314cb3af024a8854))
+* **deps:** update github/codeql-action action to v4.38.0 ([#1198](https://github.com/TimSchoenle/Portfolio/issues/1198)) ([0566b26](https://github.com/TimSchoenle/Portfolio/commit/0566b26efda5f1e76d96a074d43f5a445c76fc5f))
+* **deps:** update rust:1.98-slim docker digest to bce1476 ([#1196](https://github.com/TimSchoenle/Portfolio/issues/1196)) ([a175d26](https://github.com/TimSchoenle/Portfolio/commit/a175d262bf15a688911c35c31eecbd04120fd8e0))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.23 ([#1174](https://github.com/TimSchoenle/Portfolio/issues/1174)) ([92b7c50](https://github.com/TimSchoenle/Portfolio/commit/92b7c5044238584a01a18d0bd63d766ec4bb1cfd))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-timed-auto-pr-approve.yaml to vworkflows-maintenance-timed-auto-pr-approve-v1.2.35 ([#1175](https://github.com/TimSchoenle/Portfolio/issues/1175)) ([5030962](https://github.com/TimSchoenle/Portfolio/commit/50309620cf0672c09a97674df5787f0d403d1ba6))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.5.0 ([#1179](https://github.com/TimSchoenle/Portfolio/issues/1179)) ([4844ad0](https://github.com/TimSchoenle/Portfolio/commit/4844ad0c500cac747b958db106102ff8526e8145))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.5.1 ([#1184](https://github.com/TimSchoenle/Portfolio/issues/1184)) ([a62b1f7](https://github.com/TimSchoenle/Portfolio/commit/a62b1f788c457d28ca7387352c1e579d7638c768))
+* **deps:** update timschoenle/actions/actions/common/readme-variables to vactions-common-readme-variables-v1.2.0 ([#1180](https://github.com/TimSchoenle/Portfolio/issues/1180)) ([02b76cb](https://github.com/TimSchoenle/Portfolio/commit/02b76cb14a8d9bb8f430d942f5c2dabf0d3ee939))
+* **deps:** update timschoenle/actions/actions/common/readme-variables to vactions-common-readme-variables-v1.2.1 ([#1185](https://github.com/TimSchoenle/Portfolio/issues/1185)) ([5808826](https://github.com/TimSchoenle/Portfolio/commit/580882600dfca81c3f8c5686f114ee385f665622))
+* **deps:** update timschoenle/actions/actions/common/render-template to vactions-common-render-template-v1.2.0 ([#1181](https://github.com/TimSchoenle/Portfolio/issues/1181)) ([afbfbbd](https://github.com/TimSchoenle/Portfolio/commit/afbfbbd30c6fc3e06ec797d45134aef3c0e2163f))
+* **deps:** update timschoenle/actions/actions/common/render-template to vactions-common-render-template-v1.2.1 ([#1186](https://github.com/TimSchoenle/Portfolio/issues/1186)) ([604e588](https://github.com/TimSchoenle/Portfolio/commit/604e588d329ab2e2de460bef9aefc0d84daba3f8))
+* **deps:** update timschoenle/actions/actions/common/render-template-and-commit to vactions-common-render-template-and-commit-v1.1.6 ([#1176](https://github.com/TimSchoenle/Portfolio/issues/1176)) ([87d338b](https://github.com/TimSchoenle/Portfolio/commit/87d338b649dc9806f83a8c6644910ac4387ad4be))
+* **deps:** update timschoenle/actions/actions/common/render-template-and-commit to vactions-common-render-template-and-commit-v1.1.7 ([#1187](https://github.com/TimSchoenle/Portfolio/issues/1187)) ([7218fb0](https://github.com/TimSchoenle/Portfolio/commit/7218fb07147f6458c66735fb8adbc5d2fe7b17a2))
+* **deps:** update timschoenle/actions/actions/common/render-template-and-commit to vactions-common-render-template-and-commit-v1.1.8 ([#1193](https://github.com/TimSchoenle/Portfolio/issues/1193)) ([288d7c9](https://github.com/TimSchoenle/Portfolio/commit/288d7c9bfc49a75b15e32072009b894eb72b41b2))
+* **deps:** update timschoenle/actions/actions/common/upsert-pr-comment to vactions-common-upsert-pr-comment-v1.1.1 ([#1188](https://github.com/TimSchoenle/Portfolio/issues/1188)) ([e433a62](https://github.com/TimSchoenle/Portfolio/commit/e433a62a2e5765c1b2eab16792244ca260e3f5f4))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.7 ([#1177](https://github.com/TimSchoenle/Portfolio/issues/1177)) ([81dcfa7](https://github.com/TimSchoenle/Portfolio/commit/81dcfa71153706a2dbdb89beb48f21952a3446bf))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.8 ([#1189](https://github.com/TimSchoenle/Portfolio/issues/1189)) ([f8e2885](https://github.com/TimSchoenle/Portfolio/commit/f8e288587e4de5a7a8e46ec45f71da5fffc592f5))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.9 ([#1194](https://github.com/TimSchoenle/Portfolio/issues/1194)) ([4c63897](https://github.com/TimSchoenle/Portfolio/commit/4c63897540594e1e303423186e621828c635b464))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.14 ([#1178](https://github.com/TimSchoenle/Portfolio/issues/1178)) ([5412a5c](https://github.com/TimSchoenle/Portfolio/commit/5412a5ccd4ae6a593f61bd02e6c08f7c62eb1615))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.15 ([#1190](https://github.com/TimSchoenle/Portfolio/issues/1190)) ([1087184](https://github.com/TimSchoenle/Portfolio/commit/1087184677a15654efda932f67e1ea1930ffc2f1))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.16 ([#1195](https://github.com/TimSchoenle/Portfolio/issues/1195)) ([dcf5347](https://github.com/TimSchoenle/Portfolio/commit/dcf534785230b5ca31d776ca0eab21affb7cb3c4))
+* **deps:** update timschoenle/actions/actions/rust/config-contract to vactions-rust-config-contract-v1.3.0 ([#1182](https://github.com/TimSchoenle/Portfolio/issues/1182)) ([0f12e1d](https://github.com/TimSchoenle/Portfolio/commit/0f12e1dfbfa5c5804340894e315543e4547fecf4))
+* **deps:** update timschoenle/actions/actions/rust/config-contract to vactions-rust-config-contract-v1.3.1 ([#1191](https://github.com/TimSchoenle/Portfolio/issues/1191)) ([7abc563](https://github.com/TimSchoenle/Portfolio/commit/7abc563c77e82223b35a2e1280fbb2934b9b6a82))
+* **deps:** update zizmorcore/zizmor-action action to v0.6.4 ([#1197](https://github.com/TimSchoenle/Portfolio/issues/1197)) ([b9976a2](https://github.com/TimSchoenle/Portfolio/commit/b9976a2f3a9d63860461cf27d4e7db3757fa4164))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1172](https://github.com/TimSchoenle/Portfolio/issues/1172)) ([b6022eb](https://github.com/TimSchoenle/Portfolio/commit/b6022eb5e3aa62195afaffdafc679269d096b52f))
+
 ## [2.12.0](https://github.com/TimSchoenle/Portfolio/compare/v2.11.0...v2.12.0) (2026-09-06)
 
 
