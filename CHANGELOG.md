@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.2](https://github.com/TimSchoenle/Portfolio/compare/v2.12.1...v2.12.2) (2026-09-15)
+
+
+### Miscellaneous
+
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.24 ([#1207](https://github.com/TimSchoenle/Portfolio/issues/1207)) ([4bb7af9](https://github.com/TimSchoenle/Portfolio/commit/4bb7af93f0791d3680bf67cb79a5cfb56b9fd22e))
+
 ## [2.12.1](https://github.com/TimSchoenle/Portfolio/compare/v2.12.0...v2.12.1) (2026-09-14)
 
 
