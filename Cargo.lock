@@ -2573,9 +2573,9 @@ checksum = "bef68590049bab63a464eee1a1158ac04c6f6613a546d8d90f78636b8b94f171"
 
 [[package]]
 name = "i18nrs"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cd49c0f70832d82c0c51be6e85042844784d31fea9cb5e7792bd8f779e11f0f"
+checksum = "df2492ea0a0a46fedb31b8af8c5ee1c36f97bccdd887d4f932c805907a627b60"
 dependencies = [
  "dioxus",
  "serde_json",
