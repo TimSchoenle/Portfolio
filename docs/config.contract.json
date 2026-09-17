@@ -7,7 +7,7 @@
   },
   "app": {
     "name": "portfolio",
-    "version": "v2.12.1",
+    "version": "v2.12.2",
     "source": "https://github.com/TimSchoenle/Portfolio"
   },
   "schema": {
