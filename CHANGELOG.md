@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.12.2](https://github.com/TimSchoenle/Portfolio/compare/v2.12.1...v2.12.2) (2026-09-17)
+
+
+### Miscellaneous
+
+* **deps:** update rust crate i18nrs to v0.1.10 ([#1206](https://github.com/TimSchoenle/Portfolio/issues/1206)) ([1fccb3f](https://github.com/TimSchoenle/Portfolio/commit/1fccb3f32e65838d9ce3299c281d713318a56a82))
+* **deps:** update timschoenle/actions/.github/workflows/maintenance-auto-approve-renovate.yaml to vworkflows-maintenance-auto-approve-renovate-v1.4.24 ([#1207](https://github.com/TimSchoenle/Portfolio/issues/1207)) ([4bb7af9](https://github.com/TimSchoenle/Portfolio/commit/4bb7af93f0791d3680bf67cb79a5cfb56b9fd22e))
+* **deps:** update timschoenle/actions/actions/common/commit-changes to vactions-common-commit-changes-v1.5.2 ([#1209](https://github.com/TimSchoenle/Portfolio/issues/1209)) ([467ecea](https://github.com/TimSchoenle/Portfolio/commit/467ecea3493b87964dddee4d0da5340f8fac9de3))
+* **deps:** update timschoenle/actions/actions/common/render-template to vactions-common-render-template-v1.2.2 ([#1211](https://github.com/TimSchoenle/Portfolio/issues/1211)) ([9c8ff05](https://github.com/TimSchoenle/Portfolio/commit/9c8ff054634473cfa152a7cef51412f1f6d241de))
+* **deps:** update timschoenle/actions/actions/helm/update-chart-version to vactions-helm-update-chart-version-v1.6.11 ([#1213](https://github.com/TimSchoenle/Portfolio/issues/1213)) ([6793af9](https://github.com/TimSchoenle/Portfolio/commit/6793af95cc00fa98e17cf3803c4b9af505e3577e))
+* **deps:** update timschoenle/actions/actions/rust/auto-format to vactions-rust-auto-format-v1.1.18 ([#1219](https://github.com/TimSchoenle/Portfolio/issues/1219)) ([35b89cc](https://github.com/TimSchoenle/Portfolio/commit/35b89cc2d2ac292caecc19be7e0a19ab41a0422d))
+* **deps:** update timschoenle/actions/actions/rust/config-contract to vactions-rust-config-contract-v1.3.2 ([#1214](https://github.com/TimSchoenle/Portfolio/issues/1214)) ([f709b66](https://github.com/TimSchoenle/Portfolio/commit/f709b66d0a398e7484bf02fce0553dee5468483f))
+
 ## [2.12.1](https://github.com/TimSchoenle/Portfolio/compare/v2.12.0...v2.12.1) (2026-09-14)
 
 
