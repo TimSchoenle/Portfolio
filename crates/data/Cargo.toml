@@ -1,6 +1,6 @@
 [package]
 name = "portfolio-data"
-version = "2.12.1"
+version = "2.12.2"
 edition.workspace = true
 publish.workspace = true
 
