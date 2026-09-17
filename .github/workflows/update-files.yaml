@@ -154,7 +154,7 @@ jobs:
       # configuration stays on the raw generator payload: it interpolates nothing the merge adds.
       - name: Render and commit the README
         id: readme
-        uses: TimSchoenle/actions/actions/common/render-template-and-commit@88e964d440835fd99f7e9d17b4ba1b48544303ba # tag=actions-common-render-template-and-commit-v1.1.9
+        uses: TimSchoenle/actions/actions/common/render-template-and-commit@f4fea19c7d53dee672f082bd62406b3e1e29ee3a # tag=actions-common-render-template-and-commit-v1.1.10
         with:
           template: .github/templates/README.md.hbs
           output: README.md
@@ -164,7 +164,7 @@ jobs:
 
       - name: Render and commit the example configuration
         id: example-config
-        uses: TimSchoenle/actions/actions/common/render-template-and-commit@88e964d440835fd99f7e9d17b4ba1b48544303ba # tag=actions-common-render-template-and-commit-v1.1.9
+        uses: TimSchoenle/actions/actions/common/render-template-and-commit@f4fea19c7d53dee672f082bd62406b3e1e29ee3a # tag=actions-common-render-template-and-commit-v1.1.10
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
