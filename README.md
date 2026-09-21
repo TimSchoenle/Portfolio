@@ -215,6 +215,8 @@ environment spelling also accepts a `_FILE` suffix naming a file that holds the 
 | `sentry.http_transactions` | `bool` | `PORTFOLIO_SENTRY__HTTP_TRANSACTIONS` | `true` | — | Record one Sentry transaction per request, named by the *matched route* rather than by the URI — so `/api/repos/{name}` does not become one transaction name per repository. |
 | `sentry.span_attributes` | `bool` | `PORTFOLIO_SENTRY__SPAN_ATTRIBUTES` | `false` | — | Copy `tracing` span fields onto the Sentry span as attributes. |
 | `sentry.debug` | `bool` | `PORTFOLIO_SENTRY__DEBUG` | `false` | — | Print the SDK's own diagnostics to stderr. For proving a DSN works, not for running. |
+| `legal.default_locale` | `String` | `PORTFOLIO_LEGAL__DEFAULT_LOCALE` | unset | — | Locale served when neither the request nor its `Accept-Language` header matches a published one, for example `en`. Without it, the first published locale in alphabetical order is served. |
+| `legal.documents` | `BTreeMap<String, LegalDocument>` | `PORTFOLIO_LEGAL__DOCUMENTS` | `{  }` | — | The published documents, keyed by the slug their URL uses. A slug is lowercase letters, digits, `_` and `-`, at most 64 characters, and starts with a letter or a digit. |
 
 ### Builder
 
