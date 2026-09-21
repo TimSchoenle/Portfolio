@@ -305,8 +305,11 @@ jobs:
         run: |
           set -uo pipefail
 
-          # Boot the freshly built image as a detached container.
-          docker run -d --rm --name portfolio-test -p 8080:8080 image:test
+          # Boot the freshly built image as a detached container. The legal
+          # documents are required configuration and none is baked into the
+          # image, so the repository's own `legal/` block is mounted the way a
+          # deployment mounts its ConfigMap.
+          docker run -d --rm --name portfolio-test -p 8080:8080             -v "$PWD/legal:/config/legal:ro"             -e PORTFOLIO_CONFIG=/config/legal             image:test
 
           # Always surface the container's logs and tear it down, no matter how
           # the assertions below exit.
@@ -396,6 +399,22 @@ jobs:
           # ── Profile JSON Schema endpoint ──────────────────────────────────────
           expect_status /api/v1/profile/schema 200
           expect_body_contains /api/v1/profile/schema '"type":"object"'
+
+          # ── Legal documents come from configuration, in the first response ────
+          # Rendered server-side, so the text is in the bytes a reader without
+          # JavaScript receives, and linked from the footer of every page.
+          expect_status /legal/imprint 200
+          expect_body_contains /legal/imprint '§ 5 DDG'
+          expect_body_contains / 'href="/legal/imprint"'
+          expect_body_contains / 'href="/legal/privacy"'
+          expect_status /legal/privacy 200
+          expect_body_contains /legal/privacy 'Art. 4(7) GDPR'
+          # The pre-configuration paths redirect permanently rather than 404.
+          expect_status /imprint 308
+          expect_status /privacy 308
+          # The public JSON view of the same catalog, with a validator.
+          expect_status /api/v1/legal 200
+          expect_body_contains /api/v1/legal '"slug":"imprint"'
 
           # ── SPA: root and unknown client routes both serve index.html ─────────
           expect_status / 200

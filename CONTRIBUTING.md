@@ -34,8 +34,11 @@ Thank you for your interest in contributing! This document provides guidelines a
    ```bash
    cd apps/web
    npm ci && npm run build:css
-   dx serve --platform web
+   PORTFOLIO_CONFIG=../../legal dx serve --platform web
    ```
+
+   `PORTFOLIO_CONFIG` points the loader at the repository's legal documents: the server refuses
+   to start without an imprint and a privacy notice, and none is compiled in.
 
 4. Open [http://localhost:8080](http://localhost:8080) in your browser.
 

@@ -9,7 +9,8 @@ use dioxus::prelude::*;
 use i18nrs::dioxus::I18nContext;
 
 /// Storage key holding the selected language ("en" / "de"). Documented in the
-/// privacy policy — keep both in sync.
+/// privacy notice (`legal/privacy.toml`, and whatever a deployment mounts in its
+/// place) — keep both in sync.
 pub const LANG_STORAGE_KEY: &str = "lang";
 
 /// [`LANG_STORAGE_KEY`] with the `=` that separates a cookie pair's name from

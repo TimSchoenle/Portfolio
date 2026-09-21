@@ -333,6 +333,15 @@ WORKDIR /app
 #   PORTFOLIO_SENTRY__DSN_FILE=/run/secrets/sentry_dsn
 #   PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE=0
 #   PORTFOLIO_SENTRY__SEND_DEFAULT_PII=false
+#
+# The legal documents are configuration too (`legal.*`), and REQUIRED: the
+# server refuses to start without an imprint and a privacy notice in English and
+# German, naming every missing key. None is baked in — the text is the
+# operator's, and a default one would be published by whoever forgot to replace
+# it. The repository's `legal/` directory is a complete block: mount it (as a
+# ConfigMap, say) and point the loader at the directory, and it reads every
+# `*.toml` in it.
+#   PORTFOLIO_CONFIG=/config/legal
 ENV PORT=8080 \
     IP=0.0.0.0 \
     RUST_LOG=info \

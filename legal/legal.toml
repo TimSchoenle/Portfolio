@@ -1,0 +1,18 @@
+# The legal documents this site publishes, as configuration.
+#
+# The server reads every `*.toml` in the directory `PORTFOLIO_CONFIG` names, so this directory is a
+# complete `legal.*` block on its own: `PORTFOLIO_CONFIG=legal dx serve --platform web` serves
+# these texts in development, and CI mounts it into the image for the container smoke test. A
+# deployment supplies the same keys its own way — a ConfigMap holding these three files is the
+# shortest — and nothing here is baked into the image.
+#
+# Each document is a table under `legal.documents.<slug>` and is served at `/legal/<slug>`. The
+# body is Markdown per locale. The page renders the title as its heading, so a body starts at
+# `##`. Raw HTML is shown as text and an image as its alt text, so neither belongs in a body. A
+# bare URL is not a link: write `<https://…>`. A trailing `\` is a line break.
+#
+# The server refuses to start without an `imprint` and a `privacy` document, and without a text
+# in every language the site renders (`en`, `de`).
+
+[legal]
+default_locale = "en"
