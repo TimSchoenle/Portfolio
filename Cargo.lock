@@ -3806,7 +3806,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-platform"
-version = "2.12.1"
+version = "3.0.0"
 
 [[package]]
 name = "postcard"
