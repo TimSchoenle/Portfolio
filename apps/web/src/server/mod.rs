@@ -9,6 +9,7 @@ mod api;
 mod assets;
 mod cache;
 mod csp;
+pub(crate) mod legal;
 mod seo;
 mod telemetry;
 
@@ -27,6 +28,7 @@ use axum::{
 use dioxus::server::{DioxusRouterExt, IncrementalRendererConfig, ServeConfig};
 use portfolio_config::{AssetsConfig, IsrConfig, ServerConfig};
 use portfolio_data::LANGUAGES;
+use terrace_legal::Legal;
 use tower_http::{
     compression::{
         CompressionLayer,
@@ -52,6 +54,15 @@ const EX_CONFIG: i32 = 78;
 /// means the container never reports ready rather than serving a degraded site.
 pub fn serve() {
     let config = Arc::new(load_config());
+    // The legal catalog is part of the configuration's validity: a deployment without an
+    // imprint and a privacy notice in every language is refused here, with every missing key
+    // named, before anything binds a port.
+    let legal = match legal::build(&config.legal) {
+        Ok(legal) => legal,
+        Err(issues) => refuse(&issues),
+    };
+    legal::install(legal.clone());
+    let paths = PagePaths::new(&legal::hosted_paths(&legal));
 
     // Before `dioxus::serve`, and that ordering is the whole of the handover: the framework
     // installs its own subscriber unless one is already set, and a Sentry layer has to be a
@@ -68,7 +79,9 @@ pub fn serve() {
 
     dioxus::serve(move || {
         let config = Arc::clone(&config);
-        async move { Ok(router(&config)) }
+        let legal = legal.clone();
+        let paths = paths.clone();
+        async move { Ok(router(&config, legal, paths)) }
     });
 }
 
@@ -112,15 +125,18 @@ fn load_config() -> ServerConfig {
 /// The full application router: the Dioxus SSR/asset router with our routes and
 /// layers mounted on top. Custom routes take precedence over the SSR fallback;
 /// layers apply to every response (SSR HTML, static assets, API, SEO).
-fn router(config: &ServerConfig) -> Router {
+///
+/// `legal` serves the JSON routes and the sitemap; `paths` is the render cache's allowlist, built
+/// once in [`serve`] from the same catalog.
+fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> Router {
     let static_header = |name: HeaderName, value: &'static str| {
         SetResponseHeaderLayer::overriding(name, HeaderValue::from_static(value))
     };
 
     let policy = Arc::new(csp::SitePolicy::new(&config.csp));
-    let (dioxus_app, isr_enabled) = dioxus_app_router(&config.isr);
+    let (dioxus_app, isr_enabled) = dioxus_app_router(&config.isr, &paths);
     let app = dioxus_app
-        .merge(api_router(config.assets.clone()))
+        .merge(api_router(config.assets.clone(), legal))
         .merge(assets::router());
     // Page handling for navigations, innermost so it sees the request before the
     // router and the response before compression: it stamps the negotiated
@@ -133,6 +149,7 @@ fn router(config: &ServerConfig) -> Router {
             isr_enabled,
             policy: Arc::clone(&policy),
             pages: Arc::new(PageMemo::default()),
+            paths,
         },
         localize_page,
     ));
@@ -193,6 +210,8 @@ struct PageState {
     policy: Arc<csp::SitePolicy>,
     /// Finished pages, memoized per `(path, locale)`. See [`PageMemo`].
     pages: Arc<PageMemo>,
+    /// The pages worth remembering. See [`PagePaths`].
+    paths: PagePaths,
 }
 
 /// A finished page: the body exactly as it will be sent, and the inline-script hashes taken from
@@ -216,11 +235,11 @@ struct RenderedPage {
 /// every inline script — the serialized hydration payload among them — only to rebuild a policy
 /// byte-identical to the one before it.
 ///
-/// Sound for exactly the reason the incremental cache itself is: a [`CACHEABLE_PATHS`] page is
-/// rendered entirely from compile-time data, so its bytes are a function of the path and the
-/// negotiated locale and of nothing else. Both halves of the key are `&'static str` drawn from
-/// those same compile-time lists, which is also what bounds the map at
-/// `CACHEABLE_PATHS.len() * LANGUAGES.len()` entries — it is a memo, not a cache, and so needs
+/// Sound for exactly the reason the incremental cache itself is: a [`PagePaths`] page is rendered
+/// from compile-time data and from configuration read once at boot, so its bytes are a function of
+/// the path and the negotiated locale and of nothing else for the life of the process. Both halves
+/// of the key are `&'static str` drawn from those same fixed lists, which is also what bounds the
+/// map at `paths.len() * LANGUAGES.len()` entries — it is a memo, not a cache, and so needs
 /// neither eviction nor a TTL.
 ///
 /// What it deliberately does *not* do is answer the request itself: the render still goes through
@@ -336,31 +355,54 @@ const _: () = {
     }
 };
 
-/// Page paths whose rendered HTML is worth persisting. These mirror the concrete
-/// variants of `crate::routes::Route`; the catch-all `NotFound` route is
-/// deliberately absent.
+/// Page paths whose rendered HTML is worth persisting: the fixed routes of
+/// `crate::routes::Route`, plus one `/legal/<slug>` per document the configuration hosts. The
+/// catch-all `NotFound` route is deliberately absent, and so is every slug nothing is published
+/// under.
 ///
 /// The incremental cache is keyed by path, and the catch-all matches every URL
 /// that exists — so without this allowlist an unauthenticated client could mint
 /// an unbounded number of cache entries (one directory and one HTML file each)
-/// simply by requesting `/1`, `/2`, … until the cache volume filled up. Routes
-/// outside the list still render normally; their output is just never stored
-/// (see [`isr_map_path`]).
-const CACHEABLE_PATHS: [&str; 4] = ["/", "/imprint", "/privacy", "/licenses"];
-
-/// Whether a request path is one of the [`CACHEABLE_PATHS`].
-fn is_cacheable_path(path: &str) -> bool {
-    cacheable_path(path).is_some()
-}
-
-/// The [`CACHEABLE_PATHS`] entry equal to `path`.
+/// simply by requesting `/1`, `/2`, … until the cache volume filled up. The same
+/// holds for `/legal/:slug`, whose segment is request text. Routes outside the
+/// list still render normally; their output is just never stored (see
+/// [`isr_map_path`]).
 ///
-/// Returning the compile-time entry rather than a `bool` is what lets [`PageMemo`] key on a
-/// `&'static str`: the request's own path is borrowed from a URI that does not outlive the
-/// request, whereas this one is a program constant, so the memo owns nothing and can never be
-/// keyed by attacker-supplied text.
-fn cacheable_path(path: &str) -> Option<&'static str> {
-    CACHEABLE_PATHS.into_iter().find(|known| *known == path)
+/// Cheap to clone: the list is shared.
+#[derive(Clone)]
+struct PagePaths(Arc<[&'static str]>);
+
+/// The routes whose paths do not depend on configuration.
+const STATIC_PAGE_PATHS: [&str; 2] = ["/", "/licenses"];
+
+impl PagePaths {
+    /// The fixed routes, then `legal`: each a hosted document's path.
+    ///
+    /// The configured paths are leaked into `&'static str` on purpose, and once per process:
+    /// [`serve`] builds this before the runtime starts, from a configuration that is never
+    /// reloaded. That is what lets [`PageMemo`] key on a program-lifetime string the way it did
+    /// when every path was a literal, instead of on request text or a per-request allocation.
+    fn new(legal: &[String]) -> Self {
+        let configured = legal
+            .iter()
+            .map(|path| &*Box::leak(path.clone().into_boxed_str()));
+        Self(STATIC_PAGE_PATHS.into_iter().chain(configured).collect())
+    }
+
+    /// The entry equal to `path`.
+    ///
+    /// Returning the stored entry rather than a `bool` is what lets [`PageMemo`] key on a
+    /// `&'static str`: the request's own path is borrowed from a URI that does not outlive the
+    /// request, whereas this one lives as long as the process, so the memo owns nothing and can
+    /// never be keyed by attacker-supplied text.
+    fn get(&self, path: &str) -> Option<&'static str> {
+        self.0.iter().copied().find(|known| *known == path)
+    }
+
+    /// Whether a request path is one of these.
+    fn contains(&self, path: &str) -> bool {
+        self.get(path).is_some()
+    }
 }
 
 /// Name of the sentinel that [`isr_map_path`] maps every non-cacheable route to.
@@ -386,8 +428,8 @@ const ISR_UNCACHEABLE_SENTINEL: &str = ".uncacheable";
 /// rendered a URL first to everyone who asked for it afterwards.
 /// [`with_locale_query`] puts the negotiated locale on the URI and [`isr_map_path`] nests each
 /// render under it, which is what makes the key one entry per language per path.
-fn dioxus_app_router(isr: &IsrConfig) -> (Router, bool) {
-    match incremental_config(isr) {
+fn dioxus_app_router(isr: &IsrConfig, paths: &PagePaths) -> (Router, bool) {
+    match incremental_config(isr, paths) {
         Some(cfg) => (
             Router::new()
                 .serve_dioxus_application(ServeConfig::builder().incremental(cfg), crate::app::App),
@@ -401,7 +443,7 @@ fn dioxus_app_router(isr: &IsrConfig) -> (Router, bool) {
 /// Builds the incremental-render configuration, or `None` when ISR is disabled
 /// (no cache directory configured) or the cache directory is not usable (cannot
 /// be created, or exists but is not writable).
-fn incremental_config(isr: &IsrConfig) -> Option<IncrementalRendererConfig> {
+fn incremental_config(isr: &IsrConfig, paths: &PagePaths) -> Option<IncrementalRendererConfig> {
     let dir = isr.cache_dir()?.to_path_buf();
     // Verify the directory can actually be written to, not merely that it
     // exists: a mounted volume (e.g. a root-owned Kubernetes `emptyDir`) can be
@@ -437,6 +479,7 @@ fn incremental_config(isr: &IsrConfig) -> Option<IncrementalRendererConfig> {
         ),
     }
     let map_dir = dir.clone();
+    let map_paths = paths.clone();
     // Remembers which cache entries we have already announced as created, so the
     // log line fires once per creation rather than on every `map_path` call (the
     // renderer invokes it on both the cache-miss lookup and the subsequent write).
@@ -446,11 +489,11 @@ fn incremental_config(isr: &IsrConfig) -> Option<IncrementalRendererConfig> {
         // Fold the locale marker into the on-disk path: the default mapping
         // drops the query string, collapsing every language onto one file.
         .map_path(move |route| {
-            let mapped = isr_map_path(&map_dir, route);
+            let mapped = isr_map_path(&map_dir, route, &map_paths);
             // Non-cacheable routes all share the sentinel path and never produce
             // an entry, so announcing them would be noise about a write that is
             // guaranteed not to happen.
-            if is_cacheable_route(route) && is_new_cache_entry(&announced, &mapped) {
+            if is_cacheable_route(route, &map_paths) && is_new_cache_entry(&announced, &mapped) {
                 log_cache_entry_created(route, &mapped);
             }
             mapped
@@ -556,7 +599,7 @@ async fn localize_page(
     // constant. `None` for anything else: the catch-all route is shared by every
     // unknown URL, so remembering one of their renders under it would answer the
     // next unknown URL with the previous one's document.
-    let memo_key = cacheable_path(request.uri().path());
+    let memo_key = state.paths.get(request.uri().path());
 
     if state.isr_enabled && memo_key.is_some() {
         *request.uri_mut() = with_locale_query(request.uri(), locale);
@@ -596,7 +639,7 @@ const MAX_HTML_REWRITE_BYTES: usize = 4 * 1024 * 1024;
 /// hashes describe the response as sent rather than an earlier version of it.
 ///
 /// All of that happens once per `(path, locale)`. `memo_key` names the
-/// [`CACHEABLE_PATHS`] entry this request is for, if any; a second request for
+/// [`PagePaths`] entry this request is for, if any; a second request for
 /// the same page is answered from [`PageMemo`] without buffering, validating,
 /// copying or re-hashing anything — only the nonce in its policy is new.
 async fn rewrite_html_response(
@@ -770,11 +813,11 @@ fn is_locale_marker(pair: &str) -> bool {
 /// keeps the languages separate (and stable across restarts). A route without
 /// the marker maps straight under `static_dir`, matching the default.
 ///
-/// Routes outside [`CACHEABLE_PATHS`] map to the [`ISR_UNCACHEABLE_SENTINEL`]
+/// Routes outside [`PagePaths`] map to the [`ISR_UNCACHEABLE_SENTINEL`]
 /// instead, which the renderer can neither read a page from nor write one to.
-fn isr_map_path(static_dir: &std::path::Path, route: &str) -> PathBuf {
+fn isr_map_path(static_dir: &std::path::Path, route: &str, paths: &PagePaths) -> PathBuf {
     let (path, query) = route.split_once('?').unwrap_or((route, ""));
-    if !is_cacheable_path(path) {
+    if !paths.contains(path) {
         return static_dir.join(ISR_UNCACHEABLE_SENTINEL).join("route");
     }
 
@@ -792,9 +835,9 @@ fn isr_map_path(static_dir: &std::path::Path, route: &str) -> PathBuf {
 
 /// Whether a full incremental-cache route (path plus query) addresses a page
 /// whose render may be persisted.
-fn is_cacheable_route(route: &str) -> bool {
+fn is_cacheable_route(route: &str, paths: &PagePaths) -> bool {
     let (path, _) = route.split_once('?').unwrap_or((route, ""));
-    is_cacheable_path(path)
+    paths.contains(path)
 }
 
 /// Extracts the [`ISR_LOCALE_PARAM`] value from a raw query string, if it names
@@ -873,12 +916,12 @@ fn log_cache_entry_created(route: &str, mapped: &Path) {
 /// exercised in isolation by the integration tests below (without the SSR
 /// render machinery).
 ///
-/// `assets` is the router's state purely for the readiness probe, which is the
-/// one handler whose answer depends on configuration rather than on
-/// compile-time data. Holding it as state rather than re-reading it per request
-/// means the probe cannot start disagreeing with the rest of the process about
-/// where the bundle is.
-fn api_router(assets: AssetsConfig) -> Router {
+/// `assets` is the router's state for the readiness probe, and `legal` serves the
+/// legal JSON routes and decides which documents the sitemap lists. Both are
+/// configuration handed in rather than re-read per request, so neither can start
+/// disagreeing with the rest of the process.
+fn api_router(assets: AssetsConfig, legal: Legal) -> Router {
+    let sitemap: Arc<str> = seo::sitemap_xml(&legal::hosted_paths(&legal)).into();
     Router::new()
         .route("/api/health", get(api::health))
         .route("/api/health/live", get(api::live))
@@ -889,9 +932,13 @@ fn api_router(assets: AssetsConfig) -> Router {
         .route("/api/v1/profile", get(api::profile))
         .route("/api/v1/profile/schema", get(api::schema))
         .route("/robots.txt", get(seo::robots))
-        .route("/sitemap.xml", get(seo::sitemap))
+        .route(
+            "/sitemap.xml",
+            get(move || std::future::ready(seo::sitemap(&sitemap))),
+        )
         .route("/site.webmanifest", get(seo::webmanifest))
         .with_state(assets)
+        .merge(legal::router(legal))
 }
 
 #[cfg(test)]
@@ -907,7 +954,7 @@ mod tests {
 
     /// Dispatches a `GET` through the real API router and returns the response.
     async fn get_(path: &str) -> axum::response::Response {
-        api_router(AssetsConfig::default())
+        api_router(AssetsConfig::default(), legal::tests::fixture())
             .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
             .await
             .unwrap()
@@ -927,7 +974,13 @@ mod tests {
             isr_enabled,
             policy: Arc::new(csp::SitePolicy::new(&portfolio_config::CspConfig::default())),
             pages: Arc::new(PageMemo::default()),
+            paths: paths(),
         }
+    }
+
+    /// The allowlist the fixture catalog produces.
+    fn paths() -> PagePaths {
+        PagePaths::new(&legal::hosted_paths(&legal::tests::fixture()))
     }
 
     /// Builds a response with the given content type and a body large enough to
@@ -1075,11 +1128,11 @@ mod tests {
                 .body(Body::empty())
                 .unwrap()
         };
-        let bare = api_router(AssetsConfig::default())
+        let bare = api_router(AssetsConfig::default(), legal::tests::fixture())
             .oneshot(request())
             .await
             .unwrap();
-        let layered = api_router(AssetsConfig::default())
+        let layered = api_router(AssetsConfig::default(), legal::tests::fixture())
             .layer(http)
             .layer(hub)
             .oneshot(request())
@@ -1100,7 +1153,7 @@ mod tests {
 
     #[tokio::test]
     async fn profile_rejects_non_get_methods() {
-        let response = api_router(AssetsConfig::default())
+        let response = api_router(AssetsConfig::default(), legal::tests::fixture())
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -1190,7 +1243,7 @@ mod tests {
     #[test]
     fn a_forged_locale_never_becomes_a_path_component() {
         let base = std::path::Path::new("/cache");
-        let untagged = isr_map_path(base, "/");
+        let untagged = isr_map_path(base, "/", &paths());
 
         // Traversal, absolute paths and unknown languages are all rejected by
         // `locale_from_query`, so the route maps exactly as if no marker were
@@ -1201,7 +1254,7 @@ mod tests {
             "/?__isr_locale=fr",
             "/?__isr_locale=",
         ] {
-            let mapped = isr_map_path(base, forged);
+            let mapped = isr_map_path(base, forged, &paths());
             assert_eq!(mapped, untagged, "{forged} was not neutralised");
             assert!(
                 mapped.starts_with(base),
@@ -1212,13 +1265,25 @@ mod tests {
 
     #[test]
     fn only_allowlisted_pages_are_cacheable() {
-        for path in ["/", "/imprint", "/privacy", "/licenses"] {
-            assert!(is_cacheable_path(path), "{path} should be cacheable");
+        let paths = paths();
+        for path in ["/", "/legal/imprint", "/legal/privacy", "/licenses"] {
+            assert!(paths.contains(path), "{path} should be cacheable");
         }
         // The catch-all 404 route matches unboundedly many URLs; caching them
         // would let any client fill the cache volume.
-        for path in ["/nope", "/1", "/imprint/x", "/robots.txt", ""] {
-            assert!(!is_cacheable_path(path), "{path} should not be cacheable");
+        // `/legal/terms` is published, but hosted elsewhere: it has no page to cache. `/imprint`
+        // is only a redirect now.
+        for path in [
+            "/nope",
+            "/1",
+            "/imprint",
+            "/legal/nope",
+            "/legal/terms",
+            "/legal/imprint/x",
+            "/robots.txt",
+            "",
+        ] {
+            assert!(!paths.contains(path), "{path} should not be cacheable");
         }
     }
 
@@ -1230,10 +1295,10 @@ mod tests {
 
         // Every non-cacheable route maps to the same place, so their number
         // cannot grow the cache...
-        let a = isr_map_path(&dir, "/nope?__isr_locale=en");
-        let b = isr_map_path(&dir, "/other?__isr_locale=de");
+        let a = isr_map_path(&dir, "/nope?__isr_locale=en", &paths());
+        let b = isr_map_path(&dir, "/other?__isr_locale=de", &paths());
         assert_eq!(a, b);
-        assert_ne!(a, isr_map_path(&dir, "/?__isr_locale=en"));
+        assert_ne!(a, isr_map_path(&dir, "/?__isr_locale=en", &paths()));
 
         // ...and that place cannot hold a render, because a regular file sits
         // where the renderer would need a directory.
@@ -1298,9 +1363,9 @@ mod tests {
             p.components().any(|c| c.as_os_str().to_str() == Some(name))
         };
 
-        let de = isr_map_path(base, "/?__isr_locale=de");
-        let en = isr_map_path(base, "/?__isr_locale=en");
-        let untagged = isr_map_path(base, "/");
+        let de = isr_map_path(base, "/?__isr_locale=de", &paths());
+        let en = isr_map_path(base, "/?__isr_locale=en", &paths());
+        let untagged = isr_map_path(base, "/", &paths());
 
         // Each language lands in its own sub-directory, distinct from the other
         // and from the marker-less (default) mapping.
@@ -1312,7 +1377,7 @@ mod tests {
 
         // A different path under the same language shares the language sub-dir
         // but still maps to its own folder.
-        let imprint_de = isr_map_path(base, "/imprint?__isr_locale=de");
+        let imprint_de = isr_map_path(base, "/legal/imprint?__isr_locale=de", &paths());
         assert!(has(&imprint_de, "de") && has(&imprint_de, "imprint"));
         assert_ne!(imprint_de, de);
     }
@@ -1327,7 +1392,7 @@ mod tests {
     /// back.
     #[test]
     fn isr_is_off_without_a_configured_cache_directory() {
-        assert!(incremental_config(&IsrConfig::default()).is_none());
+        assert!(incremental_config(&IsrConfig::default(), &paths()).is_none());
     }
 
     #[test]
@@ -1338,7 +1403,7 @@ mod tests {
             ttl_secs: 0,
         };
 
-        assert!(incremental_config(&on).is_some());
+        assert!(incremental_config(&on, &paths()).is_some());
         // The sentinel is what keeps non-cacheable routes from minting entries;
         // enabling ISR must have created it as a regular file.
         assert!(dir.join(ISR_UNCACHEABLE_SENTINEL).is_file());
@@ -1361,7 +1426,7 @@ mod tests {
             cache_dir: Some(blocker.join("cache")),
             ttl_secs: 0,
         };
-        assert!(incremental_config(&unusable).is_none());
+        assert!(incremental_config(&unusable, &paths()).is_none());
 
         let _ = std::fs::remove_file(&blocker);
     }
@@ -1439,7 +1504,7 @@ mod tests {
     async fn non_page_responses_are_left_alone() {
         // A request may accept HTML and still be answered with JSON; those do
         // not vary by language and have no tag to stamp.
-        let response = api_router(AssetsConfig::default())
+        let response = api_router(AssetsConfig::default(), legal::tests::fixture())
             .layer(middleware::from_fn_with_state(
                 page_state(false),
                 localize_page,
@@ -1733,7 +1798,7 @@ mod tests {
     /// — which admits no inline script at all — is the one that stands.
     #[tokio::test]
     async fn non_documents_are_left_to_the_subresource_policy() {
-        let response = api_router(AssetsConfig::default())
+        let response = api_router(AssetsConfig::default(), legal::tests::fixture())
             .layer(middleware::from_fn_with_state(
                 page_state(false),
                 localize_page,

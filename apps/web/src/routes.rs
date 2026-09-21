@@ -1,9 +1,12 @@
 //! Application routes and the shared layout shell.
 
 use dioxus::prelude::*;
+use terrace_legal_dioxus::{LegalProvider, Shared, SharedTransport};
 
 use crate::github::ReposState;
-use crate::pages::{Home, Imprint, Licenses, NotFound, Privacy};
+use crate::i18n::use_i18n;
+use crate::legal::{LegalIndexes, SiteRouting, SiteSkin, SiteText, SiteTransport, legal_indexes};
+use crate::pages::{Home, LegalDocument, Licenses, NotFound};
 use crate::ui::footer::Footer;
 use crate::ui::masthead::Masthead;
 use crate::ui::palette::CommandPalette;
@@ -15,10 +18,10 @@ pub enum Route {
     #[layout(Shell)]
     #[route("/")]
     Home {},
-    #[route("/imprint")]
-    Imprint {},
-    #[route("/privacy")]
-    Privacy {},
+    /// A hosted legal document. Which slugs exist is configuration, so an unknown one renders
+    /// the 404 page from inside the route rather than being refused by the router.
+    #[route("/legal/:slug")]
+    LegalDocument { slug: String },
     #[route("/licenses")]
     Licenses {},
     #[route("/:..segments")]
@@ -26,12 +29,38 @@ pub enum Route {
 }
 
 /// Shared chrome around every page: the masthead, the routed page content
-/// (`Outlet`), the footer and (client-side) the command palette. The masthead
-/// and palette are wired in as their components are ported.
+/// (`Outlet`), the footer and (client-side) the command palette.
+///
+/// It also resolves the legal index, because the footer on every page links each published
+/// document and those links have to be in the server render: an imprint a reader without
+/// JavaScript cannot reach is not "easily recognisable, directly accessible" (§ 5 DDG). The
+/// fetch has no reactive input, so it suspends once, on the server, and hydrates from the
+/// payload. The index is shared as context and handed to [`LegalProvider`], which the document
+/// page's component reads its adapters from.
 #[component]
 fn Shell() -> Element {
     let mut palette_open = use_signal(|| false);
     let repos = use_context::<ReposState>();
+    let i18n = use_i18n().i18n;
+
+    let indexes = use_server_future(legal_indexes)?;
+    // A failed fetch is only possible on the client, after hydration already had the answer;
+    // an empty index then degrades to a footer without legal links rather than a broken shell.
+    let indexes: LegalIndexes = indexes
+        .read()
+        .as_ref()
+        .and_then(|result| result.as_ref().ok())
+        .cloned()
+        .unwrap_or(LegalIndexes::default());
+    use_context_provider(|| indexes.clone());
+
+    // Created once: the provider reads its handles on first render and compares them by
+    // identity afterwards.
+    let transport = use_hook(|| SharedTransport::new(SiteTransport::new(indexes.clone())));
+    let text = use_hook(|| Shared::<dyn terrace_legal_dioxus::LegalText>::new(SiteText::new(i18n)));
+    let routing = use_hook(|| Shared::<dyn terrace_legal_dioxus::LegalRouting>::new(SiteRouting));
+    let skin = use_hook(|| Shared::<dyn terrace_legal_dioxus::LegalSkin>::new(SiteSkin));
+    let language = use_memo(move || i18n.read().get_current_language().to_string());
 
     #[cfg(feature = "web")]
     {
@@ -75,14 +104,21 @@ fn Shell() -> Element {
     }
 
     rsx! {
-        div { class: "site",
-            Masthead { on_open_palette: move |_| palette_open.set(true) }
-            Outlet::<Route> {}
-            Footer {}
-            if palette_open() {
-                CommandPalette {
-                    repos: repos.clone(),
-                    on_close: move |_| palette_open.set(false),
+        LegalProvider {
+            transport,
+            text,
+            routing,
+            skin,
+            language,
+            div { class: "site",
+                Masthead { on_open_palette: move |_| palette_open.set(true) }
+                Outlet::<Route> {}
+                Footer {}
+                if palette_open() {
+                    CommandPalette {
+                        repos: repos.clone(),
+                        on_close: move |_| palette_open.set(false),
+                    }
                 }
             }
         }

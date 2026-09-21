@@ -89,47 +89,6 @@ impl ResumeFingerprints {
 
 // ---------- Site configuration ----------
 
-/// A processor the privacy policy has to name.
-///
-/// Nothing renders one. The GDPR wants these facts in the reader's own language, so the prose
-/// that states them is in the translation files; this is the copy that prose is checked against.
-pub struct ExternalService {
-    /// The legal entity, spelled as it appears in its own imprint.
-    pub name: &'static str,
-    /// Registered seat, in the format that country writes addresses in.
-    pub address: &'static str,
-    /// The processor's own privacy policy, which the prose links to.
-    pub policy_url: &'static str,
-}
-
-/// What the imprint and privacy pages are obliged to state.
-///
-/// Five of these reach a rendered page. The rest is duplicated inside the translated prose for
-/// the reason [`ExternalService`] gives, and is kept here so there is one place to correct when
-/// a provider moves or a retention period changes.
-pub struct Legal {
-    /// Postal address used in the imprint and as GDPR controller address.
-    pub address_lines: &'static [&'static str],
-    /// VAT identification number. German law obliges the imprint to show it.
-    pub vat_id: &'static str,
-    /// Second contact channel required by the imprint service.
-    pub second_contact_url: &'static str,
-    /// Who runs the machine the site is served from.
-    pub hosting: ExternalService,
-    /// Who runs the edge the site is delivered through.
-    pub cloudflare: ExternalService,
-    /// How long access logs are kept before deletion.
-    pub log_retention_days: u32,
-    /// ISO date shown as "last updated" on the imprint page.
-    pub imprint_last_change: &'static str,
-    /// ISO date shown as "last updated" on the privacy page.
-    pub privacy_last_change: &'static str,
-    /// Supervisory authority for data-protection complaints.
-    pub authority_url: &'static str,
-    /// EU online dispute resolution platform.
-    pub odr_url: &'static str,
-}
-
 /// The name, as a bare literal.
 ///
 /// A macro rather than a `const` because [`CONFIG`]`.title` is `concat!`-ed from this and
@@ -208,7 +167,7 @@ pub struct Config {
     pub github: &'static str,
     /// The account `update-repos` lists repositories for unless `github.username` names another.
     pub github_username: &'static str,
-    /// LinkedIn profile page, linked from the imprint and from the resume sidebar.
+    /// LinkedIn profile page, linked from the footer and from the resume sidebar.
     pub linkedin: &'static str,
     /// This repository, which the footer colophon links to.
     pub repository: &'static str,
@@ -233,8 +192,6 @@ pub struct Config {
     /// activity. Matched case-insensitively by name when listing all of the
     /// user's repositories in `update-repos`.
     pub blacklisted_repos: &'static [&'static str],
-    /// The imprint and privacy facts.
-    pub legal: Legal,
 }
 
 /// The site's own identity. No configuration key reaches any of it: changing one is a redeploy.
@@ -279,31 +236,6 @@ pub const CONFIG: Config = Config {
         "helm-charts",
     ],
     blacklisted_repos: &["TimSchoenle", "actions-testing"],
-    legal: Legal {
-        address_lines: &[
-            "tim-schoenle.de – Tim Schönle",
-            "c/o Online-Impressum.de #5279",
-            "Europaring 90",
-            "53757 Sankt Augustin",
-        ],
-        vat_id: "DE347101415",
-        second_contact_url: "https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg",
-        hosting: ExternalService {
-            name: "netcup GmbH",
-            address: "Daimlerstraße 25, 76185 Karlsruhe, Germany",
-            policy_url: "https://www.netcup.de/kontakt/datenschutzerklaerung.php",
-        },
-        cloudflare: ExternalService {
-            name: "Cloudflare, Inc.",
-            address: "101 Townsend St, San Francisco, CA 94107, USA",
-            policy_url: "https://www.cloudflare.com/privacypolicy/",
-        },
-        log_retention_days: 7,
-        imprint_last_change: "2026-06-10",
-        privacy_last_change: "2026-06-10",
-        authority_url: "https://www.baden-wuerttemberg.datenschutz.de",
-        odr_url: "https://ec.europa.eu/consumers/odr/",
-    },
 };
 
 // ---------- Skills ----------

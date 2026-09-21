@@ -1,4 +1,5 @@
-//! `robots.txt`, `sitemap.xml` and `site.webmanifest`, built from [`CONFIG`].
+//! `robots.txt`, `sitemap.xml` and `site.webmanifest`, built from [`CONFIG`] — and, for the
+//! sitemap, from the legal documents the configuration hosts.
 //!
 //! Three whole documents a crawler fetches by a fixed path, which is what separates them from
 //! the rest of the site's metadata. Anything a crawler reads *inside* a page — the title, the
@@ -11,14 +12,15 @@ use axum::{http::header, response::IntoResponse};
 use portfolio_data::CONFIG;
 use serde_json::json;
 
-/// All three documents are built from [`CONFIG`] alone, so each is rendered once
+/// These two documents are built from [`CONFIG`] alone, so each is rendered once
 /// on first request rather than rebuilt on every one — the manifest in
 /// particular ran a full pretty-printing serialization each time it was fetched.
+/// The sitemap also lists configured pages, so the server renders it once at
+/// startup instead and hands it to [`sitemap`].
 ///
 /// The builders below stay separate functions so the tests exercise the
 /// construction itself rather than whatever a `LazyLock` happens to be holding.
 static ROBOTS_TXT: LazyLock<String> = LazyLock::new(robots_txt);
-static SITEMAP_XML: LazyLock<String> = LazyLock::new(sitemap_xml);
 static WEBMANIFEST_JSON: LazyLock<String> = LazyLock::new(webmanifest_json);
 
 /// `GET /robots.txt`.
@@ -29,11 +31,11 @@ pub async fn robots() -> impl IntoResponse {
     )
 }
 
-/// `GET /sitemap.xml`.
-pub async fn sitemap() -> impl IntoResponse {
+/// `GET /sitemap.xml`, answering with `xml` as [`sitemap_xml`] rendered it at startup.
+pub fn sitemap(xml: &str) -> impl IntoResponse + use<> {
     (
         [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
-        SITEMAP_XML.as_str(),
+        xml.to_string(),
     )
 }
 
@@ -55,25 +57,28 @@ fn robots_txt() -> String {
     )
 }
 
-fn sitemap_xml() -> String {
-    // Paths mirror the routes in `app::routes::Route`.
+/// The sitemap: the fixed routes of `crate::routes::Route`, with `legal_paths` — each a hosted
+/// legal document's route, in the operator's order — between the home page and the licences.
+pub fn sitemap_xml(legal_paths: &[String]) -> String {
     let entry = |path: &str, changefreq: &str, priority: &str| {
         format!(
             "  <url>\n    <loc>{}{path}</loc>\n    <changefreq>{changefreq}</changefreq>\n    <priority>{priority}</priority>\n  </url>\n",
             CONFIG.url
         )
     };
-    format!(
+    let mut xml = String::from(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-         <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n\
-         {}{}{}{}</urlset>\n",
-        entry("/", "weekly", "1.0"),
-        entry("/imprint", "monthly", "0.5"),
-        entry("/privacy", "monthly", "0.5"),
-        // Regenerated from the dependency set on every build, so it changes as
-        // often as the site is deployed rather than as rarely as a legal text.
-        entry("/licenses", "weekly", "0.3"),
-    )
+         <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
+    );
+    xml.push_str(&entry("/", "weekly", "1.0"));
+    for path in legal_paths {
+        xml.push_str(&entry(path, "monthly", "0.5"));
+    }
+    // Regenerated from the dependency set on every build, so it changes as
+    // often as the site is deployed rather than as rarely as a legal text.
+    xml.push_str(&entry("/licenses", "weekly", "0.3"));
+    xml.push_str("</urlset>\n");
+    xml
 }
 
 fn webmanifest_json() -> String {
@@ -113,9 +118,10 @@ mod tests {
 
     #[test]
     fn sitemap_lists_every_public_route() {
-        let xml = sitemap_xml();
+        let legal = ["/legal/imprint".to_owned(), "/legal/privacy".to_owned()];
+        let xml = sitemap_xml(&legal);
         assert!(xml.starts_with("<?xml"));
-        for path in ["/", "/imprint", "/privacy", "/licenses"] {
+        for path in ["/", "/legal/imprint", "/legal/privacy", "/licenses"] {
             assert!(
                 xml.contains(&format!("<loc>{}{path}</loc>", CONFIG.url)),
                 "sitemap missing route {path}"

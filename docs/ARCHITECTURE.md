@@ -79,7 +79,12 @@ rather than a second toolchain.
 
 ## Routes
 
-`/` is a single page of sections `s1`–`s5`. `/imprint`, `/privacy` and `/licenses` are routes in
-the same shell, translated and server-rendered like any other, with a 404 page under the catch-all.
-Beside them the server registers `/api/v1/profile` and its JSON schema, the probes documented in
-the README, and `robots.txt`, `sitemap.xml` and `site.webmanifest`.
+`/` is a single page of sections `s1`–`s5`. `/licenses` and `/legal/:slug` are routes in the same
+shell, translated and server-rendered like any other, with a 404 page under the catch-all. Which
+legal documents exist is configuration (`legal.*`, validated by `terrace-legal` plus the rules in
+`crates/config/src/legal.rs`): the shell fetches their index with a server future so the footer
+links are in the first response, and `/legal/:slug` renders an unknown slug as the 404 page.
+`/imprint` and `/privacy` redirect permanently to their `/legal/` pages. Beside them the server
+registers `/api/v1/profile` and its JSON schema, `/api/v1/legal` (the same catalog as JSON, with
+`ETag` and `304`), the probes documented in the README, and `robots.txt`, `sitemap.xml` and
+`site.webmanifest`.

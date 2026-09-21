@@ -594,23 +594,31 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 .fp-digest[href]:hover { color: var(--accent); }
 .fp-sep { width: 100%; height: 1px; border: none; margin: 4px 0; background: var(--line); }
 
-/* Legal pages (imprint / privacy) — same editorial language as the site. */
+/* Legal documents (/legal/:slug) and the licences page — same editorial language as the site.
+   A document is operator-written Markdown rendered by terrace-legal-dioxus into plain semantic
+   elements with no classes of their own, so everything below the article is styled by element.
+   The classes are the ones `SiteSkin` in src/legal/adapters.rs hands out. */
 .legal-page { max-width: 760px; margin: 0 auto; padding: 60px var(--side-pad) 80px; }
 .legal-back { color: var(--muted); transition: color 0.15s ease; }
 .legal-back:hover { color: var(--accent); }
-.legal-title { font-size: clamp(32px, 4vw, 52px); font-weight: 700; letter-spacing: -0.03em; margin: 28px 0 8px; line-height: 1; }
-.legal-sections { margin-top: 40px; display: flex; flex-direction: column; gap: 40px; }
-.legal-sections h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 14px; }
-.legal-sections p { margin: 0 0 14px; color: rgba(232, 236, 242, 0.85); line-height: 1.65; font-size: 15px; }
-.legal-sections ul { margin: 0 0 14px; padding-left: 20px; color: rgba(232, 236, 242, 0.85); line-height: 1.65; font-size: 15px; display: flex; flex-direction: column; gap: 6px; }
-.legal-sections a { color: var(--accent); word-break: break-all; }
-.legal-sections a:hover { text-decoration: underline; }
-.address-block {
-  border: 1px solid var(--line); background: var(--bg-card); border-radius: 3px;
-  padding: 18px 20px; font-family: "JetBrains Mono", monospace; font-size: 13px;
-  display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px;
-}
-.address-label { color: var(--muted); }
+.legal-title,
+.legal-document > h1 { font-size: clamp(32px, 4vw, 52px); font-weight: 700; letter-spacing: -0.03em; margin: 28px 0 8px; line-height: 1; }
+.legal-meta { display: block; margin: 0; }
+.legal-prose { margin-top: 40px; }
+.legal-prose h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin: 40px 0 14px; }
+.legal-prose h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+.legal-prose > :first-child { margin-top: 0; }
+.legal-prose p,
+.legal-prose ul,
+.legal-prose ol { margin: 0 0 14px; color: rgba(232, 236, 242, 0.85); line-height: 1.65; font-size: 15px; }
+.legal-prose ul,
+.legal-prose ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.legal-prose ul { list-style: disc; }
+.legal-prose ol { list-style: decimal; }
+.legal-prose strong { color: var(--fg); font-weight: 600; }
+.legal-prose code { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--fg); }
+.legal-prose a { color: var(--accent); word-break: break-all; }
+.legal-prose a:hover { text-decoration: underline; }
 
 /* Third-party licenses (/licenses) — the generated attribution page.
    Wider than the legal pages: those are prose at a reading measure, this is a

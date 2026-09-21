@@ -95,6 +95,8 @@ mod tests {
         isr: IsrConfig,
         #[serde(default)]
         sentry: SentryConfig,
+        #[serde(default)]
+        legal: terrace_legal::LegalConfig,
     }
 
     /// A sandbox over the loader [`terrace`] builds, so every name a test arranges is derived
@@ -175,6 +177,44 @@ mod tests {
             // here turns performance tracing on, and nothing here widens what an event carries.
             assert!((config.sentry.traces_sample_rate - 0.0).abs() < f32::EPSILON);
             assert!(!config.sentry.send_default_pii);
+            Ok(())
+        });
+    }
+
+    /// The two ways a legal text reaches the server, in the shape a deployment uses them: a
+    /// TOML fragment carrying the metadata and one body inline, and a mounted Markdown file
+    /// named by `_FILE` indirection for the other. The locale sits two levels below the slug,
+    /// which is the deepest key in the workspace and the one a hand-written variable name gets
+    /// wrong first.
+    #[test]
+    fn legal_texts_arrive_inline_and_through_file_indirection() {
+        harness().run(|jail| {
+            jail.config(
+                "[legal]
+default_locale = \"en\"
+
+                 [legal.documents.imprint]
+updated = \"2026-06-10\"
+order = 10
+                 title = { en = \"Imprint\", de = \"Impressum\" }
+                 body.en = '''
+## Information according to § 5 DDG
+'''
+",
+            )?;
+            jail.indirection(
+                "legal.documents.imprint.body.de",
+                "## Angaben gemäß § 5 DDG
+",
+            )?;
+
+            let config: Sample = jail.load()?;
+            let imprint = &config.legal.documents["imprint"];
+            assert_eq!(config.legal.default_locale.as_deref(), Some("en"));
+            assert_eq!(imprint.order, 10);
+            assert_eq!(imprint.title["de"], "Impressum");
+            assert!(imprint.body["en"].contains("§ 5 DDG"));
+            assert!(imprint.body["de"].starts_with("## Angaben"));
             Ok(())
         });
     }

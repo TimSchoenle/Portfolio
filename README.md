@@ -80,9 +80,14 @@ runs as `1001:1001` and needs nothing writable.
 - Every route renders on the server and then hydrates. Per-route `<head>` metadata and JSON-LD ship
   in the first response, and the locale is negotiated from request headers before the document is
   serialised, so nothing arrives in the wrong language and gets swapped a moment later.
-- EN and DE throughout, including both legal pages and both resumes. `translation_key_sets_match`
-  in `crates/data` fails the build when the two translation files disagree on a key, which
-  otherwise shows up as one English string in a German page rather than as an error.
+- EN and DE throughout, including both resumes. `translation_key_sets_match` in `crates/data`
+  fails the build when the two translation files disagree on a key, which otherwise shows up as
+  one English string in a German page rather than as an error.
+- **The legal documents are configuration, not code.** The imprint, the privacy notice and any
+  other document are Markdown under `legal.*`, served at `/legal/<slug>` through
+  [terrace-legal](https://github.com/TimSchoenle/terrace-legal) and rendered to elements rather
+  than an HTML string. The server refuses to start without an imprint and a privacy notice in
+  both languages; `legal/` in this repository is a complete block to mount.
 - **The resumes are typeset during the build.** Typst lays out one A4 page per language, scaling
   the type down and re-typesetting until the content fits, and each PDF carries a SHA-256
   fingerprint that the contact card shows.
@@ -140,7 +145,7 @@ them it substitutes empty defaults and the pages render their empty state.
 cargo run -p resume-generator -- apps/web/generated   # resume PDFs, fingerprints, social card
 just licenses                                         # third-party inventory for /licenses
 cd apps/web && npm ci && npm run build:css
-dx serve --platform web                               # SSR + hydration on http://localhost:8080
+PORTFOLIO_CONFIG=../../legal dx serve --platform web  # SSR + hydration on http://localhost:8080
 ```
 
 Run the checks CI runs, in one recipe:

@@ -60,6 +60,10 @@ terrace-config.workspace = true
 # struct that nests it, so the token stays wrapped until the one line that
 # builds the `Authorization` header.
 secrecy.workspace = true
+# `legal.*`: the documents' configuration type, and the validation this crate adds to it in
+# `src/legal.rs`. Here rather than only in the server so the configuration reference, the example
+# file and the contract describe the legal block with everything else the server loads.
+terrace-legal.workspace = true
 
 [dev-dependencies]
 # The loader's own test harness, which is why `src/loader.rs` arranges a mount

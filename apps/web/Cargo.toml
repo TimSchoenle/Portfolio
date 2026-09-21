@@ -10,6 +10,10 @@ portfolio-data.workspace = true
 i18nrs.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+# The legal documents' wire types, and the provider and Markdown page component that show them.
+# Both halves: they build for `wasm32` and carry no configuration loader into the bundle.
+terrace-legal-model.workspace = true
+terrace-legal-dioxus.workspace = true
 
 # Client-only (wasm). Gated behind the `web` feature so the native SSR binary
 # never links wasm-bindgen. Feature lists come from the workspace.
@@ -44,6 +48,11 @@ http = { version = "1", optional = true }
 # The layered configuration the SSR server boots through. Server-only: the wasm
 # client has no filesystem to read a config file or a mounted secret from.
 portfolio-config = { workspace = true, optional = true }
+# Serving the legal documents the configuration carries: the validated catalog and its handle,
+# and the conditional JSON routes over it. Server-only — the client receives documents, never the
+# configuration they came from.
+terrace-legal = { workspace = true, optional = true }
+terrace-legal-axum = { workspace = true, optional = true }
 
 [build-dependencies]
 # Read at build time so `build.rs` embeds the resume PDFs under their canonical
@@ -100,6 +109,8 @@ server = [
     "dep:dioxus-fullstack-core",
     "dep:http",
     "dep:portfolio-config",
+    "dep:terrace-legal",
+    "dep:terrace-legal-axum",
 ]
 
 [lints]

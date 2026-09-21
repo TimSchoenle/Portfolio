@@ -629,6 +629,90 @@
         "required": false,
         "secret": false,
         "reserved": false
+      },
+      {
+        "path": "legal.default_locale",
+        "env": "PORTFOLIO_LEGAL__DEFAULT_LOCALE",
+        "env_file": "PORTFOLIO_LEGAL__DEFAULT_LOCALE_FILE",
+        "secrets_file": "legal__default_locale",
+        "docs": "Locale served when neither the request nor its `Accept-Language` header matches a\npublished one, for example `en`. Without it, the first published locale in alphabetical\norder is served.",
+        "ty": "String",
+        "values": [],
+        "constraint": {
+          "type": "string"
+        },
+        "text_form": "text",
+        "aliases": [],
+        "env_aliases": [],
+        "env_file_aliases": [],
+        "secrets_file_aliases": [],
+        "default": null,
+        "default_value": null,
+        "note": null,
+        "required": false,
+        "secret": false,
+        "reserved": false
+      },
+      {
+        "path": "legal.documents",
+        "env": "PORTFOLIO_LEGAL__DOCUMENTS",
+        "env_file": "PORTFOLIO_LEGAL__DOCUMENTS_FILE",
+        "secrets_file": "legal__documents",
+        "docs": "The published documents, keyed by the slug their URL uses. A slug is lowercase letters,\ndigits, `_` and `-`, at most 64 characters, and starts with a letter or a digit.",
+        "ty": "BTreeMap<String, LegalDocument>",
+        "values": [],
+        "constraint": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "body": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Markdown text per locale, keyed by locale (`en`, `de-AT`). Usually supplied through a\n`…__BODY__<LOCALE>_FILE` variable naming a mounted file. Each text is at most 1 MiB.\nExclusive with `url`.",
+                "type": "object"
+              },
+              "order": {
+                "description": "Position in the index, lowest first. Documents with the same value are ordered by slug.",
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "title": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Display title per locale, keyed like `body`.",
+                "type": "object"
+              },
+              "updated": {
+                "description": "The \"last updated\" line, displayed verbatim.",
+                "type": "string"
+              },
+              "url": {
+                "description": "Absolute `http` or `https` URL of a document hosted elsewhere, without credentials.\nExclusive with `body`.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "text_constraint": {
+          "pattern": "^\\s*[\\[\\{][\\s\\S]*[\\]\\}]\\s*$",
+          "type": "string"
+        },
+        "text_form": "structured",
+        "aliases": [],
+        "env_aliases": [],
+        "env_file_aliases": [],
+        "secrets_file_aliases": [],
+        "default": "{  }",
+        "default_value": {},
+        "note": null,
+        "required": false,
+        "secret": false,
+        "reserved": false
       }
     ]
   },
@@ -691,6 +775,55 @@
             "description": "Revalidation interval in seconds. Zero means a permanent cache.\n\nEvery page renders from compile-time data, so the only thing that changes the output is a\nnew build, which starts from an empty cache anyway. A positive value opts into a finite,\ntime-based TTL, which is useful only when a *persistent* cache volume is shared across\ndeploys.\n\nDefault: permanent.",
             "minimum": 0,
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "legal": {
+        "additionalProperties": false,
+        "properties": {
+          "default_locale": {
+            "description": "Locale served when neither the request nor its `Accept-Language` header matches a\npublished one, for example `en`. Without it, the first published locale in alphabetical\norder is served.",
+            "type": "string"
+          },
+          "documents": {
+            "additionalProperties": {
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Markdown text per locale, keyed by locale (`en`, `de-AT`). Usually supplied through a\n`…__BODY__<LOCALE>_FILE` variable naming a mounted file. Each text is at most 1 MiB.\nExclusive with `url`.",
+                  "type": "object"
+                },
+                "order": {
+                  "description": "Position in the index, lowest first. Documents with the same value are ordered by slug.",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer"
+                },
+                "title": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Display title per locale, keyed like `body`.",
+                  "type": "object"
+                },
+                "updated": {
+                  "description": "The \"last updated\" line, displayed verbatim.",
+                  "type": "string"
+                },
+                "url": {
+                  "description": "Absolute `http` or `https` URL of a document hosted elsewhere, without credentials.\nExclusive with `body`.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "default": {},
+            "description": "The published documents, keyed by the slug their URL uses. A slug is lowercase letters,\ndigits, `_` and `-`, at most 64 characters, and starts with a letter or a digit.",
+            "type": "object"
           }
         },
         "type": "object"

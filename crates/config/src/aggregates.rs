@@ -14,6 +14,7 @@
 //! one binary, and nothing else constructs one.
 
 use serde::Deserialize;
+use terrace_legal::LegalConfig;
 
 use crate::{AssetsConfig, CspConfig, GithubConfig, IsrConfig, SentryConfig};
 
@@ -45,6 +46,15 @@ pub struct ServerConfig {
     #[cfg_attr(feature = "config-schema", config(nested))]
     #[serde(default)]
     pub sentry: SentryConfig,
+    /// The legal documents the site publishes: imprint, privacy notice and any others.
+    ///
+    /// Required: [`legal_catalog_builder`](crate::legal_catalog_builder) refuses a configuration
+    /// without an imprint and a privacy notice in every language the site renders, so the
+    /// default below is a deployment that does not start. Each document's text is Markdown and
+    /// is usually supplied as a mounted TOML fragment or through `_FILE` indirection.
+    #[cfg_attr(feature = "config-schema", config(nested))]
+    #[serde(default)]
+    pub legal: LegalConfig,
 }
 
 /// What the `update-repos` builder loads.

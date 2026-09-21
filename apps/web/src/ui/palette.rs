@@ -9,7 +9,10 @@ use dioxus::prelude::*;
 use portfolio_data::{CONFIG, resume_file};
 
 use crate::github::ReposState;
+use terrace_legal_dioxus::legal_title;
+
 use crate::i18n::{other_language, persist_locale, use_i18n};
+use crate::legal::{SiteText, document_path, is_hosted, use_legal_entries};
 use crate::routes::Route;
 use crate::sections::section_num;
 use crate::ui::masthead::SECTIONS;
@@ -63,18 +66,24 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
             action: Action::Section(slug),
         })
         .collect();
-    entries.push(Entry {
-        group: g_nav.clone(),
-        label: t("palette.imprint"),
-        hint: "/imprint".into(),
-        action: Action::Goto(Route::Imprint {}),
-    });
-    entries.push(Entry {
-        group: g_nav.clone(),
-        label: t("palette.privacy"),
-        hint: "/privacy".into(),
-        action: Action::Goto(Route::Privacy {}),
-    });
+    // Every published legal document, under the operator's title and in their order.
+    let legal_text = SiteText::new(i18n);
+    for doc in use_legal_entries(&lang) {
+        let label = legal_title(&legal_text, &doc);
+        let (hint, action) = match doc.url.clone().filter(|_| !is_hosted(&doc)) {
+            Some(url) => ("↗".to_owned(), Action::Open(url)),
+            None => (
+                document_path(&doc.slug),
+                Action::Goto(Route::LegalDocument { slug: doc.slug }),
+            ),
+        };
+        entries.push(Entry {
+            group: g_nav.clone(),
+            label,
+            hint,
+            action,
+        });
+    }
     entries.push(Entry {
         group: g_nav.clone(),
         label: t("palette.licenses"),
