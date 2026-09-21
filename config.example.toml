@@ -290,6 +290,23 @@
 #   the secrets directory
 # debug = false
 
+[legal]
+# Locale served when neither the request nor its `Accept-Language` header matches a
+# published one, for example `en`. Without it, the first published locale in alphabetical
+# order is served.
+# Type: String
+# Also from: PORTFOLIO_LEGAL__DEFAULT_LOCALE, PORTFOLIO_LEGAL__DEFAULT_LOCALE_FILE=/path/to/file,
+#   legal__default_locale in the secrets directory
+# Unset by default: the value below is only the shape.
+# default_locale = "<value>"
+
+# The published documents, keyed by the slug their URL uses. A slug is lowercase letters,
+# digits, `_` and `-`, at most 64 characters, and starts with a letter or a digit.
+# Type: BTreeMap<String, LegalDocument>
+# Also from: PORTFOLIO_LEGAL__DOCUMENTS, PORTFOLIO_LEGAL__DOCUMENTS_FILE=/path/to/file,
+#   legal__documents in the secrets directory
+# documents = {}
+
 [github]
 # User whose repositories to list.
 #
