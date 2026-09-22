@@ -207,8 +207,9 @@ only when error reporting is switched on — supply it as `{{ keys.sentryDsn.env
 `IP`, `PORT` and `RUST_LOG` sit outside this namespace deliberately. They are the Dioxus toolchain's
 contract with the binary, and it keeps reading them itself.
 
-[`config.example.toml`](config.example.toml) carries every key at its default, commented out, and is
-rendered from the same payload as these tables.
+[`config.example.toml`](config.example.toml) carries every optional key at its default, commented out, and
+every required key as an uncommented placeholder to fill in. It is rendered from the same payload
+as these tables.
 
 ## Operations
 

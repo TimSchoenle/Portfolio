@@ -42,6 +42,16 @@ pub fn legal_catalog_builder(locales: &[&'static str]) -> CatalogBuilder {
 /// that is also what the negotiation serves a reader who asked for `de`. External documents are
 /// exempt — they are a link, and what language the page behind it is in is not this site's to
 /// check.
+///
+/// # Runtime-only
+///
+/// Unlike [`RequiredDocuments`], this rule publishes nothing into the configuration schema, so a
+/// configuration the published contract accepts can still be refused here at boot. That is
+/// deliberate: `terrace-legal` forbids a refinement stricter than its check, and the only one the
+/// vocabulary offers, required map entries, would demand a literal `body.de` key. That rejects
+/// `de-AT`, which this rule accepts, and it would also have to be conditional on the document
+/// being hosted rather than external, which the vocabulary cannot state. Publishing nothing is the
+/// sound choice; `schema::tests` pins that such a configuration is schema-valid and still refused.
 struct EveryLocale {
     locales: Vec<&'static str>,
 }

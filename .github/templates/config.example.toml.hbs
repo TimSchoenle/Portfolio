@@ -12,8 +12,9 @@
 #
 #   {{ loader.configVar }}=./config.toml cargo run -p web --features server
 #
-# Every key is commented out at the value it already has, so a copy of this file and an
-# empty file mean the same thing to the loader; uncomment one only to change it. The three
+# Every optional key is commented out at the value it already has; uncomment one only to
+# change it. A key marked "Required" has no default and is left uncommented as a placeholder
+# the loader refuses until it is filled in, here or through any other spelling. The three
 # spellings named above each key all outrank this file, and they are mutually exclusive per
 # key: supplying one key from two of them fails the boot rather than letting a stale
 # {{ loader.envPrefix }} variable shadow a rotated mounted secret. README.md carries the whole

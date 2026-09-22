@@ -24,36 +24,23 @@
 //! # What is left here
 //!
 //! The `--format` vocabulary, the dispatch across the renderings, the contract's build stamp and
-//! the argument parsing for all of it are [`Cli`] and [`Request`]. They were the same two hundred
+//! the argument parsing for all of it are [`Cli`](terrace_config::schema::cli::Cli) and [`Request`]. They were the same two hundred
 //! lines in every repository that had a generator, which is how several of them ended up
 //! disagreeing about how to cut a `LABEL` block back out of a Dockerfile.
 //!
-//! What stays is only what no other repository has: [`Scope`], because this workspace ships two
-//! binaries that load two different roots, and `--format variables`, because the payload the
-//! templates read mixes tables from *both* of them and so is not a rendering of any one
-//! [`Schema`]. Both are expressed by choosing what to hand [`Cli::render`] rather than by
-//! re-implementing it — [`Request::parse`] still owns every argument but `--scope`, so a
-//! rendering added upstream arrives here without a line being written.
+//! What stays is only `--format variables`, because the payload the templates read mixes tables
+//! from *both* binaries' scopes and so is not a rendering of any one [`Schema`](terrace_config::schema::Schema), and `--scope`,
+//! which chooses what to hand [`Cli::render`](terrace_config::schema::cli::Cli::render) rather than re-implementing it. [`Request::parse`]
+//! still owns every other argument, so a rendering added upstream arrives here without a line
+//! being written.
 //!
-//! # Why there are scopes
+//! # The schema is not built here
 //!
-//! One flat table of every key says that a deployment needs a GitHub token. It does not.
-//! `github.*` belongs to `update-repos`, a build-time tool that lists repositories and exits
-//! during the image build; the SSR server never loads it and never sees it. A reference that
-//! cannot express which binary reads a key documents an operational requirement that is not real,
-//! so the roots below are split the way the binaries are.
-//!
-//! # No type is declared here at all
-//!
-//! Every scope describes an aggregate the binaries actually pass to `portfolio_config::load` —
-//! [`ServerConfig`] or [`BuilderConfig`], which live in `crates/config` for exactly this reason.
-//! Nothing is mirrored, so nothing can drift: a block added to what a binary loads is a block in
-//! the README, and there is no second list to remember.
-//!
-//! `all` is `Schema::merge` of the two rather than a union type, so even the whole-workspace
-//! document is built out of what the binaries load. A key both halves described would be kept
-//! once and a key described *differently* by each would panic, which is the right answer for a
-//! reference that has to have one.
+//! The scopes, the app identity, the external variables and the refinements that publish what the
+//! server enforces at boot are all [`portfolio_config::schema`], which
+//! `examples/verify-labels.rs` reads too. A schema assembled in two places is a contract published
+//! by one and checked by the other; see that module for why the scopes exist and why the legal
+//! block is refined.
 //!
 //! # Why the payload is assembled here and not in YAML
 //!
@@ -70,12 +57,11 @@
 use std::error::Error;
 use std::process::ExitCode;
 
-use portfolio_config::{BuilderConfig, ServerConfig};
+use portfolio_config::schema::{Scope, cli, schema, toml_example};
+use portfolio_data::LANGUAGES;
 use serde_json::{Map, Value, json};
-use terrace_config::schema::cli::{Cli, Format, Request, USAGE};
-use terrace_config::schema::{
-    App, Column, Docs, External, ExternalVar, JsonSchema, Key, Schema, TomlExample,
-};
+use terrace_config::schema::cli::{Format, Request, USAGE};
+use terrace_config::schema::{Column, Key};
 
 /// The keys `README.md.hbs` names in prose, under the names it reads them by.
 ///
@@ -131,75 +117,7 @@ fn render(options: &Options) -> Result<String, Box<dyn Error>> {
         return variables();
     };
 
-    Ok(Cli::new(app())
-        // No `$id`: this workspace publishes no schema document at a URL, and an editor told to
-        // resolve one that is not there fails louder than one given nothing to resolve.
-        .json_schema(JsonSchema::new().title("portfolio configuration"))
-        .toml_example(toml_example())
-        .contract_with(&|builder| builder.external(external()))
-        .render(request, schema(options.scope)?)?)
-}
-
-/// The image this workspace builds, as the contract names it.
-///
-/// The version is `v`-prefixed, because that is how this repository tags its images and the field
-/// exists to be compared against a tag. `CARGO_PKG_VERSION` yields the bare form.
-fn app() -> App {
-    App::new("portfolio")
-        .version(concat!("v", env!("CARGO_PKG_VERSION")))
-        .source("https://github.com/TimSchoenle/Portfolio")
-}
-
-/// The part of the contract no derive can see.
-///
-/// `PORT`, `IP` and `RUST_LOG` are read by the Dioxus toolchain and by `tracing`, before any
-/// layer of this loader exists, and they carry no `PORTFOLIO_` prefix — so nothing in the types
-/// can report them. Declared here they are checked like any key: a chart passing `PORT: "http"`
-/// fails the same gate that a chart passing `PORTFOLIO_ISR__TTL_SECS: "soon"` fails.
-///
-/// The defaults are the ones the Dockerfile's `ENV` block bakes in, which is where the image's
-/// real behaviour is decided.
-fn external() -> External {
-    External::new()
-        .var(
-            ExternalVar::new("PORT")
-                .owner("dioxus")
-                .ty("u16")
-                .default("8080")
-                .docs("Bind port. Read by the Dioxus toolchain, not by this loader."),
-        )
-        .var(
-            ExternalVar::new("IP")
-                .owner("dioxus")
-                .ty("IpAddr")
-                .default("0.0.0.0")
-                .docs("Bind address. Read by the Dioxus toolchain, not by this loader."),
-        )
-        .var(
-            ExternalVar::new("RUST_LOG")
-                .owner("tracing")
-                .ty("String")
-                .default("info")
-                .docs("Verbosity, as `tracing` directives — `info`, `web=debug,info`."),
-        )
-        // What a pod carries that no image asked for, which `Unknown::Reject` names: the API
-        // server's five, and the container runtime's one. An image on `scratch` contributes none
-        // of its own. The third entry on that list — the service links — is not here and cannot
-        // be: their names are built from the release name, so they belong to
-        // `enableServiceLinks: false` on the pod.
-        .ignore("KUBERNETES_*")
-        .ignore("HOSTNAME")
-}
-
-/// How `config.example.toml` renders, in the one place both callers read it from.
-///
-/// [`Docs::Full`] rather than the default summary: this is the file an operator edits with no
-/// rustdoc open beside it, and every paragraph the fields carry is a paragraph the hand-written
-/// version of this file used to carry too. No header, because the template supplies one — what
-/// this file is and how to point the loader at it are facts about the repository rather than
-/// about the schema, and the layering itself is documented once, in `README.md`.
-fn toml_example() -> TomlExample {
-    TomlExample::new().header(false).docs(Docs::Full)
+    Ok(cli().render(request, schema(options.scope, &LANGUAGES)?)?)
 }
 
 /// The whole render payload, as the strict JSON the template action takes.
@@ -208,15 +126,15 @@ fn toml_example() -> TomlExample {
 /// a reference the payload does not *define*, never on a definition nothing reads — so the
 /// alternative, a payload per template, would only be two ways to get the same schema out.
 ///
-/// This is the one rendering [`Cli`] cannot produce, and the reason this generator still has a
+/// This is the one rendering [`Cli`](terrace_config::schema::cli::Cli) cannot produce, and the reason this generator still has a
 /// `--format` of its own: it mixes a table from each scope with a third built from both, so there
-/// is no single [`Schema`] whose rendering it is.
+/// is no single [`Schema`](terrace_config::schema::Schema) whose rendering it is.
 ///
 /// # Errors
 /// If a path in [`KEYS`] names no key in the merged schema, which is a rename the prose in
 /// `README.md.hbs` has not caught up with.
 fn variables() -> Result<String, Box<dyn Error>> {
-    let all = all()?;
+    let all = schema(Scope::All, &LANGUAGES)?;
 
     let mut keys = Map::new();
     for (name, path) in KEYS {
@@ -234,8 +152,10 @@ fn variables() -> Result<String, Box<dyn Error>> {
     // Trailing whitespace is not content in any of the three, and this is the one place it can
     // be dropped for all of them.
     let payload = json!({
-        "serverConfigTable": server()?.to_markdown().trim_end(),
-        "builderConfigTable": builder()?.to_markdown_keys(Column::DEFAULT).trim_end(),
+        "serverConfigTable": schema(Scope::Server, &LANGUAGES)?.to_markdown().trim_end(),
+        "builderConfigTable": schema(Scope::Builder, &LANGUAGES)?
+            .to_markdown_keys(Column::DEFAULT)
+            .trim_end(),
         "exampleConfig": all.to_toml_example_with(&toml_example()).trim_end(),
         "loader": {
             "envPrefix": all.dialect.prefix,
@@ -260,60 +180,13 @@ fn spellings(key: &Key) -> Value {
     })
 }
 
-/// The schema one scope describes.
-fn schema(scope: Scope) -> Result<Schema, portfolio_config::ConfigError> {
-    match scope {
-        Scope::All => all(),
-        Scope::Server => server(),
-        Scope::Builder => builder(),
-    }
-}
-
-/// Every key in the workspace, which is what a machine-readable contract and the example file
-/// both want.
-fn all() -> Result<Schema, portfolio_config::ConfigError> {
-    Ok(server()?.merge(builder()?))
-}
-
-/// The keys the SSR server loads, with the defaults it starts from.
-///
-/// Built through [`portfolio_config::terrace`] rather than a bare dialect, so the two variables
-/// the loader itself reads — `PORTFOLIO_CONFIG` and `PORTFOLIO_SECRETS_DIR` — are reported with
-/// the names *this* workspace configures rather than the ones a default prefix would derive.
-///
-/// The `Default` column comes from a value built here, not from the process environment: the
-/// documentation job runs where none of these variables exist, and that is the point.
-fn server() -> Result<Schema, portfolio_config::ConfigError> {
-    portfolio_config::terrace()
-        .schema::<ServerConfig>()
-        .with_defaults_from(&ServerConfig::default())
-}
-
-/// The keys the `update-repos` builder loads, with the defaults it starts from.
-fn builder() -> Result<Schema, portfolio_config::ConfigError> {
-    portfolio_config::terrace()
-        .schema::<BuilderConfig>()
-        .with_defaults_from(&BuilderConfig::default())
-}
-
 /// What to emit, and how much of it.
 struct Options {
-    /// What to hand [`Cli::render`], or `None` for `--format variables` — see [`variables`].
+    /// What to hand [`Cli::render`](terrace_config::schema::cli::Cli::render), or `None` for `--format variables` — see [`variables`].
     request: Option<Request>,
     /// Whose configuration to render. Resolved rather than optional: the whole-image formats fix
     /// their own scope, and everything else defaults to [`Scope::All`].
     scope: Scope,
-}
-
-/// Whose configuration to report.
-#[derive(PartialEq, Eq, Clone, Copy)]
-enum Scope {
-    /// Every key in the workspace.
-    All,
-    /// The keys the SSR server loads.
-    Server,
-    /// The keys the `update-repos` builder loads.
-    Builder,
 }
 
 impl Options {

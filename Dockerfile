@@ -161,9 +161,9 @@ RUN --mount=type=secret,id=resume_photo \
 # and the variables outside the `PORTFOLIO_` namespace this container reads.
 #
 # On `generate` rather than on a toolchain of its own, and its own stage rather
-# than a step inside `web-builder`: it depends on `crates/config` alone, so it
-# rebuilds when a configuration type changes and stays cached across every
-# change to the site itself. Nothing the `config-schema` feature links —
+# than a step inside `web-builder`: it depends on `crates/config` and, for the
+# site's language list, `crates/data`, so it rebuilds when either changes and
+# stays cached across every change to the rest of the site. Nothing the `config-schema` feature links —
 # `serde_json`, `syn`, the derive — reaches the binary the runtime stage copies.
 FROM generate AS contract-builder
 RUN mkdir -p /out \

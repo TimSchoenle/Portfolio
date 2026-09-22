@@ -19,8 +19,8 @@ use std::error::Error;
 use std::io::Read as _;
 use std::process::ExitCode;
 
-use portfolio_config::ServerConfig;
-use terrace_config::schema::{App, Contract, DEFAULT_PATH, External, ExternalVar, Schema};
+use portfolio_data::LANGUAGES;
+use terrace_config::schema::DEFAULT_PATH;
 
 fn main() -> ExitCode {
     match run() {
@@ -49,47 +49,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     let path = std::env::args()
         .nth(1)
         .unwrap_or_else(|| DEFAULT_PATH.to_owned());
-    contract()?.verify_labels(&path, &labels)?;
+    // The same contract `--format contract` publishes, built by the same function, so this checks
+    // the image against the document the build put in it rather than against a second description
+    // of it.
+    portfolio_config::schema::contract(&LANGUAGES)?.verify_labels(&path, &labels)?;
     Ok(())
-}
-
-/// The same contract `--format contract` publishes, so this checks the image against the document
-/// the build put in it rather than against a second description of it.
-fn contract() -> Result<Contract, Box<dyn Error>> {
-    Ok(schema()?
-        .into_contract(
-            App::new("portfolio")
-                .version(concat!("v", env!("CARGO_PKG_VERSION")))
-                .source("https://github.com/TimSchoenle/Portfolio"),
-        )
-        .external(
-            External::new()
-                .var(
-                    ExternalVar::new("PORT")
-                        .owner("dioxus")
-                        .ty("u16")
-                        .default("8080"),
-                )
-                .var(
-                    ExternalVar::new("IP")
-                        .owner("dioxus")
-                        .ty("IpAddr")
-                        .default("0.0.0.0"),
-                )
-                .var(
-                    ExternalVar::new("RUST_LOG")
-                        .owner("tracing")
-                        .ty("String")
-                        .default("info"),
-                )
-                .ignore("KUBERNETES_*")
-                .ignore("HOSTNAME"),
-        )
-        .build()?)
-}
-
-fn schema() -> Result<Schema, portfolio_config::ConfigError> {
-    portfolio_config::terrace()
-        .schema::<ServerConfig>()
-        .with_defaults_from(&ServerConfig::default())
 }
