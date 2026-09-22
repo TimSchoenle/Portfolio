@@ -216,7 +216,7 @@ environment spelling also accepts a `_FILE` suffix naming a file that holds the 
 | `sentry.span_attributes` | `bool` | `PORTFOLIO_SENTRY__SPAN_ATTRIBUTES` | `false` | — | Copy `tracing` span fields onto the Sentry span as attributes. |
 | `sentry.debug` | `bool` | `PORTFOLIO_SENTRY__DEBUG` | `false` | — | Print the SDK's own diagnostics to stderr. For proving a DSN works, not for running. |
 | `legal.default_locale` | `String` | `PORTFOLIO_LEGAL__DEFAULT_LOCALE` | unset | — | Locale served when neither the request nor its `Accept-Language` header matches a published one, for example `en`. Without it, the first published locale in alphabetical order is served. |
-| `legal.documents` | `BTreeMap<String, LegalDocument>` | `PORTFOLIO_LEGAL__DOCUMENTS` | `{  }` | — | The published documents, keyed by the slug their URL uses. A slug is lowercase letters, digits, `_` and `-`, at most 64 characters, and starts with a letter or a digit. |
+| `legal.documents` | `BTreeMap<String, LegalDocument>`, must contain: `imprint`, `privacy` | `PORTFOLIO_LEGAL__DOCUMENTS` | — | required | The published documents, keyed by the slug their URL uses. A slug is lowercase letters, digits, `_` and `-`, at most 64 characters, and starts with a letter or a digit. |
 
 ### Builder
 
@@ -241,8 +241,9 @@ only when error reporting is switched on — supply it as `PORTFOLIO_SENTRY__DSN
 `IP`, `PORT` and `RUST_LOG` sit outside this namespace deliberately. They are the Dioxus toolchain's
 contract with the binary, and it keeps reading them itself.
 
-[`config.example.toml`](config.example.toml) carries every key at its default, commented out, and is
-rendered from the same payload as these tables.
+[`config.example.toml`](config.example.toml) carries every optional key at its default, commented out, and
+every required key as an uncommented placeholder to fill in. It is rendered from the same payload
+as these tables.
 
 ## Operations
 

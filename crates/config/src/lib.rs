@@ -67,9 +67,11 @@
 //! # The configuration reference in `README.md` is generated from these types
 //!
 //! Every block and aggregate above derives `terrace_config::schema::Describe` under the
-//! off-by-default `config-schema` feature, and `examples/config-schema.rs` walks them into the
-//! tables CI renders into the README — one per aggregate, so the reference says which binary
-//! reads a key rather than implying every deployment needs all of them. The feature is off in
+//! off-by-default `config-schema` feature, and the `schema` module — also behind it — is the
+//! single place they are assembled into the schema, refined with what the server enforces at boot
+//! beyond its types. `examples/config-schema.rs` renders that into the tables CI puts in the
+//! README — one per aggregate, so the reference says which binary reads a key rather than
+//! implying every deployment needs all of them. The feature is off in
 //! every build that ships, so `serde_json` and the derive never reach a binary;
 //! `cargo clippy --all-features --all-targets` is what keeps the generator compiling.
 //!
@@ -88,6 +90,8 @@ mod github;
 mod isr;
 mod legal;
 mod loader;
+#[cfg(feature = "config-schema")]
+pub mod schema;
 mod sentry;
 
 pub use aggregates::{BuilderConfig, ServerConfig};

@@ -103,7 +103,7 @@ portfolio-data = { path = "crates/data" }
 # Cargo unifies the feature, so leaving it out here does not keep it out.
 # `testing` is left out for the same reason and taken as a dev-dependency in
 # `crates/config`, which is the only crate that loads anything.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.12.0", default-features = false, features = [
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.13.0", default-features = false, features = [
     "loader",
     "explain",
 ] }
@@ -111,7 +111,7 @@ terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = 
 # publishes) are configuration, not compiled-in copy: `legal.*` in the layered
 # config above. One git repository, five crates, one tag — pinned by tag for the
 # same reason `terrace-config` is, and at the tag whose own `terrace-config`
-# requirement is `v0.12.0`, so the two resolve to a single loader.
+# requirement is `v0.13.0`, so the two resolve to a single loader.
 #
 # - `terrace-legal` is the configuration type, its validation into a catalog and
 #   the serving handle. It takes `terrace-config/schema` unconditionally (its
@@ -124,12 +124,12 @@ terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = 
 # - `terrace-legal-model` and `terrace-legal-dioxus` are the half that builds for
 #   `wasm32`: wire types, and the provider plus the Markdown page component. The
 #   Dioxus crate renders Markdown to elements and never to an HTML string.
-terrace-legal = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.2.0" }
-terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.2.0", features = [
+terrace-legal = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
+terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0", features = [
     "router",
 ] }
-terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.2.0" }
-terrace-legal-model = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.2.0" }
+terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
+terrace-legal-model = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
 # Keeps the GitHub token out of `Debug` output and off every accidental log
 # line: a `SecretString` has no `Display`, and reading it is the explicit
 # `expose_secret()` call at the one place it is put on the wire.
@@ -192,6 +192,11 @@ ureq = { version = "3", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 schemars = "1"
+# Test-only: `crates/config` validates configurations against the JSON Schema the published
+# contract carries, with a stock validator, because that is what a consumer of the contract does.
+# Default features off — they pull `reqwest` and a TLS stack to resolve remote `$ref`s, and the
+# contract's schema has none. The same version terrace-config tests its own contracts with.
+jsonschema = { version = "0.56", default-features = false }
 
 axum = "0.8"
 # `util` brings `ServiceExt::oneshot`, used by the server's router-level
