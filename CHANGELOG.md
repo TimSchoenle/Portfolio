@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/TimSchoenle/Portfolio/compare/v3.0.0...v3.1.0) (2026-09-22)
+
+
+### Features
+
+* **config:** publish the legal document requirement in the configuration contract ([#1225](https://github.com/TimSchoenle/Portfolio/issues/1225)) ([41399ab](https://github.com/TimSchoenle/Portfolio/commit/41399abbf75decebf27894316ba248fea751e82c))
+
 ## [3.0.0](https://github.com/TimSchoenle/Portfolio/compare/v2.12.1...v3.0.0) (2026-09-21)
 
 
