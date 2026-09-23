@@ -12,26 +12,32 @@ use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
 use crate::util::{current_month, current_year};
 
-/// Whole years a role lasted, counted in months so that Nov 2018 – Jan 2023 is four years,
-/// not five. An ongoing role runs to the current month.
-fn whole_years(start: YearMonth, end: Option<YearMonth>) -> u32 {
+/// How many months a role lasted, counting its first and last month both, the way a resume or
+/// LinkedIn states a tenure: Oct 2021 – Jan 2023 is 16 months. An ongoing role runs to the
+/// current month.
+fn tenure_months(start: YearMonth, end: Option<YearMonth>) -> u32 {
     let (end_year, end_month) = match end {
         Some(end) => (i32::from(end.year), end.month),
         None => (current_year(), current_month()),
     };
     let months =
-        (end_year - i32::from(start.year)) * 12 + i32::from(end_month) - i32::from(start.month);
-    months.max(0).unsigned_abs() / 12
+        (end_year - i32::from(start.year)) * 12 + i32::from(end_month) - i32::from(start.month) + 1;
+    months.max(1).unsigned_abs()
 }
 
-/// The duration badge, e.g. "4y" or "4 J.", with `under_one_year` for a role shorter than a year.
-/// `years_short` carries an `{n}` placeholder for the count.
-fn years_badge(years: u32, years_short: &str, under_one_year: &str) -> String {
-    if years == 0 {
-        under_one_year.to_string()
-    } else {
-        years_short.replace("{n}", &years.to_string())
-    }
+/// The duration badge, e.g. "4y 3m", "2y" or "5m" ("4 J. 3 M." in German).
+///
+/// `years_unit` and `months_unit` each carry an `{n}` placeholder for the count, and a zero part
+/// is left out, so a whole number of years reads as years alone.
+fn duration_badge(months: u32, years_unit: &str, months_unit: &str) -> String {
+    let (years, rest) = (months / 12, months % 12);
+    let years_part = (years > 0).then(|| years_unit.replace("{n}", &years.to_string()));
+    let months_part = (rest > 0).then(|| months_unit.replace("{n}", &rest.to_string()));
+    [years_part, months_part]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// Renders the accordion with the most recent role open. One row is open at a time, and clicking
@@ -43,8 +49,8 @@ pub fn Experience() -> Element {
     // `usize::MAX` = all collapsed.
     let mut open = use_signal(|| 0usize);
     let now = t("common.now");
-    let years_short = t("experience.yearsShort");
-    let under_one_year = t("experience.underOneYear");
+    let years_unit = t("experience.yearsShort");
+    let months_unit = t("experience.monthsShort");
     // Sorted once per mounted section rather than on every render: the ordering
     // is a property of the compile-time data, while `open` above changes on every
     // row the reader expands.
@@ -71,7 +77,7 @@ pub fn Experience() -> Element {
                             let body_style = if is_open { "max-height: 1000px" } else { "max-height: 0" };
                             let key = |field: &str| format!("experience.entries.{}.{field}", e.id);
                             let period = format_period_years(e.start, e.end, &now);
-                            let badge = years_badge(whole_years(e.start, e.end), &years_short, &under_one_year);
+                            let badge = duration_badge(tenure_months(e.start, e.end), &years_unit, &months_unit);
                             let role = t(&key("role"));
                             let sub = format!("{} · {}", t(&key("org")), e.location);
                             let bullet_count = e.bullet_count;
@@ -127,5 +133,29 @@ pub fn Experience() -> Element {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ym(year: u16, month: u8) -> YearMonth {
+        YearMonth { year, month }
+    }
+
+    #[test]
+    fn tenure_counts_the_first_and_last_month() {
+        assert_eq!(tenure_months(ym(2021, 10), Some(ym(2023, 1))), 16);
+        assert_eq!(tenure_months(ym(2018, 11), Some(ym(2023, 1))), 51);
+        assert_eq!(tenure_months(ym(2026, 3), Some(ym(2026, 3))), 1);
+    }
+
+    #[test]
+    fn the_badge_shows_years_and_months_and_drops_a_zero_part() {
+        assert_eq!(duration_badge(16, "{n}y", "{n}m"), "1y 4m");
+        assert_eq!(duration_badge(24, "{n}y", "{n}m"), "2y");
+        assert_eq!(duration_badge(5, "{n}y", "{n}m"), "5m");
+        assert_eq!(duration_badge(51, "{n} J.", "{n} M."), "4 J. 3 M.");
     }
 }
