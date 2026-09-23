@@ -1,5 +1,5 @@
 Proprietary License – Portfolio Project
-Copyright (c) 2025 The Licensor. All rights reserved.
+Copyright (c) 2025 Tim Schönle. All rights reserved.
 
 1. Grant
 You are granted a limited, non-exclusive, non-transferable, revocable license to
@@ -7,7 +7,9 @@ You are granted a limited, non-exclusive, non-transferable, revocable license to
 non-commercial evaluation only.
 
 2. Restrictions
-You may NOT: (i) copy, modify, merge, translate, or create derivative works;
+You may NOT: (i) copy, modify, merge, translate, or create derivative works,
+except for the local copies that cloning and running the Software under
+Section 1 necessarily make;
 (ii) distribute, sublicense, sell, rent, lease, lend, or host the Software or
 any portion of it; (iii) deploy the Software publicly or provide it as a
 service; (iv) remove or alter notices; (v) use names, logos, images, or other
@@ -31,6 +33,6 @@ IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIMS OR DAMAGES ARISING FROM
 USE OF THE SOFTWARE.
 
 Definitions
-“Licensor” means the copyright owner of the Software.
+“Licensor” means Tim Schönle, the copyright owner of the Software.
 “Software” means the source code and all accompanying files in this repository,
 except where a different license is expressly noted.
