@@ -171,7 +171,7 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
             svg {
                 "viewBox": "{view_box}",
                 class: "radar-svg",
-                // Announced as a single labelled image: the rings, sweep and
+                // Announced as a single labeled image: the rings, sweep and
                 // scatter carry no information on their own, and every skill
                 // plotted here is also reachable as text in the adjacent list.
                 role: "img",
@@ -259,7 +259,7 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
                             opacity: "{opacity:.2}", style: "{style}",
                             // Decorative scatter: hovering one is a sighted-only
                             // affordance, and turning 80-odd dots into tab stops
-                            // would bury the rest of the page. The labelled
+                            // would bury the rest of the page. The labeled
                             // `role="img"` on the svg covers them.
                             "aria-hidden": "true",
                             onmouseenter: move |_| { hovered_filler.set(Some(i)); on_hover.call(Some(skill)); },

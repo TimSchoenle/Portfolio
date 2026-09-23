@@ -97,10 +97,10 @@ pub fn Hero() -> Element {
         // target and lock briefly so the trailing momentum does not immediately
         // re-trigger it. Reduced-motion off.
         //
-        // While locked the event is deliberately *not* cancelled: doing so froze
-        // the page for the whole 900 ms, so a reader who wanted to keep going —
-        // or turn straight back — found their input silently dropped. The lock
-        // now only suppresses another snap; ordinary scrolling continues.
+        // While locked the event is deliberately *not* canceled: canceling it
+        // would freeze the page for the whole 900 ms and silently drop the input
+        // of a reader who wants to keep going or turn straight back. The lock
+        // only suppresses another snap; ordinary scrolling continues.
         let about_target = about_id.clone();
         let lock: Rc<RefCell<bool>> = use_hook(|| Rc::new(RefCell::new(false)));
         let _wheel: Rc<RefCell<Option<ListenerGuard>>> = use_hook(move || {
@@ -144,7 +144,7 @@ pub fn Hero() -> Element {
 
     // Parallax transform; identity (`translateY(0px)`) on the server and under
     // reduced motion, so it never diverges from the SSR markup. The `+ 0.0`
-    // normalises IEEE negative zero so the resting value renders as `0px`.
+    // normalizes IEEE negative zero so the resting value renders as `0px`.
     let name_offset = scroll() * -0.08 + 0.0;
 
     rsx! {
@@ -160,11 +160,11 @@ pub fn Hero() -> Element {
                     div { class: "hero-meta-card",
                         span { class: "mono text-muted", "§ {identity_num}.a" }
                         dl { class: "meta-dl",
-                            dt { span { class: "mono text-muted", "ROLE" } }
+                            dt { span { class: "mono text-muted", {t("hero.roleLabel")} } }
                             dd { {t("common.jobTitle")} }
-                            dt { span { class: "mono text-muted", "LOC" } }
+                            dt { span { class: "mono text-muted", {t("hero.locationLabel")} } }
                             dd { {t("common.country")} }
-                            dt { span { class: "mono text-muted", "YRS" } }
+                            dt { span { class: "mono text-muted", {t("hero.yearsLabel")} } }
                             dd { "{years}+" }
                             dt { span { class: "mono text-muted", {t("hero.statusLabel")} } }
                             dd { class: "text-accent flex items-center gap-2",
@@ -192,8 +192,8 @@ pub fn Hero() -> Element {
                 }
             }
 
-            a { href: "#{about_id}", class: "scroll-cue", "aria-label": "Scroll",
-                span { class: "mono text-muted", "SCROLL" }
+            a { href: "#{about_id}", class: "scroll-cue", "aria-label": t("hero.scrollLabel"),
+                span { class: "mono text-muted", {t("hero.scroll")} }
                 span { class: "scroll-cue-line" }
             }
         }

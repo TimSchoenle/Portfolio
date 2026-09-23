@@ -1,6 +1,9 @@
 {
   "common": {
     "country": "Deutschland",
+    "region": "Baden-Württemberg",
+    "openToRemote": "Offen für Remote-Arbeit · MEZ/MESZ",
+    "jobTitle": "Senior Softwareentwickler",
     "present": "Heute",
     "now": "jetzt",
     "lastUpdated": "Zuletzt aktualisiert",
@@ -20,10 +23,7 @@
       "m10": "Okt.",
       "m11": "Nov.",
       "m12": "Dez."
-    },
-    "region": "Baden-Württemberg",
-    "openToRemote": "Offen für Remote-Arbeit · MEZ (UTC+1)",
-    "jobTitle": "Senior Softwareentwickler"
+    }
   },
   "nav": {
     "about": "Über mich",
@@ -32,18 +32,26 @@
     "experience": "Erfahrung",
     "contact": "Kontakt",
     "search": "suche",
-    "languageToggle": "Sprache auf Englisch umstellen"
+    "languageToggle": "Sprache auf Englisch umstellen",
+    "paletteTitle": "Befehlspalette (Strg+K / ⌘K)",
+    "sectionNav": "Abschnittsnavigation",
+    "intro": "Intro"
   },
   "hero": {
     "statusLabel": "STATUS",
     "status": "Offen für Senior-Positionen in Backend und Plattform",
     "tagline": "Ich entwickle Backend-Systeme und betreibe sie in Produktion.",
-    "taglineSub": "Java, Rust und TypeScript auf Kubernetes, per GitOps ausgeliefert."
+    "taglineSub": "Java, Rust und TypeScript auf Kubernetes, per GitOps ausgeliefert.",
+    "roleLabel": "ROLLE",
+    "locationLabel": "ORT",
+    "yearsLabel": "JAHRE",
+    "scroll": "SCROLLEN",
+    "scrollLabel": "Zum Abschnitt Über mich scrollen"
   },
   "about": {
     "title": "Über mich",
     "intro": "Ich baue zuverlässige Software, End-to-End.",
-    "body": "Ich bin Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Den Kern bilden Java und Spring Boot, dazu Rust und TypeScript. Ich verantworte die Kette von der Entwicklung bis zum Betrieb, über containerisierte Services, Kubernetes, Helm und GitOps. Mir sind sauberer Code, klare Abstraktionen und gut getestete Systeme wichtig, die sich unkompliziert betreiben und erweitern lassen.",
+    "body": "Ich entwerfe und entwickle Backend-Systeme, überwiegend mit Java und Spring Boot, und setze Rust und TypeScript dort ein, wo sie besser passen. Nach dem Release bleibe ich dabei: Ich containerisiere die Systeme, betreibe sie mit Helm und GitOps auf Kubernetes und halte sie beobachtbar. Mein Ziel ist Code, den andere lesen, testen und sicher ändern können.",
     "focusLabel": "Schwerpunkte",
     "focus": {
       "f1": {
@@ -72,7 +80,7 @@
     "build": "Build & Tools",
     "infrastructure": "Infrastruktur",
     "confidenceLabel": "Tiefe",
-    "hoverHint": "Auf einen Punkt zeigen",
+    "hoverHint": "Einen Punkt auswählen",
     "radarLabel": "Skill-Radar: Technologien nach Kategorie aufgetragen, je mehr praktische Tiefe, desto weiter außen."
   },
   "projects": {
@@ -87,12 +95,13 @@
     "loading": "lädt…",
     "offline": "offline",
     "viewAll": "Alle Repos auf GitHub ansehen",
-    "emptyTitle": "Repositories werden aktualisiert…",
-    "emptyBody": "Die Repository-Liste wird einmal täglich aus GitHub neu gebaut und liegt noch nicht vor. Bis dahin führt das GitHub-Profil sie auf.",
+    "emptyTitle": "Keine Repositories aufgeführt",
+    "emptyBody": "Dieser Build enthält keine Repository-Liste. Alle öffentlichen Repositories stehen im GitHub-Profil.",
     "featured": "★ EMPFOHLEN",
     "favorites": "★ Favoriten",
     "prevPage": "Vorherige Projekte",
-    "nextPage": "Weitere Projekte"
+    "nextPage": "Weitere Projekte",
+    "pageLabel": "Seite {n} von {total}"
   },
   "experience": {
     "title": "Erfahrung",
@@ -102,8 +111,8 @@
         "role": "Senior Softwareentwickler",
         "org": "SixTwenty Cloud LLC",
         "bullets": {
-          "b1": "Pflege und entwickle die White-Label-Softwarelösungen der Plattform weiter.",
-          "b2": "Entwickle das generalisierte Framework, auf dem sie aufsetzen, sodass jedes neue Partnerprodukt von gemeinsamem Code ausgeht."
+          "b1": "Pflege und Weiterentwicklung der White-Label-Produkte, die die Plattform für ihre Partner betreibt.",
+          "b2": "Entwicklung des gemeinsamen Frameworks, auf dem diese Produkte aufbauen, sodass jedes neue Partnerprodukt von gemeinsamem Code statt einer Kopie ausgeht."
         }
       },
       "mineplex-studios": {
@@ -112,14 +121,14 @@
         "bullets": {
           "b1": "Die Frontend- und Backend-Engine einer internen und externen Entwicklungsplattform implementiert, sodass Teams Services über den gesamten Stack hinweg einheitlich entwickelten und integrierten.",
           "b2": "Deployments, Release-Strategien und Konfiguration über Services und Umgebungen hinweg standardisiert, mit CI/CD- und GitOps-Workflows auf Kubernetes.",
-          "b3": "Partnerspezifische Funktionen als White-Label-Lösungen ausgeliefert, sodass Partner individuelle Produkte auf gemeinsamer Kerninfrastruktur und gemeinsamem Tooling bereitstellten."
+          "b3": "Partnerspezifische Funktionen auf dem gemeinsamen Kern umgesetzt, sodass Partner individuelle Produkte ohne Fork von Infrastruktur und Tooling auslieferten."
         }
       },
       "self-employed": {
         "role": "Selbstständiger Softwareentwickler",
         "org": "Selbstständig",
         "bullets": {
-          "b1": "Vollständige Produkte für Kunden umgesetzt, von REST- und gRPC-Backends über Web-Frontends bis zu nativen OS-Anwendungen.",
+          "b1": "Vollständige Produkte für Kunden umgesetzt, von REST- und gRPC-Backends über Web-Frontends bis zu nativen Desktop-Anwendungen.",
           "b2": "Dependency-Updates, Security-Scans, Dokumentation und zeitgesteuerte Releases vollständig über CI automatisiert, sodass Projekte sich ohne manuellen Eingriff aktuell hielten.",
           "b3": "Gehärtetes, hochperformantes Kubernetes auf Talos Linux betrieben, per GitOps ausgeliefert und mit Metriken, Logs und Traces instrumentiert."
         }
@@ -142,7 +151,9 @@
           "b3": "Fixes für kritische Produktionsfehler gemeinsam mit Entwickler- und Community-Team verifiziert."
         }
       }
-    }
+    },
+    "yearsShort": "{n} J.",
+    "underOneYear": "<1 J."
   },
   "contact": {
     "title": "Kontakt",
@@ -152,7 +163,8 @@
     "write": "Schreiben",
     "resumeEn": "Lebenslauf (EN)",
     "resumeDe": "Lebenslauf (DE)",
-    "fingerprintNote": "Heruntergeladene Lebensläufe lassen sich über den Vergleich der SHA-256-Prüfsumme mit diesen Fingerprints verifizieren."
+    "fingerprintNote": "Heruntergeladene Lebensläufe lassen sich über den Vergleich der SHA-256-Prüfsumme mit diesen Fingerprints verifizieren.",
+    "fingerprintLabel": "{algorithm}-Fingerprint"
   },
   "palette": {
     "placeholder": "Zu Sektion, Projekt oder Aktion springen…",
@@ -173,7 +185,11 @@
     "credit": "Entworfen und gebaut von Tim Schönle.",
     "licenses": "Lizenzen",
     "colophon": "Kolophon",
-    "built": "Mit Sorgfalt gebaut"
+    "built": "Mit Sorgfalt gebaut",
+    "social": "PROFILE",
+    "legal": "RECHTLICHES",
+    "meta": "META",
+    "signoff": "— ENDE DER ÜBERTRAGUNG —"
   },
   "notFound": {
     "title": "Seite nicht gefunden",
@@ -193,8 +209,8 @@
     "unavailable": "Dieser Build enthält kein Lizenzverzeichnis."
   },
   "resume": {
-    "summaryTitle": "Professionelle Zusammenfassung",
-    "summary": "Senior Softwareentwickler mit Schwerpunkt auf skalierbaren, hochperformanten Backend-Systemen. Kernstack Java und Spring Boot, dazu Rust und TypeScript. Durchgängige Verantwortung von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Fokus auf sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
+    "summaryTitle": "Kurzprofil",
+    "summary": "Entwickelt skalierbare, hochperformante Backend-Systeme mit Java und Spring Boot als Kern, ergänzt um Rust und TypeScript, und verantwortet sie von der Entwicklung bis zum Betrieb: containerisierte Services, Kubernetes, Helm und GitOps. Fokus auf sauberen, gut getesteten Code, der sich unkompliziert betreiben und weiterentwickeln lässt.",
     "experienceTitle": "Berufserfahrung",
     "skillsTitle": "Technische Fähigkeiten",
     "educationTitle": "Ausbildung",
@@ -207,6 +223,13 @@
     },
     "stackLabel": "Stack",
     "contactTitle": "Kontakt",
+    "contactLabels": {
+      "location": "Standort",
+      "email": "E-Mail",
+      "web": "Web",
+      "github": "GitHub",
+      "linkedin": "LinkedIn"
+    },
     "education": {
       "uni-konstanz": {
         "degree": "Informatik (ohne Abschluss)",
@@ -216,13 +239,6 @@
         "degree": "Abitur (Wirtschaftsgymnasium)",
         "institution": "Rudolf-Eberle-Schule, Bad Säckingen"
       }
-    },
-    "contactLabels": {
-      "location": "Standort",
-      "email": "E-Mail",
-      "web": "Web",
-      "github": "GitHub",
-      "linkedin": "LinkedIn"
     }
   }
 }

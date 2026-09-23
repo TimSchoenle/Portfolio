@@ -1,6 +1,7 @@
 //! Top masthead: logo, section nav, command-palette trigger, language toggle.
 
 use dioxus::prelude::*;
+use portfolio_data::CONFIG;
 
 use crate::i18n::{other_language, persist_locale, use_i18n};
 use crate::routes::Route;
@@ -31,7 +32,7 @@ pub fn goto_section(on_home: bool, id: String) {
 
 /// Renders the fixed top bar and raises `on_open_palette` when the palette trigger is clicked.
 ///
-/// The ⌘K shortcut is a window listener in [`crate::routes`], which owns the palette's open
+/// The Ctrl+K / ⌘K shortcut is a window listener in [`crate::routes`], which owns the palette's open
 /// state, so this component never learns whether the palette is showing.
 #[component]
 pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
@@ -62,13 +63,14 @@ pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
     let on_home = matches!(use_route::<Route>(), Route::Home {});
 
     let search_label = t("nav.search");
+    let palette_title = t("nav.paletteTitle");
     let lang_aria = t("nav.languageToggle");
 
     rsx! {
         header { class: "masthead",
             div { class: "masthead-left",
                 Link { to: Route::Home {}, class: "logo-mark",
-                    img { class: "logo-img", src: "/favicon.svg", alt: "TS", width: "28", height: "28" }
+                    img { class: "logo-img", src: "/favicon.svg", alt: "{CONFIG.full_name}", width: "28", height: "28" }
                 }
             }
 
@@ -99,7 +101,8 @@ pub fn Masthead(on_open_palette: EventHandler<()>) -> Element {
                 button {
                     class: "cmdk-trigger",
                     onclick: move |_| on_open_palette.call(()),
-                    title: "Command palette (⌘K)",
+                    title: "{palette_title}",
+                    "aria-label": "{palette_title}",
                     span { "⌘K" }
                     span { class: "mono text-muted ml-2", "{search_label}" }
                 }

@@ -31,8 +31,10 @@ pub fn Contact() -> Element {
         t("contact.resumeEn")
     };
     let resume_digest = fingerprints.as_ref().and_then(|f| {
-        f.digest_for(&lang)
-            .map(|d| (f.algorithm.clone(), d.to_string()))
+        f.digest_for(&lang).map(|d| {
+            let label = t("contact.fingerprintLabel").replace("{algorithm}", &f.algorithm);
+            (label, d.to_string())
+        })
     });
 
     let mailto = format!("mailto:{}", CONFIG.email);
@@ -81,6 +83,7 @@ pub fn Contact() -> Element {
         });
     }
 
+    let fingerprint_open = show_fingerprint();
     let copy_label = if copied() {
         t("contact.copied")
     } else {
@@ -183,12 +186,13 @@ pub fn Contact() -> Element {
                                     class: "btn-outline resume-dl",
                                     span { class: "mono", "{resume_label} ↓" }
                                 }
-                                if let Some((algorithm, digest)) = resume_digest {
+                                if let Some((fingerprint_label, digest)) = resume_digest {
                                     button {
                                         r#type: "button",
                                         class: "resume-info-btn",
-                                        "aria-label": "{algorithm} fingerprint",
-                                        title: "{algorithm} fingerprint",
+                                        "aria-label": "{fingerprint_label}",
+                                        "aria-expanded": "{fingerprint_open}",
+                                        title: "{fingerprint_label}",
                                         onclick: move |e| {
                                             e.prevent_default();
                                             e.stop_propagation();
@@ -199,7 +203,7 @@ pub fn Contact() -> Element {
                                     }
                                     if show_fingerprint() {
                                         div { class: "fp-popup",
-                                            span { class: "mono text-muted", "{algorithm} fingerprint" }
+                                            span { class: "mono text-muted", "{fingerprint_label}" }
                                             div { class: "fp-row", title: "{digest}",
                                                 span { class: "text-fg/80 shrink-0", "{resume_name}" }
                                                 span { class: "fp-digest", "{digest}" }

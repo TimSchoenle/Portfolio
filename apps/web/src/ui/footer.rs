@@ -14,7 +14,7 @@ use crate::util::current_year;
 /// Renders the footer. The copyright year is read from the clock at render time.
 ///
 /// The legal column lists every document the operator published, in their order and under their
-/// titles, followed by the site's own licence inventory and colophon.
+/// titles, followed by the site's own license inventory and colophon.
 #[component]
 pub fn Footer() -> Element {
     let i18n = use_i18n().i18n;
@@ -39,13 +39,13 @@ pub fn Footer() -> Element {
                 }
                 div { class: "footer-cols",
                     div { class: "footer-col",
-                        span { class: "mono text-muted", "SOCIAL" }
+                        span { class: "mono text-muted", {t("footer.social")} }
                         a { href: CONFIG.github, target: "_blank", rel: "noreferrer", "GitHub" }
                         a { href: CONFIG.linkedin, target: "_blank", rel: "noreferrer", "LinkedIn" }
-                        a { href: CONFIG.url, target: "_blank", rel: "noreferrer", "{url_display}" }
+                        a { href: CONFIG.url, "{url_display}" }
                     }
                     div { class: "footer-col",
-                        span { class: "mono text-muted", "LEGAL" }
+                        span { class: "mono text-muted", {t("footer.legal")} }
                         for entry in legal.iter() {
                             {legal_link(entry, &legal_title(&text, entry))}
                         }
@@ -53,15 +53,15 @@ pub fn Footer() -> Element {
                         a { href: CONFIG.repository, target: "_blank", rel: "noreferrer", {t("footer.colophon")} }
                     }
                     div { class: "footer-col",
-                        span { class: "mono text-muted", "META" }
-                        span { "© {year}" }
+                        span { class: "mono text-muted", {t("footer.meta")} }
+                        span { "© {year} {CONFIG.full_name}" }
                         span { {t("common.country")} }
                         span { {t("footer.built")} }
                     }
                 }
             }
             div { class: "footer-bottom",
-                span { class: "mono text-muted", "— END OF TRANSMISSION —" }
+                span { class: "mono text-muted", {t("footer.signoff")} }
             }
         }
     }

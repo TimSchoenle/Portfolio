@@ -4,8 +4,8 @@
 //! system clock (`time`) on the server. The two use different zones — the client
 //! reports local time, the server UTC — so around midnight, and for a few hours
 //! either side of New Year, they can disagree by a day or a year. Only the
-//! footer's copyright year and the hero's "years of experience" are derived from
-//! them; both are cosmetic, and the worst case is that a freshly hydrated page
+//! footer's copyright year, the hero's "years of experience" and the duration
+//! badges of ongoing roles are derived from them; all are cosmetic, and the worst case is that a freshly hydrated page
 //! corrects itself by one. Anything where the exact date matters must not be
 //! built on these.
 

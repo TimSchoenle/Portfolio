@@ -4,22 +4,33 @@
 use std::rc::Rc;
 
 use dioxus::prelude::*;
-use portfolio_data::{experiences_sorted, format_period_years};
+use portfolio_data::{YearMonth, experiences_sorted, format_period_years};
 
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
-use crate::util::current_year;
+use crate::util::{current_month, current_year};
 
-/// "7y" badge; sub-year stints render as "<1y".
-fn years_badge(start: u16, end: Option<u16>) -> String {
-    let end = end.unwrap_or_else(|| current_year() as u16);
-    let years = end.saturating_sub(start);
+/// Whole years a role lasted, counted in months so that Nov 2018 – Jan 2023 is four years,
+/// not five. An ongoing role runs to the current month.
+fn whole_years(start: YearMonth, end: Option<YearMonth>) -> u32 {
+    let (end_year, end_month) = match end {
+        Some(end) => (i32::from(end.year), end.month),
+        None => (current_year(), current_month()),
+    };
+    let months =
+        (end_year - i32::from(start.year)) * 12 + i32::from(end_month) - i32::from(start.month);
+    months.max(0).unsigned_abs() / 12
+}
+
+/// The duration badge, e.g. "4y" or "4 J.", with `under_one_year` for a role shorter than a year.
+/// `years_short` carries an `{n}` placeholder for the count.
+fn years_badge(years: u32, years_short: &str, under_one_year: &str) -> String {
     if years == 0 {
-        "<1y".to_string()
+        under_one_year.to_string()
     } else {
-        format!("{years}y")
+        years_short.replace("{n}", &years.to_string())
     }
 }
 
@@ -32,6 +43,8 @@ pub fn Experience() -> Element {
     // `usize::MAX` = all collapsed.
     let mut open = use_signal(|| 0usize);
     let now = t("common.now");
+    let years_short = t("experience.yearsShort");
+    let under_one_year = t("experience.underOneYear");
     // Sorted once per mounted section rather than on every render: the ordering
     // is a property of the compile-time data, while `open` above changes on every
     // row the reader expands.
@@ -58,7 +71,7 @@ pub fn Experience() -> Element {
                             let body_style = if is_open { "max-height: 1000px" } else { "max-height: 0" };
                             let key = |field: &str| format!("experience.entries.{}.{field}", e.id);
                             let period = format_period_years(e.start, e.end, &now);
-                            let badge = years_badge(e.start.year, e.end.map(|d| d.year));
+                            let badge = years_badge(whole_years(e.start, e.end), &years_short, &under_one_year);
                             let role = t(&key("role"));
                             let sub = format!("{} · {}", t(&key("org")), e.location);
                             let bullet_count = e.bullet_count;
