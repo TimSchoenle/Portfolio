@@ -28,27 +28,24 @@ code. The rest of this document describes the development workflow the maintaine
    cd Portfolio
    ```
 
-2. Generate the build-time artifacts the web build embeds. Both are optional: without them
-   `build.rs` embeds empty defaults and the affected pages render their empty state.
+2. Start the dev server (SSR + hydration, live reload):
 
    ```bash
-   cargo run --profile tools -p resume-generator -- apps/web/generated
-   just licenses
+   just dev
    ```
 
-3. Run the web dev server (SSR + hydration):
+   The first run generates the resume PDFs and the social card into `apps/web/generated`, runs
+   `npm ci` and builds the Tailwind stylesheet; later runs reuse them (delete
+   `apps/web/generated` to regenerate). A Tailwind watcher rebuilds the stylesheet on every
+   change. The recipe is `apps/web/scripts/dev.mjs`, run by Node so it behaves the same on every
+   platform, and `.claude/launch.json` starts it for editors that read that file.
 
-   ```bash
-   cd apps/web
-   npm ci && npm run build:css
-   PORTFOLIO_CONFIG=../../legal dx serve --platform web
-   ```
+   The server runs against the legal document templates in `legal/`: it refuses to start
+   without an imprint and a privacy notice, and none is compiled in. The templates contain
+   placeholders; the published texts are maintained outside this repository. `/licenses` stays
+   empty until `just licenses` has rendered the third-party inventory.
 
-   `PORTFOLIO_CONFIG` points the loader at the legal document templates in `legal/`. The server
-   refuses to start without an imprint and a privacy notice, and none is compiled in. The
-   templates contain placeholders; the published texts are maintained outside this repository.
-
-4. Open <http://localhost:8080>.
+3. Open <http://localhost:8080>.
 
 ## Checks
 

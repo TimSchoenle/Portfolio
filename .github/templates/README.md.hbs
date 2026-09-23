@@ -144,15 +144,16 @@ Node.js is needed for the Tailwind step, and `just` runs every recipe CI runs.
 
 ## Usage
 
-Two artifacts have to exist before the web build, because `apps/web/build.rs` embeds both. Without
-them it substitutes empty defaults and the pages render their empty state.
+Serve the site locally, with SSR, hydration and live reload, on <http://localhost:8080>:
 
 ```bash
-cargo run --profile tools -p resume-generator -- apps/web/generated  # resume PDFs, social card
-just licenses                                        # third-party inventory for /licenses
-cd apps/web && npm ci && npm run build:css
-PORTFOLIO_CONFIG=../../legal dx serve --platform web # SSR + hydration on http://localhost:8080
+just dev          # or `just dev 3000` for another port
 ```
+
+The first run generates the resume PDFs and the social card, installs the Tailwind toolchain and
+builds the stylesheet; later runs reuse them. The server runs against the legal templates in
+`legal/`. The `/licenses` page stays empty until `just licenses` has rendered the third-party
+inventory. `.claude/launch.json` runs the same recipe for editors that read it.
 
 Run the checks CI runs, in one recipe:
 

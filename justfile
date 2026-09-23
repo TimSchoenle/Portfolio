@@ -109,6 +109,19 @@ licenses:
         apps/web/about.hbs
     echo "wrote apps/web/generated/licenses.json"
 
+# The whole local setup in one command: it generates the resume artifacts on first run, installs
+# and builds the stylesheet, watches it, and starts `dx serve` against the legal templates. See
+# apps/web/scripts/dev.mjs. The body runs under Node rather than a shell because a POSIX shell is
+# not guaranteed on Windows, and Node is a prerequisite anyway.
+[doc('Serve the site locally with SSR + hydration and live reload, against the legal templates')]
+[group('dev')]
+[script('node')]
+dev port="8080":
+    process.argv[2] = "{{ port }}";
+    const { resolve } = require("node:path");
+    const { pathToFileURL } = require("node:url");
+    import(pathToFileURL(resolve("apps/web/scripts/dev.mjs")).href);
+
 [doc('Format, lint and test — what a pull request is going to run anyway')]
 [group('check')]
 verify: fmt lint docs test
