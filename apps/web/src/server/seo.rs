@@ -13,10 +13,9 @@ use portfolio_data::CONFIG;
 use serde_json::json;
 
 /// These two documents are built from [`CONFIG`] alone, so each is rendered once
-/// on first request rather than rebuilt on every one — the manifest in
-/// particular ran a full pretty-printing serialization each time it was fetched.
-/// The sitemap also lists configured pages, so the server renders it once at
-/// startup instead and hands it to [`sitemap`].
+/// on first request rather than rebuilt on every one. The sitemap also lists
+/// configured pages, so the server renders it once at startup instead and hands
+/// it to [`sitemap`].
 ///
 /// The builders below stay separate functions so the tests exercise the
 /// construction itself rather than whatever a `LazyLock` happens to be holding.
@@ -58,7 +57,7 @@ fn robots_txt() -> String {
 }
 
 /// The sitemap: the fixed routes of `crate::routes::Route`, with `legal_paths` — each a hosted
-/// legal document's route, in the operator's order — between the home page and the licences.
+/// legal document's route, in the operator's order — between the home page and the licenses.
 pub fn sitemap_xml(legal_paths: &[String]) -> String {
     let entry = |path: &str, changefreq: &str, priority: &str| {
         format!(

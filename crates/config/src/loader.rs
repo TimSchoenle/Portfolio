@@ -133,7 +133,7 @@ mod tests {
                 config.isr.invalidate_after(),
                 Some(std::time::Duration::from_secs(3600))
             );
-            // A field the environment did not touch still materialises with its default.
+            // A field the environment did not touch still materializes with its default.
             assert_eq!(config.isr.cache_dir(), None);
             Ok(())
         });
@@ -173,7 +173,7 @@ mod tests {
             assert!(config.sentry.is_active());
             assert_eq!(config.sentry.dsn(), Some("https://key@sentry.example/42"));
             assert_eq!(config.sentry.validate(), Ok(()));
-            // The block materialises around what was supplied rather than replacing it: nothing
+            // The block materializes around what was supplied rather than replacing it: nothing
             // here turns performance tracing on, and nothing here widens what an event carries.
             assert!((config.sentry.traces_sample_rate - 0.0).abs() < f32::EPSILON);
             assert!(!config.sentry.send_default_pii);

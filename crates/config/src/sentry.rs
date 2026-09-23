@@ -58,12 +58,12 @@ pub enum SentryLevel {
     reason = "independent operator toggles, one per PORTFOLIO_SENTRY__* variable"
 )]
 pub struct SentryConfig {
-    /// Initialise the Sentry client. `false` installs no client, no panic hook, no `tracing`
+    /// Initialize the Sentry client. `false` installs no client, no panic hook, no `tracing`
     /// layer and no HTTP middleware, so every other key here is inert and nothing leaves the
     /// process.
     ///
     /// It also decides who owns the log subscriber. Off — the default — the Dioxus toolchain
-    /// installs its own, which is the behaviour this server has always had. On, the server
+    /// installs its own, which is the behavior this server has always had. On, the server
     /// installs one first (still reading `RUST_LOG`, still formatting the same way) because a
     /// Sentry layer has to be a layer *of* the subscriber, and the framework's is not
     /// extensible after the fact.
@@ -81,7 +81,7 @@ pub struct SentryConfig {
     ///
     /// Absent while `sentry.enabled` is set is a boot failure, not a silent no-op.
     // Not rustdoc: `skip_serializing` is here for the same reason it is on `github.token` —
-    // `SecretString` has no `Serialize`, and the schema generator serialises a default config to
+    // `SecretString` has no `Serialize`, and the schema generator serializes a default config to
     // read the `Default` column out of it. The key still appears in the table, with `unset` for
     // a default it never had.
     #[cfg_attr(feature = "config-schema", config(secret))]
@@ -173,16 +173,15 @@ pub struct SentryConfig {
     /// set (`Cookie` included) and the resolved user.
     ///
     /// **Off, and worth leaving off.** A reader's IP address and cookies are exactly what a
-    /// crash report does not need in order to be actionable, and Sentry is a third party for the
-    /// purposes of the privacy page this site publishes — a page that currently says no
-    /// third-party service receives visitor data, which is a statement this key is the one way
-    /// to falsify. On, it also widens what the HTTP middleware records, because `sentry-tower`
-    /// reads this same flag to decide whether to redact sensitive request headers.
+    /// crash report does not need in order to be actionable, and every event sent is personal
+    /// data handed to a third party, which the published privacy notice would then have to
+    /// name. On, it also widens what the HTTP middleware records, because `sentry-tower` reads
+    /// this same flag to decide whether to redact sensitive request headers.
     #[serde(default)]
     pub send_default_pii: bool,
 
     /// Record one Sentry transaction per request, named by the *matched route* rather than by
-    /// the URI — so `/api/repos/{name}` does not become one transaction name per repository.
+    /// the URI — so `/api/v1/legal/{slug}` does not become one transaction name per document.
     ///
     /// Whether a started transaction is *kept* is `sentry.traces_sample_rate`'s decision; this is
     /// the switch for taking the middleware out entirely.
@@ -361,7 +360,7 @@ mod tests {
 
     /// A deployment that says nothing about Sentry gets no client and no egress. Every key is
     /// `#[serde(default)]`, twice over — once on `sentry` in the aggregate, once per field here
-    /// — so an absent block has to materialise rather than fail the boot of a deployment that
+    /// — so an absent block has to materialize rather than fail the boot of a deployment that
     /// has never heard of this feature.
     #[test]
     fn an_unmentioned_block_is_off() {

@@ -1,4 +1,4 @@
-//! The one description of this workspace's configuration surface that every generated artefact
+//! The one description of this workspace's configuration surface that every generated artifact
 //! is rendered from.
 //!
 //! `examples/config-schema.rs` renders the README tables, `config.example.toml`, the contract and
@@ -66,7 +66,7 @@ pub enum Scope {
 /// `locales` are the site's languages, `portfolio_data::LANGUAGES`; see the module documentation.
 ///
 /// # Errors
-/// [`ConfigError`] if a default cannot be serialised, if the two scopes of [`Scope::All`]
+/// [`ConfigError`] if a default cannot be serialized, if the two scopes of [`Scope::All`]
 /// describe one key differently, or if a refinement names a key the schema does not have or
 /// cannot spell — the last is a mount point renamed without this module following it.
 pub fn schema(scope: Scope, locales: &[&'static str]) -> Result<Schema, ConfigError> {
@@ -147,7 +147,7 @@ pub fn app() -> App {
 /// fails the same gate that a chart passing `PORTFOLIO_ISR__TTL_SECS: "soon"` fails.
 ///
 /// The defaults are the ones the Dockerfile's `ENV` block bakes in, which is where the image's
-/// real behaviour is decided.
+/// real behavior is decided.
 #[must_use]
 pub fn external() -> External {
     External::new()
@@ -379,7 +379,7 @@ mod tests {
             .expect("the contract renders");
         assert_eq!(
             rendered,
-            published().to_json().expect("the contract serialises")
+            published().to_json().expect("the contract serializes")
         );
     }
 }

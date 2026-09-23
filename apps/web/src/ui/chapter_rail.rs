@@ -8,14 +8,14 @@ use dioxus::prelude::*;
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_index};
 
-/// (section slug, i18n key or None for the identity hero).
-const CHAPTERS: [(&str, Option<&str>); 6] = [
-    ("identity", None),
-    ("about", Some("nav.about")),
-    ("stack", Some("nav.skills")),
-    ("work", Some("nav.projects")),
-    ("experience", Some("nav.experience")),
-    ("contact", Some("nav.contact")),
+/// (section slug, i18n key of the name the rail reveals).
+const CHAPTERS: [(&str, &str); 6] = [
+    ("identity", "nav.intro"),
+    ("about", "nav.about"),
+    ("stack", "nav.skills"),
+    ("work", "nav.projects"),
+    ("experience", "nav.experience"),
+    ("contact", "nav.contact"),
 ];
 
 /// Lowercase roman numeral for `n`, e.g. 1 -> "i", 4 -> "iv", 6 -> "vi".
@@ -118,12 +118,13 @@ pub fn ChapterRail() -> Element {
     }
 
     let active = active();
+    let rail_label = t("nav.sectionNav");
     rsx! {
-        nav { class: "chapter-rail", "aria-label": "Section navigation",
+        nav { class: "chapter-rail", "aria-label": "{rail_label}",
             {CHAPTERS.iter().enumerate().map(|(i, (slug, key))| {
                 let id = chapter_id(slug);
                 let label = chapter_label(slug);
-                let name = key.map(&t).unwrap_or_else(|| (*slug).to_string());
+                let name = t(key);
                 let cls = if i == active { "chapter-dot active" } else { "chapter-dot" };
                 rsx! {
                     a { key: "{slug}", href: "#{id}", class: "{cls}", title: "{name}",

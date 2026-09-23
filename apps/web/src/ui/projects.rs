@@ -207,11 +207,15 @@ pub fn Projects(state: ReposState) -> Element {
                             div { class: "slider-dots",
                                 {(0..pages).map(|pi| {
                                     let cls = if pi == cur { "slider-dot active" } else { "slider-dot" };
+                                    let page_label = t("projects.pageLabel")
+                                        .replace("{n}", &(pi + 1).to_string())
+                                        .replace("{total}", &pages.to_string());
                                     rsx! {
                                         button {
                                             key: "{pi}",
                                             class: "{cls}",
-                                            "aria-label": "{pi + 1}",
+                                            "aria-label": "{page_label}",
+                                            "aria-current": if pi == cur { "true" } else { "false" },
                                             onclick: move |_| page.set(pi),
                                         }
                                     }

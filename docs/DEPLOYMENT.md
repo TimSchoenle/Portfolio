@@ -6,7 +6,12 @@ What the image contains, how it is built reproducibly, what it publishes about i
 
 The runtime stage is `FROM scratch`. There is no shell, no package manager, no CA bundle, no
 tzdata and no `/etc/passwd` — a numeric `USER` needs no passwd entry. What gets copied in is the
-`server` binary, the `public/` bundle beside it, and `/config/contract.json`.
+`server` binary, the `public/` bundle beside it, and `/config/contract.json`. The one outbound
+connection the server can make, to Sentry when error reporting is on, verifies TLS against the
+`webpki-roots` bundle compiled into the binary, so the missing CA bundle costs nothing.
+
+No legal documents are baked in. The server refuses to start without `legal.*`, and a deployment
+mounts its own texts; `legal/` in this repository holds templates only.
 
 That works because the server is linked against musl and is fully static. Every build stage runs
 natively on `$BUILDPLATFORM` and cross-compiles the binary to `$TARGETPLATFORM`; the mapping from
@@ -97,10 +102,10 @@ The chart lives in
 is bumped by the release workflow with the image **digest** alongside the tag, so a deployment is
 pinned to bytes rather than to a moving name.
 
-## Third-party licence inventory
+## Third-party license inventory
 
 `/licenses` renders a document produced by [cargo-about](https://github.com/EmbarkStudios/cargo-about)
-during the image build, from `apps/web/about.toml` (which licences are acceptable, which targets are
+during the image build, from `apps/web/about.toml` (which licenses are acceptable, which targets are
 built) and `apps/web/about.hbs` (the JSON it writes).
 
 It runs against `apps/web/Cargo.toml` rather than the workspace, because what the page has to report
@@ -113,11 +118,11 @@ and the server's axum sit behind its platform features.
 just licenses
 ```
 
-The document stays normalised, one entry per distinct licence file rather than one per dependency,
+The document stays normalized, one entry per distinct license file rather than one per dependency,
 and the join happens while rendering. That is what keeps it to 340 KB inside the binary.
 
 The `accepted` list in `about.toml` is a gate rather than a description. `cargo about` exits
-non-zero on a licence that is not on it and the image build fails, so a dependency arriving under
-terms this site cannot ship stops the build instead of being published under a licences page that
+non-zero on a license that is not on it and the image build fails, so a dependency arriving under
+terms this site cannot ship stops the build instead of being published under a licenses page that
 does not mention it. Adding an entry to that list is a deliberate decision to ship under those
 terms.

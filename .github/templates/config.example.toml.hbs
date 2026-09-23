@@ -20,9 +20,10 @@
 # {{ loader.envPrefix }} variable shadow a rotated mounted secret. README.md carries the whole
 # precedence order.
 #
-# Secrets do not belong in a committed file. {{ keys.githubToken.envFile }} names a file
-# holding one, and {{ keys.githubToken.secretsFile }} inside ${{ loader.secretsDirVar }} is the same value as a
-# mounted `Secret` key.
+# Secrets do not belong in a committed file. The workspace has two, and each can arrive
+# as a file: {{ keys.githubToken.envFile }} and {{ keys.sentryDsn.envFile }} name a
+# file holding the value, and {{ keys.githubToken.secretsFile }} or {{ keys.sentryDsn.secretsFile }}
+# inside ${{ loader.secretsDirVar }} is the same value as a mounted `Secret` key.
 #
 # NOT configured here: IP, PORT and RUST_LOG belong to the Dioxus toolchain, which reads
 # them itself, and CI belongs to the CI provider.

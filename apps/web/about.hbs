@@ -7,7 +7,7 @@
   serves is a Dioxus route inside the app shell — masthead, footer, i18n,
   client-side navigation, one stylesheet — not a separate document bolted next to
   it. What the tool is needed for is the *data*: which crates the shipped
-  artefacts link, under which licence, and the exact text of every licence file
+  artifacts link, under which license, and the exact text of every license file
   it found.
 
   `--format json` carries the same data plus the entire `cargo metadata` record
@@ -16,7 +16,7 @@
   document with the fields the page needs and nothing else.
 
   Handlebars renders `{{json x}}` as a JSON literal and cargo-about disables HTML
-  escaping, so licence texts survive verbatim, quotes and angle brackets and all.
+  escaping, so license texts survive verbatim, quotes and angle brackets and all.
   Every newline below falls between JSON tokens, never inside a string.
 --}}
 {

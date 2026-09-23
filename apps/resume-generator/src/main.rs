@@ -152,11 +152,11 @@ fn run() -> Result<(), Box<dyn Error>> {
     println!("wrote {}", manifest_path.display());
 
     // The social card, alongside the resumes: another artifact derived from the
-    // shared data here and embedded into the web binary by its `build.rs`. Paired
-    // with `CONFIG` rather than the translations so it says exactly what the
-    // `og:title`/`og:description` beside it say.
+    // shared data here and embedded into the web binary by its `build.rs`. Built
+    // from `CONFIG` rather than the translations so it states what the English
+    // `og:title`/`og:description` beside it state.
     let og_path = Path::new(&out_dir).join(portfolio_data::OG_IMAGE_FILE);
-    let og_bytes = og_image::render(CONFIG.job_title, CONFIG.description)?;
+    let og_bytes = og_image::render(CONFIG.job_title, &card_tagline(CONFIG.description))?;
     fs::write(&og_path, &og_bytes)?;
     let (width, height) = portfolio_data::OG_IMAGE_SIZE;
     println!(
@@ -223,6 +223,21 @@ fn photo_format(bytes: &[u8]) -> Option<&'static str> {
         .map(|(_, extension)| extension)
 }
 
+/// The social card's closing line: `description` without the leading `"{full_name} — {role}"`,
+/// which the card already sets in large type directly above it, starting with a capital.
+///
+/// A description that does not open with [`CONFIG`]`.title` is returned unchanged.
+fn card_tagline(description: &str) -> String {
+    let Some(rest) = description.strip_prefix(CONFIG.title) else {
+        return description.to_string();
+    };
+    let mut chars = rest.trim_start().chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => description.to_string(),
+    }
+}
+
 /// Lowercase hex encoding of a byte slice (for SHA-256 digests).
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -270,6 +285,14 @@ mod tests {
         assert_eq!(photo_format(b"\xFF\xD8\xFF\xE0rest"), Some("jpg"));
         assert_eq!(photo_format(b"\x89PNG\r\n\x1A\nrest"), Some("png"));
         assert_eq!(photo_format(b"RIFF\0\0\0\0WEBPVP8 "), Some("webp"));
+    }
+
+    #[test]
+    fn the_card_tagline_drops_the_name_and_role_the_card_already_shows() {
+        let tagline = card_tagline(CONFIG.description);
+        assert!(!tagline.contains(CONFIG.full_name), "{tagline}");
+        assert!(tagline.starts_with(char::is_uppercase), "{tagline}");
+        assert_eq!(card_tagline("Something else."), "Something else.");
     }
 
     #[test]

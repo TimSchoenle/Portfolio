@@ -2,7 +2,7 @@
   "common": {
     "country": "Germany",
     "region": "Baden-Württemberg",
-    "openToRemote": "Open to remote · CET (UTC+1)",
+    "openToRemote": "Open to remote · CET/CEST",
     "jobTitle": "Senior Software Developer",
     "present": "Present",
     "now": "now",
@@ -32,24 +32,44 @@
     "experience": "Experience",
     "contact": "Contact",
     "search": "search",
-    "languageToggle": "Switch language to German"
+    "languageToggle": "Switch language to German",
+    "paletteTitle": "Command palette (Ctrl+K / ⌘K)",
+    "sectionNav": "Section navigation",
+    "intro": "Intro"
   },
   "hero": {
     "statusLabel": "STATUS",
     "status": "Open to senior backend and platform roles",
     "tagline": "I build backend systems and operate them in production.",
-    "taglineSub": "Java, Rust and TypeScript on Kubernetes, deployed by GitOps."
+    "taglineSub": "Java, Rust and TypeScript on Kubernetes, deployed by GitOps.",
+    "roleLabel": "ROLE",
+    "locationLabel": "LOC",
+    "yearsLabel": "YRS",
+    "scroll": "SCROLL",
+    "scrollLabel": "Scroll to the about section"
   },
   "about": {
     "title": "About Me",
     "intro": "I build reliable software, end to end.",
-    "body": "I am a senior software developer specializing in scalable, high-performance backend systems. Java and Spring Boot are my core, with Rust and TypeScript alongside them. I own the path from code to production, across containerized services, Kubernetes, Helm and GitOps. I care about clean code, clear abstractions, and well-tested systems that stay straightforward to operate and extend.",
+    "body": "I design and build backend systems, mostly in Java and Spring Boot, with Rust and TypeScript where they fit better. I stay with those systems after release: I containerize them, run them on Kubernetes with Helm and GitOps, and keep them observable. I aim for code that others can read, test and change with confidence.",
     "focusLabel": "Key Competencies",
     "focus": {
-      "f1": { "k": "Backend Architecture", "v": "Java & Spring Boot · domain modeling" },
-      "f2": { "k": "Scalability & Performance", "v": "High-throughput, reliable systems" },
-      "f3": { "k": "Kubernetes, Helm & GitOps", "v": "ArgoCD · containerized infra · Docker" },
-      "f4": { "k": "Clean, Maintainable Code", "v": "Clear abstractions · well-tested" }
+      "f1": {
+        "k": "Backend Architecture",
+        "v": "Java & Spring Boot · domain modeling"
+      },
+      "f2": {
+        "k": "Scalability & Performance",
+        "v": "High-throughput, reliable systems"
+      },
+      "f3": {
+        "k": "Kubernetes, Helm & GitOps",
+        "v": "ArgoCD · containerized infra · Docker"
+      },
+      "f4": {
+        "k": "Clean, Maintainable Code",
+        "v": "Clear abstractions · well-tested"
+      }
     }
   },
   "skills": {
@@ -60,7 +80,7 @@
     "build": "Build & Tools",
     "infrastructure": "Infrastructure",
     "confidenceLabel": "Depth",
-    "hoverHint": "Hover a dot",
+    "hoverHint": "Select a dot",
     "radarLabel": "Skill radar: technologies plotted by category, positioned further from the center the more hands-on depth I have with them."
   },
   "projects": {
@@ -75,12 +95,13 @@
     "loading": "loading…",
     "offline": "offline",
     "viewAll": "View all repos on GitHub",
-    "emptyTitle": "Repositories refreshing…",
-    "emptyBody": "The repository list is rebuilt from GitHub once a day and is not yet available. The GitHub profile lists them in the meantime.",
+    "emptyTitle": "No repositories listed",
+    "emptyBody": "This build carries no repository list. Every public repository is on the GitHub profile.",
     "featured": "★ FEATURED",
     "favorites": "★ Favorites",
     "prevPage": "Previous projects",
-    "nextPage": "More projects"
+    "nextPage": "More projects",
+    "pageLabel": "Page {n} of {total}"
   },
   "experience": {
     "title": "Experience",
@@ -90,8 +111,8 @@
         "role": "Senior Software Developer",
         "org": "SixTwenty Cloud LLC",
         "bullets": {
-          "b1": "Maintain and further develop the white-label software solutions running on the platform.",
-          "b2": "Develop the generalized framework they are built from, so each new partner product starts from shared code."
+          "b1": "Maintain and extend the white-label products the platform runs for its partners.",
+          "b2": "Build the shared framework those products are built on, so each new partner product starts from common code rather than a copy."
         }
       },
       "mineplex-studios": {
@@ -100,14 +121,14 @@
         "bullets": {
           "b1": "Implemented the frontend and backend engine of an internal and external development platform, so teams built and integrated services consistently across the stack.",
           "b2": "Standardized deployments, release strategies and configuration across services and environments with CI/CD and GitOps workflows on Kubernetes.",
-          "b3": "Delivered partner-specific features as white-label solutions, so partners shipped customized products on shared core infrastructure and tooling."
+          "b3": "Delivered partner-specific features on the shared core, so partners shipped customized products without forking its infrastructure or tooling."
         }
       },
       "self-employed": {
         "role": "Independent Software Developer",
         "org": "Self-employed",
         "bullets": {
-          "b1": "Owned entire products for customers, from REST and gRPC backends through the web frontends and native OS applications built on them.",
+          "b1": "Owned entire products for customers, from REST and gRPC backends through the web frontends and native desktop applications built on them.",
           "b2": "Automated dependency updates, security scanning, documentation and scheduled releases in CI, so projects kept themselves current without manual intervention.",
           "b3": "Ran hardened, high-performance Kubernetes on Talos Linux, delivered by GitOps and instrumented with metrics, logs and traces."
         }
@@ -130,7 +151,9 @@
           "b3": "Verified fixes for critical production issues with developers and community staff."
         }
       }
-    }
+    },
+    "yearsShort": "{n}y",
+    "monthsShort": "{n}m"
   },
   "contact": {
     "title": "Contact",
@@ -140,7 +163,8 @@
     "write": "Write",
     "resumeEn": "Resume (EN)",
     "resumeDe": "Resume (DE)",
-    "fingerprintNote": "Verify a downloaded resume by comparing its SHA-256 checksum with these fingerprints."
+    "fingerprintNote": "Verify a downloaded resume by comparing its SHA-256 checksum with these fingerprints.",
+    "fingerprintLabel": "{algorithm} fingerprint"
   },
   "palette": {
     "placeholder": "Jump to section, project, or action…",
@@ -161,7 +185,11 @@
     "credit": "Designed and built by Tim Schönle.",
     "licenses": "Licenses",
     "colophon": "Colophon",
-    "built": "Built with care"
+    "built": "Built with care",
+    "social": "SOCIAL",
+    "legal": "LEGAL",
+    "meta": "META",
+    "signoff": "— END OF TRANSMISSION —"
   },
   "notFound": {
     "title": "Page Not Found",
@@ -182,7 +210,7 @@
   },
   "resume": {
     "summaryTitle": "Professional Summary",
-    "summary": "Senior software developer specializing in scalable, high-performance backend systems. Java and Spring Boot at the core, with Rust and TypeScript. End-to-end ownership from code to production: containerized services, Kubernetes, Helm and GitOps. Focused on clean code, clear abstractions, and well-tested systems that stay straightforward to operate and evolve.",
+    "summary": "Builds scalable, high-performance backend systems with Java and Spring Boot at the core, alongside Rust and TypeScript, and owns them from code to production: containerized services, Kubernetes, Helm and GitOps. Focused on clean code, clear abstractions and well-tested systems that stay straightforward to operate and evolve.",
     "experienceTitle": "Professional Experience",
     "skillsTitle": "Technical Skills",
     "educationTitle": "Education",
@@ -208,7 +236,7 @@
         "institution": "University of Konstanz"
       },
       "abitur": {
-        "degree": "Abitur (Business High School)",
+        "degree": "Abitur (university entrance qualification, business track)",
         "institution": "Rudolf-Eberle-Schule, Bad Säckingen"
       }
     }

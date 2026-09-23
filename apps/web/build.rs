@@ -76,14 +76,14 @@ fn main() {
     let repos_source = Path::new(&manifest_dir).join("repos.json");
     embed(&repos_source, &out_dir, "repos.json", EMPTY_REPOS);
 
-    // The third-party licence inventory, written by `cargo about generate` (see
+    // The third-party license inventory, written by `cargo about generate` (see
     // `about.toml` / `about.hbs`, the `licenses` recipe in the justfile and the
     // `generate` stage of the Dockerfile) and rendered by the `/licenses` route.
     //
     // Embedded rather than fetched so the page is part of the server-side render
     // like every other route, and so the attribution a build publishes is the
     // attribution for the dependency set that build actually linked — the two
-    // cannot drift apart when they are the same artefact.
+    // cannot drift apart when they are the same artifact.
     let licenses_source = Path::new(&manifest_dir)
         .join("generated")
         .join("licenses.json");

@@ -1,116 +1,80 @@
-# The operator disclosure § 5 DDG requires of a German site. See legal.toml for the format.
+# Template for the operator disclosure § 5 DDG requires of a German website. See legal.toml for
+# the format and for why this is a template rather than the published text.
+#
+# Placeholders: [OPERATOR NAME], [STREET AND NUMBER], [POSTCODE], [CITY], [EMAIL ADDRESS],
+# [VAT ID]. Remove the VAT section when no VAT identification number has been issued.
 
 [legal.documents.imprint]
-updated = "2026-06-10"
+updated = "2026-09-23"
 order = 10
 title = { en = "Imprint", de = "Impressum" }
 
 body.en = '''
 ## Information according to § 5 DDG
 
-tim-schoenle.de – Tim Schönle\
-c/o Online-Impressum.de #5279\
-Europaring 90\
-53757 Sankt Augustin\
+[OPERATOR NAME]\
+[STREET AND NUMBER]\
+[POSTCODE] [CITY]\
 Germany
 
-**Email:** [contact@tim-schoenle.de](mailto:contact@tim-schoenle.de)\
-**Contact form:** <https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg>
+**Email:** [EMAIL ADDRESS]
 
-## VAT ID
+## VAT identification number
 
-Sales tax identification number according to Sect. 27 a of the Sales Tax Law:
+VAT identification number according to Section 27a of the German VAT Act (UStG): [VAT ID]
 
-`DE347101415`
+## Responsible for content according to § 18(2) MStV
 
-## Responsible for content according to § 18 Abs. 2 MStV
+[OPERATOR NAME], address as above.
 
-tim-schoenle.de – Tim Schönle\
-c/o Online-Impressum.de #5279\
-Europaring 90\
-53757 Sankt Augustin\
-Germany
+## Consumer dispute resolution
 
-**Email:** [contact@tim-schoenle.de](mailto:contact@tim-schoenle.de)\
-**Contact form:** <https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg>
-
-## Dispute Resolution
-
-The European Commission provides a platform for online dispute resolution (ODR): <https://ec.europa.eu/consumers/odr/>
-
-You can find our email address in the imprint above.
-
-We are not willing or obliged to participate in dispute resolution proceedings before a consumer arbitration board.
-
-## This legal notice also applies to the following social media profiles
-
-- <https://github.com/timschoenle>
-- <https://www.linkedin.com/in/tim-schoenle>
+I am neither willing nor obliged to participate in dispute resolution proceedings before a consumer arbitration board (§ 36 VSBG).
 
 ## Liability for content
 
-As a service provider, we are responsible for our own content on these pages in accordance with general legislation pursuant to Section 7 (1) of the Digital Services Act (DDG). However, according to Sections 8 to 10 DDG, we are not obligated as a service provider to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.
+As a service provider, I am responsible for my own content on these pages under the general laws, in accordance with § 7(1) of the German Digital Services Act (Digitale-Dienste-Gesetz, DDG). Under §§ 8 to 10 DDG, however, I am not obliged to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity. Obligations to remove or block the use of information under the general laws remain unaffected. Liability in this respect is only possible from the time a specific infringement becomes known. On becoming aware of such an infringement, I will remove the content concerned without delay.
 
 ## Liability for links
 
-Our website contains links to external third-party websites over whose content we have no influence. Therefore, we cannot accept any liability for this third-party content. The respective provider or operator of the pages is always responsible for the content of the linked pages.
+This website contains links to external third-party websites whose content I have no influence over, so I cannot accept any liability for that content. The respective provider or operator of a linked page is always responsible for its content. The linked pages were checked for possible legal violations at the time of linking, and no illegal content was apparent then. Permanent monitoring of the linked pages is not reasonable without concrete indications of an infringement. On becoming aware of an infringement, I will remove the link concerned without delay.
 
 ## Copyright
 
-The content and works created by the site operators on these pages are subject to German copyright law. The reproduction, editing, distribution and any kind of use outside the limits of copyright require the written consent of the respective author or creator.
+The content and works created by the site operator on these pages are subject to German copyright law. Reproduction, editing, distribution and any kind of use outside the limits of copyright law require the written consent of the author. Downloads and copies of this site are permitted for private, non-commercial use only. Where content on this site was not created by the operator, the copyrights of third parties are respected. Should you nevertheless become aware of a copyright infringement, please let me know. On becoming aware of an infringement, I will remove the content concerned without delay.
 '''
 
 body.de = '''
 ## Angaben gemäß § 5 DDG
 
-tim-schoenle.de – Tim Schönle\
-c/o Online-Impressum.de #5279\
-Europaring 90\
-53757 Sankt Augustin\
+[NAME DES BETREIBERS]\
+[STRASSE UND HAUSNUMMER]\
+[PLZ] [ORT]\
 Deutschland
 
-**E-Mail:** [contact@tim-schoenle.de](mailto:contact@tim-schoenle.de)\
-**Kontaktformular:** <https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg>
+**E-Mail:** [E-MAIL-ADRESSE]
 
-## Umsatzsteuer-ID
+## Umsatzsteuer-Identifikationsnummer
 
-Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:
-
-`DE347101415`
+Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: [UST-ID]
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 
-tim-schoenle.de – Tim Schönle\
-c/o Online-Impressum.de #5279\
-Europaring 90\
-53757 Sankt Augustin\
-Deutschland
+[NAME DES BETREIBERS], Anschrift wie oben.
 
-**E-Mail:** [contact@tim-schoenle.de](mailto:contact@tim-schoenle.de)\
-**Kontaktformular:** <https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg>
+## Verbraucherstreitbeilegung
 
-## Streitschlichtung
-
-Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <https://ec.europa.eu/consumers/odr/>
-
-Unsere E-Mail-Adresse finden Sie oben im Impressum.
-
-Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
-
-## Dieses Impressum gilt auch für folgende Social-Media-Profile
-
-- <https://github.com/timschoenle>
-- <https://www.linkedin.com/in/tim-schoenle>
+Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen (§ 36 VSBG).
 
 ## Haftung für Inhalte
 
-Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden entsprechender Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.
+Als Diensteanbieter bin ich gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG bin ich jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden entsprechender Rechtsverletzungen entferne ich diese Inhalte umgehend.
 
 ## Haftung für Links
 
-Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.
+Diese Website enthält Links zu externen Websites Dritter, auf deren Inhalte ich keinen Einfluss habe. Deshalb kann ich für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen entferne ich derartige Links umgehend.
 
 ## Urheberrecht
 
-Die durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet, soweit nicht anders vereinbart. Soweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen.
+Die durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des Autors. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet. Soweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitte ich um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen entferne ich derartige Inhalte umgehend.
 '''

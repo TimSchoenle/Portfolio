@@ -11,7 +11,9 @@
 //! module for how a CSS pixel, a CSS margin and a CSS `line-height` each map
 //! onto Typst.
 
-use portfolio_data::{CONFIG, EDUCATION, Quadrant, experiences_sorted, matrix_skills};
+use portfolio_data::{
+    CONFIG, EDUCATION, Quadrant, experiences_sorted, format_period_years, matrix_skills,
+};
 
 use crate::fit::Detail;
 use crate::qr;
@@ -308,7 +310,7 @@ fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
          [{summary}]",
         fs = l.pt(style::FS_BODY),
         ink = style::INK_BODY,
-        summary = esc(&t.get("resume.summary")),
+        summary = keep_compounds(&esc(&t.get("resume.summary"))),
     ));
 
     // -- Experience --
@@ -395,7 +397,10 @@ fn experience_entry(
     if n > 0 {
         let (top_edge, bottom_edge) = Layout::edges(l.sp().lh_bullet);
         let items: String = (1..=n)
-            .map(|b| format!("[{}],\n", esc(&t.get(&key(&format!("bullets.b{b}"))))))
+            .map(|b| {
+                let bullet = esc(&t.get(&key(&format!("bullets.b{b}"))));
+                format!("[{}],\n", keep_compounds(&bullet))
+            })
             .collect();
         s.push_str(&format!(
             "\n\n{gap}\n\n#[\n\
@@ -651,7 +656,10 @@ fn skills_block(t: &Translations, l: &Layout) -> String {
     blocks.join("\n\n")
 }
 
-/// Education: `Degree` (semibold) over `Institution · Years` (muted).
+/// Education: `Degree` (semibold) over `Institution` over `Years` (both muted).
+///
+/// The years get a line of their own: appended to the institution, they wrap alone onto a
+/// second line whenever the institution nearly fills the narrow sidebar.
 fn education_block(t: &Translations, l: &Layout) -> String {
     let mut blocks: Vec<String> = Vec::new();
     for (i, e) in EDUCATION.iter().enumerate() {
@@ -675,9 +683,13 @@ fn education_block(t: &Translations, l: &Layout) -> String {
                 style::W_REGULAR,
                 style::INK_MUTED,
                 &format!(
-                    "{inst} · {years}",
+                    "{inst}#linebreak(){years}",
                     inst = esc(&t.get(&key("institution"))),
-                    years = year_range(e.start, e.end),
+                    years = esc(&format_period_years(
+                        e.start,
+                        e.end,
+                        &t.get("common.present")
+                    )),
                 ),
             ),
         ));
@@ -719,11 +731,23 @@ fn languages_block(t: &Translations, l: &Layout) -> String {
     )
 }
 
-/// `YYYY–YYYY` (single year if start == end year) for the education lines.
-fn year_range(start: portfolio_data::YearMonth, end: Option<portfolio_data::YearMonth>) -> String {
-    match end {
-        Some(end) if end.year == start.year => format!("{}", start.year),
-        Some(end) => format!("{}–{}", start.year, end.year),
-        None => format!("{}–", start.year),
-    }
+/// Wraps every hyphenated word of already-escaped text in a `#box`, so a line never breaks at
+/// its hyphen.
+///
+/// Typst breaks after an explicit hyphen even with hyphenation off, and a PDF text extractor then
+/// joins the two halves without it: `Web-` / `Frontends` reads back as `WebFrontends`, a word an
+/// applicant tracking system does not recognize. Boxing only moves the break to the preceding
+/// space.
+fn keep_compounds(escaped: &str) -> String {
+    escaped
+        .split(' ')
+        .map(|word| {
+            if word.contains('-') {
+                format!("#box[{word}]")
+            } else {
+                word.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }

@@ -594,7 +594,7 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 .fp-digest[href]:hover { color: var(--accent); }
 .fp-sep { width: 100%; height: 1px; border: none; margin: 4px 0; background: var(--line); }
 
-/* Legal documents (/legal/:slug) and the licences page — same editorial language as the site.
+/* Legal documents (/legal/:slug) and the licenses page — same editorial language as the site.
    A document is operator-written Markdown rendered by terrace-legal-dioxus into plain semantic
    elements with no classes of their own, so everything below the article is styled by element.
    The classes are the ones `SiteSkin` in src/legal/adapters.rs hands out. */
@@ -623,7 +623,7 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
 /* Third-party licenses (/licenses) — the generated attribution page.
    Wider than the legal pages: those are prose at a reading measure, this is a
    300-row inventory, and squeezing name + version + SPDX expression into 760px
-   wraps every third line. The licence texts themselves stay in a monospace
+   wraps every third line. The license texts themselves stay in a monospace
    block at their original wrapping. */
 .licenses-page { max-width: 1040px; margin: 0 auto; padding: 60px var(--side-pad) 80px; }
 .licenses-intro { max-width: 68ch; margin: 20px 0 0; color: rgba(232, 236, 242, 0.85); line-height: 1.65; }

@@ -22,7 +22,7 @@ FROM --platform=$BUILDPLATFORM rust:1.98-slim@sha256:f47a8de237dcbb0b0ce1099901e
 ARG DIOXUS_CLI_VERSION
 ARG CARGO_ABOUT_VERSION
 ARG TARGETARCH
-# Honoured by tooling that supports it so embedded timestamps stay deterministic.
+# Honored by tooling that supports it so embedded timestamps stay deterministic.
 ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
@@ -67,7 +67,7 @@ RUN rustup target add wasm32-unknown-unknown "$(cat /etc/rust-target)"
 # the one unpinned input in a file where the base images, actions and CLI
 # version are all pinned. Renovate tracks the SHA via the annotation below.
 #
-# `cargo-about` renders the third-party licence inventory the `/licenses` page is
+# `cargo-about` renders the third-party license inventory the `/licenses` page is
 # built from (see the `generate` stage). A build tool like `dx`: it runs once
 # during the image build and nothing it links reaches the runtime image.
 # renovate: datasource=github-tags depName=cargo-bins/cargo-binstall
@@ -111,7 +111,7 @@ RUN --mount=type=secret,id=gh_token \
     cp /repos-cache/repos.json apps/web/repos.json 2>/dev/null || true; \
     CI=1 cargo run --profile tools --locked -p update-repos -- apps/web/repos.json \
     && cp apps/web/repos.json /repos-cache/repos.json
-# The third-party licence inventory, embedded by build.rs and rendered by the
+# The third-party license inventory, embedded by build.rs and rendered by the
 # `/licenses` route. Runs here rather than being committed for the same reason
 # repos.json is not committed: the attribution a build publishes has to describe
 # the dependency set that build linked, and the only place both are known is the
@@ -123,10 +123,10 @@ RUN --mount=type=secret,id=gh_token \
 # committed Cargo.lock resolves unchanged, so the inventory describes the same
 # graph `dx bundle` is about to compile.
 #
-# This step is also the licence gate: `accepted` in apps/web/about.toml lists the
+# This step is also the license gate: `accepted` in apps/web/about.toml lists the
 # terms this site ships under, and a dependency arriving with anything else exits
 # non-zero here — the image fails to build rather than being published with a
-# licences page that does not mention it.
+# licenses page that does not mention it.
 RUN mkdir -p apps/web/generated \
     && cargo about generate --locked --all-features \
          --manifest-path apps/web/Cargo.toml \
@@ -212,8 +212,10 @@ RUN mkdir -p /isr-cache
 # `scratch`: the smallest possible attack surface — no shell, no package
 # manager, no libc, nothing but our own files. This is viable because the SSR
 # server is a fully static musl binary (see web-builder) and serves only
-# compile-time data, so it makes no outbound TLS at runtime and therefore needs
-# no CA bundle, tzdata, or /etc/passwd (a numeric USER needs no passwd entry).
+# compile-time data, so it needs no tzdata or /etc/passwd (a numeric USER needs
+# no passwd entry) and no CA bundle: its one possible outbound connection, to
+# Sentry when error reporting is on, verifies TLS against the webpki-roots
+# bundle compiled into the binary.
 #
 # Unlike every stage above — which deliberately pins itself to $BUILDPLATFORM —
 # this stage takes the default, $TARGETPLATFORM (stating it explicitly trips
@@ -338,9 +340,9 @@ WORKDIR /app
 # server refuses to start without an imprint and a privacy notice in English and
 # German, naming every missing key. None is baked in — the text is the
 # operator's, and a default one would be published by whoever forgot to replace
-# it. The repository's `legal/` directory is a complete block: mount it (as a
-# ConfigMap, say) and point the loader at the directory, and it reads every
-# `*.toml` in it.
+# it. The repository's `legal/` directory holds templates with placeholders in
+# the same layout: mount a directory of the operator's own `*.toml` files (as a
+# ConfigMap, say) and point the loader at it.
 #   PORTFOLIO_CONFIG=/config/legal
 ENV PORT=8080 \
     IP=0.0.0.0 \

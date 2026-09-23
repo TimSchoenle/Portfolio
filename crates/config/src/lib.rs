@@ -29,7 +29,7 @@
 //! Two of `terrace-config`'s five features are taken: `loader`, which is the layering above, and
 //! `explain`, which is [`provenance`] — the report naming which layer supplied each key, printed
 //! beside the error when a boot is refused. `explain` costs no dependency at all, and it is what
-//! answers the question the error cannot: an operator inside a distroless image with no shell
+//! answers the question the error cannot: an operator inside a `scratch` image with no shell
 //! cannot otherwise see that the variable they thought they removed is still shadowing the
 //! `Secret` they mounted.
 //!
@@ -52,7 +52,7 @@
 //!    redeploy already replaces.
 //!
 //! Both halves of that reasoning are recorded here rather than in a commit message because the
-//! second one changes the moment Dioxus grows a cancellable `serve`.
+//! second one changes the moment Dioxus grows a cancelable `serve`.
 //!
 //! The remaining two are development-time only: `schema` behind this crate's own off-by-default
 //! `config-schema` feature (see below), and `testing` as a dev-dependency, which is what the

@@ -6,9 +6,9 @@ The Content-Security-Policy the server builds per response, the headers around i
 
 The server reads its bundle directory and writes to stdout. Nothing else, unless error reporting is
 switched on — the one thing that gives the process an outbound connection, and it is off by
-default; see [Error reporting](#error-reporting). It runs with a read-only root filesystem and no
-writable volume, apart from the ISR cache described in [DEPLOYMENT.md](DEPLOYMENT.md), which it
-does without when the path is not writable.
+default; see [Error reporting](#error-reporting). It runs with a read-only root filesystem. The
+only path it writes to is the ISR cache described in [DEPLOYMENT.md](DEPLOYMENT.md), and it
+renders every request fresh when that path is not writable.
 
 It is built to satisfy the restricted Pod Security Standard:
 
@@ -115,9 +115,9 @@ transactions named by the matched route rather than by the URI.
 `sentry.send_default_pii` is off and is the key to leave alone. On, it attaches the client IP, the
 full request header set including `Cookie`, and the resolved user to every event, and it also
 widens what the HTTP middleware records, because `sentry-tower` reads the same flag to decide
-whether to redact sensitive headers. The privacy page this site publishes says no third-party
-service receives visitor data; that statement survives error reporting being on, and does not
-survive this key being on.
+whether to redact sensitive headers. Every event sent to Sentry is data handed to a further
+recipient, so switching error reporting on requires a matching section in the published privacy
+notice; this key on would additionally make that section describe IP addresses and cookies.
 
 There is no browser SDK. Nothing is loaded by the page, the Content-Security-Policy admits no new
 origin, and a client-side error is still invisible to the operator — which is the trade made

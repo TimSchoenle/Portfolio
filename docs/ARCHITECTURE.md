@@ -9,7 +9,7 @@ Six packages in one Cargo workspace: two libraries every binary reads, three bin
 | `crates/config` | The typed configuration blocks each binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader |
 | `crates/data` | Language-neutral data — site config, skills, experience, the `repos.json` schema — and the embedded `i18n/{en,de}.json` translations |
 | `apps/web` | The site. One crate that builds twice: a WASM client under the `web` feature and a native Axum SSR server under `server`, carrying the JSON API, the SEO documents, the security headers and the probes |
-| `apps/resume-generator` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterises the 1200×630 social card, with its fonts embedded |
+| `apps/resume-generator` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterizes the 1200×630 social card, with its fonts embedded |
 | `apps/update-repos` | Lists the owner's active GitHub repositories and rewrites `apps/web/repos.json` through the shared `Repo`/`ReposFile` models |
 | `.` (`portfolio-platform`) | `src/lib.rs` is a placeholder. release-please's Rust strategy needs a root package to bump, and the version it writes there is the one the README payload and the image's contract document both read |
 
@@ -27,7 +27,7 @@ switched on by `sentry.enabled` rather than by a Cargo feature, so an image cann
 and silently do nothing with it — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
 
 Server-side rendering is not a fallback here. The locale is negotiated from request headers in
-`apps/web/src/i18n.rs` and applied before the document is serialised, so nothing arrives in the
+`apps/web/src/i18n.rs` and applied before the document is serialized, so nothing arrives in the
 wrong language and gets swapped once hydration runs. The `<html lang>` attribute is stamped into
 the buffered body, which is also where the Content-Security-Policy gets the inline scripts it
 hashes — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
@@ -46,25 +46,29 @@ only thing that catches it.
 
 ## What the client ships
 
-The WASM bundle is built under the `release` profile: `opt-level = "z"`, fat LTO, one codegen unit.
-The profile sets `panic = "unwind"` even so, because it also builds the SSR server, where a panic
-in one handler has to fail that request rather than the process. The wasm target has no unwinding,
-so the client keeps its size either way.
+`dx bundle --release` does not build under Cargo's `release` profile. It injects two profiles of
+its own, `wasm-release` for the client and `server-release` for the server, and the tuning in the
+root `[profile.release]` (`opt-level = "z"`, fat LTO, one codegen unit) reaches the shipped
+binaries only through them. The profile sets `panic = "unwind"` because it also applies to the SSR
+server, where a panic in one handler has to fail that request rather than the process. The wasm
+target has no unwinding, so the client keeps its size either way.
 
 Tailwind CSS v4 is compiled by `@tailwindcss/cli` through npm, which is the only reason Node.js is
 a prerequisite.
 
-## Generated artefacts
+## Generated artifacts
 
-Three things reach the binary from outside the source tree, and `apps/web/build.rs` embeds all
-three with `include_str!`. Each has an empty default it falls back to, so a bare `cargo check`
-outside the image build still compiles and the affected page renders its empty state.
+Several files reach the binary from outside the source tree, and `apps/web/build.rs` embeds them.
+Each has an empty default it falls back to, so a bare `cargo check` outside the image build still
+compiles and the affected page renders its empty state.
 
-| Artefact | Written by | Read by |
+| Artifact | Written by | Read by |
 | --- | --- | --- |
 | `apps/web/repos.json` | `apps/update-repos` | the projects section — see [PROJECT_DATA.md](PROJECT_DATA.md) |
 | `apps/web/generated/licenses.json` | `cargo about`, through `just licenses` | `/licenses` — see [DEPLOYMENT.md](DEPLOYMENT.md) |
-| `resume-fingerprint.json` | `apps/resume-generator` | the contact card, which shows each PDF's SHA-256 |
+| `apps/web/generated/resume/*.pdf` | `apps/resume-generator` | `/resume/<file>`, linked from the contact card and the command palette |
+| `apps/web/generated/resume-fingerprint.json` | `apps/resume-generator` | the contact card, which shows each PDF's SHA-256 |
+| `apps/web/generated/og-image.png` | `apps/resume-generator` | `/og-image.png`, the `og:image` of every page |
 
 The resume generator is a Typst document builder rather than a PDF library. It embeds Inter, with
 Liberation Sans as a metric-compatible last resort, and emits a tagged PDF 1.7 with live link
@@ -73,7 +77,12 @@ the content lands on one A4 page, because a resume that runs to a second page is
 truncates. The main column is emitted before the sidebar so a text extractor reads identity,
 summary and experience in that order despite the sidebar sitting on the left.
 
-The same run rasterises `og-image.png` at 1200×630. Every link unfurler refuses SVG, and Typst is
+The German sheet can carry an application photo at the top of its sidebar. The photo is a build
+input, never a committed file: pass `--photo <file>` (or `PORTFOLIO_RESUME__PHOTO_FILE`), which
+the image build supplies as the BuildKit secret `resume_photo`. Without it, both sheets render
+without a photo.
+
+The same run rasterizes `og-image.png` at 1200×630. Every link unfurler refuses SVG, and Typst is
 already here with the brand font and a layout engine, so the social card is a second small document
 rather than a second toolchain.
 

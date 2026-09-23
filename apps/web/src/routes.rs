@@ -33,7 +33,7 @@ pub enum Route {
 ///
 /// It also resolves the legal index, because the footer on every page links each published
 /// document and those links have to be in the server render: an imprint a reader without
-/// JavaScript cannot reach is not "easily recognisable, directly accessible" (§ 5 DDG). The
+/// JavaScript cannot reach is not "easily recognizable, directly accessible" (§ 5 DDG). The
 /// fetch has no reactive input, so it suspends once, on the server, and hydrates from the
 /// payload. The index is shared as context and handed to [`LegalProvider`], which the document
 /// page's component reads its adapters from.

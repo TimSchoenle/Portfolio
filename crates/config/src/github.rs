@@ -31,16 +31,16 @@ pub struct GithubConfig {
     /// Optional: the listing is public, so an unauthenticated build still works, just against the
     /// anonymous quota.
     ///
-    /// This is the one secret in the workspace, and the reason the loader is `terrace-config`:
-    /// supply it as `PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token` (or from a secrets
-    /// directory) so it never enters the process environment, where `/proc/<pid>/environ`, a
-    /// crash dump or a `docker inspect` would carry it.
+    /// One of the workspace's two secrets, beside `sentry.dsn`. Supply it as
+    /// `PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token` (or from a secrets directory) so it
+    /// never enters the process environment, where `/proc/<pid>/environ`, a crash dump or a
+    /// `docker inspect` would carry it.
     // Not rustdoc: every `///` on a field in this crate is rendered into `config.example.toml`
     // and into the README table, for an operator who is not reading the source. Why the
     // attribute is `skip_serializing` is for whoever changes this line.
     //
     // `skip_serializing` rather than an impl: `SecretString` deliberately has no `Serialize`,
-    // and the schema generator serialises the default config to read the `Default` column out of
+    // and the schema generator serializes the default config to read the `Default` column out of
     // it. The key still appears in the table — the derive reports it either way — with `unset`
     // for a default it never had, which is both true and the only safe thing to print. This is
     // the pattern `terrace-config` documents for a secret-bearing field.

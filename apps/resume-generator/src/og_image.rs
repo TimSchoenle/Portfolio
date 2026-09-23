@@ -46,7 +46,7 @@ const _: () = {
 
 // The site's dark palette (`apps/web/assets/input.css`). `--accent` is authored
 // there in oklch, which is a wider gamut than PNG carries, so it is stated here
-// as the sRGB a browser clamps it to — the same colour a visitor sees.
+// as the sRGB a browser clamps it to — the same color a visitor sees.
 const BG: &str = "#0a0d14";
 const FG: &str = "#e8ecf2";
 const MUTED: &str = "#6b7689";
@@ -55,10 +55,10 @@ const ACCENT: &str = "#00b6ff";
 
 /// Renders the card as PNG bytes.
 ///
-/// `job_title` and `description` come from the caller's translations rather than
-/// from [`CONFIG`] so the card speaks the same language as the page that
-/// references it, should a per-locale card ever be wanted; today one English
-/// card is published, matching the single global `og:image`.
+/// `job_title` is set under the name and `description` under the rule. Both are
+/// parameters rather than read from [`CONFIG`] here, so a per-locale card needs
+/// no change to this module; today one English card is published, matching the
+/// single global `og:image`.
 pub(crate) fn render(job_title: &str, description: &str) -> Result<Vec<u8>, String> {
     render_png(build_typ(job_title, description), SCALE)
 }

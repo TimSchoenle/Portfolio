@@ -68,7 +68,7 @@ fn cache_control_for(path: &str) -> &'static str {
 /// plain hex, so a hash with leading zero nibbles is written short — one real
 /// `dx bundle` of this crate produced `web-dxh9c6f94a783aca5d3.js` (16 digits)
 /// and `web_bg-dxhfc275e0429871eb.wasm` (15) side by side. Requiring exactly 16
-/// therefore failed to recognise roughly one asset in sixteen as hashed, and
+/// therefore failed to recognize roughly one asset in sixteen as hashed, and
 /// those fell through to `no-cache`: the wasm binary and the stylesheet, the two
 /// largest and most cacheable files on the page, were revalidated on every visit.
 fn is_content_hashed(path: &str) -> bool {
