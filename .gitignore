@@ -52,9 +52,7 @@ yarn-error.log*
 # ---------------------------------------------------------------------------
 # Local agent / tooling state
 # ---------------------------------------------------------------------------
-.claude/*
-# The dev-server launch configuration is shared: it runs `just dev`.
-!.claude/launch.json
+.claude/
 .serena/
 
 # ---------------------------------------------------------------------------

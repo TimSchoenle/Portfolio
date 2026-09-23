@@ -153,7 +153,7 @@ just dev          # or `just dev 3000` for another port
 The first run generates the resume PDFs and the social card, installs the Tailwind toolchain and
 builds the stylesheet; later runs reuse them. The server runs against the legal templates in
 `legal/`. The `/licenses` page stays empty until `just licenses` has rendered the third-party
-inventory. `.claude/launch.json` runs the same recipe for editors that read it.
+inventory.
 
 Run the checks CI runs, in one recipe:
 

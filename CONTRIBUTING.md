@@ -38,7 +38,7 @@ code. The rest of this document describes the development workflow the maintaine
    `npm ci` and builds the Tailwind stylesheet; later runs reuse them (delete
    `apps/web/generated` to regenerate). A Tailwind watcher rebuilds the stylesheet on every
    change. The recipe is `apps/web/scripts/dev.mjs`, run by Node so it behaves the same on every
-   platform, and `.claude/launch.json` starts it for editors that read that file.
+   platform.
 
    The server runs against the legal document templates in `legal/`: it refuses to start
    without an imprint and a privacy notice, and none is compiled in. The templates contain
