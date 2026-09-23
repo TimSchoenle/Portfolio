@@ -57,7 +57,7 @@ about itself, so renaming a field corrects all three in the commit that renames 
 ```bash
 docker run --rm -p 8080:8080 \
   -v "$PWD/legal:/config/legal:ro" -e PORTFOLIO_CONFIG=/config/legal \
-  timschoenle/portfolio:v3.1.0
+  timschoenle/portfolio:v3.1.1
 ```
 
 Run it from a checkout of this repository: the server refuses to start without an imprint and a
@@ -112,7 +112,7 @@ client bundle beside it, and the configuration contract at `/config/contract.jso
 ### Docker
 
 ```bash
-docker pull timschoenle/portfolio:v3.1.0
+docker pull timschoenle/portfolio:v3.1.1
 ```
 
 Both architectures are pushed as one manifest list, so `docker pull` resolves the right image per
