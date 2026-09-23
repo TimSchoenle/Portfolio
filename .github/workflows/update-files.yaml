@@ -130,7 +130,7 @@ jobs:
             --example config-schema -- --format variables)"
           echo "variables=${variables}" >> "$GITHUB_OUTPUT"
 
-      # The other half of the README's payload: name, description, version, licence, toolchain and
+      # The other half of the README's payload: name, description, version, license, toolchain and
       # the `docs/` index, read out of the root `Cargo.toml` and a walk of `docs/`. The
       # configuration payload above is handed to it as `extra` and deep-merged over what it
       # derived, which is safe here because the generator emits no key this action also emits —
@@ -207,7 +207,7 @@ jobs:
           identifier: render-generated-files
           body: ${{ steps.comment-body.outputs.body }}
 
-  # The two artefacts the image publishes about its own configuration: `docs/config.contract.json`,
+  # The two artifacts the image publishes about its own configuration: `docs/config.contract.json`,
   # which a chart's CI reads to check that what it renders is what this image loads, and the
   # `LABEL` block that makes that document discoverable on the image without pulling a layer.
   #

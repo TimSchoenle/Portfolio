@@ -97,10 +97,10 @@ pub struct CloudflareConfig {
     /// Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge.
     ///
     /// On by default, because this site is delivered through a Cloudflare Tunnel with the bot
-    /// products active — the privacy page lists `_cf_bm`, `cf_clearance` and the `cf_chl_rc_*`
-    /// challenge cookies, which is the observable half of the same feature. Those products inject
-    /// an inline `<script>` into the HTML *after* it leaves this process, so no hash this server
-    /// computes can cover it; `script-src` refuses it and the detection silently never runs.
+    /// products active; the `__cf_bm` and `cf_clearance` cookies they set are the observable
+    /// half of the same feature. Those products inject an inline `<script>` into the HTML
+    /// *after* it leaves this process, so no hash this server computes can cover it;
+    /// `script-src` refuses it and the detection silently never runs.
     /// Cloudflare's documented answer is to parse the `Content-Security-Policy` response header
     /// and copy the nonce onto what it injects, so nothing has to be stamped into the document.
     ///

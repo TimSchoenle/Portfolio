@@ -10,7 +10,7 @@
 //! # Why the document policy is per response
 //!
 //! Dioxus renders inline script into every page: the streaming bootstrap, and
-//! `window.initial_dioxus_hydration_data="…"`, whose text is the serialised state of *that*
+//! `window.initial_dioxus_hydration_data="…"`, whose text is the serialized state of *that*
 //! render. There is no shell on disk carrying it, so nothing about it is knowable at start-up —
 //! `csp-shell`'s file scanner is the wrong half of the crate here, and [`csp_shell::scan_shell`],
 //! which takes the document's text, is the right one. The body is already buffered for the

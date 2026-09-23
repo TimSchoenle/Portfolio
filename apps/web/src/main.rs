@@ -18,7 +18,7 @@ mod github;
 mod hooks;
 mod i18n;
 mod legal;
-/// The third-party licence inventory embedded at build time (`cargo about`).
+/// The third-party license inventory embedded at build time (`cargo about`).
 mod licenses;
 mod pages;
 mod routes;

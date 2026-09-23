@@ -38,7 +38,7 @@ jobs:
   # diffing makes a configuration change visible in the pull request that makes it: a removed key
   # shows up in the diff, next to the chart it is about to break.
   #
-  # The gate stays now that `update-files.yaml` regenerates both artefacts and commits them: the
+  # The gate stays now that `update-files.yaml` regenerates both artifacts and commits them: the
   # two answer different questions. That workflow makes a pull request converge on the contract
   # its types produce; this one refuses to let one merge before it has. A copy that arrives a
   # commit late is a gate passing against the wrong document, and this job is what makes "late"
@@ -227,7 +227,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check
     strategy:
-      # Report every architecture's failures in one run rather than cancelling
+      # Report every architecture's failures in one run rather than canceling
       # the sibling leg on the first error.
       fail-fast: false
       matrix:
@@ -450,7 +450,7 @@ jobs:
           # The one way this part of the pipeline fails quietly: `cargo about`
           # did not run, or its output never reached `build.rs`, and the route
           # answers 200 anyway — with the "nothing to show" state in place of the
-          # licences the image is obliged to publish. So assert a licence text and
+          # licenses the image is obliged to publish. So assert a license text and
           # a crate name, not just the status.
           expect_status /licenses 200
           expect_body_contains /licenses 'Permission is hereby granted, free of charge'

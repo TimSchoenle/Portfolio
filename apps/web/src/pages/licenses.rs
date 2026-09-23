@@ -5,8 +5,8 @@
 //! the same fact. Nothing here is fetched at runtime and nothing is
 //! hand-maintained: adding a dependency changes this page on the next build.
 //!
-//! Two views: which licences are involved, then every dependency — each one
-//! expanding to the licence text it ships under. The texts are not a section of
+//! Two views: which licenses are involved, then every dependency — each one
+//! expanding to the license text it ships under. The texts are not a section of
 //! their own, because that section could only have listed the same dependency
 //! names a second time to say which text belonged to which.
 
@@ -58,7 +58,7 @@ fn Inventory(file: &'static LicensesFile) -> Element {
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
 
-    // The join, done once: each dependency with the licence texts naming it.
+    // The join, done once: each dependency with the license texts naming it.
     let dependencies = file.dependencies();
 
     let unit = t("licenses.dependencyUnit");
@@ -85,13 +85,13 @@ fn Inventory(file: &'static LicensesFile) -> Element {
         section { class: "licenses-block",
             h2 { "{dependencies_heading}" }
             // One row per dependency, the whole row a disclosure control: the
-            // licence text belongs to the dependency that ships it, and a
+            // license text belongs to the dependency that ships it, and a
             // separate list of texts could only have repeated these names to say
             // which text was whose.
             //
             // Collapsed, not deferred — `details` hides its contents, it does not
             // withhold them — so Ctrl+F and a crawler still reach every word of
-            // every licence.
+            // every license.
             div { class: "license-deps",
                 {dependencies.iter().map(|row| {
                     let dep = row.dependency;

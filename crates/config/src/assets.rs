@@ -12,7 +12,7 @@ use serde::Deserialize;
 /// endpoints instead of serving a page with no wasm.
 // No `deny_unknown_fields` on any block in this crate, and it is not an oversight — though the
 // reason it used to give was. The `PORTFOLIO_<KEY>_FILE` indirection is *not* the obstacle:
-// terrace-config resolves the suffix into the key it names before anything is deserialised, so a
+// terrace-config resolves the suffix into the key it names before anything is deserialized, so a
 // closed struct loads through both the `_FILE` layer and the secrets directory. Two other
 // reasons stand in its place:
 //
@@ -27,7 +27,7 @@ use serde::Deserialize;
 //     generated contract byte-identical.
 //
 // Hardening the blocks against a misspelt key is still worth doing. It is a deliberate
-// behaviour change and belongs in its own commit, not folded into a schema migration.
+// behavior change and belongs in its own commit, not folded into a schema migration.
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",

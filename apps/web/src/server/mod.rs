@@ -341,7 +341,7 @@ const ISR_LOCALE_QUERY_PREFIX: &str = "__isr_locale=";
 /// Compile-time proof that the two constants above have not drifted apart, for
 /// the same reason as `crate::i18n::LANG_COOKIE_PREFIX`: `concat!` takes only
 /// literals, so nothing else would catch a rename of one leaving the other
-/// behind — and a mapper that stops recognising the marker silently collapses
+/// behind — and a mapper that stops recognizing the marker silently collapses
 /// every language back onto one cache entry.
 const _: () = {
     let key = ISR_LOCALE_PARAM.as_bytes();
@@ -882,7 +882,7 @@ fn is_new_cache_entry(announced: &Mutex<HashSet<PathBuf>>, mapped: &Path) -> boo
 /// Whether `mapped` already holds a rendered page.
 ///
 /// Dioxus's `FileSystemCache` uses two different on-disk layouts depending on
-/// whether a TTL is configured, and both have to be recognised here — checking
+/// whether a TTL is configured, and both have to be recognized here — checking
 /// only the timestamped one made this always report "not cached" under the
 /// default (permanent) configuration, which in turn kept every announced path
 /// in memory forever:
@@ -1255,7 +1255,7 @@ mod tests {
             "/?__isr_locale=",
         ] {
             let mapped = isr_map_path(base, forged, &paths());
-            assert_eq!(mapped, untagged, "{forged} was not neutralised");
+            assert_eq!(mapped, untagged, "{forged} was not neutralized");
             assert!(
                 mapped.starts_with(base),
                 "{forged} escaped the cache directory"

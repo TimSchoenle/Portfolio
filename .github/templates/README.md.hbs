@@ -2,7 +2,7 @@
 Generated from .github/templates/README.md.hbs. Edit that file, never this one.
 
 Two payloads are merged into one render. The repository's own facts — name, description, version,
-licence, toolchain and the docs/ index — come from
+license, toolchain and the docs/ index — come from
 TimSchoenle/actions/actions/common/readme-variables, which reads the root Cargo.toml and walks
 docs/. It deliberately does not read the description from the GitHub API: one edited in the web UI
 would change this file with no commit behind it, and the next unrelated pull request would fail the
@@ -55,12 +55,16 @@ about itself, so renaming a field corrects all three in the commit that renames 
 ## Quick start
 
 ```bash
-docker run --rm -p 8080:8080 timschoenle/portfolio:{{ release.tag }}
+docker run --rm -p 8080:8080 \
+  -v "$PWD/legal:/config/legal:ro" -e PORTFOLIO_CONFIG=/config/legal \
+  timschoenle/portfolio:{{ release.tag }}
 ```
 
-Then open <http://localhost:8080>. The runtime image is `FROM scratch`: one statically linked
-binary, the client bundle beside it, and the configuration contract at `/config/contract.json`. It
-runs as `1001:1001` and needs nothing writable.
+Run it from a checkout of this repository: the server refuses to start without an imprint and a
+privacy notice, none is baked into the image, and `legal/` holds templates for both. Then open
+<http://localhost:8080>. The runtime image is `FROM scratch`: one statically linked binary, the
+client bundle beside it, and the configuration contract at `/config/contract.json`. It runs as
+`1001:1001`, and nothing it needs has to be writable.
 
 ## Table of contents
 
@@ -79,7 +83,7 @@ runs as `1001:1001` and needs nothing writable.
 
 - Every route renders on the server and then hydrates. Per-route `<head>` metadata and JSON-LD ship
   in the first response, and the locale is negotiated from request headers before the document is
-  serialised, so nothing arrives in the wrong language and gets swapped a moment later.
+  serialized, so nothing arrives in the wrong language and gets swapped a moment later.
 - EN and DE throughout, including both resumes. `translation_key_sets_match` in `crates/data`
   fails the build when the two translation files disagree on a key, which otherwise shows up as
   one English string in a German page rather than as an error.
@@ -87,16 +91,17 @@ runs as `1001:1001` and needs nothing writable.
   other document are Markdown under `legal.*`, served at `/legal/<slug>` through
   [terrace-legal](https://github.com/TimSchoenle/terrace-legal) and rendered to elements rather
   than an HTML string. The server refuses to start without an imprint and a privacy notice in
-  both languages; `legal/` in this repository is a complete block to mount.
+  both languages. `legal/` holds templates for both, with placeholders; the published texts are
+  maintained outside this repository.
 - **The resumes are typeset during the build.** Typst lays out one A4 page per language, scaling
   the type down and re-typesetting until the content fits, and each PDF carries a SHA-256
   fingerprint that the contact card shows.
 - **The Content-Security-Policy is built per response.** The server hashes the inline scripts that
   document actually carries and reserves a nonce for the script Cloudflare injects at the edge, so
   `script-src` needs no `'unsafe-inline'`.
-- `/licenses` lists every crate the client and the server link, the licence it ships under, and the
-  verbatim text of every licence file found. cargo-about produces it during the image build, and an
-  unlisted licence fails that build.
+- `/licenses` lists every crate the client and the server link, the license it ships under, and the
+  verbatim text of every license file found. cargo-about produces it during the image build, and an
+  unlisted license fails that build.
 - The project list is fetched from the GitHub API at build time, with archived, blacklisted and
   year-stale repositories dropped, then embedded into the binary by `build.rs`.
 - Cmd+K opens a command palette with fuzzy search and keyboard navigation. The stack section is a
@@ -129,7 +134,8 @@ each release bumps it to the new image digest.
 
 ```bash
 rustup target add wasm32-unknown-unknown
-cargo install --locked dioxus-cli cargo-about
+cargo install --locked dioxus-cli --version 0.7.9   # match DIOXUS_CLI_VERSION in the Dockerfile
+cargo install --locked cargo-about
 git clone {{ repo.url }}.git
 cd {{ repo.name }}
 ```
@@ -138,14 +144,14 @@ Node.js is needed for the Tailwind step, and `just` runs every recipe CI runs.
 
 ## Usage
 
-Two artefacts have to exist before the web build, because `apps/web/build.rs` embeds both. Without
+Two artifacts have to exist before the web build, because `apps/web/build.rs` embeds both. Without
 them it substitutes empty defaults and the pages render their empty state.
 
 ```bash
-cargo run -p resume-generator -- apps/web/generated   # resume PDFs, fingerprints, social card
-just licenses                                         # third-party inventory for /licenses
+cargo run --profile tools -p resume-generator -- apps/web/generated  # resume PDFs, social card
+just licenses                                        # third-party inventory for /licenses
 cd apps/web && npm ci && npm run build:css
-PORTFOLIO_CONFIG=../../legal dx serve --platform web  # SSR + hydration on http://localhost:8080
+PORTFOLIO_CONFIG=../../legal dx serve --platform web # SSR + hydration on http://localhost:8080
 ```
 
 Run the checks CI runs, in one recipe:
@@ -268,7 +274,7 @@ layer that reports.
 ## Contributing
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the development setup, the commit convention and the checks
-a pull request has to pass. Note what the licence grants before you fork: reading the source and
+a pull request has to pass. Note what the license grants before you fork: reading the source and
 running it locally, and nothing about redistributing or deploying it.
 
 Several files here are generated, this one included. Each says so in its opening lines, and an edit

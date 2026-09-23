@@ -23,7 +23,7 @@
 //! same `hyper_util` mute) and adds the Sentry layer to it.
 //!
 //! With Sentry off, nothing here is constructed and the framework's subscriber stands exactly as
-//! before. That asymmetry is deliberate: the default path must not change behaviour to make an
+//! before. That asymmetry is deliberate: the default path must not change behavior to make an
 //! opt-in feature possible.
 //!
 //! One visible difference on the opted-in path, and only in development: `dioxus_logger` drops
@@ -283,7 +283,7 @@ fn accepts(threshold: SentryLevel, level: Level) -> bool {
 ///
 /// Separate from [`portfolio_config::SentryConfigError`] on purpose: that one is everything the
 /// schema can decide on its own, and this is the two answers only the SDK and the process can
-/// give. Both end the boot through the same refusal, so an operator sees one behaviour.
+/// give. Both end the boot through the same refusal, so an operator sees one behavior.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum TelemetryError {

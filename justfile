@@ -7,7 +7,7 @@
 #
 #     https://github.com/casey/just
 #
-# There is deliberately no recipe that *checks* the generated artefacts. Checking is
+# There is deliberately no recipe that *checks* the generated artifacts. Checking is
 # `TimSchoenle/actions/actions/rust/config-contract`, which does it in three places this file
 # cannot reach — against the Dockerfile, against the committed document, and against the labels a
 # built image actually carries. A second implementation here would be a second opinion, and the
@@ -84,7 +84,7 @@ dockerfile-labels:
     mv "$rewritten" "{{ dockerfile }}"
     echo "wrote the LABEL region in {{ dockerfile }}"
 
-# The third-party licence inventory the `/licenses` page renders. Not a committed artefact: the
+# The third-party license inventory the `/licenses` page renders. Not a committed artifact: the
 # image build runs this same command in its `generate` stage (see the Dockerfile), because the
 # attribution a build publishes has to describe the dependency set that build linked. This recipe
 # is here so a developer can render the page locally — without it `cargo run` embeds the empty
@@ -94,10 +94,10 @@ dockerfile-labels:
 #
 # `--all-features` is not optional: the crate's platform features are what pull in the wasm
 # client's `web-sys` and the server's axum, and a run without them attributes neither. The
-# accepted-licence list in apps/web/about.toml is a gate — an unlisted licence exits non-zero
+# accepted-license list in apps/web/about.toml is a gate — an unlisted license exits non-zero
 # here and fails the image build there.
 
-[doc('Render the third-party licence inventory the /licenses page is built from')]
+[doc('Render the third-party license inventory the /licenses page is built from')]
 [group('generate')]
 licenses:
     #!/usr/bin/env bash

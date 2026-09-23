@@ -1,9 +1,9 @@
-//! The third-party licence inventory, embedded into the binary at build time.
+//! The third-party license inventory, embedded into the binary at build time.
 //!
 //! `cargo about generate` writes `generated/licenses.json` from `about.toml` and
 //! `about.hbs`; `build.rs` copies it into `OUT_DIR` (or writes an empty default
 //! when absent), so the include below always resolves. The `/licenses` route
-//! renders it — server-side like every other page, from the same artefact that
+//! renders it — server-side like every other page, from the same artifact that
 //! carries the dependencies it names.
 
 use std::sync::LazyLock;
@@ -16,7 +16,7 @@ const LICENSES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/licenses.jso
 /// The parsed inventory, or `None` when there is nothing to show.
 ///
 /// Parsed once per process rather than per render: this is a quarter of a
-/// megabyte of licence text, and on the server `App` mounts once per render, so
+/// megabyte of license text, and on the server `App` mounts once per render, so
 /// every incremental-cache miss would otherwise re-parse the whole document.
 ///
 /// Borrowed, not shared through an `Arc` the way `github::REPOS` is: the repo

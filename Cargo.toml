@@ -18,17 +18,18 @@ publish = false
 # take the description from the GitHub API on purpose: one edited in the web UI
 # would change the rendered README with no commit behind it, and the next
 # unrelated pull request would then fail the README drift gate for a reason
-# absent from its own diff. The description, the homepage and the licence are
+# absent from its own diff. The description, the homepage and the license are
 # the same three strings the image's OCI labels carry.
 #
-# `rust-version` is the toolchain the image is built with — `rust:1.97-slim` in
-# the Dockerfile — and not a floor anything tests below.
+# `rust-version` is the toolchain the image is built with — the `rust:<version>-slim` base in
+# the Dockerfile — and not a floor anything tests below. Renovate bumps the Dockerfile only, so a
+# base-image update has to move this line in the same pull request.
 [package]
 name = "portfolio-platform"
 version = "3.1.0"
 publish = false
 edition = "2024"
-rust-version = "1.97"
+rust-version = "1.98"
 description = "Dioxus fullstack (SSR + hydration) portfolio served by Axum."
 homepage = "https://tim-schoenle.de"
 license = "LicenseRef-Proprietary"
@@ -253,7 +254,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # request's task and leaves the process serving, so without this it is invisible), and the two
 # integrations: `tracing` for the subscriber layer and `tower-axum-matched-path` for one
 # transaction per request named by the matched route rather than by the URI, which is what stops
-# `/api/repos/{name}` becoming one transaction name per repository.
+# `/api/v1/legal/{slug}` becoming one transaction name per document.
 #
 # `contexts` is deliberately **off**, and it is a default. It adds an OS/host/runtime tag block by
 # pulling `os_info`, which carries a fifteen-crate `objc2` tree for its macOS support — into
@@ -312,6 +313,9 @@ sha2 = "0.11"
 # Drop the `=` once cookie no longer constrains the choice.
 time = { version = "=0.3.55", features = ["formatting", "parsing"] }
 
+# `dx bundle --release` compiles under profiles it injects itself (`wasm-release` for the client,
+# `server-release` for the server), so this block reaches the shipped binaries through them rather
+# than directly. `cargo build --release` and `cargo test --release` use it as written.
 [profile.release]
 opt-level = "z"
 lto = true
@@ -326,7 +330,7 @@ strip = true
 
 # The two build-time generators (`update-repos`, `resume-generator`) run once
 # during the image build and are never shipped, so every property `release`
-# optimises for is the wrong trade for them: `opt-level = "z"`, fat LTO and a
+# optimizes for is the wrong trade for them: `opt-level = "z"`, fat LTO and a
 # single codegen unit buy a smaller binary nobody keeps, at the cost of the
 # slowest possible compile of a 296-crate tree (typst).
 #
@@ -334,7 +338,7 @@ strip = true
 # `release`, 1m29s under this profile — and `opt-level = 1` is the faster of the
 # two at *runtime* as well, since typst's layout pass is compute-bound and `z`
 # trades speed for size. `inherits = "release"` rather than "dev" so the
-# generators still run optimised and with `debug-assertions` off.
+# generators still run optimized and with `debug-assertions` off.
 [profile.tools]
 inherits = "release"
 opt-level = 1

@@ -10,7 +10,7 @@
 //! the pull request. Neither document can drift from the types: a key renamed in `crates/config`
 //! is a key renamed in both, in the same commit.
 //!
-//! The same workflow regenerates the two artefacts the image publishes about itself —
+//! The same workflow regenerates the two artifacts the image publishes about itself —
 //! `docs/config.contract.json` and the Dockerfile's `dev.terrace.config.*` label block — through
 //! `just regenerate`, and the Config Contract job in `build.yaml` checks both afterwards. That
 //! job is the gate; this is what keeps a pull request from having to clear it by hand, including

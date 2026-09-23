@@ -7,7 +7,7 @@
 # Build-time embedded data (see build.rs) produced by update-repos, cargo-about
 # and the resume generator; substituted with empty defaults when absent.
 # `generated/` also holds the resume PDFs (`generated/resume/*.pdf`) and the
-# third-party licence inventory (`generated/licenses.json`) embedded into the
+# third-party license inventory (`generated/licenses.json`) embedded into the
 # binary.
 /repos.json
 /generated/
