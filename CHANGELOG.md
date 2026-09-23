@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.1](https://github.com/TimSchoenle/Portfolio/compare/v3.1.0...v3.1.1) (2026-09-23)
+
+
+### Documentation
+
+* legal templates, localized UI strings, resume and documentation fixes ([#1229](https://github.com/TimSchoenle/Portfolio/issues/1229)) ([dc9a1c7](https://github.com/TimSchoenle/Portfolio/commit/dc9a1c70f2b24936821bd2a7c4323bdd11278c36))
+
+
+### Miscellaneous
+
+* **deps:** update rust:1.98-slim docker digest to f47a8de ([#1227](https://github.com/TimSchoenle/Portfolio/issues/1227)) ([b427604](https://github.com/TimSchoenle/Portfolio/commit/b427604b745ba96cc7b04c26315a8046667989a9))
+
 ## [3.1.0](https://github.com/TimSchoenle/Portfolio/compare/v3.0.0...v3.1.0) (2026-09-22)
 
 
