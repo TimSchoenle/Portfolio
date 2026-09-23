@@ -1,148 +1,151 @@
-# The privacy notice Art. 13 GDPR requires. See legal.toml for the format.
+# Template for the privacy notice Art. 13 GDPR requires. See legal.toml for the format and for why
+# this is a template rather than the published text.
+#
+# Placeholders: [OPERATOR NAME], [STREET AND NUMBER], [POSTCODE], [CITY], [EMAIL ADDRESS],
+# [HOSTING PROVIDER, ADDRESS], [HOSTING PROVIDER PRIVACY URL], [LOG RETENTION DAYS],
+# [SUPERVISORY AUTHORITY], [SUPERVISORY AUTHORITY URL].
+#
+# Section 5 describes delivery through Cloudflare, which the default configuration assumes
+# (`csp.cloudflare.script_nonce`). Delete it when no CDN sits in front of the server, and list in
+# section 8 only the cookies the CDN actually sets on this site: check them in the browser rather
+# than copying a vendor's full list. If error reporting (`sentry.enabled`) is ever switched on,
+# the error-reporting service is a further recipient and needs a section of its own.
 
 [legal.documents.privacy]
-updated = "2026-09-21"
+updated = "2026-09-23"
 order = 20
 title = { en = "Privacy Policy", de = "Datenschutzerklärung" }
 
 body.en = '''
-This privacy policy explains how your personal data is processed when you visit this website.
+This privacy policy explains how personal data is processed when you visit this website.
 
 ## 1. Controller
 
-tim-schoenle.de – Tim Schönle\
-c/o Online-Impressum.de #5279\
-Europaring 90\
-53757 Sankt Augustin\
+[OPERATOR NAME]\
+[STREET AND NUMBER]\
+[POSTCODE] [CITY]\
 Germany
 
-**Email:** [contact@tim-schoenle.de](mailto:contact@tim-schoenle.de)\
-**Contact form:** <https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg>
+**Email:** [EMAIL ADDRESS]
 
 The controller within the meaning of Art. 4(7) GDPR is the person named above.
 
-## 2. General Information
+## 2. Purpose and legal basis
 
-This website is a personal portfolio for professional presentation as a software developer. Personal data is processed only to the extent necessary to provide and secure this website and to respond to contact requests. The legal basis is our legitimate interest in a functional and secure online presence (Art. 6(1)(f) GDPR) and, where applicable, the performance or initiation of a contract (Art. 6(1)(b) GDPR).
+This website is a personal portfolio. Personal data is processed only to the extent necessary to deliver and secure the website and to answer contact requests. Unless a section below states otherwise, the legal basis is my legitimate interest in a functional and secure website (Art. 6(1)(f) GDPR).
 
-## 3. Hosting
+You are not obliged to provide personal data. Without the connection data described below, however, the website cannot be delivered to you. No automated decision-making, including profiling, within the meaning of Art. 22 GDPR takes place.
 
-Our website is hosted by netcup GmbH, Daimlerstraße 25, 76185 Karlsruhe, Germany (hereinafter 'netcup'). The personal data collected on this website is stored on netcup's servers. This may include, but is not limited to, IP addresses, meta and communication data, website accesses and other data generated via a website. The use of netcup is for the purpose of fulfilling the contract with our potential and existing customers (Art. 6(1)(b) GDPR) and in the interest of a secure, fast and efficient provision of our online offer by a professional provider (Art. 6(1)(f) GDPR). netcup will only process your data to the extent necessary to fulfill its performance obligations and follows our instructions regarding this data. We have concluded a data processing agreement (DPA) with netcup. Further information can be found in netcup's privacy policy: <https://www.netcup.de/kontakt/datenschutzerklaerung.php>
+## 3. Hosting and server logs
 
-## 4. SSL/TLS Encryption
+This website is hosted by [HOSTING PROVIDER, ADDRESS], which processes data on my behalf under a data processing agreement (Art. 28 GDPR). Further information: [HOSTING PROVIDER PRIVACY URL]
 
-This website uses SSL/TLS encryption for security reasons and to protect the transmission of confidential content. You can recognize an encrypted connection by the "https://" prefix in your browser's address bar and the lock icon. When SSL/TLS encryption is active, data you transmit to us cannot be read by third parties.
+When you visit the website, the IP address, the date and time of access, the requested page, the referrer URL, the browser type and version, the operating system and the amount of data transferred are recorded in server logs. This data is processed to deliver the website and to detect and investigate misuse. Logs are deleted after [LOG RETENTION DAYS] days unless an individual incident requires longer retention as evidence. The legal basis is Art. 6(1)(f) GDPR.
 
-## 5. Access Data and Logs
+## 4. Encryption
 
-When visiting this website, the server automatically records log files (IP address, date and time of access, browser type and version, operating system, referrer URL, requested page and amount of data transferred). This data is processed to ensure the security and stability of the website and to detect and investigate misuse. Log files are kept for up to 7 days and then deleted, unless further storage is required for evidence purposes. Server location: Germany. The legal basis is our legitimate interest in secure and reliable operation of the website (Art. 6(1)(f) GDPR).
+This website is served exclusively over HTTPS (TLS). Data you transmit is encrypted in transit, so it cannot be read by third parties on the way between your browser and the delivery infrastructure described in sections 3 and 5.
 
-## 6. Use of Cloudflare
+## 5. Delivery through Cloudflare
 
-This website is delivered through a Cloudflare Tunnel provided by Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA. For this purpose, Cloudflare processes technical connection data (in particular IP addresses, requested URLs, system configuration information and other metadata) to deliver and secure the website (e.g. DDoS protection, performance optimization). Cloudflare processes this data as a processor on our behalf under a data processing agreement. Depending on your location, data may be transferred to data centers outside the EU, including the USA. These transfers are protected by Standard Contractual Clauses (Art. 46(2)(c) GDPR) and Cloudflare's certification under the EU-U.S. Data Privacy Framework adequacy decision. Cloudflare has also implemented additional technical and organizational measures to ensure the protection of your data. Processing is based on our legitimate interest in secure and efficient operation of the website (Art. 6(1)(f) GDPR). Further information can be found in Cloudflare's privacy policy: <https://www.cloudflare.com/privacypolicy/>
+This website is delivered through Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA, which terminates the encrypted connection and forwards requests to the server. For this purpose Cloudflare processes connection data, in particular IP addresses, requested URLs, request headers and technical metadata, to deliver the website and protect it against attacks. Cloudflare acts as a processor under a data processing agreement. Data may be processed in data centers outside the EU, including in the USA. Such transfers are based on the European Commission's adequacy decision for the EU-U.S. Data Privacy Framework, under which Cloudflare is certified, and on Standard Contractual Clauses (Art. 46(2)(c) GDPR). The legal basis is Art. 6(1)(f) GDPR. Further information: <https://www.cloudflare.com/privacypolicy/>
 
-## 7. Contact
+## 6. Contact
 
-If you contact me by email, the data you provide (in particular email address, name and the content of your message) will be processed for the purpose of handling and responding to your request. The legal basis is Art. 6(1)(b) GDPR where the contact relates to an existing or potential contractual relationship, and otherwise Art. 6(1)(f) GDPR (our legitimate interest in processing inquiries). Your data will not be shared with third parties unless this is necessary to process your request or required by law, and will be deleted when your inquiry has been conclusively answered, unless statutory retention obligations apply.
+If you contact me by email, the data you provide (in particular your email address, your name and the content of your message) is processed to handle and answer your request. The legal basis is Art. 6(1)(b) GDPR where the request concerns a contract or its initiation, and Art. 6(1)(f) GDPR otherwise. The data is deleted once the request has been conclusively dealt with, unless statutory retention obligations apply.
 
-## 8. Data Subject Rights
+## 7. Your rights
 
-You have the rights granted by Articles 15–21 GDPR: in particular the right of access, rectification, erasure, restriction of processing, data portability and objection to processing based on Art. 6(1)(f) GDPR. Where processing is based on consent, you may withdraw consent at any time with effect for the future. You also have the right to lodge a complaint with a supervisory authority, in particular in the Member State of your habitual residence or place of work (Art. 77 GDPR). For Baden-Württemberg, the competent authority is the State Commissioner for Data Protection and Freedom of Information Baden-Württemberg: <https://www.baden-wuerttemberg.datenschutz.de>
+You have the right of access (Art. 15 GDPR), rectification (Art. 16 GDPR), erasure (Art. 17 GDPR), restriction of processing (Art. 18 GDPR) and data portability (Art. 20 GDPR). You also have the right to lodge a complaint with a supervisory authority (Art. 77 GDPR), in particular in the Member State of your habitual residence or place of work. The authority competent for the controller is [SUPERVISORY AUTHORITY]: [SUPERVISORY AUTHORITY URL]
 
-## 9. Cookies and Browser Storage
+**Right to object (Art. 21 GDPR):** Where processing is based on Art. 6(1)(f) GDPR, you have the right to object to it at any time on grounds relating to your particular situation. An email to the address above is sufficient.
 
-This website itself sets a single cookie and a single entry in your browser's local storage. Both are named `lang` and hold nothing but your language preference ("en" or "de"):
+## 8. Cookies and browser storage
 
-- `lang` (cookie): set on your first visit from your browser's language setting, and updated when you switch the language, so that every page is delivered in your language from the start. First-party only, `SameSite=Lax` (duration: 1 year).
-- `lang` (local storage): the same preference, kept by the page's script so that the language you selected persists (stored until you delete it).
+This website sets one cookie and one local storage entry. Both are named `lang` and hold nothing but your language preference (`en` or `de`):
 
-Delivery through Cloudflare may set technically necessary cookies:
+- `lang` (cookie): set from your browser's language settings when you first visit, and updated when you switch the language, so that every page is delivered in your language from the first byte. First-party, `SameSite=Lax`, expires after one year.
+- `lang` (local storage): the same preference, kept by the page's script so that a language you select persists. Stored until you delete it.
 
-- `_cf_bm`: bot management and detection of malicious visitors (duration: 30 minutes).
-- `__cflb`: session affinity for load balancing (duration: up to 24 hours).
-- `__cfruid`: support for rate limiting to distinguish individual users (session cookie).
-- `cf_clearance`: set after successful security verification to avoid repeated challenges (duration: 30–60 minutes).
-- `cf_chl_rc_i`: supports Cloudflare challenge products (session cookie).
-- `cf_chl_rc_ni`: supports Cloudflare challenge products (session cookie).
+Delivery through Cloudflare may set the following technically necessary cookies:
 
-These entries are technically required to provide the website in the selected language, ensure security, identify malicious visitors and filter web traffic. The storage and access of this technically necessary information is based on § 25(2)(2) TDDDG, as these are used exclusively for the purpose of carrying out the transmission of a communication over a public telecommunications network or are strictly necessary for the provider to supply a service explicitly requested by the user. Therefore, no consent is required for technically necessary cookies. The legal basis for the associated data processing is our legitimate interest in a secure and user-friendly presentation of the website (Art. 6(1)(f) GDPR). No profiling or cross-site tracking takes place. You can delete these entries at any time via your browser settings.
+- `__cf_bm`: distinguishes humans from bots (expires after 30 minutes).
+- `cf_clearance`: records a passed security challenge so it is not repeated (expires after 30 minutes by default).
 
-## 10. No Analytics or Tracking
+Storing and reading these entries is strictly necessary to provide the website you requested in your language and to protect it against attacks, and is therefore permitted without consent under § 25(2) no. 2 TDDDG. The legal basis for the associated processing is Art. 6(1)(f) GDPR. You can delete these entries at any time in your browser settings.
 
-Apart from the technically necessary processing described above, this website uses no tracking tools, analytics, behavioral profiling, advertising networks or social media plugins. No personal data is shared with third parties for marketing or profiling purposes.
+## 9. No analytics or tracking
 
-## 11. Changes
+This website uses no analytics, tracking, advertising or social media plugins, and no personal data is shared for marketing or profiling purposes.
 
-This privacy policy may be updated if technical or legal changes occur. The latest version will always be available on this page.
+## 10. Changes
+
+This privacy policy is updated when the processing it describes changes. The current version is always available on this page.
 '''
 
 body.de = '''
-Diese Datenschutzerklärung informiert darüber, wie Ihre personenbezogenen Daten beim Besuch dieser Website verarbeitet werden.
+Diese Datenschutzerklärung informiert darüber, wie personenbezogene Daten beim Besuch dieser Website verarbeitet werden.
 
 ## 1. Verantwortlicher
 
-tim-schoenle.de – Tim Schönle\
-c/o Online-Impressum.de #5279\
-Europaring 90\
-53757 Sankt Augustin\
+[NAME DES BETREIBERS]\
+[STRASSE UND HAUSNUMMER]\
+[PLZ] [ORT]\
 Deutschland
 
-**E-Mail:** [contact@tim-schoenle.de](mailto:contact@tim-schoenle.de)\
-**Kontaktformular:** <https://mein.online-impressum.de/tim-schoenle-de/#Zweiter_Kontaktweg>
+**E-Mail:** [E-MAIL-ADRESSE]
 
 Verantwortlicher im Sinne von Art. 4 Nr. 7 DSGVO ist die oben genannte Person.
 
-## 2. Allgemeine Hinweise
+## 2. Zweck und Rechtsgrundlage
 
-Diese Website ist ein persönliches Portfolio zur beruflichen Darstellung als Softwareentwickler. Personenbezogene Daten werden nur verarbeitet, soweit dies zur Bereitstellung, Sicherheit und Optimierung dieser Website sowie zur Bearbeitung von Kontaktanfragen erforderlich ist. Rechtsgrundlage ist unser berechtigtes Interesse an einer funktionsfähigen und sicheren Online-Präsenz (Art. 6 Abs. 1 lit. f DSGVO) sowie — soweit einschlägig — die Durchführung vorvertraglicher Maßnahmen oder die Erfüllung eines Vertrags (Art. 6 Abs. 1 lit. b DSGVO).
+Diese Website ist ein persönliches Portfolio. Personenbezogene Daten werden nur verarbeitet, soweit dies zur Auslieferung und Absicherung der Website und zur Beantwortung von Kontaktanfragen erforderlich ist. Soweit ein Abschnitt unten nichts anderes angibt, ist Rechtsgrundlage mein berechtigtes Interesse an einer funktionsfähigen und sicheren Website (Art. 6 Abs. 1 lit. f DSGVO).
 
-## 3. Hosting
+Sie sind nicht verpflichtet, personenbezogene Daten bereitzustellen. Ohne die unten beschriebenen Verbindungsdaten kann die Website jedoch nicht an Sie ausgeliefert werden. Eine automatisierte Entscheidungsfindung einschließlich Profiling im Sinne von Art. 22 DSGVO findet nicht statt.
 
-Unsere Website wird bei der netcup GmbH, Daimlerstraße 25, 76185 Karlsruhe (nachfolgend „netcup") gehostet. Die personenbezogenen Daten, die auf dieser Website erfasst werden, werden auf den Servern von netcup gespeichert. Hierbei kann es sich v. a. um IP-Adressen, Meta- und Kommunikationsdaten, Webseitenzugriffe und sonstige Daten handeln, die über eine Website generiert werden. Die Nutzung von netcup erfolgt zum Zwecke der Vertragserfüllung gegenüber unseren potenziellen und bestehenden Kunden (Art. 6 Abs. 1 lit. b DSGVO) und im Interesse einer sicheren, schnellen und effizienten Bereitstellung unseres Online-Angebots durch einen professionellen Anbieter (Art. 6 Abs. 1 lit. f DSGVO). netcup wird Ihre Daten nur insoweit verarbeiten, wie dies zur Erfüllung seiner Leistungspflichten erforderlich ist, und befolgt unsere Weisungen in Bezug auf diese Daten. Wir haben einen Vertrag über Auftragsverarbeitung (AVV) mit netcup geschlossen. Weitere Informationen finden Sie in der Datenschutzerklärung von netcup: <https://www.netcup.de/kontakt/datenschutzerklaerung.php>
+## 3. Hosting und Server-Logdateien
 
-## 4. SSL-/TLS-Verschlüsselung
+Diese Website wird bei [HOSTING-ANBIETER, ANSCHRIFT] gehostet, der die Daten in meinem Auftrag auf Grundlage eines Vertrags zur Auftragsverarbeitung (Art. 28 DSGVO) verarbeitet. Weitere Informationen: [DATENSCHUTZ-URL DES HOSTING-ANBIETERS]
 
-Diese Website nutzt aus Sicherheitsgründen und zum Schutz der Übertragung vertraulicher Inhalte eine SSL- bzw. TLS-Verschlüsselung. Eine verschlüsselte Verbindung erkennen Sie an der Zeichenfolge "https://" und dem Schloss-Symbol in der Adresszeile Ihres Browsers. Ist die SSL-/TLS-Verschlüsselung aktiviert, können die Daten, die Sie an uns übermitteln, nicht von Dritten mitgelesen werden.
+Beim Aufruf der Website werden IP-Adresse, Datum und Uhrzeit des Abrufs, aufgerufene Seite, Referrer-URL, Browsertyp und -version, Betriebssystem und übertragene Datenmenge in Server-Logdateien erfasst. Diese Daten werden verarbeitet, um die Website auszuliefern sowie Missbrauch zu erkennen und aufzuklären. Die Logdateien werden nach [AUFBEWAHRUNG IN TAGEN] Tagen gelöscht, sofern ein konkreter Vorfall keine längere Aufbewahrung zu Beweiszwecken erfordert. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.
 
-## 5. Server-Logdateien
+## 4. Verschlüsselung
 
-Beim Aufruf dieser Website werden durch den Server automatisch Informationen in so genannten Server-Logdateien erhoben und gespeichert (z. B. IP-Adresse, Datum und Uhrzeit des Abrufs, Browsertyp und -version, verwendetes Betriebssystem, Referrer-URL, aufgerufene Seite und übertragene Datenmenge). Die Verarbeitung dieser Daten erfolgt zur Sicherstellung eines störungsfreien Betriebs der Website, zur Gewährleistung der IT-Sicherheit sowie zur Abwehr und Aufklärung von Missbrauchsfällen. Die Logdateien werden bis zu 7 Tage gespeichert und danach gelöscht, sofern keine längere Aufbewahrung zu Beweiszwecken erforderlich ist. Serverstandort: Deutschland. Rechtsgrundlage ist unser berechtigtes Interesse an der sicheren und zuverlässigen Bereitstellung der Website (Art. 6 Abs. 1 lit. f DSGVO).
+Diese Website wird ausschließlich über HTTPS (TLS) ausgeliefert. Von Ihnen übermittelte Daten werden bei der Übertragung verschlüsselt und können auf dem Weg zwischen Ihrem Browser und der in den Abschnitten 3 und 5 beschriebenen Auslieferungsinfrastruktur nicht von Dritten mitgelesen werden.
 
-## 6. Nutzung von Cloudflare
+## 5. Auslieferung über Cloudflare
 
-Diese Website wird über einen Cloudflare-Tunnel von Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA ausgeliefert. Hierzu verarbeitet Cloudflare technische Verbindungsdaten (insbesondere IP-Adressen, aufgerufene URLs, Systemkonfigurationsinformationen und weitere Metadaten), um die Auslieferung der Website zu ermöglichen und Sicherheitsfunktionen bereitzustellen (z. B. DDoS-Schutz, Performance-Optimierung). Cloudflare verarbeitet diese Daten als Auftragsverarbeiter auf Grundlage eines Auftragsverarbeitungsvertrags. Je nach Standort können Daten in Rechenzentren außerhalb der EU, insbesondere in den USA, verarbeitet werden. Die Übermittlung erfolgt auf Grundlage von Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO) sowie der Zertifizierung von Cloudflare nach dem EU-US Data Privacy Framework. Cloudflare hat zudem zusätzliche technische und organisatorische Maßnahmen implementiert, um den Schutz Ihrer Daten zu gewährleisten. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren und effizienten Betrieb dieser Website (Art. 6 Abs. 1 lit. f DSGVO). Weitere Informationen finden Sie in der Datenschutzerklärung von Cloudflare: <https://www.cloudflare.com/privacypolicy/>
+Diese Website wird über Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA ausgeliefert. Cloudflare terminiert die verschlüsselte Verbindung und leitet Anfragen an den Server weiter. Dazu verarbeitet Cloudflare Verbindungsdaten, insbesondere IP-Adressen, aufgerufene URLs, Anfrage-Header und technische Metadaten, um die Website auszuliefern und vor Angriffen zu schützen. Cloudflare ist als Auftragsverarbeiter auf Grundlage eines Vertrags zur Auftragsverarbeitung tätig. Daten können in Rechenzentren außerhalb der EU, auch in den USA, verarbeitet werden. Grundlage dieser Übermittlungen sind der Angemessenheitsbeschluss der Europäischen Kommission zum EU-US Data Privacy Framework, unter dem Cloudflare zertifiziert ist, sowie Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Weitere Informationen: <https://www.cloudflare.com/privacypolicy/>
 
-## 7. Kontaktaufnahme
+## 6. Kontaktaufnahme
 
-Wenn Sie uns per E-Mail kontaktieren, werden die von Ihnen mitgeteilten Daten (insbesondere E-Mail-Adresse, Name und der Inhalt Ihrer Nachricht) zum Zweck der Bearbeitung und Beantwortung Ihrer Anfrage verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre Anfrage mit der Anbahnung oder Durchführung eines Vertrags zusammenhängt, und im Übrigen Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Bearbeitung eingehender Anfragen). Eine Weitergabe an Dritte erfolgt nur, soweit dies zur Bearbeitung der Anfrage erforderlich ist oder eine gesetzliche Verpflichtung besteht. Die Daten werden gelöscht, sobald Ihre Anfrage abschließend erledigt ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
+Wenn Sie mich per E-Mail kontaktieren, werden die von Ihnen mitgeteilten Daten (insbesondere E-Mail-Adresse, Name und Inhalt der Nachricht) zur Bearbeitung und Beantwortung Ihrer Anfrage verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, sofern die Anfrage einen Vertrag oder dessen Anbahnung betrifft, und im Übrigen Art. 6 Abs. 1 lit. f DSGVO. Die Daten werden gelöscht, sobald die Anfrage abschließend bearbeitet ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
 
-## 8. Rechte der betroffenen Personen
+## 7. Ihre Rechte
 
-Sie haben die nach der DSGVO gewährten Rechte, insbesondere das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO), Einschränkung der Verarbeitung (Art. 18 DSGVO), Datenübertragbarkeit (Art. 20 DSGVO) sowie Widerspruch gegen Verarbeitungen, die auf Art. 6 Abs. 1 lit. f DSGVO beruhen (Art. 21 DSGVO). Soweit eine Verarbeitung auf Ihrer Einwilligung beruht, können Sie diese jederzeit mit Wirkung für die Zukunft widerrufen. Zudem haben Sie das Recht, sich bei einer Datenschutzaufsichtsbehörde, insbesondere in dem Mitgliedstaat Ihres gewöhnlichen Aufenthaltsorts oder Ihres Arbeitsplatzes, zu beschweren (Art. 77 DSGVO). Für Baden-Württemberg ist dies der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg: <https://www.baden-wuerttemberg.datenschutz.de>
+Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO), Einschränkung der Verarbeitung (Art. 18 DSGVO) und Datenübertragbarkeit (Art. 20 DSGVO). Zudem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO), insbesondere in dem Mitgliedstaat Ihres gewöhnlichen Aufenthaltsorts oder Ihres Arbeitsplatzes. Für den Verantwortlichen zuständig ist [AUFSICHTSBEHÖRDE]: [URL DER AUFSICHTSBEHÖRDE]
 
-## 9. Cookies und Browser-Speicher
+**Widerspruchsrecht (Art. 21 DSGVO):** Soweit eine Verarbeitung auf Art. 6 Abs. 1 lit. f DSGVO beruht, können Sie ihr aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen. Eine E-Mail an die oben genannte Adresse genügt.
 
-Diese Website setzt selbst ein einzelnes Cookie und einen einzelnen Eintrag im lokalen Speicher Ihres Browsers. Beide heißen `lang` und enthalten ausschließlich Ihre Sprachpräferenz („en" oder „de"):
+## 8. Cookies und Browser-Speicher
 
-- `lang` (Cookie): wird bei Ihrem ersten Besuch anhand der Spracheinstellung Ihres Browsers gesetzt und beim Wechsel der Sprache aktualisiert, damit jede Seite von Beginn an in Ihrer Sprache ausgeliefert wird. Nur Erstanbieter, `SameSite=Lax` (Gültigkeitsdauer: 1 Jahr).
-- `lang` (lokaler Speicher): dieselbe Präferenz, vom Skript der Seite gespeichert, damit die gewählte Sprache erhalten bleibt (gespeichert, bis Sie den Eintrag löschen).
+Diese Website setzt ein Cookie und einen Eintrag im lokalen Speicher Ihres Browsers. Beide heißen `lang` und enthalten ausschließlich Ihre Sprachpräferenz (`en` oder `de`):
 
-Durch die Auslieferung über Cloudflare können technisch notwendige Cookies gesetzt werden:
+- `lang` (Cookie): wird beim ersten Besuch anhand der Spracheinstellungen Ihres Browsers gesetzt und beim Wechsel der Sprache aktualisiert, damit jede Seite von Beginn an in Ihrer Sprache ausgeliefert wird. Erstanbieter, `SameSite=Lax`, Gültigkeitsdauer ein Jahr.
+- `lang` (lokaler Speicher): dieselbe Präferenz, vom Skript der Seite gespeichert, damit eine gewählte Sprache erhalten bleibt. Gespeichert, bis Sie den Eintrag löschen.
 
-- `_cf_bm`: Bot-Management und Erkennung bösartiger Besucher (Gültigkeitsdauer: 30 Minuten).
-- `__cflb`: Session-Affinity für Load Balancing (Gültigkeitsdauer: bis zu 24 Stunden).
-- `__cfruid`: Unterstützung für Rate Limiting zur Unterscheidung einzelner Nutzer (Session-Cookie).
-- `cf_clearance`: Wird nach erfolgreicher Sicherheitsüberprüfung gesetzt, um wiederholte Challenges zu vermeiden (Gültigkeitsdauer: 30–60 Minuten).
-- `cf_chl_rc_i`: Unterstützt Cloudflare-Challenge-Produkte (Session-Cookie).
-- `cf_chl_rc_ni`: Unterstützt Cloudflare-Challenge-Produkte (Session-Cookie).
+Durch die Auslieferung über Cloudflare können folgende technisch notwendige Cookies gesetzt werden:
 
-Diese Einträge sind technisch erforderlich, um die Website in der gewählten Sprache bereitzustellen, die Sicherheit zu gewährleisten, bösartige Besucher zu identifizieren und Web-Traffic zu filtern. Die Speicherung und der Zugriff auf diese technisch notwendigen Informationen erfolgen auf Grundlage von § 25 Abs. 2 Nr. 2 TDDDG, da diese ausschließlich der Durchführung der Übertragung einer Nachricht über ein öffentliches Telekommunikationsnetz dienen oder unbedingt erforderlich sind, damit der Anbieter einen vom Nutzer ausdrücklich gewünschten Dienst zur Verfügung stellen kann. Für technisch notwendige Cookies ist daher keine Einwilligung erforderlich. Rechtsgrundlage für die damit verbundene Datenverarbeitung ist unser berechtigtes Interesse an einer sicheren und nutzerfreundlichen Darstellung der Website (Art. 6 Abs. 1 lit. f DSGVO). Es findet keine Profilbildung oder seitenübergreifende Nachverfolgung statt. Sie können diese Einträge jederzeit über die Einstellungen Ihres Browsers löschen.
+- `__cf_bm`: unterscheidet Menschen von Bots (Gültigkeitsdauer 30 Minuten).
+- `cf_clearance`: speichert eine bestandene Sicherheitsprüfung, damit sie nicht wiederholt wird (Gültigkeitsdauer standardmäßig 30 Minuten).
 
-## 10. Keine Analyse- und Tracking-Tools
+Das Speichern und Auslesen dieser Einträge ist unbedingt erforderlich, um die von Ihnen aufgerufene Website in Ihrer Sprache bereitzustellen und vor Angriffen zu schützen, und ist daher nach § 25 Abs. 2 Nr. 2 TDDDG ohne Einwilligung zulässig. Rechtsgrundlage für die damit verbundene Verarbeitung ist Art. 6 Abs. 1 lit. f DSGVO. Sie können diese Einträge jederzeit in den Einstellungen Ihres Browsers löschen.
 
-Abgesehen von den oben beschriebenen technisch notwendigen Verarbeitungen verwendet diese Website keine Tracking-Tools, Analysedienste, Verhaltensprofile, Werbenetzwerke oder Social-Media-Plugins. Es werden keine personenbezogenen Daten zu Marketing- oder Profiling-Zwecken an Dritte weitergegeben.
+## 9. Keine Analyze- und Tracking-Dienste
 
-## 11. Änderungen
+Diese Website verwendet keine Analyse-, Tracking- oder Werbedienste und keine Social-Media-Plugins. Personenbezogene Daten werden nicht zu Marketing- oder Profiling-Zwecken weitergegeben.
 
-Diese Datenschutzerklärung kann bei technischen oder rechtlichen Änderungen aktualisiert werden. Die jeweils aktuelle Fassung ist stets auf dieser Seite verfügbar.
+## 10. Änderungen
+
+Diese Datenschutzerklärung wird aktualisiert, wenn sich die beschriebene Verarbeitung ändert. Die jeweils aktuelle Fassung ist stets auf dieser Seite abrufbar.
 '''
