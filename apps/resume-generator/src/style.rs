@@ -55,7 +55,7 @@ pub(crate) const INK: &str = "#191A21";
 /// Body prose: the summary and the bullet text. A step down from [`INK`] so a
 /// paragraph reads quieter than the headings around it.
 pub(crate) const INK_BODY: &str = "#2A2C34";
-/// Secondary text: the organisation line, the `Stack` run, sidebar values and
+/// Secondary text: the organization line, the `Stack` run, sidebar values and
 /// chip text.
 pub(crate) const INK_SOFT: &str = "#3C3F4A";
 /// Meta text: dates, locations, sidebar micro-labels. Dark enough to stay
@@ -122,7 +122,7 @@ pub(crate) const FS_SECTION_SM: Px = 9.5;
 pub(crate) const FS_TITLE: Px = 12.0;
 /// Dates, and the institution line under an education degree.
 pub(crate) const FS_META: Px = 10.0;
-/// The organisation · location line under a role title.
+/// The organization · location line under a role title.
 pub(crate) const FS_ORG: Px = 10.5;
 /// The professional summary.
 pub(crate) const FS_BODY: Px = 11.0;
@@ -212,7 +212,7 @@ pub(crate) const NAME_TO_ROLE: Px = 4.0;
 /// Gap between a contact micro-label and its value, and between an education
 /// degree and its institution line.
 pub(crate) const LABEL_TO_VALUE: Px = 1.0;
-/// Gap between a role title row and the organisation line beneath it.
+/// Gap between a role title row and the organization line beneath it.
 pub(crate) const TITLE_TO_ORG: Px = 1.0;
 /// Column gutter between the sidebar and the main column.
 pub(crate) const COL_GAP: Px = 22.0;
@@ -270,7 +270,7 @@ pub(crate) struct Spacing {
     pub(crate) main_rule_above: Px,
     /// Below a main-column section rule.
     pub(crate) main_rule_below: Px,
-    /// Organisation line to the first bullet.
+    /// Organization line to the first bullet.
     pub(crate) bullets_top: Px,
     /// Between bullets.
     pub(crate) bullet_gap: Px,
@@ -366,7 +366,7 @@ impl Layout {
     /// The `(top-edge, bottom-edge)` pair that gives a run of text the CSS line
     /// box `line_height` would give it, as em literals.
     ///
-    /// A browser centres the font box inside the line box and splits the
+    /// A browser centers the font box inside the line box and splits the
     /// difference into half-leading above and below; Typst instead stacks lines
     /// between a top edge and a bottom edge with `leading` in between. Folding
     /// the half-leading into the two edges and running the document at zero
@@ -385,7 +385,7 @@ impl Layout {
 
     /// The gutter between two skill chips, across and down.
     ///
-    /// Typst centres a border on the box edge, so a chip paints
+    /// Typst centers a border on the box edge, so a chip paints
     /// [`HAIRLINE`]`/2` past its layout box on every side and two neighbours
     /// eat one whole hairline of whatever sits between them. Adding it back is
     /// what makes the *painted* gap the one the design asks for — and, since

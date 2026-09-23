@@ -3,7 +3,7 @@
 //! All user-visible prose lives in the embedded translation files ([`I18N_EN`],
 //! [`I18N_DE`]); this crate only holds facts (names, dates, URLs, confidence
 //! values) and the schemas for the build-time generated documents — `repos.json`
-//! and the third-party licence inventory in [`licenses`].
+//! and the third-party license inventory in [`licenses`].
 //!
 //! Nothing here is read at run time. Every item is a compile-time constant or a schema for a
 //! document produced during the image build, so changing any of it is a redeploy.
@@ -107,10 +107,6 @@ macro_rules! full_name {
 /// the profile API, [`CONFIG`]`.title` for `og:title` and the document head, and `common.jobTitle`
 /// in [`I18N_EN`], which the `english_job_title_matches_config` test holds equal to it. The German
 /// translation of the same fact is `common.jobTitle` in [`I18N_DE`].
-///
-/// Before this was one literal it was three, and they disagreed: the resume PDF said "Senior
-/// Software Developer" while `og:title`, the profile API and the summary all said "Software
-/// Developer".
 macro_rules! job_title {
     () => {
         "Senior Software Developer"
@@ -177,12 +173,10 @@ pub struct Config {
     pub description: &'static str,
     /// The three technologies the site leads with, in the order the hero prints them.
     ///
-    /// Rendered as the hero eyebrow, joined with ` · `. It was a translation key until it became
-    /// this field, and the two translation files held byte-identical values for it — a tool's
-    /// name is not translated, so it was never prose. Every entry must also appear in
-    /// [`keywords`](Self::keywords), which
-    /// the `headline_tech_is_covered_by_keywords` test enforces, so the line a visitor reads and
-    /// the line a crawler reads cannot name different stacks.
+    /// Rendered as the hero eyebrow, joined with ` · `. Not a translation key, because a tool's
+    /// name is the same in every language. Every entry must also appear in
+    /// [`keywords`](Self::keywords), which the `headline_tech_is_covered_by_keywords` test
+    /// enforces, so the line a visitor reads and the line a crawler reads name the same stack.
     pub headline_tech: &'static [&'static str],
     /// `meta keywords`, joined with `, `.
     pub keywords: &'static [&'static str],
@@ -270,7 +264,7 @@ impl Quadrant {
         }
     }
 
-    /// Quadrant colors from the v4 design (radar-v3).
+    /// The color each quadrant is drawn in on the skill radar and its legend.
     pub fn color(&self) -> &'static str {
         match self {
             Quadrant::Languages => "#60a5fa",
@@ -298,7 +292,8 @@ pub struct Skill {
     pub name: &'static str,
     /// Which radar region it is plotted in, and which matrix group it is listed under.
     pub quadrant: Quadrant,
-    /// 0.0..=1.0, mirrored from the original portfolio's skills data.
+    /// Hands-on depth, `0.0..=1.0`. Decides the radar distance, the matrix order and, against
+    /// [`MIN_CONFIDENCE`], whether the skill is listed at all.
     pub confidence: f32,
     /// Radar-only skills appear as radar scatter but not in the matrix/resume.
     pub radar_only: bool,
@@ -342,7 +337,8 @@ const fn r(name: &'static str, quadrant: Quadrant, confidence: f32) -> Skill {
     }
 }
 
-/// Full skill inventory, mirrored from the original portfolio's `skills.ts`.
+/// Full skill inventory. Matrix skills (`s`) reach the skill section, the resume and the radar;
+/// radar-only skills (`r`) reach the radar alone.
 pub const SKILLS: &[Skill] = &{
     use Quadrant::{Build, Frameworks, Infra, Languages};
     [
@@ -374,7 +370,8 @@ pub const SKILLS: &[Skill] = &{
         s("Next.js", Frameworks, 0.80),
         s("React", Frameworks, 0.76),
         s("Tailwind CSS", Frameworks, 0.75),
-        s("Yew", Frameworks, 0.75),
+        s("Dioxus", Frameworks, 0.75),
+        s("Axum", Frameworks, 0.70),
         s("Node.js", Frameworks, 0.65),
         r("Bukkit API", Frameworks, 0.95),
         r("Spigot API", Frameworks, 0.95),
@@ -384,6 +381,7 @@ pub const SKILLS: &[Skill] = &{
         r("Lucide React", Frameworks, 0.70),
         r("Pino", Frameworks, 0.65),
         r("Tokio", Frameworks, 0.60),
+        r("Yew", Frameworks, 0.60),
         r("Serwist", Frameworks, 0.60),
         r("Express", Frameworks, 0.60),
         r("Webhooks", Frameworks, 0.60),
@@ -395,7 +393,6 @@ pub const SKILLS: &[Skill] = &{
         r("Radix UI", Frameworks, 0.50),
         r("ratatui", Frameworks, 0.50),
         r("NextAuth.js", Frameworks, 0.45),
-        r("Axum", Frameworks, 0.45),
         r("Actix Web", Frameworks, 0.45),
         r("tRPC", Frameworks, 0.40),
         r("sqlx", Frameworks, 0.40),
@@ -516,7 +513,7 @@ const fn ym(year: u16, month: u8) -> YearMonth {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Experience {
     /// Stable id used as translation key segment (`experience.entries.<id>`).
-    /// The localized role, organisation and bullets live in the i18n files.
+    /// The localized role, organization and bullets live in the i18n files.
     pub id: &'static str,
     /// Where the role is worked from, e.g. `Remote`. Not localized.
     pub location: &'static str,
@@ -594,7 +591,7 @@ pub const EXPERIENCE: &[Experience] = &[
         end: Some(ym(2023, 1)),
         bullet_count: 3,
         resume_bullet_cap: Some(2),
-        tech: &["Java", "QA", "Testing"],
+        tech: &["Java"],
     },
 ];
 
@@ -687,13 +684,24 @@ pub fn format_period(
     }
 }
 
-/// Compact year-based range like "2018 — 2023" or "2026 — now", as used by
-/// the web experience accordion (the PDF uses [`format_period`]).
+/// A year-only range, e.g. `2018–2023`, `2026–now`, or a single year when both ends share it.
+///
+/// Used by the web experience accordion and the resume's education lines; the resume's
+/// experience dates use the month-precise [`format_period`]. The en dash is unspaced, as it is
+/// between two numbers.
+///
+/// ```
+/// # use portfolio_data::{YearMonth, format_period_years};
+/// let ym = |year, month| YearMonth { year, month };
+/// assert_eq!(format_period_years(ym(2018, 11), Some(ym(2023, 1)), "now"), "2018–2023");
+/// assert_eq!(format_period_years(ym(2026, 3), None, "now"), "2026–now");
+/// assert_eq!(format_period_years(ym(2026, 3), Some(ym(2026, 9)), "now"), "2026");
+/// ```
 pub fn format_period_years(start: YearMonth, end: Option<YearMonth>, now: &str) -> String {
     match end {
         Some(end) if end.year == start.year => format!("{}", start.year),
-        Some(end) => format!("{} — {}", start.year, end.year),
-        None => format!("{} — {now}", start.year),
+        Some(end) => format!("{}–{}", start.year, end.year),
+        None => format!("{}–{now}", start.year),
     }
 }
 
@@ -717,7 +725,7 @@ pub struct Repo {
     pub description: Option<String>,
     /// The repository page the card links to.
     pub html_url: String,
-    /// GitHub's primary-language guess, coloured by [`lang_color`]. `None` for an empty
+    /// GitHub's primary-language guess, colored by [`lang_color`]. `None` for an empty
     /// repository.
     #[serde(default)]
     pub language: Option<String>,
@@ -727,7 +735,9 @@ pub struct Repo {
     /// Forks at that same moment.
     #[serde(default)]
     pub forks_count: u32,
-    /// RFC 3339 timestamp of the last push. `update-repos` drops anything older than a year.
+    /// RFC 3339 timestamp of GitHub's `updated_at`: the last change to the repository object,
+    /// which a push, a description edit or a topic change each move. `update-repos` drops
+    /// anything older than a year.
     #[serde(default)]
     pub updated_at: String,
     /// GitHub topics, rendered as chips.
@@ -771,7 +781,7 @@ pub struct ReposFile {
     pub repos: Vec<Repo>,
 }
 
-/// The colour GitHub paints a language in, for the dot on a repository card.
+/// The color GitHub paints a language in, for the dot on a repository card.
 ///
 /// The values are linguist's, copied rather than fetched, so a card matches what a visitor sees
 /// on github.com. An unrecognised language gets a neutral grey rather than no dot.
@@ -920,8 +930,8 @@ mod tests {
 
     /// No two experience bullets may be byte-identical, in either language.
     ///
-    /// Two roles once shared two bullets word for word, which read as copy-paste on the resume
-    /// and left the current role with no distinct content of its own.
+    /// A bullet repeated across roles reads as copy-paste on the resume and leaves one of the
+    /// roles without content of its own.
     #[test]
     fn experience_bullets_are_distinct() {
         for (lang, json) in [("en", I18N_EN), ("de", I18N_DE)] {
@@ -940,10 +950,8 @@ mod tests {
         }
     }
 
-    /// The English copy is en-US throughout.
-    ///
-    /// It was previously both: `containerised` and `containerized` appeared five lines apart,
-    /// and `Specialising` sat above `specializing`.
+    /// The English copy is en-US throughout, so one page never mixes `containerised` with
+    /// `containerized`.
     #[test]
     fn english_copy_uses_us_spelling() {
         // Whole words, not suffixes: `-ising` as a substring also matches `advertising`, which is
@@ -995,8 +1003,7 @@ mod tests {
     /// The cap is words rather than characters because the PDF sets them at one size in one
     /// column, so length in words is what decides the wrap. A bullet over it costs the fit ladder
     /// a rung: the generator condenses roles and then shrinks the type to win back the line, which
-    /// is a worse trade than editing the sentence. One bullet ran to 38 words in a single sentence
-    /// before this existed.
+    /// is a worse trade than editing the sentence.
     #[test]
     fn experience_bullets_stay_within_two_lines() {
         const MAX_WORDS: usize = 24;
@@ -1024,10 +1031,8 @@ mod tests {
 
     /// Phrases that describe an attitude instead of a capability, banned from both languages.
     ///
-    /// The first six were in the copy: the hero called itself "passionate about building great
-    /// software", and both the about text and the resume summary said "growing experience in
-    /// Rust" beside a workspace written in Rust. The last two have never appeared here and are
-    /// listed because they are the next two of the same kind.
+    /// Each one claims a quality without evidence ("passionate", "team player") or undersells a
+    /// skill the rest of the page demonstrates ("growing experience").
     #[test]
     fn copy_avoids_hedges() {
         const BANNED: [&str; 8] = [
@@ -1088,7 +1093,7 @@ mod tests {
     }
 
     #[test]
-    fn experiences_sorted_prioritises_ongoing_then_recent_start() {
+    fn experiences_sorted_prioritizes_ongoing_then_recent_start() {
         let order = experiences_sorted();
         // No entry lost or duplicated by sorting.
         assert_eq!(order.len(), EXPERIENCE.len());

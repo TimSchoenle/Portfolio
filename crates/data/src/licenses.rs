@@ -1,12 +1,12 @@
-//! Schema of the third-party licence inventory embedded into the web binary.
+//! Schema of the third-party license inventory embedded into the web binary.
 //!
 //! The document is produced by [`cargo-about`] from `apps/web/about.toml` and
 //! `apps/web/about.hbs`, embedded by `apps/web/build.rs` and rendered by the
 //! `/licenses` route. This module is the contract between those three: the
 //! template writes this shape, the build script copies it in unchanged, and the
-//! page deserialises it here.
+//! page deserializes it here.
 //!
-//! It holds no prose. Licence *texts* are reproduced verbatim as their authors
+//! It holds no prose. License *texts* are reproduced verbatim as their authors
 //! wrote them — that is the point of the page — and every label around them
 //! comes from the translation files.
 //!
@@ -16,23 +16,23 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-/// The generated licence inventory: one entry per licence in [`Self::summary`],
-/// one per distinct licence *file* in [`Self::texts`], one per dependency in
+/// The generated license inventory: one entry per license in [`Self::summary`],
+/// one per distinct license *file* in [`Self::texts`], one per dependency in
 /// [`Self::crates`].
 ///
-/// Stored normalised — a licence text appears once, however many dependencies
+/// Stored normalized — a license text appears once, however many dependencies
 /// ship it — and joined back into one row per dependency by
 /// [`Self::dependencies`], which is the shape the page renders. Keeping the
-/// document normalised is what holds it to 340 KB in the binary: the same data
+/// document normalized is what holds it to 340 KB in the binary: the same data
 /// denormalised, with each shared Apache text repeated under every crate using
 /// it, is half again as large.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LicensesFile {
-    /// Every licence the dependency set resolves to, with the number of crates
+    /// Every license the dependency set resolves to, with the number of crates
     /// under it. Ordered by cargo-about, most-used first.
     #[serde(default)]
     pub summary: Vec<LicenseSummary>,
-    /// Every distinct licence file found, each naming the crates it covers.
+    /// Every distinct license file found, each naming the crates it covers.
     ///
     /// Distinct by text, not by identifier: two crates under MIT ship two files
     /// that differ in their copyright line, and reproducing that line is what MIT
@@ -68,7 +68,7 @@ impl LicensesFile {
         self.crates.iter().filter(|c| c.source.is_some())
     }
 
-    /// Every third-party dependency with the licence texts that cover it, in the
+    /// Every third-party dependency with the license texts that cover it, in the
     /// document's own order.
     ///
     /// The inversion of [`LicenseText::used_by`], done once here rather than by
@@ -110,44 +110,44 @@ impl LicensesFile {
     }
 }
 
-/// One dependency and the licence texts it ships under: a row of the page.
+/// One dependency and the license texts it ships under: a row of the page.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DependencyLicenses<'a> {
     /// The crate being attributed.
     pub dependency: &'a CrateLicense,
-    /// Empty only if the generator found no licence file for it at all, which is
+    /// Empty only if the generator found no license file for it at all, which is
     /// worth showing as such rather than hiding the dependency.
     pub texts: Vec<&'a LicenseText>,
 }
 
-/// One licence and how many crates resolve to it.
+/// One license and how many crates resolve to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LicenseSummary {
     /// SPDX short identifier, e.g. `MIT`.
     pub id: String,
     /// Full name, e.g. `MIT License`.
     pub name: String,
-    /// Crates resolving to this licence. Sums to more than the number of
+    /// Crates resolving to this license. Sums to more than the number of
     /// dependencies: a crate licensed `A AND B` is counted by both.
     pub crates: usize,
 }
 
-/// One distinct licence text and the crates it covers.
+/// One distinct license text and the crates it covers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LicenseText {
     /// SPDX short identifier this text was identified as.
     pub id: String,
-    /// Full name of that licence.
+    /// Full name of that license.
     pub name: String,
-    /// The licence file, verbatim — copyright line, wrapping and all. Rendered
-    /// preformatted; never reflowed, translated or summarised.
+    /// The license file, verbatim — copyright line, wrapping and all. Rendered
+    /// preformatted; never reflowed, translated or summarized.
     pub text: String,
     /// The crates this exact text was found in.
     #[serde(default)]
     pub used_by: Vec<CrateRef>,
 }
 
-/// A crate named from a licence text's coverage list.
+/// A crate named from a license text's coverage list.
 ///
 /// Name and version together, because a dependency graph can hold two versions of the same crate
 /// under two different copyright lines.
@@ -167,7 +167,7 @@ pub struct CrateLicense {
     /// The exact version cargo resolved, which is what the page prints beside the name.
     pub version: String,
     /// The SPDX *expression* the crate declares, e.g. `MIT OR Apache-2.0` —
-    /// what it offers, which is not always the single licence it was resolved
+    /// what it offers, which is not always the single license it was resolved
     /// under. Both are shown: the offer here, the resolved text in
     /// [`LicensesFile::texts`].
     pub license: String,
@@ -182,7 +182,7 @@ pub struct CrateLicense {
     /// The manifest's `authors` field is deliberately not carried alongside it.
     /// It is empty for a tenth of this graph and stale for more, and the
     /// attribution that carries legal weight is the copyright notice inside the
-    /// licence text, which [`LicensesFile::texts`] reproduces in full. Every
+    /// license text, which [`LicensesFile::texts`] reproduces in full. Every
     /// field in this document is rendered; a field the page would not show has no
     /// reason to be embedded in the binary.
     #[serde(default)]
@@ -194,7 +194,7 @@ mod tests {
     use super::*;
 
     /// The empty default `build.rs` embeds when the generator has not run has to
-    /// deserialise, or every build outside the image would fail to compile the
+    /// deserialize, or every build outside the image would fail to compile the
     /// page rather than render it empty.
     #[test]
     fn the_empty_default_parses_and_reports_itself_empty() {
@@ -224,7 +224,7 @@ mod tests {
     }
 
     /// The workspace's own crates arrive in the document with no source and the
-    /// licence `Unknown`; a page about third parties must not list them, and a
+    /// license `Unknown`; a page about third parties must not list them, and a
     /// document holding nothing else must report itself empty.
     #[test]
     fn path_dependencies_are_not_third_party() {
@@ -301,8 +301,8 @@ mod tests {
         assert!(parsed.is_empty());
     }
 
-    /// A licence text is reproduced byte for byte; the round-trip is what proves
-    /// no serialisation step here rewrites one.
+    /// A license text is reproduced byte for byte; the round-trip is what proves
+    /// no serialization step here rewrites one.
     #[test]
     fn licence_text_survives_a_round_trip_verbatim() {
         let text = "MIT License\n\nCopyright (c) 2020 A. Person <a@example.com>\n\n\"Software\"\n";
@@ -320,8 +320,8 @@ mod tests {
             crates: Vec::new(),
         };
 
-        let json = serde_json::to_string(&file).expect("serialises");
-        let back: LicensesFile = serde_json::from_str(&json).expect("deserialises");
+        let json = serde_json::to_string(&file).expect("serializes");
+        let back: LicensesFile = serde_json::from_str(&json).expect("deserializes");
         assert_eq!(back.texts[0].text, text);
     }
 }

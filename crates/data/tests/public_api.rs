@@ -178,7 +178,7 @@ fn format_period_years_collapses_same_year_and_open_ranges() {
             }),
             "now"
         ),
-        "2018 — 2023"
+        "2018–2023"
     );
     // Same start/end year collapses to a single year.
     assert_eq!(
@@ -192,7 +192,7 @@ fn format_period_years_collapses_same_year_and_open_ranges() {
         ),
         "2018"
     );
-    assert_eq!(format_period_years(start, None, "now"), "2018 — now");
+    assert_eq!(format_period_years(start, None, "now"), "2018–now");
 }
 
 // ---------- repos.json schema ----------
