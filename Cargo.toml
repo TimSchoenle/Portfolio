@@ -197,7 +197,7 @@ schemars = "1"
 # contract carries, with a stock validator, because that is what a consumer of the contract does.
 # Default features off — they pull `reqwest` and a TLS stack to resolve remote `$ref`s, and the
 # contract's schema has none. The same version terrace-config tests its own contracts with.
-jsonschema = { version = "0.56", default-features = false }
+jsonschema = { version = "0.57", default-features = false }
 
 axum = "0.8"
 # `util` brings `ServiceExt::oneshot`, used by the server's router-level
