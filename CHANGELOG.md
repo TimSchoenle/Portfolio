@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.1.2](https://github.com/TimSchoenle/Portfolio/compare/v3.1.1...v3.1.2) (2026-09-26)
+
+
+### Bug Fixes
+
+* hydrate in the rendered language, index every language, harden the build ([#1234](https://github.com/TimSchoenle/Portfolio/issues/1234)) ([ad84358](https://github.com/TimSchoenle/Portfolio/commit/ad8435888d2903ae1362c0164d990bbe93246d75))
+
+
+### Documentation
+
+* link the prose and README contracts from CONTRIBUTING.md ([#1233](https://github.com/TimSchoenle/Portfolio/issues/1233)) ([9c0bbe1](https://github.com/TimSchoenle/Portfolio/commit/9c0bbe1ee4a7b716d24564e6bdaccf4d182bd4e8))
+
+
+### Miscellaneous
+
+* **deps:** update rust crate jsonschema to 0.57 ([#1231](https://github.com/TimSchoenle/Portfolio/issues/1231)) ([d090cd0](https://github.com/TimSchoenle/Portfolio/commit/d090cd06385ad14f32e672b6e569e800e0087909))
+* **deps:** update rust crate sentry to v0.49.3 ([#1230](https://github.com/TimSchoenle/Portfolio/issues/1230)) ([7424fe4](https://github.com/TimSchoenle/Portfolio/commit/7424fe4cfb884707a9271ac8e1bdcd5ba67a53b9))
+
 ## [3.1.1](https://github.com/TimSchoenle/Portfolio/compare/v3.1.0...v3.1.1) (2026-09-23)
 
 
