@@ -107,6 +107,32 @@
 #   the secrets directory
 # web_analytics = false
 
+[hsts]
+# How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.
+#
+# Zero is the documented way to *withdraw* HSTS: browsers drop the host from their list on
+# the next response. It is refused together with `preload`, which that would contradict.
+# Type: u64
+# Also from: PORTFOLIO_HSTS__MAX_AGE_SECS, PORTFOLIO_HSTS__MAX_AGE_SECS_FILE=/path/to/file,
+#   hsts__max_age_secs in the secrets directory
+# max_age_secs = 31536000
+
+# Apply the policy to every subdomain as well (`includeSubDomains`).
+# Type: bool
+# Also from: PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS,
+#   PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS_FILE=/path/to/file, hsts__include_subdomains in the secrets
+#   directory
+# include_subdomains = true
+
+# Ask to be included in the browsers' built-in HSTS preload list (`preload`).
+#
+# The list's own requirements are enforced at boot: `include_subdomains` on and a
+# `max_age_secs` of at least one year.
+# Type: bool
+# Also from: PORTFOLIO_HSTS__PRELOAD, PORTFOLIO_HSTS__PRELOAD_FILE=/path/to/file, hsts__preload in
+#   the secrets directory
+# preload = true
+
 [isr]
 # Writable directory rendered HTML is cached into. Unset or empty disables ISR.
 #
