@@ -113,7 +113,7 @@ portfolio-data = { path = "crates/data" }
 # Cargo unifies the feature, so leaving it out here does not keep it out.
 # `testing` is left out for the same reason and taken as a dev-dependency in
 # `crates/config`, which is the only crate that loads anything.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.13.0", default-features = false, features = [
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.14.0", default-features = false, features = [
     "loader",
     "explain",
 ] }
