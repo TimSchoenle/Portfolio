@@ -31,16 +31,22 @@ fn quadrant_seed(q: Quadrant) -> f64 {
         Quadrant::Build => "build",
         Quadrant::Infra => "infra",
     };
-    (key.as_bytes()[0] as f64) * 131.0 + (key.len() as f64) * 17.0
+    // Every key is a short literal, so its length fits a `u8` and converts losslessly.
+    let len = u8::try_from(key.len()).expect("quadrant keys are short");
+    f64::from(key.as_bytes()[0]) * 131.0 + f64::from(len) * 17.0
 }
 
 /// Deterministic PRNG from the design: s = (s * 9301 + 49297) % 233280.
 struct Seeded(f64);
 
 impl Seeded {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "a value in [0, 1) only loses precision it does not need for a jitter"
+    )]
     fn next(&mut self) -> f32 {
-        self.0 = (self.0 * 9301.0 + 49297.0) % 233280.0;
-        (self.0 / 233280.0) as f32
+        self.0 = (self.0 * 9_301.0 + 49_297.0) % 233_280.0;
+        (self.0 / 233_280.0) as f32
     }
 }
 
@@ -81,6 +87,10 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
         let items: Vec<Skill> = skills.iter().filter(|s| s.quadrant == q).copied().collect();
 
         for (i, skill) in items.iter().enumerate() {
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "a quadrant holds a handful of skills, far below f32's exact-integer range"
+            )]
             let t = if items.len() > 1 {
                 i as f32 / (items.len() - 1) as f32
             } else {
@@ -92,7 +102,7 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
             named.push(NamedDot {
                 x,
                 y,
-                size: 5.0 + skill.level() as f32 * 0.4,
+                size: 5.0 + f32::from(skill.level()) * 0.4,
                 skill: *skill,
             });
         }
@@ -109,7 +119,7 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
             filler.push(FillerDot {
                 x,
                 y,
-                size: 2.4 + skill.level() as f32 * 0.3,
+                size: 2.4 + f32::from(skill.level()) * 0.3,
                 opacity: 0.35 + skill.confidence * 0.4,
                 skill,
                 near_named: false,
@@ -117,7 +127,7 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
         }
     }
 
-    for f in filler.iter_mut() {
+    for f in &mut filler {
         f.near_named = named.iter().any(|n| {
             n.skill.quadrant == f.skill.quadrant
                 && (n.x - f.x).hypot(n.y - f.y) <= n.size + f.size + 2.0
@@ -139,10 +149,10 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
     let mut hovered_filler = use_signal(|| None::<usize>);
 
     // The dot layout is a pure function of compile-time data, so it is computed
-    // once per mounted radar rather than on every render. It used to be rebuilt
-    // inline, which meant re-running `matrix_skills()` (allocate + sort), laying
-    // out ~120 dots and an O(named x filler) proximity pass on *every* pointer
-    // move in or out of a dot, since those write the hover signals below.
+    // once per mounted radar. Rebuilding it per render would re-run
+    // `matrix_skills()`, the layout of ~120 dots and an O(named x filler)
+    // proximity pass on every pointer move, since those write the hover signals
+    // below.
     let dots = use_hook(|| Rc::new(build_dots()));
     let (named, filler) = (&dots.0, &dots.1);
 

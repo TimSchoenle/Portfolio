@@ -76,8 +76,7 @@ fn main() -> ExitCode {
 fn run() -> Result<(), UpdateReposError> {
     let output = std::env::args()
         .nth(1)
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(DEFAULT_OUTPUT));
+        .map_or_else(|| PathBuf::from(DEFAULT_OUTPUT), PathBuf::from);
 
     // Reuse a still-fresh cache to keep rebuilds (and CI) off the GitHub API.
     let ttl = cache::ttl_for_env();
@@ -106,7 +105,12 @@ fn run() -> Result<(), UpdateReposError> {
     let builder = ReposBuilder::new(user)
         .token(github.into_token())
         .repos(names)
-        .blacklist(CONFIG.blacklisted_repos.iter().map(|name| name.to_string()));
+        .blacklist(
+            CONFIG
+                .blacklisted_repos
+                .iter()
+                .map(std::string::ToString::to_string),
+        );
 
     let repos = builder.fetch()?;
 

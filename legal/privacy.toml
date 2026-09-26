@@ -64,7 +64,7 @@ You have the right of access (Art. 15 GDPR), rectification (Art. 16 GDPR), erasu
 
 This website sets one cookie and one local storage entry. Both are named `lang` and hold nothing but your language preference (`en` or `de`):
 
-- `lang` (cookie): set from your browser's language settings when you first visit, and updated when you switch the language, so that every page is delivered in your language from the first byte. First-party, `SameSite=Lax`, expires after one year.
+- `lang` (cookie): set from your browser's language settings when you first visit, and updated when you switch the language or open an address that names one (such as `?lang=de`), so that every page is delivered in your language from the first byte. First-party, `SameSite=Lax`, expires after one year.
 - `lang` (local storage): the same preference, kept by the page's script so that a language you select persists. Stored until you delete it.
 
 Delivery through Cloudflare may set the following technically necessary cookies:
@@ -131,7 +131,7 @@ Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), 
 
 Diese Website setzt ein Cookie und einen Eintrag im lokalen Speicher Ihres Browsers. Beide heißen `lang` und enthalten ausschließlich Ihre Sprachpräferenz (`en` oder `de`):
 
-- `lang` (Cookie): wird beim ersten Besuch anhand der Spracheinstellungen Ihres Browsers gesetzt und beim Wechsel der Sprache aktualisiert, damit jede Seite von Beginn an in Ihrer Sprache ausgeliefert wird. Erstanbieter, `SameSite=Lax`, Gültigkeitsdauer ein Jahr.
+- `lang` (Cookie): wird beim ersten Besuch anhand der Spracheinstellungen Ihres Browsers gesetzt und beim Wechsel der Sprache oder beim Aufruf einer Adresse, die eine Sprache nennt (etwa `?lang=de`), aktualisiert, damit jede Seite von Beginn an in Ihrer Sprache ausgeliefert wird. Erstanbieter, `SameSite=Lax`, Gültigkeitsdauer ein Jahr.
 - `lang` (lokaler Speicher): dieselbe Präferenz, vom Skript der Seite gespeichert, damit eine gewählte Sprache erhalten bleibt. Gespeichert, bis Sie den Eintrag löschen.
 
 Durch die Auslieferung über Cloudflare können folgende technisch notwendige Cookies gesetzt werden:

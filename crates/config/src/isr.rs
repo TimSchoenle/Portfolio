@@ -53,11 +53,10 @@ impl IsrConfig {
 
     /// The revalidation interval, or `None` for a permanent cache.
     ///
-    /// Unlike the environment-variable reader this replaces, an *unparseable* value no longer
-    /// falls back to "permanent" — it fails the boot, because figment rejects it before this is
-    /// ever called. That is the intended trade: a typo used to silently disable revalidation on
-    /// the one deployment shape that needs it, and a container that refuses to start is the
-    /// louder half of the failure.
+    /// An *unparseable* value does not fall back to "permanent": it fails the boot, because the
+    /// loader rejects it before this is called. A silent fallback would disable revalidation on
+    /// the one deployment shape that needs it; a container that refuses to start is the louder
+    /// failure.
     #[must_use]
     pub fn invalidate_after(&self) -> Option<Duration> {
         (self.ttl_secs > 0).then(|| Duration::from_secs(self.ttl_secs))

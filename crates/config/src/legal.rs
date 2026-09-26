@@ -104,8 +104,10 @@ mod tests {
     }
 
     fn complete() -> LegalConfig {
-        let mut config = LegalConfig::default();
-        config.default_locale = Some("en".to_owned());
+        let mut config = LegalConfig {
+            default_locale: Some("en".to_owned()),
+            ..LegalConfig::default()
+        };
         for slug in REQUIRED_DOCUMENTS {
             config.documents.insert(slug.to_owned(), hosted(&LOCALES));
         }
@@ -199,8 +201,10 @@ mod tests {
     #[test]
     fn an_external_document_is_exempt_from_the_language_rule() {
         let mut config = complete();
-        let mut external = LegalDocument::default();
-        external.url = Some("https://example.org/terms".to_owned());
+        let external = LegalDocument {
+            url: Some("https://example.org/terms".to_owned()),
+            ..LegalDocument::default()
+        };
         config.documents.insert("terms".to_owned(), external);
         assert!(legal_catalog_builder(&LOCALES).build(&config).is_ok());
     }

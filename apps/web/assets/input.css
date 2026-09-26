@@ -54,6 +54,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+/* The hero hands over to the about section when a scroll ends near the boundary. `proximity`
+   rather than `mandatory`: a reader who stops halfway through a long section stays there. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-snap-type: y proximity; }
+}
+.hero, .snap-start { scroll-snap-align: start; }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; background: none; border: none; color: inherit; cursor: pointer; padding: 0; }
 
@@ -196,6 +202,18 @@ button { font-family: inherit; background: none; border: none; color: inherit; c
   will-change: transform;
 }
 .hero-name-line { display: block; }
+/* Name parallax: drifts up 40px over the first 500px of scroll. A scroll-driven animation runs
+   on the compositor, so the page does no work per frame for it. */
+@keyframes hero-parallax { to { transform: translateY(-40px); } }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-name {
+      animation: hero-parallax linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 500px;
+    }
+  }
+}
 .hero-accent-char { color: var(--accent); }
 
 .hero-meta { position: absolute; top: 0; right: 0; max-width: 300px; }

@@ -164,6 +164,88 @@
         "reserved": false
       },
       {
+        "path": "hsts.max_age_secs",
+        "env": "PORTFOLIO_HSTS__MAX_AGE_SECS",
+        "env_file": "PORTFOLIO_HSTS__MAX_AGE_SECS_FILE",
+        "secrets_file": "hsts__max_age_secs",
+        "docs": "How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.\n\nZero is the documented way to *withdraw* HSTS: browsers drop the host from their list on\nthe next response. It is refused together with `preload`, which that would contradict.",
+        "ty": "u64",
+        "values": [],
+        "constraint": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text_constraint": {
+          "pattern": "^\\s*\\+?[0-9]+\\s*$",
+          "type": "string"
+        },
+        "text_form": "integer",
+        "aliases": [],
+        "env_aliases": [],
+        "env_file_aliases": [],
+        "secrets_file_aliases": [],
+        "default": "31536000",
+        "default_value": 31536000,
+        "note": null,
+        "required": false,
+        "secret": false,
+        "reserved": false
+      },
+      {
+        "path": "hsts.include_subdomains",
+        "env": "PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS",
+        "env_file": "PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS_FILE",
+        "secrets_file": "hsts__include_subdomains",
+        "docs": "Apply the policy to every subdomain as well (`includeSubDomains`).",
+        "ty": "bool",
+        "values": [],
+        "constraint": {
+          "type": "boolean"
+        },
+        "text_constraint": {
+          "pattern": "^\\s*(true|false)\\s*$",
+          "type": "string"
+        },
+        "text_form": "boolean",
+        "aliases": [],
+        "env_aliases": [],
+        "env_file_aliases": [],
+        "secrets_file_aliases": [],
+        "default": "true",
+        "default_value": true,
+        "note": null,
+        "required": false,
+        "secret": false,
+        "reserved": false
+      },
+      {
+        "path": "hsts.preload",
+        "env": "PORTFOLIO_HSTS__PRELOAD",
+        "env_file": "PORTFOLIO_HSTS__PRELOAD_FILE",
+        "secrets_file": "hsts__preload",
+        "docs": "Ask to be included in the browsers' built-in HSTS preload list (`preload`).\n\nThe list's own requirements are enforced at boot: `include_subdomains` on and a\n`max_age_secs` of at least one year.",
+        "ty": "bool",
+        "values": [],
+        "constraint": {
+          "type": "boolean"
+        },
+        "text_constraint": {
+          "pattern": "^\\s*(true|false)\\s*$",
+          "type": "string"
+        },
+        "text_form": "boolean",
+        "aliases": [],
+        "env_aliases": [],
+        "env_file_aliases": [],
+        "secrets_file_aliases": [],
+        "default": "true",
+        "default_value": true,
+        "note": null,
+        "required": false,
+        "secret": false,
+        "reserved": false
+      },
+      {
         "path": "isr.cache_dir",
         "env": "PORTFOLIO_ISR__CACHE_DIR",
         "env_file": "PORTFOLIO_ISR__CACHE_DIR_FILE",
@@ -762,6 +844,28 @@
           "hash_inline_scripts": {
             "default": true,
             "description": "Hash every inline `<script>` in the document being served instead of admitting all inline\nscript with `'unsafe-inline'`.\n\nOn — the default — the server hashes the response body it is about to send, so the only\ninline scripts that run are the ones it rendered itself. That is the whole point of the\nexercise: `'unsafe-inline'` admits an injected `<script>` just as readily as the Dioxus\nhydration bootstrap.\n\nOff is the escape hatch, and it exists because the failure mode is silent: an inline\nscript the scanner does not see is refused by the browser, and the evidence is a blank\npage and a console message nobody is watching. Turning it off restores `'unsafe-inline'`\nthrough an environment variable and a restart rather than a redeploy. Known cases: a\ndevelopment server that injects its own live-reload script downstream of this process,\nand any future renderer change that emits script this server never sees.\n\nThe two settings are mutually exclusive in the browser, not merely different: a policy\ncarrying any hash or nonce makes `'unsafe-inline'` inert, which is why there is one switch\nhere rather than two independent ones.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "hsts": {
+        "additionalProperties": false,
+        "properties": {
+          "include_subdomains": {
+            "default": true,
+            "description": "Apply the policy to every subdomain as well (`includeSubDomains`).",
+            "type": "boolean"
+          },
+          "max_age_secs": {
+            "default": 31536000,
+            "description": "How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.\n\nZero is the documented way to *withdraw* HSTS: browsers drop the host from their list on\nthe next response. It is refused together with `preload`, which that would contradict.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "preload": {
+            "default": true,
+            "description": "Ask to be included in the browsers' built-in HSTS preload list (`preload`).\n\nThe list's own requirements are enforced at boot: `include_subdomains` on and a\n`max_age_secs` of at least one year.",
             "type": "boolean"
           }
         },

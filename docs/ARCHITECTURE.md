@@ -7,9 +7,9 @@ Six packages in one Cargo workspace: two libraries every binary reads, three bin
 | Package | Purpose |
 | --- | --- |
 | `crates/config` | The typed configuration blocks each binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader |
-| `crates/data` | Language-neutral data — site config, skills, experience, the `repos.json` schema — and the embedded `i18n/{en,de}.json` translations |
+| `crates/data` | Language-neutral data — the site languages (`SITE_LANGUAGES`), site config, skills, experience, the `repos.json` schema — and the embedded `i18n/{en,de}.json` translations |
 | `apps/web` | The site. One crate that builds twice: a WASM client under the `web` feature and a native Axum SSR server under `server`, carrying the JSON API, the SEO documents, the security headers and the probes |
-| `apps/resume-generator` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterizes the 1200×630 social card, with its fonts embedded |
+| `apps/resume-generator` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterizes the 1200×630 social card and the 192/512 px app icons, with its fonts embedded |
 | `apps/update-repos` | Lists the owner's active GitHub repositories and rewrites `apps/web/repos.json` through the shared `Repo`/`ReposFile` models |
 | `.` (`portfolio-platform`) | `src/lib.rs` is a placeholder. release-please's Rust strategy needs a root package to bump, and the version it writes there is the one the README payload and the image's contract document both read |
 
@@ -26,18 +26,38 @@ Content-Security-Policy and a line in the privacy page. It is compiled into ever
 switched on by `sentry.enabled` rather than by a Cargo feature, so an image cannot accept the key
 and silently do nothing with it — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
 
-Server-side rendering is not a fallback here. The locale is negotiated from request headers in
+Server-side rendering is not a fallback here. The locale is negotiated from the request in
 `apps/web/src/i18n.rs` and applied before the document is serialized, so nothing arrives in the
-wrong language and gets swapped once hydration runs. The `<html lang>` attribute is stamped into
-the buffered body, which is also where the Content-Security-Policy gets the inline scripts it
-hashes — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
+wrong language and gets swapped once hydration runs.
+
+Every document then passes through `apps/web/src/server/page.rs`, which sits outside the Dioxus
+router and so also sees pages the incremental cache answers without rendering. It stamps
+`<html lang>`, writes the `lang` cookie when the request's disagrees, and gives the document a
+Content-Security-Policy hashed from the bytes it is about to send — see
+[SECURITY_POSTURE.md](SECURITY_POSTURE.md). A finished page is memoized per path and language, so a
+repeat request is answered without reaching the router at all; only the nonce and the cookie are
+per response. `apps/web/src/server/isr.rs` is the on-disk render cache behind it, keyed per
+language and restricted to an allowlist of real pages.
 
 ## Internationalization
 
 EN and DE, through [i18nrs](https://crates.io/crates/i18nrs) with only its `dio` component set
 enabled. `dio-ssr` is left out: it negotiates the locale through a `#[server]` round-trip whose
-`get_cookie` result is discarded upstream, so this workspace negotiates on the server from request
-headers and reads `document.cookie` directly on the client instead.
+`get_cookie` result is discarded upstream, so this workspace negotiates on the server itself.
+
+The server decides in this order: a `?lang=` query parameter, a valid `lang` cookie,
+`Accept-Language` (quality values honored), the default language. The query parameter is what
+gives each language an address of its own: crawlers send neither a cookie nor, usually, an
+`Accept-Language`, so without it only the default language would ever be indexed. Every page
+declares its variants as `<link rel="alternate" hreflang>` and the sitemap lists each page once per
+language with the same alternates.
+
+The wasm client starts in the language `<html lang>` names and falls back to the cookie. The
+attribute is guaranteed to describe the HTML being hydrated; the cookie is not, for example on a
+first visit answered from the render cache.
+
+Everything about a language that is not prose — its code, `og:locale`, translation file and resume
+file name — is one `Language` entry in `crates/data`, and every consumer iterates that table.
 
 `translation_key_sets_match` in `crates/data` compares the key sets of both translation files and
 fails the build when they differ. i18nrs falls back to an arbitrary language for a missing key,

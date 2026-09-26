@@ -134,7 +134,7 @@ each release bumps it to the new image digest.
 
 ```bash
 rustup target add wasm32-unknown-unknown
-cargo install --locked dioxus-cli --version 0.7.9   # match DIOXUS_CLI_VERSION in the Dockerfile
+cargo install --locked dioxus-cli --version 0.7.10  # match DIOXUS_CLI_VERSION in the Dockerfile
 cargo install --locked cargo-about
 git clone https://github.com/TimSchoenle/Portfolio.git
 cd Portfolio
@@ -205,6 +205,9 @@ environment spelling also accepts a `_FILE` suffix naming a file that holds the 
 | `csp.cloudflare.script_nonce` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE` | `true` | — | Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge. |
 | `csp.cloudflare.turnstile` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE` | `false` | — | Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile widget. |
 | `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `false` | — | Admit the Cloudflare Web Analytics beacon and the endpoint it reports to. |
+| `hsts.max_age_secs` | `u64` | `PORTFOLIO_HSTS__MAX_AGE_SECS` | `31536000` | — | How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it. |
+| `hsts.include_subdomains` | `bool` | `PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS` | `true` | — | Apply the policy to every subdomain as well (`includeSubDomains`). |
+| `hsts.preload` | `bool` | `PORTFOLIO_HSTS__PRELOAD` | `true` | — | Ask to be included in the browsers' built-in HSTS preload list (`preload`). |
 | `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
 | `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
 | `sentry.enabled` | `bool` | `PORTFOLIO_SENTRY__ENABLED` | `false` | — | Initialize the Sentry client. `false` installs no client, no panic hook, no `tracing` layer and no HTTP middleware, so every other key here is inert and nothing leaves the process. |

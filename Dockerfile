@@ -5,7 +5,13 @@ ARG GROUP_ID=1001
 
 # Pinned build-tool versions. Bump alongside the base image digests and the
 # committed Cargo.lock / package-lock.json.
-ARG DIOXUS_CLI_VERSION=0.7.9
+#
+# `dx` has to match the `dioxus` crates in Cargo.lock exactly: the CLI writes the
+# asset manifest and the hydration bootstrap the library reads. Renovate's
+# "dioxus" group moves both in one pull request, and
+# `apps/web/tests/toolchain_pins.rs` fails the test suite when they disagree.
+# renovate: datasource=crate depName=dioxus-cli
+ARG DIOXUS_CLI_VERSION=0.7.10
 # renovate: datasource=crate depName=cargo-about
 ARG CARGO_ABOUT_VERSION=0.9.2
 
@@ -48,8 +54,11 @@ RUN case "${TARGETARCH}" in \
 # up with no target headers at all and ring's first .c file fails on <stdlib.h>.
 # Its headers are glibc's, but they are only ever preprocessed — nothing from
 # this package reaches the linked binary.
+#
+# No `libssl-dev`/`pkg-config`: nothing in the graph links OpenSSL — ureq and
+# sentry use rustls on ring, which only needs the C compiler above.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config libssl-dev curl nodejs npm ca-certificates musl-tools \
+    curl nodejs npm ca-certificates musl-tools \
     && if [ "${TARGETARCH}" = "arm64" ]; then \
          apt-get install -y --no-install-recommends \
            gcc-aarch64-linux-gnu libc6-dev-arm64-cross; \
@@ -79,6 +88,13 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf \
 
 WORKDIR /app
 
+# Cargo's registry and every stage's target directory live in BuildKit cache
+# mounts, so a source change recompiles the workspace crates rather than all
+# ~700 dependencies. A cache mount is not part of the image: anything a later
+# stage needs out of `target/` is copied out of it in the same RUN. On CI the
+# mounts are carried between runs by the workflow (see build.yaml).
+ENV CARGO_TARGET_DIR=/cargo-target
+
 # ── generate build-time data: repos.json, resume PDFs + fingerprint ───────────
 FROM tools AS generate
 COPY . .
@@ -105,6 +121,8 @@ COPY . .
 # and a missing file is exactly the "stale" the generator already handles.
 RUN --mount=type=secret,id=gh_token \
     --mount=type=cache,target=/repos-cache,sharing=locked \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=target-generate,target=/cargo-target,sharing=locked \
     if [ -s /run/secrets/gh_token ]; then \
       export PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token; \
     fi; \
@@ -127,7 +145,8 @@ RUN --mount=type=secret,id=gh_token \
 # terms this site ships under, and a dependency arriving with anything else exits
 # non-zero here — the image fails to build rather than being published with a
 # licenses page that does not mention it.
-RUN mkdir -p apps/web/generated \
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    mkdir -p apps/web/generated \
     && cargo about generate --locked --all-features \
          --manifest-path apps/web/Cargo.toml \
          --output-file apps/web/generated/licenses.json \
@@ -148,12 +167,14 @@ RUN mkdir -p apps/web/generated \
 # The generator reads the format from the file's own header, so the mount having
 # no extension is fine.
 RUN --mount=type=secret,id=resume_photo \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=target-generate,target=/cargo-target,sharing=locked \
     cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
       $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
     && mkdir -p apps/web/generated/resume \
     && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
     && cp /app/resume-out/resume-fingerprint.json apps/web/generated/ \
-    && cp /app/resume-out/og-image.png apps/web/generated/
+    && cp /app/resume-out/*.png apps/web/generated/
 
 # ── the configuration contract ────────────────────────────────────────────────
 # The document a deployment pipeline reads to check that what it renders is what
@@ -166,7 +187,9 @@ RUN --mount=type=secret,id=resume_photo \
 # stays cached across every change to the rest of the site. Nothing the `config-schema` feature links —
 # `serde_json`, `syn`, the derive — reaches the binary the runtime stage copies.
 FROM generate AS contract-builder
-RUN mkdir -p /out \
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=target-contract,target=/cargo-target,sharing=locked \
+    mkdir -p /out \
     && cargo run --locked -p portfolio-config --features config-schema \
          --example config-schema -- --format contract > /out/contract.json
 
@@ -177,7 +200,7 @@ WORKDIR /app/apps/web
 # Tailwind (scanning the .rs files) into assets/tailwind.css, which the app links
 # via manganis `asset!`.
 RUN npm ci && npm run build:css
-# Produces target/dx/web/release/web/{server, public/} — the server binary plus
+# Produces <target>/dx/web/release/web/{server, public/} — the server binary plus
 # the hashed client assets (the /resume PDFs are embedded, not bundled). The client stays wasm
 # while `@server --target …-musl` cross-links the SSR server fully static
 # (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
@@ -191,17 +214,30 @@ RUN npm ci && npm run build:css
 # `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
 # with `musl-tools` above), and cargo picks that up from the workspace root. Keep
 # the two in sync — a linker named in only one of them is a silent build break.
+#
+# `PORTFOLIO_REQUIRE_GENERATED=1` makes `apps/web/build.rs` refuse to embed an
+# empty default for anything the stages above should have produced — a missing
+# license inventory or stylesheet fails the image instead of shipping.
 ENV CC_x86_64_unknown_linux_musl=musl-gcc \
     CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
     AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
-    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc \
+    PORTFOLIO_REQUIRE_GENERATED=1
 # `--debug-symbols=false` strips the client wasm's DWARF debug info and `name`
 # section for production: it shrinks the payload substantially and avoids the
 # malformed `name` custom section that Firefox rejects at validation. We already
 # don't `--keep-names`, so no readable backtraces are lost.
-RUN dx bundle --release \
+#
+# The bundle is copied out to /out/web in the same RUN: the target directory is
+# a cache mount and does not survive into the layer.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=target-web,target=/cargo-target,sharing=locked \
+    dx bundle --release \
     @client --platform web --debug-symbols=false \
-    @server --platform server --target "$(cat /etc/rust-target)"
+    @server --platform server --target "$(cat /etc/rust-target)" \
+    && mkdir -p /out \
+    && rm -rf /out/web \
+    && cp -r /cargo-target/dx/web/release/web /out/web
 # An empty, staged ISR cache directory. The `scratch` runtime has no shell to
 # `mkdir` with and its non-root user cannot create directories under `/`, so the
 # directory (and its ownership) has to be baked in here and COPYed across to
@@ -268,7 +304,7 @@ LABEL org.opencontainers.image.title="portfolio" \
 # The whole bundle: the `server` binary and its sibling `public/` asset dir. The
 # server resolves `public/` relative to itself, so keep them together and run
 # from that directory.
-COPY --from=web-builder /app/target/dx/web/release/web /app
+COPY --from=web-builder /out/web /app
 # The ISR cache directory, owned by the runtime user so it is writable even on
 # the read-only `scratch` root (the non-root user cannot create it at runtime).
 # It lives under /tmp, which the deployment (Helm chart) already mounts as a

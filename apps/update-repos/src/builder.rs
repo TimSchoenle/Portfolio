@@ -153,7 +153,7 @@ impl ReposBuilder {
             all.extend(batch);
 
             // A short page signals the last one; stop before an empty request.
-            if (fetched as u32) < PER_PAGE {
+            if fetched < PER_PAGE as usize {
                 break;
             }
             page += 1;

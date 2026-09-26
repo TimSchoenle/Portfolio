@@ -1,0 +1,12 @@
+{
+  "name": "portfolio-browser-smoke",
+  "private": true,
+  "type": "module",
+  "description": "Headless-browser smoke test for a running portfolio image.",
+  "scripts": {
+    "smoke": "node smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

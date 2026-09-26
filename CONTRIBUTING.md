@@ -12,7 +12,7 @@ code. The rest of this document describes the development workflow the maintaine
 - Rust, at the version in `rust-version` of the root `Cargo.toml`, with the WebAssembly target:
   `rustup target add wasm32-unknown-unknown`
 - The [Dioxus CLI](https://dioxuslabs.com) (`dx`), at the version the image pins in
-  `DIOXUS_CLI_VERSION` in the `Dockerfile`: `cargo install --locked dioxus-cli --version 0.7.9`
+  `DIOXUS_CLI_VERSION` in the `Dockerfile`: `cargo install --locked dioxus-cli --version 0.7.10`
 - [cargo-about](https://github.com/EmbarkStudios/cargo-about), only to render the third-party
   license page: `cargo install --locked cargo-about`
 - [just](https://github.com/casey/just), which runs every check CI runs
@@ -52,10 +52,16 @@ code. The rest of this document describes the development workflow the maintaine
 Before opening a pull request, run the same checks CI runs:
 
 ```bash
-just verify   # fmt, lint, docs, test
+just verify   # fmt, lint, docs, test, deny
 ```
 
-`just --list` shows the individual recipes.
+`just lint` runs Clippy three times: over the workspace with every feature, then over the web app
+as the server alone and as the wasm client alone. `--all-features` builds both platforms at once,
+which compiles out anything only one of them sees.
+
+With an image built (`docker build -t portfolio:local .`), `just smoke` runs the container smoke
+test CI runs, and `just browser-smoke` the headless-browser hydration test against a running
+server. `just --list` shows the individual recipes.
 
 ## Generated files
 

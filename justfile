@@ -124,15 +124,27 @@ dev port="8080":
 
 [doc('Format, lint and test — what a pull request is going to run anyway')]
 [group('check')]
-verify: fmt lint docs test
+verify: fmt lint docs test deny
 
 [group('check')]
 fmt:
     cargo fmt --all
 
+# Three passes, because `--all-features` alone never compiles what only one platform sees: with
+# `web` and `server` both on, every `cfg(all(feature = "web", not(feature = "server")))` item —
+# the wasm client's language detection, `dioxus::launch` — is compiled out.
+
+[doc('Clippy over the workspace, then each platform of the web app on its own')]
 [group('check')]
 lint:
-    cargo clippy --all-features --all-targets -- -D warnings
+    cargo clippy --workspace --all-features --all-targets -- -D warnings
+    cargo clippy -p web --no-default-features --features server --all-targets -- -D warnings
+    cargo clippy -p web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
+
+[doc('Advisories, licenses, bans and sources, per deny.toml')]
+[group('check')]
+deny:
+    cargo deny --all-features check
 
 # `--workspace` because the workspace root is a package, so without it cargo builds the
 # release-please placeholder in `src/lib.rs` and nothing else. `RUSTDOCFLAGS` is where the
@@ -147,4 +159,16 @@ docs:
 
 [group('check')]
 test:
-    cargo test --all-features
+    cargo test --workspace --all-features
+
+# Both need a built image; `docker build -t portfolio:local .` makes one.
+
+[doc('Run the container smoke test against an image')]
+[group('image')]
+smoke image="portfolio:local" port="8080":
+    bash scripts/smoke-test.sh "{{ image }}" "{{ port }}"
+
+[doc('Run the headless-browser hydration test against a running server')]
+[group('image')]
+browser-smoke base="http://localhost:8080":
+    cd tests/browser && npm ci && npx playwright install chromium && node smoke.mjs "{{ base }}"

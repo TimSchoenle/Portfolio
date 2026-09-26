@@ -6,10 +6,19 @@ members = [
     "apps/resume-generator",
     "apps/update-repos",
 ]
+# Every member, not only the root package. With a root `[package]`, a bare `cargo clippy` or
+# `cargo test` otherwise covers the empty root crate alone and nothing a member contains.
+default-members = [
+    ".",
+    "crates/config",
+    "crates/data",
+    "apps/web",
+    "apps/resume-generator",
+    "apps/update-repos",
+]
 resolver = "2"
 
 [workspace.package]
-version = "2.1.0"
 edition = "2024"
 publish = false
 
@@ -140,7 +149,7 @@ secrecy = { version = "0.10", features = ["serde"] }
 # serialization on both targets; `router` re-exports dioxus-router. The
 # `web` (wasm client) and `server` (native SSR) renderers are selected
 # per-build by the `apps/web` crate's own feature flags, never here.
-dioxus = { version = "0.7.9", features = ["fullstack", "router"] }
+dioxus = { version = "0.7.10", features = ["fullstack", "router"] }
 
 # i18nrs Dioxus integration. Only the base component set (`dio`) is enabled.
 # `dio-ssr` is deliberately omitted: it wires i18nrs's own cookie negotiation via

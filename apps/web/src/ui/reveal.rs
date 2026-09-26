@@ -52,14 +52,16 @@ pub fn Reveal(#[props(default = 0)] delay: u32, children: Element) -> Element {
         div {
             class: "reveal {phase}",
             style: "transition-delay: {delay}ms",
-            onmounted: move |_e| {
+            onmounted: move |e| {
                 #[cfg(feature = "web")]
                 {
                     use dioxus::web::WebEventExt;
-                    if let Some(node) = _e.try_as_web_event() {
+                    if let Some(node) = e.try_as_web_event() {
                         el.set(Some(node));
                     }
                 }
+                #[cfg(not(feature = "web"))]
+                let _ = e;
             },
             {children}
         }

@@ -1,6 +1,7 @@
 //! Selected-work section: GitHub filter chips + the paged project grid, fed by
 //! the build-time embedded `repos.json`.
 
+use std::fmt::Write as _;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
@@ -45,7 +46,7 @@ impl Filter {
 }
 
 /// The repositories worth showing, most-starred first, and the languages found
-/// among them — the two derivations every render of this section used to redo.
+/// among them — derived once rather than on every render of the section.
 ///
 /// Forks and archived repositories are dropped here rather than at each use
 /// site, so the chip counts, the pager and the grid all agree on what "a project"
@@ -124,7 +125,7 @@ pub fn Projects(state: ReposState) -> Element {
         };
         let mut line = format!("{} {unit}", filtered.len());
         if offline {
-            line.push_str(&format!(" · {}", t("projects.offline")));
+            let _ = write!(line, " · {}", t("projects.offline"));
         }
         line
     };
@@ -186,7 +187,7 @@ pub fn Projects(state: ReposState) -> Element {
                             {filtered.chunks(PAGE_SIZE).enumerate().map(|(pi, chunk)| rsx! {
                                 div { key: "p{pi}", class: "project-grid",
                                     {chunk.iter().enumerate().map(|(i, r)| rsx! {
-                                        Reveal { key: "{r.name}", delay: (180 + i * 60).min(600) as u32,
+                                        Reveal { key: "{r.name}", delay: u32::try_from((180 + i * 60).min(600)).unwrap_or(600),
                                             ProjectCard { repo: (*r).clone(), index: pi * PAGE_SIZE + i }
                                         }
                                     })}

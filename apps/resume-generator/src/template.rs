@@ -11,6 +11,8 @@
 //! module for how a CSS pixel, a CSS margin and a CSS `line-height` each map
 //! onto Typst.
 
+use std::fmt::Write as _;
+
 use portfolio_data::{
     CONFIG, EDUCATION, Quadrant, experiences_sorted, format_period_years, matrix_skills,
 };
@@ -352,7 +354,8 @@ fn experience_entry(
 
     // Line 1: role (left) | date range (right). The date follows the title in
     // source order so extraction reads role-then-date.
-    s.push_str(&format!(
+    let _ = write!(
+        s,
         "#grid(columns: (1fr, auto), column-gutter: {gutter}, \
          align: (left + bottom, right + bottom),\n[{role}],\n[{dates}],\n)",
         gutter = l.pt(style::ENTRY_DATE_GAP),
@@ -370,10 +373,11 @@ fn experience_entry(
             style::INK_MUTED,
             &esc(&t.period(e.start, e.end)),
         ),
-    ));
+    );
 
     // Line 2: company (kept whole via `#box`) · location (muted).
-    s.push_str(&format!(
+    let _ = write!(
+        s,
         "\n\n{gap}\n\n#box[{org}]{loc}",
         gap = v(l, style::TITLE_TO_ORG),
         org = run(
@@ -390,19 +394,19 @@ fn experience_entry(
             style::INK_MUTED,
             &format!(" · {}", esc(e.location)),
         ),
-    ));
+    );
 
     // Bullets (native list, so the marker precedes the text).
-    let n = detail.bullet_count(index, e);
-    if n > 0 {
+    let bullets = detail.bullet_count(index, e);
+    if bullets > 0 {
         let (top_edge, bottom_edge) = Layout::edges(l.sp().lh_bullet);
-        let items: String = (1..=n)
-            .map(|b| {
-                let bullet = esc(&t.get(&key(&format!("bullets.b{b}"))));
-                format!("[{}],\n", keep_compounds(&bullet))
-            })
-            .collect();
-        s.push_str(&format!(
+        let items = (1..=bullets).fold(String::new(), |mut items, b| {
+            let bullet = esc(&t.get(&key(&format!("bullets.b{b}"))));
+            let _ = writeln!(items, "[{}],", keep_compounds(&bullet));
+            items
+        });
+        let _ = write!(
+            s,
             "\n\n{gap}\n\n#[\n\
              #set text(size: {fs}, fill: rgb(\"{ink}\"), \
              top-edge: {top_edge}, bottom-edge: {bottom_edge})\n\
@@ -418,13 +422,14 @@ fn experience_entry(
             // the bullet size it survives the fit ladder unchanged.
             indent = format_args!("{:.4}em", style::BULLET_INDENT / style::FS_BULLET),
             items = items,
-        ));
+        );
     }
 
     // Explicit technology keywords (`·` run) so resume parsers pick them up.
     // The bold `Stack:` label stays in ink; the tech run is soft ink, not
     // accent, so the accent color reads as structure only.
-    s.push_str(&format!(
+    let _ = write!(
+        s,
         "\n\n{gap}\n\n{label}{tech}",
         gap = v(l, l.sp().stack_top),
         label = run(
@@ -441,7 +446,7 @@ fn experience_entry(
             style::INK_SOFT,
             &esc(&e.tech.join(" · ")),
         ),
-    ));
+    );
 
     s
 }
@@ -615,26 +620,28 @@ fn skills_block(t: &Translations, l: &Layout) -> String {
         if i > 0 {
             blocks.push(v(l, l.sp().skill_group_gap));
         }
-        let chips: String = skills
-            .iter()
-            .filter(|s| s.quadrant == q)
-            .map(|s| {
-                format!(
-                    "#box(fill: rgb(\"{bg}\"), stroke: {w} + rgb(\"{border}\"), \
+        let chips =
+            skills
+                .iter()
+                .filter(|s| s.quadrant == q)
+                .fold(String::new(), |mut chips, s| {
+                    let _ = write!(
+                        chips,
+                        "#box(fill: rgb(\"{bg}\"), stroke: {w} + rgb(\"{border}\"), \
                      inset: (x: {px}, y: {py}), radius: {radius})[\
                      #text(size: {fs}, fill: rgb(\"{ink}\"), spacing: 100%)[{name}]] ",
-                    bg = style::TAG_BG,
-                    w = l.pt(style::HAIRLINE),
-                    border = style::TAG_BORDER,
-                    px = l.pt(l.sp().chip_pad_x + style::HAIRLINE / 2.0),
-                    py = l.pt(l.sp().chip_pad_y + style::HAIRLINE / 2.0),
-                    radius = l.pt(style::RADIUS_TAG),
-                    fs = l.pt(style::FS_TAG),
-                    ink = style::TAG_INK,
-                    name = esc(s.name),
-                )
-            })
-            .collect();
+                        bg = style::TAG_BG,
+                        w = l.pt(style::HAIRLINE),
+                        border = style::TAG_BORDER,
+                        px = l.pt(l.sp().chip_pad_x + style::HAIRLINE / 2.0),
+                        py = l.pt(l.sp().chip_pad_y + style::HAIRLINE / 2.0),
+                        radius = l.pt(style::RADIUS_TAG),
+                        fs = l.pt(style::FS_TAG),
+                        ink = style::TAG_INK,
+                        name = esc(s.name),
+                    );
+                    chips
+                });
         blocks.push(format!(
             "{label}\n\n{gap}\n\n#[\n\
              #set text(size: {fs}, spacing: 0% + {gutter})\n\

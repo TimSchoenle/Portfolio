@@ -168,8 +168,12 @@ pub(crate) fn render(markup: String, assets: &[Asset]) -> Result<(usize, Vec<u8>
 /// 600pt × 315pt page at 2.0 is a 1200 × 630 image, which is what the social
 /// card needs. Sharing [`ResumeWorld`] means the card is laid out with the same
 /// embedded brand font as the resume and needs no toolchain of its own.
-pub(crate) fn render_png(markup: String, pixel_per_pt: f64) -> Result<Vec<u8>, String> {
-    let world = ResumeWorld::new(markup, &[]);
+pub(crate) fn render_png(
+    markup: String,
+    pixel_per_pt: f64,
+    assets: &[Asset],
+) -> Result<Vec<u8>, String> {
+    let world = ResumeWorld::new(markup, assets);
     let Warned { output, .. } = typst::compile(&world);
     let document: PagedDocument = output.map_err(|diags| diagnostics(&diags))?;
     let page = document

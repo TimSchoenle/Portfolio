@@ -52,8 +52,7 @@ impl Error for UpdateReposError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             UpdateReposError::Config(e) => Some(e),
-            UpdateReposError::MissingUser => None,
-            UpdateReposError::NoRepos => None,
+            UpdateReposError::MissingUser | UpdateReposError::NoRepos => None,
             UpdateReposError::Http(e) => Some(e),
             UpdateReposError::Io(e) => Some(e),
             UpdateReposError::Serialize(e) => Some(e),

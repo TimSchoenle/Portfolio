@@ -80,6 +80,7 @@ impl LicensesFile {
     /// licensed `A AND B`, or when it vendors code under notices of its own:
     /// `ring` carries eighteen, which are eighteen genuinely different copyright
     /// notices rather than eighteen copies of one.
+    #[must_use]
     pub fn dependencies(&self) -> Vec<DependencyLicenses<'_>> {
         let mut covered: BTreeMap<(&str, &str), Vec<&LicenseText>> = BTreeMap::new();
         for text in &self.texts {
@@ -105,6 +106,7 @@ impl LicensesFile {
     /// test` outside the image build, where `cargo about` has not run and
     /// `build.rs` embedded the empty default. The page renders its unavailable
     /// state.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.third_party().next().is_none()
     }

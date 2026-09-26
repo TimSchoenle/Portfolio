@@ -23,15 +23,23 @@ environment variables.
 
 ## Headers
 
-Five headers are set on every response, overriding whatever a handler produced:
+Seven headers are set on every response, overriding whatever a handler produced:
 
 | Header | Value |
 | --- | --- |
 | `X-Content-Type-Options` | `nosniff` |
 | `X-Frame-Options` | `DENY` |
 | `Referrer-Policy` | `no-referrer` |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` by default; `hsts.*` configures it |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), interest-cohort=()` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
+
+`Strict-Transport-Security` is configuration because both of its flags reach past this service:
+`includeSubDomains` binds every host under the domain to HTTPS, and `preload` asks browsers to
+ship that rule. A deployment on a domain it does not own outright turns them off
+(`PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS=false`, `PORTFOLIO_HSTS__PRELOAD=false`). The server refuses
+to start with `preload` on and either of the preload list's requirements unmet.
 
 `Content-Security-Policy` is the exception. The subresource policy is set only when the document
 middleware has not already set a stricter one, which is what the section below is about.

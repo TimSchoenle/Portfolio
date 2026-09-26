@@ -94,9 +94,18 @@ fn Shell() -> Element {
         // Reset scroll to the top on every route change (an SPA keeps the old
         // position otherwise). Reading `current()` subscribes this effect to
         // navigations, so it re-runs whenever the route changes.
+        //
+        // Not on the first run, which is hydration rather than a navigation: the
+        // browser has already placed the page where the URL asked — a `#s4`
+        // deep link, or the position restored after a reload — and resetting it
+        // would throw that away.
         let router = router();
+        let hydrated: Rc<std::cell::Cell<bool>> = use_hook(|| Rc::new(std::cell::Cell::new(false)));
         use_effect(move || {
             let _: Route = router.current();
+            if !hydrated.replace(true) {
+                return;
+            }
             if let Some(win) = web_sys::window() {
                 win.scroll_to_with_x_and_y(0.0, 0.0);
             }
@@ -111,13 +120,13 @@ fn Shell() -> Element {
             skin,
             language,
             div { class: "site",
-                Masthead { on_open_palette: move |_| palette_open.set(true) }
+                Masthead { on_open_palette: move |()| palette_open.set(true) }
                 Outlet::<Route> {}
                 Footer {}
                 if palette_open() {
                     CommandPalette {
                         repos: repos.clone(),
-                        on_close: move |_| palette_open.set(false),
+                        on_close: move |()| palette_open.set(false),
                     }
                 }
             }

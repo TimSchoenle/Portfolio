@@ -1,11 +1,9 @@
 //! Root component: the i18n provider wrapping the router, plus the document
 //! head shared across routes.
 
-use std::collections::HashMap;
-
 use dioxus::prelude::*;
 use i18nrs::dioxus::I18nProvider;
-use portfolio_data::{CONFIG, I18N_DE, I18N_EN, OG_IMAGE_FILE, OG_IMAGE_SIZE};
+use portfolio_data::{CONFIG, OG_IMAGE_FILE, OG_IMAGE_SIZE, SITE_LANGUAGES, language_or_default};
 
 use crate::i18n::LANG_STORAGE_KEY;
 use crate::routes::Route;
@@ -36,7 +34,10 @@ const PRELOADED_FONTS: [&str; 2] = [
 /// out of context has to sit under this one.
 #[component]
 pub fn App() -> Element {
-    let translations = HashMap::from([("en", I18N_EN), ("de", I18N_DE)]);
+    let translations = SITE_LANGUAGES
+        .iter()
+        .map(|language| (language.code, language.translations))
+        .collect();
 
     // The embedded repo list, parsed once and shared with the projects section
     // and the command palette. Identical on the server and client, so it
@@ -48,17 +49,13 @@ pub fn App() -> Element {
     // synchronously from that same `lang` cookie, so SSR and hydration agree
     // without any server round-trip.
     let default_language: String = {
-        #[cfg(feature = "server")]
-        {
-            crate::i18n::detect_locale()
-        }
-        #[cfg(all(not(feature = "server"), feature = "web"))]
+        #[cfg(any(feature = "server", feature = "web"))]
         {
             crate::i18n::detect_locale()
         }
         #[cfg(not(any(feature = "server", feature = "web")))]
         {
-            "en".to_string()
+            portfolio_data::DEFAULT_LANGUAGE.code.to_owned()
         }
     };
 
@@ -113,10 +110,7 @@ fn SiteHead(lang: String) -> Element {
     // relative `og:image` is not resolved by most of them.
     let image = format!("{}/{}", CONFIG.url, OG_IMAGE_FILE);
     let (image_width, image_height) = OG_IMAGE_SIZE;
-    let og_locale = match lang.as_str() {
-        "de" => "de_DE",
-        _ => "en_US",
-    };
+    let og_locale = language_or_default(&lang).og_locale;
 
     rsx! {
         // Core description / indexing hints.
