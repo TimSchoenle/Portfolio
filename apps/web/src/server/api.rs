@@ -26,9 +26,9 @@ use time::{OffsetDateTime, macros::format_description};
 /// The profile document and its JSON Schema, rendered to JSON once.
 ///
 /// Both derive solely from compile-time data, so every caller receives the same
-/// bytes for the whole life of the process. Going through `Json` re-serialized
-/// the entire document on each request; rendering it here reduces the handlers
-/// to a pair of headers and a `&'static str`.
+/// bytes for the whole life of the process. Serializing once here reduces the
+/// handlers to a pair of headers and a `&'static str`, where `Json` would
+/// re-serialize the whole document per request.
 static PROFILE_JSON: LazyLock<String> = LazyLock::new(|| {
     serde_json::to_string(&portfolio_data::profile::profile())
         .expect("the profile document serializes")
@@ -42,9 +42,8 @@ static SCHEMA_JSON: LazyLock<String> = LazyLock::new(|| {
 /// cacheable while staying fresh enough.
 const CACHE_CONTROL: &str = "public, max-age=3600";
 
-/// Stated explicitly because the two handlers below no longer go through `Json`,
-/// which is what used to set it. Exactly `application/json`, matching what
-/// `Json` sent, so no client sees the media type change.
+/// Stated explicitly because the two handlers below bypass `Json`, which would
+/// otherwise set it. Exactly `application/json`, the value `Json` sends.
 const JSON_CONTENT_TYPE: &str = "application/json";
 
 /// `GET /api/v1/profile` — the static, language-neutral profile document.

@@ -46,6 +46,7 @@ impl RenderArea {
 impl Skill {
     /// The areas a skill is rendered in. Radar-only skills appear solely on
     /// the tech radar; every other skill appears everywhere.
+    #[must_use]
     pub fn render_areas(&self) -> Vec<RenderArea> {
         if self.radar_only {
             vec![RenderArea::TechRadar]
@@ -149,6 +150,7 @@ pub struct ProfileWithSchema {
 }
 
 /// Builds the public profile document from the compile-time configuration.
+#[must_use]
 pub fn profile() -> ProfileWithSchema {
     ProfileWithSchema {
         profile: Profile {

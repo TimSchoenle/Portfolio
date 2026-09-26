@@ -14,7 +14,7 @@ pub fn About() -> Element {
     let t = move |k: &str| i18n.read().t(k);
 
     rsx! {
-        section { id: section_id("about"), class: "sec",
+        section { id: section_id("about"), class: "sec snap-start",
             Reveal {
                 SectionHeader {
                     num: section_label("about"),

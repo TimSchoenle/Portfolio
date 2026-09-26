@@ -136,3 +136,7 @@ manifests
 *.gz
 *.bz2
 *.xz
+
+# -------- CI-only helpers (smoke tests) never enter the image
+scripts
+tests

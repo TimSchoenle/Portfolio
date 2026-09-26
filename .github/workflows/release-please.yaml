@@ -118,6 +118,21 @@ jobs:
           # that runs during the Docker build.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
+          # Read-only: the layers the pull-request builds on `main` already
+          # produced, per architecture, so a release does not start cold.
+          cache-from: |
+            type=gha,scope=docker-amd64
+            type=gha,scope=docker-arm64
+
+      # The image just pushed is a rebuild, not the bytes the pull request
+      # tested, so it passes the same smoke test before anything signs it or
+      # the Helm chart points at it. amd64 is what this runner executes.
+      - name: Smoke-test the pushed image
+        env:
+          IMAGE: ${{ env.DOCKER_REPO }}@${{ steps.build.outputs.digest }}
+        run: |
+          docker pull --platform linux/amd64 "$IMAGE"
+          bash scripts/smoke-test.sh "$IMAGE"
 
       - name: Sign the images with GitHub OIDC Token
         env:

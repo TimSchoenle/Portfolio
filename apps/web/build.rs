@@ -1,105 +1,191 @@
-//! Embeds `repos.json`, `licenses.json`, `resume-fingerprint.json` and the
-//! resume PDFs into the binary.
+//! Embeds the build-time generated data into the binary: `repos.json`, `licenses.json`,
+//! `resume-fingerprint.json`, the resume PDFs, the Open Graph card and the app icons.
 //!
-//! `repos.json` is regenerated from the GitHub API by the `update-repos` crate,
-//! `licenses.json` by `cargo about` (see `about.toml`) and
-//! `resume-fingerprint.json` + the PDFs by the resume generator. When any of
-//! them is absent (dev builds, `cargo clippy`, `cargo test`), an empty default is
-//! substituted so the `include_str!`/`include_bytes!`s in `src/github.rs`,
-//! `src/licenses.rs` and `src/server/assets.rs` always resolve — on both the wasm
-//! client and the native server target.
+//! `repos.json` comes from the `update-repos` crate, `licenses.json` from `cargo about` (see
+//! `about.toml`) and everything else from the resume generator. Each is copied into `OUT_DIR`,
+//! where `src/github.rs`, `src/licenses.rs` and `src/server/assets.rs` include it; the resume
+//! PDFs and the icons are additionally listed in generated Rust tables (`resumes.rs`,
+//! `app_icons.rs`) so the server serves exactly what the data crate publishes.
 //!
-//! The PDFs are embedded (rather than served from an on-disk `public/resume`
-//! directory) so the SSR server stays a single self-contained binary: the
-//! `scratch` runtime image ships no writable asset tree, and the non-ASCII
-//! resume file names tripped up static file serving.
+//! # Two modes
+//!
+//! A development build (`cargo check`, `clippy`, `test`, `dx serve`) has usually not run the
+//! generators, so a missing input is replaced by an empty default and the routes serving it
+//! answer 404.
+//!
+//! An image build must not do that silently: an empty `licenses.json` publishes a licenses page
+//! that attributes nothing, and an empty stylesheet ships an unstyled site. With
+//! `PORTFOLIO_REQUIRE_GENERATED=1` — which the `Dockerfile` sets — every missing input is an
+//! error naming the step that should have produced it.
 
 use std::env;
+use std::fmt::Write as _;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use portfolio_data::{OG_IMAGE_FILE, RESUME_FILES};
+use portfolio_data::{APP_ICONS, OG_IMAGE_FILE, SITE_LANGUAGES};
+
+/// Set to `1` to turn a missing generated input into a build error.
+const REQUIRE_ENV: &str = "PORTFOLIO_REQUIRE_GENERATED";
 
 const EMPTY_MANIFEST: &str = r#"{"algorithm":"","generated_at":"","files":{}}"#;
 const EMPTY_REPOS: &str = r#"{"generated_at":"","user":"","repos":[]}"#;
 const EMPTY_LICENSES: &str = r#"{"summary":[],"texts":[],"crates":[]}"#;
 
-fn embed(source: &Path, out_dir: &str, name: &str, default: &str) {
-    let dest = Path::new(out_dir).join(name);
-    let contents = fs::read_to_string(source).unwrap_or_else(|_| default.to_string());
-    fs::write(&dest, contents).unwrap_or_else(|_| panic!("write embedded {name}"));
-    println!("cargo:rerun-if-changed={}", source.display());
+/// Where the inputs come from and where they go, and whether a missing one is fatal.
+struct Embedder {
+    crate_dir: PathBuf,
+    out_dir: PathBuf,
+    strict: bool,
+    /// Inputs that were absent, with the step that produces each.
+    missing: Vec<String>,
 }
 
-/// Copies a binary artifact into `OUT_DIR` under `name` so `assets.rs` can
-/// `include_bytes!` it. Writes an empty file when the source is absent (dev
-/// builds where the resume generator has not run), which the routes serve as a
-/// 404 rather than an empty body.
-fn embed_bytes(source: &Path, out_dir: &str, name: &str) {
-    let dest = Path::new(out_dir).join(name);
-    let bytes = fs::read(source).unwrap_or_default();
-    fs::write(&dest, bytes).unwrap_or_else(|_| panic!("write embedded {name}"));
-    println!("cargo:rerun-if-changed={}", source.display());
-}
+impl Embedder {
+    /// Copies `source` (relative to the crate) into `OUT_DIR` as `name`, or writes `default`
+    /// when it is absent. `producer` names what creates it, for the strict-mode error.
+    fn embed(&mut self, source: &str, name: &str, default: &[u8], producer: &str) -> PathBuf {
+        let source = self.crate_dir.join(source);
+        let dest = self.out_dir.join(name);
+        let bytes = if let Ok(bytes) = fs::read(&source) {
+            bytes
+        } else {
+            self.missing
+                .push(format!("{} (produced by {producer})", source.display()));
+            default.to_vec()
+        };
+        fs::write(&dest, bytes).unwrap_or_else(|err| panic!("write embedded {name}: {err}"));
+        self.watch(&source);
+        dest
+    }
 
-/// Copies a resume PDF in under a stable ASCII name (`resume-<lang>.pdf`), so the
-/// non-ASCII published file name never has to appear in an `include_bytes!` path.
-fn embed_resume(source: &Path, out_dir: &str, lang: &str) {
-    embed_bytes(source, out_dir, &format!("resume-{lang}.pdf"));
+    /// Re-runs this script when `path` changes — or, when it does not exist yet, when the
+    /// nearest existing directory above it inside the crate does. Watching a missing path
+    /// directly makes Cargo re-run the script on every build.
+    fn watch(&self, path: &Path) {
+        let mut target = path;
+        while !target.exists() {
+            match target.parent() {
+                Some(parent) if parent.starts_with(&self.crate_dir) && parent != self.crate_dir => {
+                    target = parent;
+                }
+                _ => return,
+            }
+        }
+        println!("cargo:rerun-if-changed={}", target.display());
+    }
+
+    /// Fails the build in strict mode when anything was missing.
+    fn finish(self) {
+        assert!(
+            !self.strict || self.missing.is_empty(),
+            "{REQUIRE_ENV}=1 but these generated inputs are missing:\n  {}",
+            self.missing.join("\n  ")
+        );
+    }
 }
 
 fn main() {
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR set by cargo");
-    let out_dir = env::var("OUT_DIR").expect("OUT_DIR set by cargo");
+    let crate_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("set by cargo"));
+    let out_dir = PathBuf::from(env::var("OUT_DIR").expect("set by cargo"));
+    println!("cargo:rerun-if-env-changed={REQUIRE_ENV}");
+    let strict = env::var(REQUIRE_ENV).is_ok_and(|value| value == "1");
 
-    // Ensure the Tailwind output exists so `asset!("/assets/tailwind.css")`
-    // resolves even when `npm run build:css` has not been run (e.g. a bare
-    // `cargo check`/`clippy`/`test` in CI). The real stylesheet is produced by
-    // `npm run build:css` before `dx bundle`; this only writes an empty
-    // placeholder when the file is absent and never overwrites a real one.
-    let tailwind = Path::new(&manifest_dir).join("assets").join("tailwind.css");
+    let mut embedder = Embedder {
+        crate_dir,
+        out_dir,
+        strict,
+        missing: Vec::new(),
+    };
+
+    // `asset!("/assets/tailwind.css")` needs the file at compile time. `npm run build:css`
+    // writes it before `dx bundle`; a bare `cargo check` has not run npm, so a development build
+    // gets an empty placeholder in its place. The one write outside `OUT_DIR`, and only ever of
+    // a file that is gitignored and absent.
+    let tailwind = embedder.crate_dir.join("assets").join("tailwind.css");
     if !tailwind.exists() {
-        fs::write(&tailwind, "/* placeholder — run `npm run build:css` */\n")
-            .expect("write tailwind.css placeholder");
+        embedder.missing.push(format!(
+            "{} (produced by `npm run build:css`)",
+            tailwind.display()
+        ));
+        if !strict {
+            fs::write(&tailwind, "/* placeholder — run `npm run build:css` */\n")
+                .expect("write tailwind.css placeholder");
+        }
     }
 
-    let fingerprint_source = Path::new(&manifest_dir)
-        .join("generated")
-        .join("resume-fingerprint.json");
-    embed(
-        &fingerprint_source,
-        &out_dir,
+    embedder.embed(
+        "generated/resume-fingerprint.json",
         "resume-fingerprint.json",
-        EMPTY_MANIFEST,
+        EMPTY_MANIFEST.as_bytes(),
+        "resume-generator",
+    );
+    embedder.embed(
+        "repos.json",
+        "repos.json",
+        EMPTY_REPOS.as_bytes(),
+        "update-repos",
+    );
+    // The attribution a build publishes has to be the attribution for the dependency set that
+    // build linked, so it is embedded rather than fetched.
+    embedder.embed(
+        "generated/licenses.json",
+        "licenses.json",
+        EMPTY_LICENSES.as_bytes(),
+        "`cargo about generate` (just licenses)",
+    );
+    embedder.embed(
+        &format!("generated/{OG_IMAGE_FILE}"),
+        OG_IMAGE_FILE,
+        b"",
+        "resume-generator",
     );
 
-    let repos_source = Path::new(&manifest_dir).join("repos.json");
-    embed(&repos_source, &out_dir, "repos.json", EMPTY_REPOS);
-
-    // The third-party license inventory, written by `cargo about generate` (see
-    // `about.toml` / `about.hbs`, the `licenses` recipe in the justfile and the
-    // `generate` stage of the Dockerfile) and rendered by the `/licenses` route.
-    //
-    // Embedded rather than fetched so the page is part of the server-side render
-    // like every other route, and so the attribution a build publishes is the
-    // attribution for the dependency set that build actually linked — the two
-    // cannot drift apart when they are the same artifact.
-    let licenses_source = Path::new(&manifest_dir)
-        .join("generated")
-        .join("licenses.json");
-    embed(&licenses_source, &out_dir, "licenses.json", EMPTY_LICENSES);
-
-    // Resume PDFs, embedded under their canonical `RESUME_FILES` names. The
-    // resume generator writes them into `generated/resume/` (see the Dockerfile);
-    // absent in dev builds, so an empty file is embedded and served as 404.
-    let resume_dir = Path::new(&manifest_dir).join("generated").join("resume");
-    for (lang, file_name) in RESUME_FILES {
-        embed_resume(&resume_dir.join(file_name), &out_dir, lang);
+    // One resume per site language, under a stable ASCII name so the non-ASCII published name
+    // never appears in an `include_bytes!` path.
+    let mut resumes = String::from(
+        "/// Every site language's resume: `(language, published file name, PDF bytes)`.\n\
+         /// Generated by `build.rs` from `portfolio_data::SITE_LANGUAGES`.\n\
+         const RESUMES: [(&str, &str, &[u8]); SITE_LANGUAGE_COUNT] = [\n",
+    );
+    for language in SITE_LANGUAGES {
+        let dest = embedder.embed(
+            &format!("generated/resume/{}", language.resume_file),
+            &format!("resume-{}.pdf", language.code),
+            b"",
+            "resume-generator",
+        );
+        let _ = writeln!(
+            resumes,
+            "    ({:?}, {:?}, include_bytes!({:?})),",
+            language.code,
+            language.resume_file,
+            dest.display().to_string()
+        );
     }
+    resumes.push_str("];\n");
+    resumes = resumes.replace("SITE_LANGUAGE_COUNT", &SITE_LANGUAGES.len().to_string());
+    fs::write(embedder.out_dir.join("resumes.rs"), resumes).expect("write resumes.rs");
 
-    // The Open Graph card, from the same generator and embedded for the same
-    // reason. Served at `/og-image.png`, which is what the `og:image` meta tag
-    // points at.
-    let generated = Path::new(&manifest_dir).join("generated");
-    embed_bytes(&generated.join(OG_IMAGE_FILE), &out_dir, OG_IMAGE_FILE);
+    let mut icons = String::from(
+        "/// The web manifest's raster icons: `(file name, PNG bytes)`.\n\
+         /// Generated by `build.rs` from `portfolio_data::APP_ICONS`.\n",
+    );
+    let _ = writeln!(
+        icons,
+        "const APP_ICON_FILES: [(&str, &[u8]); {}] = [",
+        APP_ICONS.len()
+    );
+    for (_, name) in APP_ICONS {
+        let dest = embedder.embed(&format!("generated/{name}"), name, b"", "resume-generator");
+        let _ = writeln!(
+            icons,
+            "    ({name:?}, include_bytes!({:?})),",
+            dest.display().to_string()
+        );
+    }
+    icons.push_str("];\n");
+    fs::write(embedder.out_dir.join("app_icons.rs"), icons).expect("write app_icons.rs");
+
+    embedder.finish();
 }

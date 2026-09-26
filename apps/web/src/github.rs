@@ -53,9 +53,8 @@ impl ReposState {
 static REPOS: LazyLock<ReposState> =
     LazyLock::new(|| match serde_json::from_str::<ReposFile>(REPOS_JSON) {
         Ok(file) => ReposState::Ready(Arc::new(file)),
-        Err(_e) => {
-            #[cfg(feature = "web")]
-            web_sys::console::warn_1(&format!("repos.json parse failed: {_e}").into());
+        Err(err) => {
+            crate::util::console_warn(format_args!("repos.json parse failed: {err}"));
             ReposState::Failed
         }
     });

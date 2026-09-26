@@ -163,7 +163,7 @@ fn largest_fitting_scale(
     let (mut lo, mut hi) = (lo, hi);
     let mut best = (lo_bytes, lo);
     while hi - lo > 0.01 {
-        let mid = (lo + hi) / 2.0;
+        let mid = f64::midpoint(lo, hi);
         let (fits, bytes) = render_at(mid)?;
         if fits {
             best = (bytes, mid);

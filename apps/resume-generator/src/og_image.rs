@@ -3,10 +3,10 @@
 //!
 //! # Why this exists at all
 //!
-//! `og:image` used to point at `/favicon.svg`, and every one of those consumers
-//! refuses SVG: the tag was present, well-formed, and produced no image
-//! anywhere. A social card has to be a raster, and the conventional size is
-//! 1200 × 630 (the 1.91:1 box every major consumer crops to).
+//! Every one of those consumers refuses SVG, so pointing `og:image` at the
+//! favicon yields a well-formed tag and no image anywhere. A social card has to
+//! be a raster, and the conventional size is 1200 × 630 (the 1.91:1 box every
+//! major consumer crops to).
 //!
 //! # Why it is generated rather than drawn
 //!
@@ -39,6 +39,11 @@ const SCALE: f64 = 2.0;
 /// The two live in different crates — the renderer here, the `og:image:width` /
 /// `og:image:height` there — and a card whose bytes disagree with its declared
 /// dimensions is letterboxed or dropped by the consumer, silently.
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "evaluated at compile time over positive whole-number constants"
+)]
 const _: () = {
     assert!((WIDTH_PT * SCALE) as u32 == OG_IMAGE_SIZE.0);
     assert!((HEIGHT_PT * SCALE) as u32 == OG_IMAGE_SIZE.1);
@@ -60,7 +65,7 @@ const ACCENT: &str = "#00b6ff";
 /// no change to this module; today one English card is published, matching the
 /// single global `og:image`.
 pub(crate) fn render(job_title: &str, description: &str) -> Result<Vec<u8>, String> {
-    render_png(build_typ(job_title, description), SCALE)
+    render_png(build_typ(job_title, description), SCALE, &[])
 }
 
 /// Builds the `.typ` source for the card.

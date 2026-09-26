@@ -5,6 +5,7 @@
 //!   resume/Tim-Schönle-Lebenslauf.pdf  (de)
 //!   resume-fingerprint.json            (SHA-256 per file, shown on the contact card)
 //!   og-image.png                       (1200×630 social card, see [`og_image`])
+//!   icon-192.png, icon-512.png         (web manifest icons, see [`icons`])
 //!
 //! Layout: a two-column design rendered with Typst — a full-width header band
 //! (QR code, name, availability) over a tinted sidebar (Contact, Skills,
@@ -44,6 +45,7 @@
 //! (single-page fitting) and [`translations`] (the embedded i18n lookup).
 
 mod fit;
+mod icons;
 mod og_image;
 mod qr;
 mod style;
@@ -56,7 +58,7 @@ use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use portfolio_data::{CONFIG, RESUME_FILES, ResumeFingerprints};
+use portfolio_data::{CONFIG, ResumeFingerprints, SITE_LANGUAGES};
 use sha2::{Digest, Sha256};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
@@ -114,12 +116,9 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let mut fingerprints: BTreeMap<String, String> = BTreeMap::new();
 
-    for (lang, file_name) in RESUME_FILES {
-        let json = match lang {
-            "de" => portfolio_data::I18N_DE,
-            _ => portfolio_data::I18N_EN,
-        };
-        let t = Translations::parse(json)?;
+    for language in SITE_LANGUAGES {
+        let (lang, file_name) = (language.code, language.resume_file);
+        let t = Translations::parse(language.translations)?;
         let fitted = fit_single_page(&t, lang, photo, &assets)
             .map_err(|err| format!("{file_name}: {err}"))?;
 
@@ -164,6 +163,13 @@ fn run() -> Result<(), Box<dyn Error>> {
         og_path.display(),
         og_bytes.len()
     );
+
+    // The web manifest's install icons, from the same favicon the page uses.
+    for (name, png) in icons::render_all()? {
+        let path = Path::new(&out_dir).join(name);
+        fs::write(&path, &png)?;
+        println!("wrote {} ({} bytes)", path.display(), png.len());
+    }
 
     Ok(())
 }
@@ -240,7 +246,13 @@ fn card_tagline(description: &str) -> String {
 
 /// Lowercase hex encoding of a byte slice (for SHA-256 digests).
 fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    use std::fmt::Write as _;
+    bytes
+        .iter()
+        .fold(String::with_capacity(bytes.len() * 2), |mut out, b| {
+            let _ = write!(out, "{b:02x}");
+            out
+        })
 }
 
 #[cfg(test)]

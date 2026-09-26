@@ -26,7 +26,7 @@ pub fn ttl_for_env() -> Duration {
 /// `true` when the `CI` environment variable is set to a non-empty value, the
 /// de-facto standard signal used by GitHub Actions and most other CI systems.
 fn is_ci() -> bool {
-    std::env::var("CI").map(|v| !v.is_empty()).unwrap_or(false)
+    std::env::var("CI").is_ok_and(|v| !v.is_empty())
 }
 
 /// Whether the `repos.json` at `path` was generated within `ttl` of `now`.

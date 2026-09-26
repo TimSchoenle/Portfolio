@@ -16,8 +16,8 @@
 //! which takes the document's text, is the right one. The body is already buffered for the
 //! `<html lang>` rewrite, so scanning it costs a SHA-256 per inline script and no extra read.
 //!
-//! The alternative — `'unsafe-inline'`, which is what this server sent before — admits an
-//! injected `<script>` exactly as readily as the hydration bootstrap. It remains reachable
+//! The alternative, `'unsafe-inline'`, admits an injected `<script>` exactly as readily as
+//! the hydration bootstrap. It remains reachable
 //! through `csp.hash_inline_scripts = false`, because the failure mode of getting hashing wrong
 //! is a blank page rather than a loud one.
 //!
@@ -29,10 +29,9 @@
 //! why nothing is stamped into the document. The other two presets are plain origin allowances,
 //! off unless the deployment turns them on. See `portfolio_config::CloudflareConfig`.
 //!
-//! # Where it differs from the string constant this replaced
+//! # Where it differs from the `spa_wasm` preset
 //!
-//! `Csp::spa_wasm` is a tighter starting point than the hand-written header was, so two
-//! directives moved and one had to be put back:
+//! Two directives are tightened and one is added:
 //!
 //! * `base-uri` is `'none'` rather than `'self'` — this site renders no `<base>` element (Dioxus
 //!   applies a base path by nesting the router, not by emitting a tag), so nothing may set one;

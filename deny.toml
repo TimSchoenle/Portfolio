@@ -1,0 +1,67 @@
+# cargo-deny policy for the whole workspace: `just deny`, and the Security workflow.
+#
+# `apps/web/about.toml` is the attribution gate for what the *image* ships; this file is the
+# dependency policy for everything the workspace builds, the build-time generators included.
+
+[graph]
+# The platforms anything here is built for: the wasm client, the two server images, and the
+# hosts the generators and the test suite run on.
+targets = [
+    "wasm32-unknown-unknown",
+    "x86_64-unknown-linux-musl",
+    "aarch64-unknown-linux-musl",
+    "x86_64-unknown-linux-gnu",
+]
+all-features = true
+
+[advisories]
+# Every entry must say why it cannot be acted on and what would change that. These two are the
+# `quick-xml` denial-of-service advisories reachable only from typst's bibliography support in
+# the build-time resume generator; see `.cargo/audit.toml` for the full reasoning.
+ignore = [
+    { id = "RUSTSEC-2026-0194", reason = "quick-xml via typst/citationberg; no bibliography input reaches it, see .cargo/audit.toml" },
+    { id = "RUSTSEC-2026-0195", reason = "quick-xml via typst/citationberg; no bibliography input reaches it, see .cargo/audit.toml" },
+]
+
+[licenses]
+# The same list `apps/web/about.toml` accepts for the shipped image. Anything else needs a
+# decision, and the build failing is how it gets one.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "0BSD",
+    "Zlib",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unlicense",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CDLA-Permissive-2.0",
+    "OpenSSL",
+]
+confidence-threshold = 0.9
+# The list mirrors about.toml on purpose, so an entry nothing uses today is not an error.
+unused-allowed-license = "allow"
+
+[licenses.private]
+# The workspace's own crates are `publish = false` and proprietary.
+ignore = true
+
+[bans]
+# Duplicate versions are reported, not refused: most come from the Dioxus and typst trees and
+# are not ours to unify. A new duplicate still shows up in the report for review.
+multiple-versions = "warn"
+wildcards = "deny"
+# Path dependencies inside the workspace carry no version, which is fine.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# No `allow-git`: the workspace's own tag-pinned git dependencies (root Cargo.toml) are not
+# subject to this check, and any other git source anywhere in the graph is refused.

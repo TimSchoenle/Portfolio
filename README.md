@@ -134,7 +134,7 @@ each release bumps it to the new image digest.
 
 ```bash
 rustup target add wasm32-unknown-unknown
-cargo install --locked dioxus-cli --version 0.7.9   # match DIOXUS_CLI_VERSION in the Dockerfile
+cargo install --locked dioxus-cli --version 0.7.10  # match DIOXUS_CLI_VERSION in the Dockerfile
 cargo install --locked cargo-about
 git clone https://github.com/TimSchoenle/Portfolio.git
 cd Portfolio

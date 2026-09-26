@@ -40,24 +40,29 @@ fn cache_control_for(path: &str) -> &'static str {
     if is_content_hashed(path) {
         return IMMUTABLE_ONE_YEAR;
     }
-    if path.ends_with(".woff2") {
+    if has_extension(path, "woff2") {
         return THIRTY_DAYS;
     }
     if path.starts_with("/resume/")
-        || path.ends_with(".pdf")
-        || path.ends_with(".webmanifest")
         || path.ends_with("robots.txt")
         || path.ends_with("sitemap.xml")
-        || path.ends_with(".svg")
-        // The generated Open Graph card, served unhashed from a fixed path
+        // The generated Open Graph card is served unhashed from a fixed path
         // because the meta tag naming it has to stay stable.
-        || path.ends_with(".png")
-        || path.ends_with(".css")
+        || ["pdf", "webmanifest", "svg", "png", "css"]
+            .into_iter()
+            .any(|ext| has_extension(path, ext))
     {
         return ONE_HOUR;
     }
     // The SSR HTML, the fallback, and anything else: revalidate.
     REVALIDATE
+}
+
+/// Whether the path's final segment ends in `.<ext>`, compared ASCII case-insensitively.
+fn has_extension(path: &str, ext: &str) -> bool {
+    std::path::Path::new(path)
+        .extension()
+        .is_some_and(|found| found.eq_ignore_ascii_case(ext))
 }
 
 /// Whether the path's filename carries a `dx`/manganis content hash: a

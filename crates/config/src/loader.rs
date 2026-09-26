@@ -162,7 +162,7 @@ mod tests {
     /// `sentry.dsn` is the only key the *server* mounts as a file, so this is where the
     /// `PORTFOLIO_<KEY>_FILE` indirection stops being a documented feature and becomes a tested
     /// one. The trailing newline is not incidental: `printf` into a Kubernetes `Secret`, an
-    /// editor and a BuildKit secret all add one, and a DSN that keeps it does not parse.
+    /// editor and a `BuildKit` secret all add one, and a DSN that keeps it does not parse.
     #[test]
     fn the_dsn_arrives_through_file_indirection_and_loses_its_newline() {
         harness().run(|jail| {

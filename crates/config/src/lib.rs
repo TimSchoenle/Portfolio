@@ -16,8 +16,8 @@
 //! This crate owns the *blocks*, the dialect, and one aggregate per binary naming the blocks that
 //! binary reads — so a struct field is evidence that something consumes it:
 //!
-//! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`IsrConfig`],
-//!   [`SentryConfig`], and `terrace-legal`'s [`LegalConfig`](terrace_legal::LegalConfig), which
+//! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`HstsConfig`],
+//!   [`IsrConfig`], [`SentryConfig`], and `terrace-legal`'s [`LegalConfig`](terrace_legal::LegalConfig), which
 //!   this crate validates further through [`legal_catalog_builder`]),
 //! - the `update-repos` builder, [`BuilderConfig`] ([`GithubConfig`]).
 //!
@@ -87,6 +87,7 @@ mod aggregates;
 mod assets;
 mod csp;
 mod github;
+mod hsts;
 mod isr;
 mod legal;
 mod loader;
@@ -98,6 +99,7 @@ pub use aggregates::{BuilderConfig, ServerConfig};
 pub use assets::AssetsConfig;
 pub use csp::{CloudflareConfig, CspConfig, CspConfigError};
 pub use github::GithubConfig;
+pub use hsts::{HstsConfig, HstsConfigError};
 pub use isr::IsrConfig;
 pub use legal::{REQUIRED_DOCUMENTS, legal_catalog_builder};
 pub use loader::{ConfigError, load, provenance, terrace};

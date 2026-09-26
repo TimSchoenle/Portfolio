@@ -17,7 +17,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use portfolio_data::{OG_IMAGE_FILE, RESUME_FILES};
+use portfolio_data::OG_IMAGE_FILE;
 
 const FAVICON: &[u8] = include_bytes!("../../assets/favicon.svg");
 
@@ -84,9 +84,15 @@ static OG_IMAGE_ETAG: LazyLock<HeaderValue> = LazyLock::new(|| etag_for(OG_IMAGE
 static FONT_ETAGS: LazyLock<Vec<HeaderValue>> =
     LazyLock::new(|| FONTS.iter().map(|(_, bytes)| etag_for(bytes)).collect());
 static RESUME_ETAGS: LazyLock<Vec<HeaderValue>> = LazyLock::new(|| {
-    RESUME_FILES
+    RESUMES
         .iter()
-        .map(|(lang, _)| etag_for(resume_bytes(lang)))
+        .map(|(_, _, bytes)| etag_for(bytes))
+        .collect()
+});
+static APP_ICON_ETAGS: LazyLock<Vec<HeaderValue>> = LazyLock::new(|| {
+    APP_ICON_FILES
+        .iter()
+        .map(|(_, bytes)| etag_for(bytes))
         .collect()
 });
 
@@ -135,7 +141,15 @@ fn is_current(headers: &HeaderMap, etag: &HeaderValue) -> bool {
 
 /// Routes for the fixed-path embedded assets.
 pub fn router() -> Router {
-    Router::new()
+    // One exact route per icon rather than a `/{file}` capture, which would also claim every
+    // page path (`/licenses`) that the Dioxus fallback has to answer.
+    let icons = (0..APP_ICON_FILES.len()).fold(Router::new(), |router, index| {
+        router.route(
+            &format!("/{}", APP_ICON_FILES[index].0),
+            get(move |headers: HeaderMap| std::future::ready(app_icon(index, &headers))),
+        )
+    });
+    icons
         .route("/favicon.svg", get(favicon))
         .route(&format!("/{OG_IMAGE_FILE}"), get(og_image))
         .route("/fonts/{file}", get(font))
@@ -163,37 +177,38 @@ async fn font(Path(file): Path<String>, headers: HeaderMap) -> Response {
     }
 }
 
-/// Build-generated resume PDFs, embedded at compile time by `build.rs` under
-/// stable ASCII names. Empty when the resume generator has not run (dev builds),
-/// in which case the route replies 404 — mirroring the empty fingerprint
-/// manifest. Embedding keeps the SSR server a single self-contained binary and
-/// sidesteps the non-ASCII file names (e.g. `Tim-Schönle-Lebenslauf.pdf`) that
-/// Dioxus's on-disk `public/` static serving failed to resolve.
-const RESUME_EN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/resume-en.pdf"));
-const RESUME_DE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/resume-de.pdf"));
-
-/// The embedded PDF bytes for a resume language code.
-fn resume_bytes(lang: &str) -> &'static [u8] {
-    match lang {
-        "de" => RESUME_DE,
-        _ => RESUME_EN,
-    }
-}
+// Build-generated resume PDFs and app icons, embedded by `build.rs` from tables it derives from
+// `portfolio_data`, so a language or an icon added there is served here without an edit. Each
+// entry is empty when the generator has not run (development builds), and an empty entry is a
+// 404 rather than an empty body. Embedding keeps the server a single self-contained binary and
+// sidesteps the non-ASCII resume file names (`Tim-Schönle-Lebenslauf.pdf`) that on-disk static
+// serving failed to resolve.
+include!(concat!(env!("OUT_DIR"), "/resumes.rs"));
+include!(concat!(env!("OUT_DIR"), "/app_icons.rs"));
 
 /// Serves an embedded resume PDF by its exact published file name.
 ///
-/// Accepting only the known `RESUME_FILES` names keeps the handler total and
-/// rules out path traversal. A language whose PDF was not generated (empty embed)
-/// yields 404.
+/// Accepting only the published names keeps the handler total and rules out path traversal.
 async fn resume(Path(file): Path<String>, headers: HeaderMap) -> Response {
-    let Some(index) = RESUME_FILES.iter().position(|(_, name)| *name == file) else {
-        return StatusCode::NOT_FOUND.into_response();
-    };
-    let bytes = resume_bytes(RESUME_FILES[index].0);
+    match RESUMES.iter().position(|(_, name, _)| *name == file) {
+        Some(index) if !RESUMES[index].2.is_empty() => embedded(
+            &headers,
+            "application/pdf",
+            &RESUME_ETAGS[index],
+            RESUMES[index].2,
+        ),
+        _ => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+/// Serves the web manifest icon at `index` in [`APP_ICON_FILES`]; 404 when the generator has
+/// not run.
+fn app_icon(index: usize, headers: &HeaderMap) -> Response {
+    let (_, bytes) = APP_ICON_FILES[index];
     if bytes.is_empty() {
         return StatusCode::NOT_FOUND.into_response();
     }
-    embedded(&headers, "application/pdf", &RESUME_ETAGS[index], bytes)
+    embedded(headers, "image/png", &APP_ICON_ETAGS[index], bytes)
 }
 
 #[cfg(test)]
@@ -288,7 +303,7 @@ mod tests {
 
     #[tokio::test]
     async fn resume_rejects_names_outside_the_allowlist() {
-        // Only the published `RESUME_FILES` names are accepted; anything else —
+        // Only the published resume names are accepted; anything else —
         // including path-traversal attempts — is refused before any disk access.
         assert_eq!(
             status("/resume/anything-else.pdf").await,

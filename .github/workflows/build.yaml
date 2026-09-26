@@ -222,6 +222,37 @@ jobs:
       - name: Run Clippy
         uses: TimSchoenle/actions/actions/rust/clippy@88e964d440835fd99f7e9d17b4ba1b48544303ba # tag=actions-rust-clippy-v1.1.11
 
+  # `--all-features` turns the web app's `web` and `server` platforms on together, which compiles
+  # out every `cfg(all(feature = "web", not(feature = "server")))` item — the wasm client's
+  # language detection, `dioxus::launch`. Each platform is linted here the way it is built.
+  clippy-platforms:
+    name: Clippy (web platforms)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the code
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          target: wasm32-unknown-unknown
+          components: clippy
+
+      - name: Clippy, server only
+        run: cargo clippy -p web --no-default-features --features server --all-targets -- -D warnings
+
+      - name: Clippy, wasm client only
+        run: cargo clippy -p web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
+
   docker-build-test:
     name: Docker Build and Test (${{ matrix.platform }})
     runs-on: ubuntu-latest
@@ -264,6 +295,28 @@ jobs:
         id: setup-buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
+      # The Dockerfile keeps the cargo registry, each stage's target directory and the fetched
+      # repos.json in BuildKit cache mounts. `cache-to: type=gha` exports layers only, never
+      # cache mounts, so on an ephemeral runner they would start empty every time: the repos
+      # freshness check could never hit and every dependency would recompile. These two steps
+      # restore the mounts before the build and save them after it.
+      - name: Restore the BuildKit cache mounts
+        id: cache-mounts
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: buildkit-cache-mounts
+          key: buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-
+            buildkit-mounts-${{ matrix.arch }}-
+
+      - name: Inject the cache mounts into BuildKit
+        uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          dockerfile: Dockerfile
+          cache-dir: buildkit-cache-mounts
+
       - name: Build Docker image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
@@ -301,296 +354,57 @@ jobs:
           fi
           echo "ok: image architecture is $got"
 
+      # Boots the image against the legal templates and checks every route and header contract.
+      # The script is what `just smoke` runs locally, so a failure here reproduces off CI.
       - name: Test Docker image serves expected endpoints
+        run: bash scripts/smoke-test.sh image:test
+
+      # Only a browser sees hydration: a CSP refusal, a wasm panic, or a client hydrating in a
+      # different language than the server rendered. amd64 only, where Chromium runs natively.
+      - name: Start the image for the browser test
+        if: matrix.arch == 'amd64'
         run: |
-          set -uo pipefail
-
-          # Boot the freshly built image as a detached container. The legal
-          # documents are required configuration and none is baked into the
-          # image, so the repository's own `legal/` block is mounted the way a
-          # deployment mounts its ConfigMap.
-          docker run -d --rm --name portfolio-test -p 8080:8080             -v "$PWD/legal:/config/legal:ro"             -e PORTFOLIO_CONFIG=/config/legal             image:test
-
-          # Always surface the container's logs and tear it down, no matter how
-          # the assertions below exit.
-          cleanup() {
-            echo "::group::portfolio-test container logs"
-            docker logs portfolio-test || true
-            echo "::endgroup::"
-            docker stop portfolio-test >/dev/null 2>&1 || true
-          }
-          trap cleanup EXIT
-
-          base="http://localhost:8080"
-
-          # ── Readiness gate: wait until the server answers its health probe ────
-          # Generous enough for the foreign-architecture leg, where the whole
-          # server runs under QEMU user-mode emulation and starts noticeably
-          # slower than the native one.
-          timeout=60
-          ready=0
-          for _ in $(seq 1 "$timeout"); do
-            if curl -fsS "$base/api/health" >/dev/null 2>&1; then ready=1; break; fi
+          docker run -d --rm --name portfolio-browser -p 8080:8080 \
+            -v "$PWD/legal:/config/legal:ro" -e PORTFOLIO_CONFIG=/config/legal image:test
+          for _ in $(seq 1 60); do
+            curl -fsS http://localhost:8080/api/health >/dev/null 2>&1 && exit 0
             sleep 1
           done
-          if [ "$ready" != "1" ]; then
-            echo "::error::container did not become healthy within ${timeout}s"
-            exit 1
-          fi
+          echo "::error::container did not become healthy within 60s"
+          exit 1
 
-          fail=0
+      - name: Set up Node
+        if: matrix.arch == 'amd64'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/browser/package-lock.json
 
-          # Assert a GET returns the expected HTTP status code.
-          expect_status() {
-            local path="$1" want="$2" got
-            got=$(curl -s -o /dev/null -w '%{http_code}' "$base$path")
-            if [ "$got" = "$want" ]; then
-              echo "ok: GET $path -> HTTP $got"
-            else
-              echo "::error::GET $path expected HTTP $want, got $got"
-              fail=1
-            fi
-          }
+      - name: Browser smoke test
+        if: matrix.arch == 'amd64'
+        working-directory: tests/browser
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          node smoke.mjs http://localhost:8080
 
-          # Assert the response body for a GET contains a substring.
-          #
-          # Matches with a here-string rather than `printf … | grep` on purpose:
-          # under `set -o pipefail`, `grep -q` exits as soon as it finds the
-          # needle, and the still-writing `printf` then takes a SIGPIPE whose
-          # non-zero status would poison the pipeline and turn a real match into
-          # a spurious "did not contain" (larger bodies like the home page hit
-          # this every time). A here-string feeds grep directly, so the exit
-          # status is grep's alone.
-          expect_body_contains() {
-            local path="$1" needle="$2" body
-            body=$(curl -fsS "$base$path" 2>/dev/null || true)
-            if grep -qF -- "$needle" <<<"$body"; then
-              echo "ok: GET $path body contains '$needle'"
-            else
-              echo "::error::GET $path body did not contain '$needle'"
-              fail=1
-            fi
-          }
-
-          # Assert a response header equals an expected value (case-insensitive name).
-          expect_header() {
-            local path="$1" name="$2" want="$3" got
-            got=$(curl -fsS -D - -o /dev/null "$base$path" 2>/dev/null \
-              | tr -d '\r' \
-              | awk -F': ' -v h="$name" 'tolower($1)==tolower(h){print $2; exit}')
-            if [ "$got" = "$want" ]; then
-              echo "ok: GET $path header '$name: $got'"
-            else
-              echo "::error::GET $path header '$name' expected '$want', got '$got'"
-              fail=1
-            fi
-          }
-
-          # ── Health endpoint reports healthy and is never cached ───────────────
-          expect_status /api/health 200
-          expect_body_contains /api/health '"status":"healthy"'
-          expect_header /api/health cache-control no-store
-
-          # ── Profile API returns the document with the long-lived TTL ──────────
-          expect_status /api/v1/profile 200
-          expect_body_contains /api/v1/profile '"email"'
-          expect_header /api/v1/profile cache-control 'public, max-age=3600'
-
-          # ── Profile JSON Schema endpoint ──────────────────────────────────────
-          expect_status /api/v1/profile/schema 200
-          expect_body_contains /api/v1/profile/schema '"type":"object"'
-
-          # ── Legal documents come from configuration, in the first response ────
-          # Rendered server-side, so the text is in the bytes a reader without
-          # JavaScript receives, and linked from the footer of every page.
-          expect_status /legal/imprint 200
-          expect_body_contains /legal/imprint '§ 5 DDG'
-          expect_body_contains / 'href="/legal/imprint"'
-          expect_body_contains / 'href="/legal/privacy"'
-          expect_status /legal/privacy 200
-          expect_body_contains /legal/privacy 'Art. 4(7) GDPR'
-          # The pre-configuration paths redirect permanently rather than 404.
-          expect_status /imprint 308
-          expect_status /privacy 308
-          # The public JSON view of the same catalog, with a validator.
-          expect_status /api/v1/legal 200
-          expect_body_contains /api/v1/legal '"slug":"imprint"'
-
-          # ── SPA: root and unknown client routes both serve index.html ─────────
-          expect_status / 200
-          expect_body_contains / '<html'
-          expect_status /some/client/route 200
-          expect_body_contains /some/client/route '<html'
-
-          # ── Pages declare their language server-side ──────────────────────────
-          # The `lang` attribute is stamped onto the SSR response, so it must be
-          # in the bytes a crawler receives — not applied after hydration. Sent
-          # without an Accept header on purpose: the negotiation must not depend
-          # on the client advertising text/html.
-          expect_body_contains / '<html lang="en"'
-          expect_body_contains /some/client/route '<html lang="en"'
-
-          # German is negotiated from Accept-Language, and the response says so.
-          de_page=$(curl -fsS -H 'Accept-Language: de-DE,de' "$base/" || true)
-          if grep -qF -- '<html lang="de"' <<<"$de_page"; then
-            echo "ok: Accept-Language: de renders <html lang=\"de\">"
-          else
-            echo '::error::Accept-Language: de did not render <html lang="de">'
-            fail=1
-          fi
-
-          # ── Language-dependent pages tell shared caches what they vary on ─────
-          expect_header / vary 'accept-language, cookie'
-
-          # ── Server-generated documents and embedded assets are served ─────────
-          expect_status /robots.txt 200
-          expect_status /favicon.svg 200
-
-          # ── The attribution page carries a real inventory ─────────────────────
-          # The one way this part of the pipeline fails quietly: `cargo about`
-          # did not run, or its output never reached `build.rs`, and the route
-          # answers 200 anyway — with the "nothing to show" state in place of the
-          # licenses the image is obliged to publish. So assert a license text and
-          # a crate name, not just the status.
-          expect_status /licenses 200
-          expect_body_contains /licenses 'Permission is hereby granted, free of charge'
-          expect_body_contains /licenses 'MIT License'
-
-          # ── The social card is a raster, and it is actually in the image ──────
-          # `og:image` pointed at the SVG favicon for a while, which every
-          # unfurler refuses; the tag looked correct and produced no preview
-          # anywhere. Asserting the bytes, not just the tag.
-          expect_status /og-image.png 200
-          expect_header /og-image.png content-type image/png
-          expect_body_contains / '<meta content="image/png" property="og:image:type"/>'
-
-          # ── Content-hashed assets are cached forever ──────────────────────────
-          # dx renders the asset hash as plain hex, so it comes out 15 digits
-          # about as often as 16. A cache rule that assumed 16 served the wasm
-          # binary and the stylesheet — the two largest files on the page —
-          # `no-cache` on every visit, which nothing else here would notice.
-          bundle=$(grep -oE '/\./assets/web-dxh[0-9a-f]+\.js' <<<"$(curl -fsS "$base/" || true)" \
-            | head -1 | sed 's|^/\.||')
-          if [ -n "$bundle" ]; then
-            expect_header "$bundle" cache-control 'public, max-age=31536000, immutable'
-          else
-            echo "::error::no hashed client bundle referenced by the served page"
-            fail=1
-          fi
-
-          # ── Embedded assets carry a validator ─────────────────────────────────
-          # Their TTL is the only thing keeping them off the wire; without an
-          # ETag every lapsed TTL re-sends the whole body instead of a 304.
-          favicon_etag=$(curl -fsS -D - -o /dev/null "$base/favicon.svg" 2>/dev/null \
-            | tr -d '\r' | awk -F': ' 'tolower($1)=="etag"{print $2; exit}')
-          if [ -n "$favicon_etag" ]; then
-            got=$(curl -s -o /dev/null -w '%{http_code}' \
-              -H "If-None-Match: $favicon_etag" "$base/favicon.svg")
-            if [ "$got" = "304" ]; then
-              echo "ok: an unchanged embedded asset revalidates to 304"
-            else
-              echo "::error::conditional GET /favicon.svg returned $got, expected 304"
-              fail=1
-            fi
-          else
-            echo "::error::/favicon.svg carried no ETag"
-            fail=1
-          fi
-
-          # An SVG is markup. tower-http's default compression predicate skips
-          # everything under `image/`, which took the favicon with it.
-          svg_encoding=$(curl -fsS -D - -o /dev/null -H 'Accept-Encoding: gzip' \
-            "$base/favicon.svg" 2>/dev/null \
-            | tr -d '\r' | awk -F': ' 'tolower($1)=="content-encoding"{print $2; exit}')
-          if [ -n "$svg_encoding" ]; then
-            echo "ok: the SVG favicon is compressed ($svg_encoding)"
-          else
-            echo "::error::/favicon.svg was served uncompressed"
-            fail=1
-          fi
-
-          # ── Security headers are applied to every response ────────────────────
-          expect_header / x-content-type-options nosniff
-          expect_header / x-frame-options DENY
-          expect_header / referrer-policy no-referrer
-
-          # ── The Content-Security-Policy is derived from the page it protects ──
-          # This is the only place the real bundle is served, and the failure it
-          # catches is silent everywhere else: `'unsafe-inline'` is gone from
-          # script-src, so an inline script the scanner never saw is refused by
-          # the browser and the page renders blank with a console message nobody
-          # is watching.
-          csp_of() {
-            curl -fsS -D - -o /dev/null "$base$1" 2>/dev/null \
-              | tr -d '\r' \
-              | awk -F': ' 'tolower($1)=="content-security-policy"{print $2; exit}'
-          }
-
-          page_csp=$(csp_of /)
-          page_html=$(curl -fsS "$base/" || true)
-          # Bare `<script>`: the renderer's own inline scripts. The wasm bootstrap
-          # is `<script type="module" src=…>` and needs no hash — `'self'` covers it.
-          inline_scripts=$(grep -oF '<script>' <<<"$page_html" | wc -l | tr -d ' ')
-          page_hashes=$(grep -oF "'sha256-" <<<"$page_csp" | wc -l | tr -d ' ')
-          if [ "$inline_scripts" -gt 0 ] && [ "$page_hashes" = "$inline_scripts" ]; then
-            echo "ok: all $inline_scripts inline scripts on / are covered by a hash"
-          else
-            echo "::error::/ carries $inline_scripts inline scripts but $page_hashes hashes; a browser will refuse the difference"
-            fail=1
-          fi
-
-          # `'unsafe-inline'` must be gone from script-src. style-src keeps it,
-          # so the check is on that directive alone rather than on the header.
-          script_src=$(tr ';' '\n' <<<"$page_csp" | grep -F 'script-src' || true)
-          case "$script_src" in
-            *"'unsafe-inline'"*)
-              echo "::error::script-src still admits all inline script:$script_src"
-              fail=1
-              ;;
-            *) echo "ok: script-src admits no blanket inline script" ;;
-          esac
-
-          # Cloudflare copies this nonce onto the script it injects at the edge.
-          # Minted per response, and never cached — one served twice is pinned
-          # across every reader, which is `'unsafe-inline'` with extra steps.
-          first_nonce=$(grep -o "'nonce-[^']*'" <<<"$page_csp" || true)
-          second_nonce=$(grep -o "'nonce-[^']*'" <<<"$(csp_of /)" || true)
-          if [ -n "$first_nonce" ] && [ "$first_nonce" != "$second_nonce" ]; then
-            echo "ok: script-src carries a nonce, freshly minted per response"
-          else
-            echo "::error::expected a per-response nonce, got '$first_nonce' then '$second_nonce'"
-            fail=1
-          fi
-          expect_header / cache-control no-cache
-
-          # Anything that is not a document has no inline script to admit, and
-          # gets the policy that admits none.
-          asset_csp=$(csp_of /favicon.svg)
-          case "$asset_csp" in
-            "")
-              echo "::error::/favicon.svg carried no Content-Security-Policy"
-              fail=1
-              ;;
-            *"sha256-"* | *"nonce-"*)
-              echo "::error::a subresource carried a document policy: $asset_csp"
-              fail=1
-              ;;
-            *) echo "ok: subresources carry the policy with no inline-script allowance" ;;
-          esac
-
-          if [ "$fail" != "0" ]; then
-            echo "::error::container functional smoke tests failed"
-            exit 1
-          fi
-          echo "All container functional smoke tests passed."
+      - name: Stop the browser test container
+        if: always() && matrix.arch == 'amd64'
+        run: |
+          docker logs portfolio-browser 2>&1 | tail -50 || true
+          docker stop portfolio-browser >/dev/null 2>&1 || true
 
       - name: Run structure tests
+        env:
+          # Pinned by digest like every other input; the tag alone is mutable.
+          # renovate: datasource=docker depName=gcr.io/gcp-runtimes/container-structure-test
+          CST_IMAGE: gcr.io/gcp-runtimes/container-structure-test:latest@sha256:377f9a9bc00376b9fa6dc6a3a020dbe40e84ebe9481b71969aa3ff9d1c9ea17e
         run: |
-          docker pull gcr.io/gcp-runtimes/container-structure-test:latest
           docker run --rm \
-            -v $PWD/cst.yaml:/cst.yaml \
+            -v "$PWD/cst.yaml:/cst.yaml" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            gcr.io/gcp-runtimes/container-structure-test:latest test \
+            "$CST_IMAGE" test \
             --image image:test --config /cst.yaml
 
       - name: Check image size

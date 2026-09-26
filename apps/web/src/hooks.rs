@@ -1,4 +1,4 @@
-//! Client-side interaction primitives (scroll offset, viewport queries, one-shot
+//! Client-side interaction primitives (viewport queries, one-shot
 //! in-view detection, global listeners) and small DOM helpers.
 //!
 //! The whole module is `web`-only: it compiles solely into the wasm client,
@@ -24,8 +24,7 @@ pub fn prefers_reduced_motion() -> bool {
                 .ok()
                 .flatten()
         })
-        .map(|m| m.matches())
-        .unwrap_or(false)
+        .is_some_and(|m| m.matches())
 }
 
 /// The current viewport height in CSS pixels (fallback `800.0`).
@@ -34,13 +33,6 @@ pub fn viewport_height() -> f64 {
         .and_then(|w| w.inner_height().ok())
         .and_then(|v| v.as_f64())
         .unwrap_or(800.0)
-}
-
-/// The current vertical scroll offset in CSS pixels.
-pub fn scroll_y() -> f64 {
-    web_sys::window()
-        .and_then(|w| w.scroll_y().ok())
-        .unwrap_or(0.0)
 }
 
 /// True if the element's top edge is above `ratio` of the viewport height, i.e.
@@ -140,7 +132,7 @@ impl Drop for ListenerGuard {
 
 /// Registers `handler` as a `window` listener for `event`, returning a guard
 /// that removes it on drop. `passive` must be `false` for handlers that call
-/// `prevent_default` (e.g. the wheel-hijack). The handler reads live component
+/// `prevent_default` (e.g. the ⌘K shortcut). The handler reads live component
 /// state through captured signals, so it never needs re-registering.
 pub fn add_window_listener(
     event: &'static str,
@@ -216,11 +208,14 @@ pub fn add_window_listener_per_frame(
     })
 }
 
-/// CSS selector matching the elements a user can Tab to. Mirrors the interactive
-/// content the command palette renders (its search field, the result buttons)
-/// plus anything explicitly made focusable.
-const FOCUSABLE: &str = "a[href], button:not([disabled]), input:not([disabled]), \
-                         select:not([disabled]), textarea:not([disabled]), \
+/// CSS selector matching the elements a user can Tab to. `tabindex="-1"` takes an element
+/// out of the Tab order, which is how the palette's options stay reachable by the arrow keys
+/// only, so every clause excludes it.
+const FOCUSABLE: &str = "a[href]:not([tabindex='-1']), \
+                         button:not([disabled]):not([tabindex='-1']), \
+                         input:not([disabled]):not([tabindex='-1']), \
+                         select:not([disabled]):not([tabindex='-1']), \
+                         textarea:not([disabled]):not([tabindex='-1']), \
                          [tabindex]:not([tabindex='-1'])";
 
 /// Keeps Tab focus inside `container` for a keydown that is already known to be

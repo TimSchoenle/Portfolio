@@ -32,9 +32,8 @@ static LICENSES: LazyLock<Option<LicensesFile>> =
         || match serde_json::from_str::<LicensesFile>(LICENSES_JSON) {
             Ok(file) if !file.is_empty() => Some(file),
             Ok(_) => None,
-            Err(_e) => {
-                #[cfg(feature = "web")]
-                web_sys::console::warn_1(&format!("licenses.json parse failed: {_e}").into());
+            Err(err) => {
+                crate::util::console_warn(format_args!("licenses.json parse failed: {err}"));
                 None
             }
         },

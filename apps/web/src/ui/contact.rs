@@ -6,7 +6,7 @@
 //! full and the copy button gives immediate visual feedback.
 
 use dioxus::prelude::*;
-use portfolio_data::{CONFIG, resume_file};
+use portfolio_data::{CONFIG, language_or_default};
 
 use crate::github::load_resume_fingerprints;
 use crate::i18n::use_i18n;
@@ -24,12 +24,9 @@ pub fn Contact() -> Element {
     let fingerprints = load_resume_fingerprints();
 
     let lang = i18n.read().get_current_language().to_string();
-    let resume_name = resume_file(&lang);
-    let resume_label = if lang == "de" {
-        t("contact.resumeDe")
-    } else {
-        t("contact.resumeEn")
-    };
+    let language = language_or_default(&lang);
+    let resume_name = language.resume_file;
+    let resume_label = t(language.resume_label_key);
     let resume_digest = fingerprints.as_ref().and_then(|f| {
         f.digest_for(&lang).map(|d| {
             let label = t("contact.fingerprintLabel").replace("{algorithm}", &f.algorithm);
@@ -75,6 +72,12 @@ pub fn Contact() -> Element {
                 wasm_bindgen_futures::spawn_local(async move {
                     for i in 0..=target.len() {
                         typed.set(target[..i].iter().collect());
+                        // `random()` is in [0, 1), so the product is a whole number in 0..40.
+                        #[expect(
+                            clippy::cast_possible_truncation,
+                            clippy::cast_sign_loss,
+                            reason = "bounded to 0..40 by construction"
+                        )]
                         let jitter = (js_sys::Math::random() * 40.0) as u32;
                         gloo_timers::future::TimeoutFuture::new(40 + jitter).await;
                     }
@@ -94,14 +97,16 @@ pub fn Contact() -> Element {
         section {
             id: section_id("contact"),
             class: "sec",
-            onmounted: move |_e| {
+            onmounted: move |e| {
                 #[cfg(feature = "web")]
                 {
                     use dioxus::web::WebEventExt;
-                    if let Some(node) = _e.try_as_web_event() {
+                    if let Some(node) = e.try_as_web_event() {
                         section_el.set(Some(node));
                     }
                 }
+                #[cfg(not(feature = "web"))]
+                let _ = e;
             },
             Reveal {
                 SectionHeader {

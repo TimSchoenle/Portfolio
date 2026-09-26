@@ -1,7 +1,7 @@
 //! What each binary in this workspace loads.
 //!
 //! The rest of this crate owns *blocks*. This module owns the two aggregates that say which
-//! blocks a given binary reads — the mapping the crate docs used to state only as prose.
+//! blocks a given binary reads.
 //!
 //! They live here rather than in the binaries because the configuration reference in `README.md`
 //! is generated from them. A generator cannot describe a private type in a crate it does not
@@ -16,7 +16,7 @@
 use serde::Deserialize;
 use terrace_legal::LegalConfig;
 
-use crate::{AssetsConfig, CspConfig, GithubConfig, IsrConfig, SentryConfig};
+use crate::{AssetsConfig, CspConfig, GithubConfig, HstsConfig, IsrConfig, SentryConfig};
 
 /// What the SSR server (`apps/web`) loads.
 ///
@@ -38,6 +38,10 @@ pub struct ServerConfig {
     #[cfg_attr(feature = "config-schema", config(nested))]
     #[serde(default)]
     pub csp: CspConfig,
+    /// The `Strict-Transport-Security` header: its lifetime and how far it reaches.
+    #[cfg_attr(feature = "config-schema", config(nested))]
+    #[serde(default)]
+    pub hsts: HstsConfig,
     /// Where rendered pages are cached, and for how long.
     #[cfg_attr(feature = "config-schema", config(nested))]
     #[serde(default)]
