@@ -120,6 +120,12 @@ Documentation, comments and commit messages use US English (`license`, `artifact
 `serialize`), the same variant as the site's English copy. A comment states what the code does
 now and why; how it used to be belongs in the commit message.
 
+Everything else about how prose is written, in the README, `docs/`, comments, commit bodies and
+pull request descriptions, is the
+[prose contract](https://github.com/TimSchoenle/actions/blob/main/docs/readme/PROSE.md). The
+README's section order is the
+[README contract](https://github.com/TimSchoenle/actions/blob/main/docs/readme/GUIDE.md).
+
 ## Commit messages
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, …).
