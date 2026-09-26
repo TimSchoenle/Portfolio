@@ -35,7 +35,7 @@ publish = false
 # base-image update has to move this line in the same pull request.
 [package]
 name = "portfolio-platform"
-version = "3.1.1"
+version = "3.1.2"
 publish = false
 edition = "2024"
 rust-version = "1.98"
