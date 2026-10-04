@@ -159,7 +159,7 @@ mod tests {
             doc["$schema"],
             format!("{}{}", CONFIG.url, portfolio_data::profile::SCHEMA_PATH)
         );
-        assert!(!doc["skills"]["languages"].as_array().unwrap().is_empty());
+        assert_ne!(doc["skills"]["languages"].as_array().unwrap().len(), 0);
     }
 
     #[tokio::test]

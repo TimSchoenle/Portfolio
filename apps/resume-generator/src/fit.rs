@@ -261,7 +261,7 @@ mod tests {
             Detail::Compact.describe(),
         ];
         for label in labels {
-            assert!(!label.is_empty());
+            assert_ne!(label, "");
         }
         assert_ne!(labels[0], labels[1]);
         assert_ne!(labels[1], labels[2]);
