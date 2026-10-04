@@ -221,7 +221,7 @@ mod tests {
 
         assert!(!parsed.is_empty());
         assert_eq!(parsed.summary[0].crates, 1);
-        assert!(parsed.texts[0].used_by.is_empty());
+        assert_eq!(parsed.texts[0].used_by, Vec::<CrateRef>::new());
         assert_eq!(parsed.crates[0].repository, None);
     }
 

@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use portfolio_data::{
     CONFIG, EDUCATION, EXPERIENCE, LANGUAGES, MIN_CONFIDENCE, Quadrant, RESUME_FILES, Repo,
-    ReposFile, ResumeFingerprints, SKILLS, YearMonth, experiences_sorted, format_period,
+    ReposFile, ResumeFingerprints, SKILLS, Skill, YearMonth, experiences_sorted, format_period,
     format_period_years, lang_color, matrix_skills, resume_file,
 };
 
@@ -33,8 +33,8 @@ fn config_contact_facts_are_well_formed() {
         CONFIG.github.contains(CONFIG.github_username),
         "github url should embed the username"
     );
-    assert!(!CONFIG.full_name.is_empty());
-    assert!(!CONFIG.featured_repos.is_empty());
+    assert_ne!(CONFIG.full_name, "");
+    assert_ne!(CONFIG.featured_repos, [] as [&str; 0]);
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn resume_file_maps_languages_and_falls_back_to_english() {
 #[test]
 fn matrix_skills_are_sorted_and_filtered() {
     let matrix = matrix_skills();
-    assert!(!matrix.is_empty());
+    assert_ne!(matrix, Vec::<Skill>::new());
 
     // Strongest first.
     for pair in matrix.windows(2) {
@@ -95,7 +95,7 @@ fn quadrants_are_distinct_and_labelled() {
     let all = Quadrant::all();
     assert_eq!(all.len(), 4);
     for (i, q) in all.iter().enumerate() {
-        assert!(!q.i18n_key().is_empty());
+        assert_ne!(q.i18n_key(), "");
         assert!(q.color().starts_with('#'));
         // No duplicate quadrants in `all()`.
         for other in &all[i + 1..] {
@@ -121,7 +121,7 @@ fn experiences_sorted_keeps_every_entry() {
 
 #[test]
 fn education_history_is_reverse_chronological() {
-    assert!(!EDUCATION.is_empty());
+    assert_ne!(EDUCATION.len(), 0);
     for pair in EDUCATION.windows(2) {
         let (a, b) = (pair[0], pair[1]);
         assert!(
@@ -245,7 +245,7 @@ fn repo_defaults_fill_optional_fields() {
     assert_eq!(repo.name, "minimal");
     assert_eq!(repo.full_name, "");
     assert_eq!(repo.stargazers_count, 0);
-    assert!(repo.topics.is_empty());
+    assert_eq!(repo.topics, Vec::<String>::new());
     assert!(!repo.archived);
 }
 
