@@ -60,7 +60,7 @@ jobs:
 
       - name: Comment on PR
         if: steps.auto-commit.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@7e8fd61045447d321c5139eea8f2e2b766333f8b # tag=actions-common-upsert-pr-comment-v1.1.3
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@7568f9a485ca91c369095414ce4d9f1a8237df21 # tag=actions-common-upsert-pr-comment-v1.2.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           identifier: cargo-lock-updated
@@ -175,37 +175,21 @@ jobs:
       # One comment for both, naming only what actually changed. Two comment steps would post
       # twice on the pull request that renames a key, which is precisely the one where both
       # documents move together.
-      - name: Build comment body
-        if: >-
-          github.event_name == 'pull_request'
-          && (steps.readme.outputs.changes_detected == 'true'
-          || steps.example-config.outputs.changes_detected == 'true')
-        id: comment-body
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-        env:
-          README_CHANGED: ${{ steps.readme.outputs.changes_detected }}
-          EXAMPLE_CHANGED: ${{ steps.example-config.outputs.changes_detected }}
-        with:
-          script: |
-            const rendered = [
-              ['README.md', '.github/templates/README.md.hbs', process.env.README_CHANGED],
-              ['config.example.toml', '.github/templates/config.example.toml.hbs', process.env.EXAMPLE_CHANGED],
-            ]
-              .filter(([, , changed]) => changed === 'true')
-              .map(([output, template]) => `- \`${output}\`, from \`${template}\``)
-              .join('\n');
-            core.setOutput('body', `Re-rendered from the configuration types in \`crates/config\`:\n\n${rendered}`);
-
+      #
+      # Each line is literal text gated on a commit step's own output, so nothing a contributor
+      # controls reaches the body. A line whose document did not change evaluates to empty and is
+      # dropped; when neither changed, no line survives and the action posts nothing, which is why
+      # the `if:` no longer has to repeat both conditions.
       - name: Comment on PR
-        if: >-
-          github.event_name == 'pull_request'
-          && (steps.readme.outputs.changes_detected == 'true'
-          || steps.example-config.outputs.changes_detected == 'true')
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@7e8fd61045447d321c5139eea8f2e2b766333f8b # tag=actions-common-upsert-pr-comment-v1.1.3
+        if: github.event_name == 'pull_request'
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@7568f9a485ca91c369095414ce4d9f1a8237df21 # tag=actions-common-upsert-pr-comment-v1.2.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           identifier: render-generated-files
-          body: ${{ steps.comment-body.outputs.body }}
+          header: 'Re-rendered from the configuration types in `crates/config`:'
+          body_lines: |
+            ${{ steps.readme.outputs.changes_detected == 'true' && '- `README.md`, from `.github/templates/README.md.hbs`' || '' }}
+            ${{ steps.example-config.outputs.changes_detected == 'true' && '- `config.example.toml`, from `.github/templates/config.example.toml.hbs`' || '' }}
 
   # The two artifacts the image publishes about its own configuration: `docs/config.contract.json`,
   # which a chart's CI reads to check that what it renders is what this image loads, and the
@@ -298,34 +282,17 @@ jobs:
           file_pattern: 'Dockerfile'
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Build comment body
-        if: >-
-          github.event_name == 'pull_request'
-          && (steps.contract.outputs.changes_detected == 'true'
-          || steps.labels.outputs.changes_detected == 'true')
-        id: comment-body
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-        env:
-          CONTRACT_CHANGED: ${{ steps.contract.outputs.changes_detected }}
-          LABELS_CHANGED: ${{ steps.labels.outputs.changes_detected }}
-        with:
-          script: |
-            const regenerated = [
-              ['docs/config.contract.json', '--format contract', process.env.CONTRACT_CHANGED],
-              ['Dockerfile', '--format dockerfile', process.env.LABELS_CHANGED],
-            ]
-              .filter(([, , changed]) => changed === 'true')
-              .map(([output, format]) => `- \`${output}\`, from \`config-schema ${format}\``)
-              .join('\n');
-            core.setOutput('body', `Regenerated from the configuration types in \`crates/config\`:\n\n${regenerated}\n\nThe \`Config Contract\` job in **Build** gates these, and runs again on this push.`);
-
+      # One comment for both commits, on the same terms as the one in `render-generated-files`:
+      # literal lines gated on each commit step's output, and no comment at all when neither file
+      # moved.
       - name: Comment on PR
-        if: >-
-          github.event_name == 'pull_request'
-          && (steps.contract.outputs.changes_detected == 'true'
-          || steps.labels.outputs.changes_detected == 'true')
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@7e8fd61045447d321c5139eea8f2e2b766333f8b # tag=actions-common-upsert-pr-comment-v1.1.3
+        if: github.event_name == 'pull_request'
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@7568f9a485ca91c369095414ce4d9f1a8237df21 # tag=actions-common-upsert-pr-comment-v1.2.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           identifier: config-contract-sync
-          body: ${{ steps.comment-body.outputs.body }}
+          header: 'Regenerated from the configuration types in `crates/config`:'
+          body_lines: |
+            ${{ steps.contract.outputs.changes_detected == 'true' && '- `docs/config.contract.json`, from `config-schema --format contract`' || '' }}
+            ${{ steps.labels.outputs.changes_detected == 'true' && '- `Dockerfile`, from `config-schema --format dockerfile`' || '' }}
+          footer: 'The `Config Contract` job in **Build** gates these, and runs again on this push.'
