@@ -138,7 +138,7 @@ terrace-legal = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v
 terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0", features = [
     "router",
 ] }
-terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
+terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.1" }
 terrace-legal-model = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
 # Keeps the GitHub token out of `Debug` output and off every accidental log
 # line: a `SecretString` has no `Display`, and reading it is the explicit
