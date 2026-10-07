@@ -5492,7 +5492,7 @@ dependencies = [
  "serde",
  "sha2 0.11.0",
  "terrace-config",
- "terrace-legal-model",
+ "terrace-legal-model 0.3.0",
  "thiserror 2.0.20",
  "url",
 ]
@@ -5507,7 +5507,7 @@ dependencies = [
  "serde",
  "serde_json",
  "terrace-legal",
- "terrace-legal-model",
+ "terrace-legal-model 0.3.0",
 ]
 
 [[package]]
@@ -5517,7 +5517,7 @@ source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.0#12493403b0
 dependencies = [
  "dioxus",
  "terrace-legal-markdown",
- "terrace-legal-model",
+ "terrace-legal-model 0.3.0",
 ]
 
 [[package]]
@@ -5533,6 +5533,15 @@ dependencies = [
 name = "terrace-legal-model"
 version = "0.3.0"
 source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.0#12493403b03855d1e97f1a7acd149b887651085f"
+dependencies = [
+ "serde",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "terrace-legal-model"
+version = "0.3.1"
+source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.1#cfe3362e23b69eaad9d35635bb4992a6454e156b"
 dependencies = [
  "serde",
  "thiserror 2.0.20",
@@ -6963,7 +6972,7 @@ dependencies = [
  "terrace-legal",
  "terrace-legal-axum",
  "terrace-legal-dioxus",
- "terrace-legal-model",
+ "terrace-legal-model 0.3.1",
  "time",
  "tokio",
  "tower",
