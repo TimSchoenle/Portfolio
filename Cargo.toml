@@ -135,7 +135,7 @@ terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = 
 #   `wasm32`: wire types, and the provider plus the Markdown page component. The
 #   Dioxus crate renders Markdown to elements and never to an HTML string.
 terrace-legal = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
-terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0", features = [
+terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.1", features = [
     "router",
 ] }
 terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.0" }
