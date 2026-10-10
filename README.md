@@ -37,6 +37,7 @@ Nothing in this comment may contain a mustache that is not a real reference.
 Dioxus fullstack (SSR + hydration) portfolio served by Axum.
 
 [![Release](https://img.shields.io/github/v/release/TimSchoenle/Portfolio?sort=semver)](https://github.com/TimSchoenle/Portfolio/releases)
+[![Chart](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Ftimschoenle.github.io%2Fhelm-charts%2Findex.yaml&query=%24.entries.portfolio%5B0%5D.version&label=chart)](https://github.com/TimSchoenle/helm-charts/tree/main/charts/portfolio)
 [![Build](https://img.shields.io/github/actions/workflow/status/TimSchoenle/Portfolio/build.yaml?branch=main)](https://github.com/TimSchoenle/Portfolio/actions/workflows/build.yaml)
 [![Site](https://img.shields.io/website?url=https%3A%2F%2Ftim-schoenle.de)](https://tim-schoenle.de)
 [![License](https://img.shields.io/badge/license-LicenseRef--Proprietary-blue)](LICENSE)
