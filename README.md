@@ -19,9 +19,10 @@ prose below names. The two tables are two on purpose: one list of every key read
 deployment needs a GitHub token, and it does not, because `github.*` belongs to a build-time tool
 that exits during the image build.
 
-The Update Files workflow renders this on every pull request and commits the result back to the
-branch. The README job in Build re-renders with `check: true` and fails when the committed file
-does not match it, so a README edited by hand does not merge.
+The `render-generated-files` job in .github/workflows/update-files.yaml renders this on every pull
+request and commits the result back to the branch. The `readme` job in .github/workflows/build.yaml
+re-renders with `check: true` and fails when the committed file does not match it, so a README
+edited by hand does not merge.
 
 Prefer an injected value to a typed one anywhere the two would say the same thing. A rename in
 `crates/config` then reaches the sentences as well as the tables, and a key the prose names and the
@@ -38,6 +39,7 @@ Dioxus fullstack (SSR + hydration) portfolio served by Axum.
 [![Release](https://img.shields.io/github/v/release/TimSchoenle/Portfolio?sort=semver)](https://github.com/TimSchoenle/Portfolio/releases)
 [![Chart](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Ftimschoenle.github.io%2Fhelm-charts%2Findex.yaml&query=%24.entries.portfolio%5B0%5D.version&label=chart)](https://github.com/TimSchoenle/helm-charts/tree/main/charts/portfolio)
 [![Build](https://img.shields.io/github/actions/workflow/status/TimSchoenle/Portfolio/build.yaml?branch=main)](https://github.com/TimSchoenle/Portfolio/actions/workflows/build.yaml)
+[![Site](https://img.shields.io/website?url=https%3A%2F%2Ftim-schoenle.de)](https://tim-schoenle.de)
 [![License](https://img.shields.io/badge/license-LicenseRef--Proprietary-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.98-orange)](https://www.rust-lang.org)
 
