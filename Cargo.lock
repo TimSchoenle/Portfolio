@@ -3979,7 +3979,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde_json",
- "terrace-config",
+ "terrace-config 0.15.1",
  "terrace-legal",
 ]
 
@@ -5469,7 +5469,20 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "terrace-config-macros",
+ "terrace-config-macros 0.15.0",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "terrace-config"
+version = "0.15.1"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.15.1#ca4558970c3d5eb2aced6d6462800ade951fe4db"
+dependencies = [
+ "figment",
+ "regex",
+ "serde",
+ "serde_json",
+ "terrace-config-macros 0.15.1",
  "thiserror 2.0.20",
  "tokio",
 ]
@@ -5485,6 +5498,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "terrace-config-macros"
+version = "0.15.1"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.15.1#ca4558970c3d5eb2aced6d6462800ade951fe4db"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.5",
+]
+
+[[package]]
 name = "terrace-legal"
 version = "0.3.2"
 source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.2#b73dbc184ee5967b9fa446f34137f0037f5b70f0"
@@ -5492,7 +5515,7 @@ dependencies = [
  "base64 0.23.1",
  "serde",
  "sha2 0.11.0",
- "terrace-config",
+ "terrace-config 0.15.0",
  "terrace-legal-model",
  "thiserror 2.0.20",
  "url",
