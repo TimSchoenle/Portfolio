@@ -75,7 +75,7 @@ jobs:
       # job stays the cheap half — the labels an image actually carries are a question for a job
       # that has one.
       - name: Verify the configuration contract
-        uses: TimSchoenle/actions/actions/rust/config-contract@f33849da61e2397d3a9277762d09a1bf0d2b9d7c # tag=actions-rust-config-contract-v1.3.7
+        uses: TimSchoenle/actions/actions/rust/config-contract@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-rust-config-contract-v1.3.8
         with:
           package: portfolio-config
           features: config-schema
@@ -121,13 +121,13 @@ jobs:
 
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@f33849da61e2397d3a9277762d09a1bf0d2b9d7c # tag=actions-common-readme-variables-v1.2.7
+        uses: TimSchoenle/actions/actions/common/readme-variables@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-common-readme-variables-v1.2.8
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
       - name: Verify README.md is current
-        uses: TimSchoenle/actions/actions/common/render-template@f33849da61e2397d3a9277762d09a1bf0d2b9d7c # tag=actions-common-render-template-v1.2.7
+        uses: TimSchoenle/actions/actions/common/render-template@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-common-render-template-v1.2.8
         with:
           template: .github/templates/README.md.hbs
           output: README.md
@@ -192,7 +192,7 @@ jobs:
           egress-policy: audit
 
       - name: Run Coverage
-        uses: TimSchoenle/actions/actions/rust/coverage-codecov@f33849da61e2397d3a9277762d09a1bf0d2b9d7c # tag=actions-rust-coverage-codecov-v2.0.1
+        uses: TimSchoenle/actions/actions/rust/coverage-codecov@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-rust-coverage-codecov-v2.0.2
         with:
           test_arguments: '--workspace --all-features'
           flags: rust
@@ -224,7 +224,7 @@ jobs:
           egress-policy: audit
 
       - name: Auto Format
-        uses: TimSchoenle/actions/actions/rust/auto-format@ff1e7853c7953c8d7176325ea4912add4a3c5398 # tag=actions-rust-auto-format-v1.1.22
+        uses: TimSchoenle/actions/actions/rust/auto-format@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-rust-auto-format-v1.1.23
         with:
           bot_app_id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
           bot_private_key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
@@ -435,7 +435,7 @@ jobs:
       # code scanning treats each upload for a category as a full replacement, so the two legs
       # must not share one, and a new name would orphan the alerts filed under the old.
       - name: Check Docker image
-        uses: TimSchoenle/actions/actions/docker/image-check@f33849da61e2397d3a9277762d09a1bf0d2b9d7c # tag=actions-docker-image-check-v1.1.5
+        uses: TimSchoenle/actions/actions/docker/image-check@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-docker-image-check-v1.1.6
         with:
           image: image:test
           platform: ${{ matrix.platform }}
@@ -461,7 +461,7 @@ jobs:
           egress-policy: audit
 
       - name: Comment image sizes on PR
-        uses: TimSchoenle/actions/actions/docker/image-check-summary@f33849da61e2397d3a9277762d09a1bf0d2b9d7c # tag=actions-docker-image-check-summary-v1.1.4
+        uses: TimSchoenle/actions/actions/docker/image-check-summary@eaf935674fec7116856ca5e138e1a2dca3f8146d # tag=actions-docker-image-check-summary-v1.1.5
 
   dependency-review:
     name: Dependency Review
