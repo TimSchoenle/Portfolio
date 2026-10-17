@@ -4002,7 +4002,7 @@ checksum = "05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85"
 
 [[package]]
 name = "portfolio-config"
-version = "3.1.4"
+version = "3.1.5"
 dependencies = [
  "jsonschema",
  "portfolio-data",
@@ -4015,7 +4015,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-data"
-version = "3.1.4"
+version = "3.1.5"
 dependencies = [
  "schemars",
  "serde",
@@ -4527,7 +4527,7 @@ dependencies = [
 
 [[package]]
 name = "resume-generator"
-version = "3.1.4"
+version = "3.1.5"
 dependencies = [
  "portfolio-data",
  "qrcode",
@@ -6599,7 +6599,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "update-repos"
-version = "3.1.4"
+version = "3.1.5"
 dependencies = [
  "portfolio-config",
  "portfolio-data",
@@ -6966,7 +6966,7 @@ dependencies = [
 
 [[package]]
 name = "web"
-version = "3.1.4"
+version = "3.1.5"
 dependencies = [
  "axum",
  "csp-shell",
