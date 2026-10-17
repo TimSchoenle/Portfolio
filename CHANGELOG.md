@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.5](https://github.com/TimSchoenle/Portfolio/compare/v3.1.4...v3.1.5) (2026-10-17)
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1306](https://github.com/TimSchoenle/Portfolio/issues/1306)) ([9214afd](https://github.com/TimSchoenle/Portfolio/commit/9214afdcae403659e3072cd94ba2ad4d585e9d96))
+* **deps:** update rust crate schemars to v1.2.3 ([#1316](https://github.com/TimSchoenle/Portfolio/issues/1316)) ([e7948f1](https://github.com/TimSchoenle/Portfolio/commit/e7948f115b6523075dcde637bd5acf8c5c49051c))
+* **deps:** update rust crate sha2 to v0.11.1 ([#1315](https://github.com/TimSchoenle/Portfolio/issues/1315)) ([959a589](https://github.com/TimSchoenle/Portfolio/commit/959a5899d67308a1c0c2d610546704ad682171d3))
+* **deps:** update rust crate tokio to v1.53.3 ([#1319](https://github.com/TimSchoenle/Portfolio/issues/1319)) ([b835568](https://github.com/TimSchoenle/Portfolio/commit/b835568bbd47d5ea55b8bbd6bd2e48b10b0efc21))
+
 ## [3.1.4](https://github.com/TimSchoenle/Portfolio/compare/v3.1.3...v3.1.4) (2026-10-11)
 
 
