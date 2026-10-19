@@ -1,0 +1,21 @@
+# The compiler every build of this repository uses: local `cargo`, every CI job (none names a
+# toolchain of its own), and the container build, which copies this file into its `tools` stage
+# before the first `cargo` call.
+#
+# Pinned to an exact release rather than `stable` so that a new Rust, with its new clippy lints
+# and rustfmt output, arrives as a reviewed Renovate pull request instead of turning an unrelated
+# pull request red on the day it ships.
+#
+# Three places name this release and must agree on `major.minor`: `channel` below, the
+# `rust:<version>-slim` base image in the Dockerfile, and `rust-version` in Cargo.toml. Renovate's
+# `rust toolchain` group moves the first two in one pull request; `rust-version` is moved by hand,
+# and `apps/web/tests/toolchain_pins.rs` fails the test suite until it is.
+[toolchain]
+channel = "1.98.1"
+# What the `cargo fmt --check` and `cargo clippy -- -D warnings` gates run.
+components = ["rustfmt", "clippy"]
+# The hydrated client is built for wasm on every machine that builds the site. The musl targets
+# the SSR server is cross-compiled to are only ever needed inside the image, so the Dockerfile
+# adds those itself.
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

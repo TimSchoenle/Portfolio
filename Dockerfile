@@ -65,8 +65,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        fi \
     && rm -rf /var/lib/apt/lists/*
 
-# wasm32 for the client; musl for a fully static SSR server (see runtime stage).
-RUN rustup target add wasm32-unknown-unknown "$(cat /etc/rust-target)"
+WORKDIR /app
+
+# The compiler `rust-toolchain.toml` pins, with the wasm32 target it lists for the client. The
+# base image above carries the same `major.minor` (`apps/web/tests/toolchain_pins.rs` asserts
+# it), but installing from the file is what guarantees the exact patch: every later stage that
+# `COPY . .` would otherwise switch to the pin halfway through the build. Copied on its own so
+# that no other change to the tree invalidates this layer.
+COPY rust-toolchain.toml ./
+RUN rustup toolchain install --no-self-update
+
+# musl for a fully static SSR server (see runtime stage), added to the pinned toolchain.
+RUN rustup target add "$(cat /etc/rust-target)"
 
 # Pin the binstalled Dioxus CLI and cargo-about for reproducible builds.
 #
@@ -85,8 +95,6 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf \
     "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${CARGO_BINSTALL_REF}/install-from-binstall-release.sh" | bash \
     && cargo binstall --no-confirm --locked "dioxus-cli@${DIOXUS_CLI_VERSION}" \
     && cargo binstall --no-confirm --locked "cargo-about@${CARGO_ABOUT_VERSION}"
-
-WORKDIR /app
 
 # Cargo's registry and every stage's target directory live in BuildKit cache
 # mounts, so a source change recompiles the workspace crates rather than all

@@ -30,9 +30,11 @@ publish = false
 # absent from its own diff. The description, the homepage and the license are
 # the same three strings the image's OCI labels carry.
 #
-# `rust-version` is the toolchain the image is built with — the `rust:<version>-slim` base in
-# the Dockerfile — and not a floor anything tests below. Renovate bumps the Dockerfile only, so a
-# base-image update has to move this line in the same pull request.
+# `rust-version` is the toolchain the image is built with — the release `rust-toolchain.toml`
+# pins and the `rust:<version>-slim` base in the Dockerfile carries — and not a floor anything
+# tests below. Renovate's `rust toolchain` group moves those two but not this line, so a minor
+# bump has to move it in the same pull request; `apps/web/tests/toolchain_pins.rs` fails until it
+# does.
 [package]
 name = "portfolio-platform"
 version = "3.1.5"

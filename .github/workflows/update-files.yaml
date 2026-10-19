@@ -44,7 +44,7 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Install stable toolchain
+      - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       - name: Sync Cargo.lock with Cargo.toml
@@ -108,7 +108,7 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Install stable toolchain
+      - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       # One run, one payload, both templates. The names the templates read are declared beside
@@ -242,7 +242,7 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Install stable toolchain
+      - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       - name: Install just
