@@ -238,9 +238,17 @@ ENV CC_x86_64_unknown_linux_musl=musl-gcc \
 #
 # The bundle is copied out to /out/web in the same RUN: the target directory is
 # a cache mount and does not survive into the layer.
+#
+# The previous bundle is deleted first. `dx` 0.7 never removes a file from
+# `public/assets`, and every changed wasm or stylesheet gets a new hashed name,
+# so a cache mount carried across builds kept each old bundle and `cp -r` put
+# all of them in the image: CI images grew by about 1.9 MiB per changed build,
+# while release builds, which start with an empty mount, did not. The compiled
+# crates stay in the mount; only the bundle output is rebuilt.
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,id=target-web,target=/cargo-target,sharing=locked \
-    dx bundle --release \
+    rm -rf /cargo-target/dx/web/release/web \
+    && dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
