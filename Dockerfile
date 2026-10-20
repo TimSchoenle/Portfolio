@@ -121,12 +121,17 @@ RUN cargo chef prepare --recipe-path recipe.json
 # for. Cooking two packages in one call resolves features across both, and
 # `cargo run -p` resolves them for one: every crate whose features differ would
 # compile a second time after `COPY . .`.
+#
+# `cargo fetch` downloads every crate in Cargo.lock, for every target, into this
+# layer. `cargo about` in `generate` reads all of them, and without the fetch it
+# downloaded the rest itself into a 540 MB layer that changed with every commit.
 FROM tools AS deps
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --locked --profile tools -p update-repos --recipe-path recipe.json \
     && cargo chef cook --locked --profile tools -p resume-generator --recipe-path recipe.json \
     && cargo chef cook --locked -p portfolio-config --features config-schema --examples \
-         --recipe-path recipe.json
+         --recipe-path recipe.json \
+    && cargo fetch --locked
 
 # ── generate build-time data: repos.json, resume PDFs + fingerprint ───────────
 FROM deps AS generate
@@ -202,22 +207,28 @@ RUN --mount=type=secret,id=resume_photo \
     && mkdir -p apps/web/generated/resume \
     && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
     && cp /app/resume-out/resume-fingerprint.json apps/web/generated/ \
-    && cp /app/resume-out/*.png apps/web/generated/
+    && cp /app/resume-out/*.png apps/web/generated/ \
+    && rm -rf /cargo-target /app/resume-out
 
 # ── the configuration contract ────────────────────────────────────────────────
 # The document a deployment pipeline reads to check that what it renders is what
 # this image loads: every key in every spelling, the same keys as a JSON Schema,
 # and the variables outside the `PORTFOLIO_` namespace this container reads.
 #
-# On `generate` rather than on a toolchain of its own, and its own stage rather
-# than a step inside `web-builder`: it depends on `crates/config` and, for the
-# site's language list, `crates/data`, so it rebuilds when either changes and
-# stays cached across every change to the rest of the site. Nothing the `config-schema` feature links —
-# `serde_json`, `syn`, the derive — reaches the binary the runtime stage copies.
-FROM generate AS contract-builder
+# On `deps`, whose cook covers this build, and its own stage rather than a step
+# inside `web-builder`: it reads nothing `generate` produces. Nothing the
+# `config-schema` feature links — `serde_json`, `syn`, the derive — reaches the
+# binary the runtime stage copies.
+#
+# `generate` and this stage delete the target directory in their last RUN: only
+# their output files are used, and the compiled workspace crates would otherwise
+# be a new layer of 50–100 MB on every commit.
+FROM deps AS contract-builder
+COPY . .
 RUN mkdir -p /out \
     && cargo run --locked -p portfolio-config --features config-schema \
-         --example config-schema -- --format contract > /out/contract.json
+         --example config-schema -- --format contract > /out/contract.json \
+    && rm -rf /cargo-target
 
 # ── dependencies of the fullstack app ─────────────────────────────────────────
 FROM deps AS web-deps
@@ -278,15 +289,16 @@ ENV PORTFOLIO_REQUIRE_GENERATED=1
 # malformed `name` custom section that Firefox rejects at validation. We already
 # don't `--keep-names`, so no readable backtraces are lost.
 #
-# The bundle is copied out to /out/web and the target directory deleted in the
-# same RUN, so this layer holds the bundle and not a second copy of every
-# compiled dependency, which `mode=max` would export to the layer cache.
+# The bundle is copied out to /out/web, and the target directory and the tools
+# `dx` downloads into ~/.local/share/.dx (wasm-bindgen, wasm-opt, esbuild,
+# 114 MB) are deleted in the same RUN. This layer is new on every commit and
+# `mode=max` exports it, so it holds the bundle and nothing else.
 RUN dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
     && cp -r /cargo-target/dx/web/release/web /out/web \
-    && rm -rf /cargo-target
+    && rm -rf /cargo-target /root/.local/share/.dx
 # An empty, staged ISR cache directory. The `scratch` runtime has no shell to
 # `mkdir` with and its non-root user cannot create directories under `/`, so the
 # directory (and its ownership) has to be baked in here and COPYed across to
