@@ -321,9 +321,25 @@ jobs:
       # cache mounts, so on an ephemeral runner they would start empty every time: the repos
       # freshness check could never hit and every dependency would recompile. These two steps
       # restore the mounts before the build and save them after it.
-      - name: Restore the BuildKit cache mounts
-        id: cache-mounts
+      #
+      # Only pushes to `main` save. A pull request restores `main`'s entry and builds on it, but
+      # copying the mounts back out of BuildKit took 260–410 s per leg, and the 1.3 GB archive it
+      # saved was readable by later runs of that pull request alone while it evicted `main`'s
+      # entries from the 10 GB cache. `actions/cache/restore` has no post step, and
+      # `skip-extraction` drops the copy-out that would only feed it.
+      - name: Restore and save the BuildKit cache mounts
+        if: github.event_name == 'push'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: buildkit-cache-mounts
+          key: buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-
+            buildkit-mounts-${{ matrix.arch }}-
+
+      - name: Restore the BuildKit cache mounts
+        if: github.event_name != 'push'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: buildkit-cache-mounts
           key: buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
@@ -337,6 +353,7 @@ jobs:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Dockerfile
           cache-dir: buildkit-cache-mounts
+          skip-extraction: ${{ github.event_name != 'push' }}
 
       - name: Build Docker image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
