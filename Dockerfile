@@ -293,7 +293,13 @@ ENV PORTFOLIO_REQUIRE_GENERATED=1
 # `dx` downloads into ~/.local/share/.dx (wasm-bindgen, wasm-opt, esbuild,
 # 114 MB) are deleted in the same RUN. This layer is new on every commit and
 # `mode=max` exports it, so it holds the bundle and nothing else.
-RUN dx bundle --release \
+#
+# `RUSTUP_AUTO_INSTALL=0`: to size its progress bar, `dx` runs
+# `cargo +nightly rustc --unit-graph`, and rustup installed whatever nightly was
+# current, about 620 MB, on every build. Without auto-install the call fails and
+# `dx` estimates the unit count from `cargo metadata` instead; only the `[n/m]`
+# totals in the log change.
+RUN RUSTUP_AUTO_INSTALL=0 dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
