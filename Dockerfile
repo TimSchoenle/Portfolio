@@ -101,6 +101,13 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf \
 # ~700 dependencies. A cache mount is not part of the image: anything a later
 # stage needs out of `target/` is copied out of it in the same RUN. On CI the
 # mounts are carried between runs by the workflow (see build.yaml).
+#
+# Every mount is `sharing=locked`, the registry included. The release workflow
+# builds both platforms in one build, and `tools` differs per $TARGETARCH, so
+# each platform runs its own copy of every stage below at the same time. With
+# the default `shared`, both copies unpacked the same crate into one registry
+# and `cargo` failed with `File exists (os error 17)`: v3.1.4 and v3.1.5 were
+# tagged but never published.
 ENV CARGO_TARGET_DIR=/cargo-target
 
 # ── generate build-time data: repos.json, resume PDFs + fingerprint ───────────
@@ -129,7 +136,7 @@ COPY . .
 # and a missing file is exactly the "stale" the generator already handles.
 RUN --mount=type=secret,id=gh_token \
     --mount=type=cache,target=/repos-cache,sharing=locked \
-    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=target-generate,target=/cargo-target,sharing=locked \
     if [ -s /run/secrets/gh_token ]; then \
       export PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token; \
@@ -153,7 +160,7 @@ RUN --mount=type=secret,id=gh_token \
 # terms this site ships under, and a dependency arriving with anything else exits
 # non-zero here — the image fails to build rather than being published with a
 # licenses page that does not mention it.
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     mkdir -p apps/web/generated \
     && cargo about generate --locked --all-features \
          --manifest-path apps/web/Cargo.toml \
@@ -175,7 +182,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 # The generator reads the format from the file's own header, so the mount having
 # no extension is fine.
 RUN --mount=type=secret,id=resume_photo \
-    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=target-generate,target=/cargo-target,sharing=locked \
     cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
       $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
@@ -195,7 +202,7 @@ RUN --mount=type=secret,id=resume_photo \
 # stays cached across every change to the rest of the site. Nothing the `config-schema` feature links —
 # `serde_json`, `syn`, the derive — reaches the binary the runtime stage copies.
 FROM generate AS contract-builder
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=target-contract,target=/cargo-target,sharing=locked \
     mkdir -p /out \
     && cargo run --locked -p portfolio-config --features config-schema \
@@ -245,7 +252,7 @@ ENV CC_x86_64_unknown_linux_musl=musl-gcc \
 # all of them in the image: CI images grew by about 1.9 MiB per changed build,
 # while release builds, which start with an empty mount, did not. The compiled
 # crates stay in the mount; only the bundle output is rebuilt.
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=target-web,target=/cargo-target,sharing=locked \
     rm -rf /cargo-target/dx/web/release/web \
     && dx bundle --release \
