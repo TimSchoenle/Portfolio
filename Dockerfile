@@ -100,17 +100,12 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf \
     && cargo binstall --no-confirm --locked "cargo-about@${CARGO_ABOUT_VERSION}" \
     && cargo binstall --no-confirm --locked "cargo-chef@${CARGO_CHEF_VERSION}"
 
-# The `dx bundle` step keeps Cargo's registry and its target directory in
-# BuildKit cache mounts. A cache mount is not part of the image: anything a later
-# stage needs out of `target/` is copied out of it in the same RUN. On CI the
-# mounts are carried between runs by the workflow (see build.yaml).
-#
-# Every mount is `sharing=locked`, the registry included. The release workflow
-# builds both platforms in one build, and `tools` differs per $TARGETARCH, so
-# each platform runs its own copy of every stage below at the same time. With
-# the default `shared`, both copies unpacked the same crate into one registry
-# and `cargo` failed with `File exists (os error 17)`: v3.1.4 and v3.1.5 were
-# tagged but never published.
+# Compiled dependencies live in the cooked layers below, not in cache mounts: a
+# cache mount starts empty on every CI runner and hides whatever layer is under
+# its target path. The one mount left, `/repos-cache` in `generate`, is
+# `sharing=locked`: the release workflow builds both platforms in one build, and
+# `tools` differs per $TARGETARCH, so each platform runs its own copy of every
+# stage below at the same time.
 ENV CARGO_TARGET_DIR=/cargo-target
 
 # ── dependency recipe ─────────────────────────────────────────────────────────
@@ -224,8 +219,45 @@ RUN mkdir -p /out \
     && cargo run --locked -p portfolio-config --features config-schema \
          --example config-schema -- --format contract > /out/contract.json
 
+# ── dependencies of the fullstack app ─────────────────────────────────────────
+FROM deps AS web-deps
+# Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
+# step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
+# consulted, so declaring both architectures unconditionally is harmless.
+#
+# The x86_64 target deliberately sets no linker here: the repository's
+# `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
+# with `musl-tools` above), and cargo picks that up from the workspace root. Keep
+# the two in sync — a linker named in only one of them is a silent build break.
+ENV CC_x86_64_unknown_linux_musl=musl-gcc \
+    CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
+    AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
+# The two compilations `dx bundle` runs below, cooked the way dioxus-cli 0.7.10
+# calls cargo (`build/request.rs`), or `dx` compiles every dependency again.
+# Neither profile is declared in Cargo.toml, so `dx` defines it through
+# `--config`: inheriting `release`, `strip=false` on both, and `opt-level="s"` on
+# the wasm client. The client also gets `--cfg getrandom_backend="wasm_js"` in
+# RUSTFLAGS. The `CARGO_PROFILE_*` variables set the same keys. A `dx` bump that
+# changes any of this shows up as `Compiled` lines for dependencies under
+# `dx bundle`.
+RUN CARGO_PROFILE_WASM_RELEASE_INHERITS=release \
+    CARGO_PROFILE_WASM_RELEASE_OPT_LEVEL=s \
+    CARGO_PROFILE_WASM_RELEASE_STRIP=false \
+    RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
+    cargo chef cook --locked --profile wasm-release --target wasm32-unknown-unknown \
+      --no-default-features --features web -p web --recipe-path recipe.json \
+    && CARGO_PROFILE_SERVER_RELEASE_INHERITS=release \
+    CARGO_PROFILE_SERVER_RELEASE_STRIP=false \
+    cargo chef cook --locked --profile server-release --target "$(cat /etc/rust-target)" \
+      --no-default-features --features server -p web --recipe-path recipe.json
+
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
-FROM generate AS web-builder
+FROM web-deps AS web-builder
+COPY . .
+# What `generate` produced for build.rs to embed.
+COPY --from=generate /app/apps/web/repos.json apps/web/repos.json
+COPY --from=generate /app/apps/web/generated apps/web/generated
 WORKDIR /app/apps/web
 # `npm ci` installs exactly the committed package-lock.json; `build:css` compiles
 # Tailwind (scanning the .rs files) into assets/tailwind.css, which the app links
@@ -237,46 +269,24 @@ RUN npm ci && npm run build:css
 # (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
 # explicitly keeps proc-macros/build-scripts on the host toolchain.
 #
-# Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
-# step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
-# consulted, so declaring both architectures unconditionally is harmless.
-#
-# The x86_64 target deliberately sets no linker here: the repository's
-# `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
-# with `musl-tools` above), and cargo picks that up from the workspace root. Keep
-# the two in sync — a linker named in only one of them is a silent build break.
-#
 # `PORTFOLIO_REQUIRE_GENERATED=1` makes `apps/web/build.rs` refuse to embed an
 # empty default for anything the stages above should have produced — a missing
 # license inventory or stylesheet fails the image instead of shipping.
-ENV CC_x86_64_unknown_linux_musl=musl-gcc \
-    CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
-    AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
-    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc \
-    PORTFOLIO_REQUIRE_GENERATED=1
+ENV PORTFOLIO_REQUIRE_GENERATED=1
 # `--debug-symbols=false` strips the client wasm's DWARF debug info and `name`
 # section for production: it shrinks the payload substantially and avoids the
 # malformed `name` custom section that Firefox rejects at validation. We already
 # don't `--keep-names`, so no readable backtraces are lost.
 #
-# The bundle is copied out to /out/web in the same RUN: the target directory is
-# a cache mount and does not survive into the layer.
-#
-# The previous bundle is deleted first. `dx` 0.7 never removes a file from
-# `public/assets`, and every changed wasm or stylesheet gets a new hashed name,
-# so a cache mount carried across builds kept each old bundle and `cp -r` put
-# all of them in the image: CI images grew by about 1.9 MiB per changed build,
-# while release builds, which start with an empty mount, did not. The compiled
-# crates stay in the mount; only the bundle output is rebuilt.
-RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
-    --mount=type=cache,id=target-web,target=/cargo-target,sharing=locked \
-    rm -rf /cargo-target/dx/web/release/web \
-    && dx bundle --release \
+# The bundle is copied out to /out/web and the target directory deleted in the
+# same RUN, so this layer holds the bundle and not a second copy of every
+# compiled dependency, which `mode=max` would export to the layer cache.
+RUN dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
-    && rm -rf /out/web \
-    && cp -r /cargo-target/dx/web/release/web /out/web
+    && cp -r /cargo-target/dx/web/release/web /out/web \
+    && rm -rf /cargo-target
 # An empty, staged ISR cache directory. The `scratch` runtime has no shell to
 # `mkdir` with and its non-root user cannot create directories under `/`, so the
 # directory (and its ownership) has to be baked in here and COPYed across to
