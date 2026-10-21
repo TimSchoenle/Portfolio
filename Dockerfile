@@ -14,6 +14,8 @@ ARG GROUP_ID=1001
 ARG DIOXUS_CLI_VERSION=0.7.10
 # renovate: datasource=crate depName=cargo-about
 ARG CARGO_ABOUT_VERSION=0.9.2
+# renovate: datasource=crate depName=cargo-chef
+ARG CARGO_CHEF_VERSION=0.1.78
 
 # ── shared build tools ────────────────────────────────────────────────────────
 # Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
@@ -27,6 +29,7 @@ FROM --platform=$BUILDPLATFORM rust:1.98-slim@sha256:4cd829461bd5c4d511c32e269da
 
 ARG DIOXUS_CLI_VERSION
 ARG CARGO_ABOUT_VERSION
+ARG CARGO_CHEF_VERSION
 ARG TARGETARCH
 # Honored by tooling that supports it so embedded timestamps stay deterministic.
 ARG SOURCE_DATE_EPOCH
@@ -94,17 +97,44 @@ ARG CARGO_BINSTALL_REF=e00d2c94cc0067b77737821097a62d91c0301baa # tag=v1.21.1
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
     "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${CARGO_BINSTALL_REF}/install-from-binstall-release.sh" | bash \
     && cargo binstall --no-confirm --locked "dioxus-cli@${DIOXUS_CLI_VERSION}" \
-    && cargo binstall --no-confirm --locked "cargo-about@${CARGO_ABOUT_VERSION}"
+    && cargo binstall --no-confirm --locked "cargo-about@${CARGO_ABOUT_VERSION}" \
+    && cargo binstall --no-confirm --locked "cargo-chef@${CARGO_CHEF_VERSION}"
 
-# Cargo's registry and every stage's target directory live in BuildKit cache
-# mounts, so a source change recompiles the workspace crates rather than all
-# ~700 dependencies. A cache mount is not part of the image: anything a later
-# stage needs out of `target/` is copied out of it in the same RUN. On CI the
-# mounts are carried between runs by the workflow (see build.yaml).
+# Compiled dependencies live in the cooked layers below, not in cache mounts: a
+# cache mount starts empty on every CI runner and hides whatever layer is under
+# its target path. The one mount left, `/repos-cache` in `generate`, is
+# `sharing=locked`: the release workflow builds both platforms in one build, and
+# `tools` differs per $TARGETARCH, so each platform runs its own copy of every
+# stage below at the same time.
 ENV CARGO_TARGET_DIR=/cargo-target
 
+# ── dependency recipe ─────────────────────────────────────────────────────────
+# Every manifest and the lockfile, reduced to what `cargo chef cook` needs. The
+# recipe changes only when a manifest or Cargo.lock does, so the cooked layers
+# below stay cached across every source-only change.
+FROM tools AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+# ── dependencies of the build-time tools ──────────────────────────────────────
+# Each cook names the package, profile and features of the build it stands in
+# for. Cooking two packages in one call resolves features across both, and
+# `cargo run -p` resolves them for one: every crate whose features differ would
+# compile a second time after `COPY . .`.
+#
+# `cargo fetch` downloads every crate in Cargo.lock, for every target, into this
+# layer. `cargo about` in `generate` reads all of them, and without the fetch it
+# downloaded the rest itself into a 540 MB layer that changed with every commit.
+FROM tools AS deps
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --locked --profile tools -p update-repos --recipe-path recipe.json \
+    && cargo chef cook --locked --profile tools -p resume-generator --recipe-path recipe.json \
+    && cargo chef cook --locked -p portfolio-config --features config-schema --examples \
+         --recipe-path recipe.json \
+    && cargo fetch --locked
+
 # ── generate build-time data: repos.json, resume PDFs + fingerprint ───────────
-FROM tools AS generate
+FROM deps AS generate
 COPY . .
 # repos.json from the GitHub API (build.rs embeds it into the web binary). CI=1
 # selects the long cache TTL so a fresh committed/cached file is reused; an
@@ -129,8 +159,6 @@ COPY . .
 # and a missing file is exactly the "stale" the generator already handles.
 RUN --mount=type=secret,id=gh_token \
     --mount=type=cache,target=/repos-cache,sharing=locked \
-    --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=target-generate,target=/cargo-target,sharing=locked \
     if [ -s /run/secrets/gh_token ]; then \
       export PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token; \
     fi; \
@@ -153,8 +181,7 @@ RUN --mount=type=secret,id=gh_token \
 # terms this site ships under, and a dependency arriving with anything else exits
 # non-zero here — the image fails to build rather than being published with a
 # licenses page that does not mention it.
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    mkdir -p apps/web/generated \
+RUN mkdir -p apps/web/generated \
     && cargo about generate --locked --all-features \
          --manifest-path apps/web/Cargo.toml \
          --output-file apps/web/generated/licenses.json \
@@ -175,34 +202,73 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 # The generator reads the format from the file's own header, so the mount having
 # no extension is fine.
 RUN --mount=type=secret,id=resume_photo \
-    --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=target-generate,target=/cargo-target,sharing=locked \
     cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
       $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
     && mkdir -p apps/web/generated/resume \
     && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
     && cp /app/resume-out/resume-fingerprint.json apps/web/generated/ \
-    && cp /app/resume-out/*.png apps/web/generated/
+    && cp /app/resume-out/*.png apps/web/generated/ \
+    && rm -rf /cargo-target /app/resume-out
 
 # ── the configuration contract ────────────────────────────────────────────────
 # The document a deployment pipeline reads to check that what it renders is what
 # this image loads: every key in every spelling, the same keys as a JSON Schema,
 # and the variables outside the `PORTFOLIO_` namespace this container reads.
 #
-# On `generate` rather than on a toolchain of its own, and its own stage rather
-# than a step inside `web-builder`: it depends on `crates/config` and, for the
-# site's language list, `crates/data`, so it rebuilds when either changes and
-# stays cached across every change to the rest of the site. Nothing the `config-schema` feature links —
-# `serde_json`, `syn`, the derive — reaches the binary the runtime stage copies.
-FROM generate AS contract-builder
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=target-contract,target=/cargo-target,sharing=locked \
-    mkdir -p /out \
+# On `deps`, whose cook covers this build, and its own stage rather than a step
+# inside `web-builder`: it reads nothing `generate` produces. Nothing the
+# `config-schema` feature links — `serde_json`, `syn`, the derive — reaches the
+# binary the runtime stage copies.
+#
+# `generate` and this stage delete the target directory in their last RUN: only
+# their output files are used, and the compiled workspace crates would otherwise
+# be a new layer of 50–100 MB on every commit.
+FROM deps AS contract-builder
+COPY . .
+RUN mkdir -p /out \
     && cargo run --locked -p portfolio-config --features config-schema \
-         --example config-schema -- --format contract > /out/contract.json
+         --example config-schema -- --format contract > /out/contract.json \
+    && rm -rf /cargo-target
+
+# ── dependencies of the fullstack app ─────────────────────────────────────────
+FROM deps AS web-deps
+# Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
+# step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
+# consulted, so declaring both architectures unconditionally is harmless.
+#
+# The x86_64 target deliberately sets no linker here: the repository's
+# `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
+# with `musl-tools` above), and cargo picks that up from the workspace root. Keep
+# the two in sync — a linker named in only one of them is a silent build break.
+ENV CC_x86_64_unknown_linux_musl=musl-gcc \
+    CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
+    AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
+# The two compilations `dx bundle` runs below, cooked the way dioxus-cli 0.7.10
+# calls cargo (`build/request.rs`), or `dx` compiles every dependency again.
+# Neither profile is declared in Cargo.toml, so `dx` defines it through
+# `--config`: inheriting `release`, `strip=false` on both, and `opt-level="s"` on
+# the wasm client. The client also gets `--cfg getrandom_backend="wasm_js"` in
+# RUSTFLAGS. The `CARGO_PROFILE_*` variables set the same keys. A `dx` bump that
+# changes any of this shows up as `Compiled` lines for dependencies under
+# `dx bundle`.
+RUN CARGO_PROFILE_WASM_RELEASE_INHERITS=release \
+    CARGO_PROFILE_WASM_RELEASE_OPT_LEVEL=s \
+    CARGO_PROFILE_WASM_RELEASE_STRIP=false \
+    RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
+    cargo chef cook --locked --profile wasm-release --target wasm32-unknown-unknown \
+      --no-default-features --features web -p web --recipe-path recipe.json \
+    && CARGO_PROFILE_SERVER_RELEASE_INHERITS=release \
+    CARGO_PROFILE_SERVER_RELEASE_STRIP=false \
+    cargo chef cook --locked --profile server-release --target "$(cat /etc/rust-target)" \
+      --no-default-features --features server -p web --recipe-path recipe.json
 
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
-FROM generate AS web-builder
+FROM web-deps AS web-builder
+COPY . .
+# What `generate` produced for build.rs to embed.
+COPY --from=generate /app/apps/web/repos.json apps/web/repos.json
+COPY --from=generate /app/apps/web/generated apps/web/generated
 WORKDIR /app/apps/web
 # `npm ci` installs exactly the committed package-lock.json; `build:css` compiles
 # Tailwind (scanning the .rs files) into assets/tailwind.css, which the app links
@@ -214,38 +280,31 @@ RUN npm ci && npm run build:css
 # (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
 # explicitly keeps proc-macros/build-scripts on the host toolchain.
 #
-# Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
-# step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
-# consulted, so declaring both architectures unconditionally is harmless.
-#
-# The x86_64 target deliberately sets no linker here: the repository's
-# `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
-# with `musl-tools` above), and cargo picks that up from the workspace root. Keep
-# the two in sync — a linker named in only one of them is a silent build break.
-#
 # `PORTFOLIO_REQUIRE_GENERATED=1` makes `apps/web/build.rs` refuse to embed an
 # empty default for anything the stages above should have produced — a missing
 # license inventory or stylesheet fails the image instead of shipping.
-ENV CC_x86_64_unknown_linux_musl=musl-gcc \
-    CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
-    AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
-    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc \
-    PORTFOLIO_REQUIRE_GENERATED=1
+ENV PORTFOLIO_REQUIRE_GENERATED=1
 # `--debug-symbols=false` strips the client wasm's DWARF debug info and `name`
 # section for production: it shrinks the payload substantially and avoids the
 # malformed `name` custom section that Firefox rejects at validation. We already
 # don't `--keep-names`, so no readable backtraces are lost.
 #
-# The bundle is copied out to /out/web in the same RUN: the target directory is
-# a cache mount and does not survive into the layer.
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=target-web,target=/cargo-target,sharing=locked \
-    dx bundle --release \
+# The bundle is copied out to /out/web, and the target directory and the tools
+# `dx` downloads into ~/.local/share/.dx (wasm-bindgen, wasm-opt, esbuild,
+# 114 MB) are deleted in the same RUN. This layer is new on every commit and
+# `mode=max` exports it, so it holds the bundle and nothing else.
+#
+# `RUSTUP_AUTO_INSTALL=0`: to size its progress bar, `dx` runs
+# `cargo +nightly rustc --unit-graph`, and rustup installed whatever nightly was
+# current, about 620 MB, on every build. Without auto-install the call fails and
+# `dx` estimates the unit count from `cargo metadata` instead; only the `[n/m]`
+# totals in the log change.
+RUN RUSTUP_AUTO_INSTALL=0 dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
-    && rm -rf /out/web \
-    && cp -r /cargo-target/dx/web/release/web /out/web
+    && cp -r /cargo-target/dx/web/release/web /out/web \
+    && rm -rf /cargo-target /root/.local/share/.dx
 # An empty, staged ISR cache directory. The `scratch` runtime has no shell to
 # `mkdir` with and its non-root user cannot create directories under `/`, so the
 # directory (and its ownership) has to be baked in here and COPYed across to

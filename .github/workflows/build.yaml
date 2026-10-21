@@ -316,14 +316,29 @@ jobs:
         id: setup-buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      # The Dockerfile keeps the cargo registry, each stage's target directory and the fetched
-      # repos.json in BuildKit cache mounts. `cache-to: type=gha` exports layers only, never
-      # cache mounts, so on an ephemeral runner they would start empty every time: the repos
-      # freshness check could never hit and every dependency would recompile. These two steps
-      # restore the mounts before the build and save them after it.
-      - name: Restore the BuildKit cache mounts
-        id: cache-mounts
+      # The Dockerfile keeps one BuildKit cache mount, the fetched repos.json; compiled
+      # dependencies are cooked layers, which `cache-to` carries. `cache-to: type=gha` exports
+      # layers only, never cache mounts, so on an ephemeral runner the mount would start empty
+      # every time and the repos freshness check could never hit. These steps restore the mount
+      # before the build and save it after it.
+      #
+      # Only pushes to `main` save. A pull request restores `main`'s entry and builds on it; an
+      # entry it saved would be readable by later runs of that pull request alone, and would
+      # count against the 10 GB cache quota that holds `main`'s entries. `actions/cache/restore`
+      # has no post step, and `skip-extraction` drops the copy-out that would only feed it.
+      - name: Restore and save the BuildKit cache mounts
+        if: github.event_name == 'push'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: buildkit-cache-mounts
+          key: buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-
+            buildkit-mounts-${{ matrix.arch }}-
+
+      - name: Restore the BuildKit cache mounts
+        if: github.event_name != 'push'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: buildkit-cache-mounts
           key: buildkit-mounts-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
@@ -337,6 +352,7 @@ jobs:
           builder: ${{ steps.setup-buildx.outputs.name }}
           dockerfile: Dockerfile
           cache-dir: buildkit-cache-mounts
+          skip-extraction: ${{ github.event_name != 'push' }}
 
       - name: Build Docker image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
@@ -357,8 +373,15 @@ jobs:
           # Scoped per architecture so the two legs do not evict each other's
           # cache — most layers are $BUILDPLATFORM-native and identical, but the
           # target-specific compile steps are not.
+          #
+          # Every run reads the cache; only pushes to `main` write it. A pull
+          # request's export lands under its own ref, which `main` and the release
+          # build never read, yet it counts against the repository's 10 GB cache
+          # quota and evicts `main`'s blobs: `main` runs logged
+          # `blob sha256:…: not found` after importing the manifest and rebuilt
+          # stages their commit had not touched.
           cache-from: type=gha,scope=docker-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=docker-${{ matrix.arch }}
+          cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=docker-{0}', matrix.arch) || '' }}
 
       # Guards against the cross-compile silently degrading into a native build:
       # without this, an image whose binary is x86_64 would still pass every
