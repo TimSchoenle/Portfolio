@@ -150,7 +150,7 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
 
     // The dot layout is a pure function of compile-time data, so it is computed
     // once per mounted radar. Rebuilding it per render would re-run
-    // `matrix_skills()`, the layout of ~120 dots and an O(named x filler)
+    // `matrix_skills()`, the layout of ~170 dots and an O(named x filler)
     // proximity pass on every pointer move, since those write the hover signals
     // below.
     let dots = use_hook(|| Rc::new(build_dots()));
