@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.2.0](https://github.com/TimSchoenle/Portfolio/compare/v3.1.5...v3.2.0) (2026-10-21)
+
+
+### Features
+
+* **data:** re-evaluate the skill inventory against repository evidence ([#1330](https://github.com/TimSchoenle/Portfolio/issues/1330)) ([31bcb6d](https://github.com/TimSchoenle/Portfolio/commit/31bcb6dbcb5fe39ee715b2c5b4d7156de832cf74))
+
+
+### Build System
+
+* **docker:** cook dependencies with cargo-chef instead of carrying cache mounts ([#1329](https://github.com/TimSchoenle/Portfolio/issues/1329)) ([d203be8](https://github.com/TimSchoenle/Portfolio/commit/d203be80212fb93bccfc6996b3fe3f7ca0dc2c14))
+* **toolchain:** pin Rust 1.98.1 in rust-toolchain.toml ([#1322](https://github.com/TimSchoenle/Portfolio/issues/1322)) ([7dbd65d](https://github.com/TimSchoenle/Portfolio/commit/7dbd65d12e59e7afdc3ba859d82aeb61341944f6))
+
+
+### Dependencies
+
+* **deps:** update rust crate jsonschema to 0.59 ([#1328](https://github.com/TimSchoenle/Portfolio/issues/1328)) ([8f67ac5](https://github.com/TimSchoenle/Portfolio/commit/8f67ac576500087de41ba4cd9891b32b0a34a8bc))
+
 ## [3.1.5](https://github.com/TimSchoenle/Portfolio/compare/v3.1.4...v3.1.5) (2026-10-19)
 
 
