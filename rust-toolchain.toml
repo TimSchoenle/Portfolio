@@ -8,8 +8,8 @@
 #
 # Three places name this release and must agree on `major.minor`: `channel` below, the
 # `rust:<version>-slim` base image in the Dockerfile, and `rust-version` in Cargo.toml. Renovate's
-# `rust toolchain` group moves the first two in one pull request; `rust-version` is moved by hand,
-# and `apps/web/tests/toolchain_pins.rs` fails the test suite until it is.
+# `rust toolchain` group moves all three in one pull request, and `apps/web/tests/toolchain_pins.rs`
+# fails the test suite if they ever drift apart.
 [toolchain]
 channel = "1.99.1"
 # What the `cargo fmt --check` and `cargo clippy -- -D warnings` gates run.

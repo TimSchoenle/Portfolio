@@ -32,15 +32,14 @@ publish = false
 #
 # `rust-version` is the toolchain the image is built with — the release `rust-toolchain.toml`
 # pins and the `rust:<version>-slim` base in the Dockerfile carries — and not a floor anything
-# tests below. Renovate's `rust toolchain` group moves those two but not this line, so a minor
-# bump has to move it in the same pull request; `apps/web/tests/toolchain_pins.rs` fails until it
-# does.
+# tests below. Renovate's `rust toolchain` group moves this line together with those two (a
+# custom manager in renovate.json), and `apps/web/tests/toolchain_pins.rs` fails if they disagree.
 [package]
 name = "portfolio-platform"
 version = "3.2.0"
 publish = false
 edition = "2024"
-rust-version = "1.98"
+rust-version = "1.99"
 description = "Dioxus fullstack (SSR + hydration) portfolio served by Axum."
 homepage = "https://tim-schoenle.de"
 license = "LicenseRef-Proprietary"

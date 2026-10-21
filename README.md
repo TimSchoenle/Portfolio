@@ -41,7 +41,7 @@ Dioxus fullstack (SSR + hydration) portfolio served by Axum.
 [![Build](https://img.shields.io/github/actions/workflow/status/TimSchoenle/Portfolio/build.yaml?branch=main)](https://github.com/TimSchoenle/Portfolio/actions/workflows/build.yaml)
 [![Site](https://img.shields.io/website?url=https%3A%2F%2Ftim-schoenle.de)](https://tim-schoenle.de)
 [![License](https://img.shields.io/badge/license-LicenseRef--Proprietary-blue)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.98-orange)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/rust-1.99-orange)](https://www.rust-lang.org)
 
 ## What this is
 
@@ -301,7 +301,7 @@ layer that reports.
 
 | | Supported |
 | --- | --- |
-| Rust | 1.98 (edition 2024) |
+| Rust | 1.99 (edition 2024) |
 | Platforms | `linux/amd64`, `linux/arm64` |
 | Pod Security Standard | restricted |
 

@@ -3,6 +3,21 @@
   "extends": [
     "github>TimSchoenle/actions//configs/renovate/default"
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "`rust-version` in Cargo.toml is the third copy of the toolchain release. Tracked as the `rust` Docker image so it uses the same `major.minor` versioning as the `rust:<version>-slim` base in the Dockerfile, and the `rust toolchain` group moves it with the other two.",
+      "managerFilePatterns": [
+        "/^Cargo\\.toml$/"
+      ],
+      "matchStrings": [
+        "rust-version = \"(?<currentValue>\\d+\\.\\d+)\""
+      ],
+      "depNameTemplate": "rust",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
   "packageRules": [
     {
       "matchPackageNames": [
@@ -26,7 +41,7 @@
       ]
     },
     {
-      "description": "The Rust toolchain moves in one pull request: `rust-toolchain.toml` and the `rust:<version>-slim` base image in the Dockerfile name the same release and must not drift apart. `rust-version` in Cargo.toml is the third copy and is moved by hand; apps/web/tests/toolchain_pins.rs fails this group's pull request until it is. Digest updates (same release, rebuilt image) stay ungrouped.",
+      "description": "The Rust toolchain moves in one pull request: `channel` in rust-toolchain.toml, the `rust:<version>-slim` base image in the Dockerfile and `rust-version` in Cargo.toml name the same release, and apps/web/tests/toolchain_pins.rs fails if they drift apart. Digest updates (same release, rebuilt image) stay ungrouped.",
       "groupName": "rust toolchain",
       "matchDepNames": [
         "rust"
@@ -36,6 +51,39 @@
         "minor",
         "patch"
       ]
+    },
+    {
+      "description": "Keeps the `rust toolchain` group whole while a member is inside `minimumReleaseAge`. Under the default `internalChecksFilter: strict`, Renovate drops pending updates from a branch that also holds ready ones, which is how a toolchain bump once shipped without its base image. `none` keeps every update in the branch and reports the pending age as the `renovate/stability-days` status; `platformAutomerge: false` hands the merge to Renovate, which waits for that status, where GitHub's native auto-merge only waits for required checks. Matched without `matchUpdateTypes`: Renovate reads `internalChecksFilter` before an update type exists, so a rule narrowed by update type never applies it.",
+      "matchDepNames": [
+        "rust"
+      ],
+      "internalChecksFilter": "none",
+      "platformAutomerge": false
+    },
+    {
+      "description": "Docker Hub stamps a tag with its last push, and the official `rust` images are rebuilt on every base image update, so `rust:<version>-slim` keeps looking days old or less long after the release. The toolchain member of the `rust toolchain` group carries the release age for the whole group; on the image it would only keep the group pending. Digest updates keep the age gate, because there the push is the change.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchDepNames": [
+        "rust"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "`rust-version` is a bare version, not an image reference: there is no digest to pin.",
+      "matchFileNames": [
+        "Cargo.toml"
+      ],
+      "matchDepNames": [
+        "rust"
+      ],
+      "pinDigests": false
     }
   ]
 }

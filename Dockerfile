@@ -25,7 +25,7 @@ ARG CARGO_CHEF_VERSION=0.1.78
 # wasm + npm build under QEMU for a foreign arch would be an order of magnitude
 # slower, and nothing here but the final server binary is arch-dependent (the
 # client is wasm; repos.json, the resume PDFs and the Tailwind CSS are data).
-FROM --platform=$BUILDPLATFORM rust:1.98-slim@sha256:4cd829461bd5c4d511c32e269da9cb8929223b666519d8004e35fc8d1d771ab7 AS tools
+FROM --platform=$BUILDPLATFORM rust:1.99-slim@sha256:e6cd1d294a300601eaaa4a294b337e5f0826f427fb2d481e9f76e69e7981e244 AS tools
 
 ARG DIOXUS_CLI_VERSION
 ARG CARGO_ABOUT_VERSION
