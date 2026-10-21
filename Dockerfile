@@ -246,16 +246,14 @@ ENV CC_x86_64_unknown_linux_musl=musl-gcc \
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
 # The two compilations `dx bundle` runs below, cooked the way dioxus-cli 0.7.10
 # calls cargo (`build/request.rs`), or `dx` compiles every dependency again.
-# Neither profile is declared in Cargo.toml, so `dx` defines it through
-# `--config`: inheriting `release`, `strip=false` on both, and `opt-level="s"` on
-# the wasm client. The client also gets `--cfg getrandom_backend="wasm_js"` in
-# RUSTFLAGS. The `CARGO_PROFILE_*` variables set the same keys. A `dx` bump that
-# changes any of this shows up as `Compiled` lines for dependencies under
-# `dx bundle`.
-RUN CARGO_PROFILE_WASM_RELEASE_INHERITS=release \
-    CARGO_PROFILE_WASM_RELEASE_OPT_LEVEL=s \
-    CARGO_PROFILE_WASM_RELEASE_STRIP=false \
-    RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
+# `wasm-release` is declared in Cargo.toml (see the comment there for why), so
+# `dx` uses it as written and only adds `strip=false`, which it already says.
+# `server-release` is not declared, so `dx` defines it through `--config`:
+# inheriting `release` with `strip=false`, which the `CARGO_PROFILE_*` variables
+# repeat. The client also gets `--cfg getrandom_backend="wasm_js"` in RUSTFLAGS.
+# A `dx` bump that changes any of this shows up as `Compiled` lines for
+# dependencies under `dx bundle`.
+RUN RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
     cargo chef cook --locked --profile wasm-release --target wasm32-unknown-unknown \
       --no-default-features --features web -p web --recipe-path recipe.json \
     && CARGO_PROFILE_SERVER_RELEASE_INHERITS=release \

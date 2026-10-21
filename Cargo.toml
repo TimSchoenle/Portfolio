@@ -338,6 +338,19 @@ codegen-units = 1
 panic = "unwind"
 strip = true
 
+# The client wasm. `dx` would inject this profile itself (`inherits` and `opt-level` as below), but
+# it also strips the linked binary with the toolchain's `rust-objcopy`, using the `strip` setting
+# it finds by walking the profile's `inherits` chain. From `release` that is `--strip-all`, which
+# since LLVM 23 (Rust 1.99) deletes every custom wasm section, including the
+# `__wasm_bindgen_unstable` metadata `wasm-bindgen` runs on next. Declaring the profile with
+# `strip = false` stops that, and `release` keeps stripping the server. `dx bundle
+# --debug-symbols=false` still drops the client's debug info and `name` section afterwards, in
+# `wasm-bindgen` and `wasm-opt`.
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+strip = false
+
 # The two build-time generators (`update-repos`, `resume-generator`) run once
 # during the image build and are never shipped, so every property `release`
 # optimizes for is the wrong trade for them: `opt-level = "z"`, fat LTO and a
