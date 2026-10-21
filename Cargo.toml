@@ -37,7 +37,7 @@ publish = false
 # does.
 [package]
 name = "portfolio-platform"
-version = "3.1.5"
+version = "3.2.0"
 publish = false
 edition = "2024"
 rust-version = "1.98"
