@@ -1,0 +1,156 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+tone_instructions: "Direct, no filler, no praise."
+
+reviews:
+  profile: assertive
+
+  auto_review:
+    # CodeRabbit cannot filter by head branch, so automated pull requests are
+    # skipped by author: Renovate opens `renovate/*`, the release manager app
+    # opens `release-please--*`. Both the bot login and the bare app slug are
+    # listed because the match is exact.
+    ignore_usernames:
+      - "renovate[bot]"
+      - "renovate"
+      - "automatic-release-manager[bot]"
+      - "automatic-release-manager"
+
+  # Generated or tool-owned files. Review their sources instead.
+  path_filters:
+    - "!Cargo.lock"
+    - "!**/package-lock.json"
+    - "!target/**"
+    - "!CHANGELOG.md"
+    - "!.release-please-manifest.json"
+    - "!README.md" # rendered from .github/templates/README.md.hbs
+    - "!config.example.toml" # rendered from .github/templates/config.example.toml.hbs
+    - "!docs/config.contract.json" # emitted from crates/config, drift-gated in CI
+    - "!apps/resume-generator/fonts/**" # vendored font binaries and licences
+    - "!apps/web/assets/fonts/**" # vendored by apps/web/scripts/vendor-fonts.mjs
+
+  path_instructions:
+    - path: "apps/web/src/**/*.rs"
+      instructions: |
+        Dioxus fullstack site: SSR on Axum plus a wasm32 hydration bundle from the same crate,
+        split by the `server` and `web` features. Flag:
+        - Code that compiles under one feature only by accident; server-only code must not reach
+          the wasm bundle and browser APIs must not reach the server build.
+        - XSS: any `dangerous_inner_html`, unescaped interpolation into attributes, `href`/`src`
+          built from data without scheme validation, or inline `<script>`/`style` that the CSP
+          would have to admit.
+        - Accessibility: semantic elements, labels and `alt` text, keyboard operability and
+          visible focus for interactive widgets, `aria-*` correctness, honouring
+          `prefers-reduced-motion` in animations and scroll behaviour.
+        - Hydration mismatches between the server render and the client (time, randomness,
+          locale or storage read during render).
+        - `unwrap`/`expect`/panics in request paths, missing rustdoc, and bare `#[allow]`.
+    - path: "apps/web/src/server/**"
+      instructions: |
+        HTTP surface. Check security headers (CSP from `csp-shell`, HSTS, nosniff, frame and
+        referrer policy) on every response type, cache headers versus ISR, content types, status
+        codes, and that errors map to responses without leaking internals. The ISR cache must
+        never key on unvalidated request text (cache poisoning, unbounded growth). No blocking
+        work on the async runtime; probes must stay cheap. Telemetry must not send IPs, query
+        strings or other personal data to Sentry without need.
+    - path: "apps/web/src/server/csp.rs"
+      instructions: |
+        Reject any loosening of the policy (`'unsafe-inline'`, `'unsafe-eval'`, wildcard or
+        `data:`/`blob:` sources, new third-party origins) unless the change explains exactly which
+        resource needs it. Nonces must be per response.
+    - path: "crates/config/**"
+      instructions: |
+        Configuration surface read by every binary through terrace-config and published as the
+        config contract. A key added, renamed or removed must regenerate
+        `docs/config.contract.json`, `config.example.toml` and the README in the same change.
+        Secret-bearing keys must use `secrecy` types, carry no default and never appear in
+        `Debug`, `explain` output, logs or errors.
+    - path: "crates/data/**"
+      instructions: |
+        Language-neutral facts and the schemas of build-time generated documents. Every
+        user-visible string belongs in `i18n/en.json` and `i18n/de.json`; flag keys added to one
+        language and not the other, and schema changes that break `repos.json` or the licence
+        inventory without updating their producers.
+    - path: "apps/update-repos/**"
+      instructions: |
+        Build-time tool calling the GitHub REST API. Check token handling (never logged, never
+        written into output), request timeouts, pagination and rate-limit handling, and that
+        failures leave the previous `repos.json` intact rather than writing a partial file.
+    - path: "apps/resume-generator/**"
+      instructions: |
+        Build-time Typst PDF generator. Output must be deterministic (fixed timestamps, stable
+        ordering) because the SHA-256 fingerprints are published. Flag data interpolated into Typst
+        markup without escaping.
+    - path: "legal/**"
+      instructions: |
+        Templates, not the published texts. Placeholders stay in square brackets; flag real
+        personal data committed here.
+    - path: "Dockerfile"
+      instructions: |
+        Multi-stage build ending on `scratch` as a non-root user. Require digest-pinned base
+        images, BuildKit secret mounts instead of build args for tokens, no network fetches without
+        checksum verification, and keep `cst.yaml` in step with the runtime stage (entrypoint,
+        user, ports, env).
+    - path: "{.cargo/audit.toml,deny.toml,apps/web/about.toml}"
+      instructions: |
+        Supply-chain policy. Every ignored advisory or allowed licence/source needs a reason,
+        the reachability argument and an exit condition; flag additions without them.
+    - path: "{apps/web/scripts,tests/browser}/**/*.mjs"
+      instructions: |
+        Node build and test scripts. Flag unpinned downloads, shell interpolation of paths,
+        swallowed promise rejections, and smoke checks that can pass on an error page.
+    - path: "apps/web/assets/**/*.css"
+      instructions: |
+        Tailwind v4 input and self-hosted font faces. Font URLs must stay root-absolute and in
+        sync with the preload list in `apps/web/src/app.rs`; flag any external font or CDN origin
+        and colour pairs below WCAG AA contrast.
+    - path: "**/tests/**"
+      instructions: |
+        Tests. Do not apply documentation or panic rules. Flag tests that depend on the network
+        or on wall-clock timing without tolerance.
+    - path: ".github/workflows/**"
+      instructions: |
+        Every third-party action must be pinned to a full commit SHA with a version comment.
+        Require least-privilege `permissions:` at workflow or job level, `persist-credentials: false`
+        on checkout unless pushing, no untrusted `${{ github.event.* }}` interpolation into `run:`,
+        and no `pull_request_target` that checks out or executes PR code. Release jobs that sign
+        or push images must not be reachable from pull requests.
+    - path: ".github/templates/**"
+      instructions: |
+        Sources of the generated README.md and config.example.toml. Review rendered wording,
+        links and badge URLs here; every mustache must reference a real variable.
+    - path: "**/*.sh"
+      instructions: |
+        Require `set -euo pipefail`, quoted expansions, and no reliance on GNU-only flags
+        without a comment.
+
+  pre_merge_checks:
+    title:
+      mode: error
+      requirements: |
+        Must follow Conventional Commits: `type(scope)?!?: subject`. Allowed types: feat, fix, perf,
+        revert, docs, refactor, test, style, ci, build, chore, deps. Lowercase, imperative subject,
+        no trailing period. release-please derives version bumps and the changelog from this title.
+
+  tools:
+    # Both already run in CI (build.yaml clippy jobs, security.yml zizmor); duplicating them adds noise.
+    clippy:
+      enabled: false
+    zizmor:
+      enabled: false
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    # CI scans the built image with Trivy but does not lint the Dockerfile itself.
+    hadolint:
+      enabled: true
+    # Lints the Node scripts and CSS, which CI does not.
+    biome:
+      enabled: true
+    # Without a repo config its defaults reject Tailwind v4 at-rules (`@theme`, `@source`).
+    stylelint:
+      enabled: false
