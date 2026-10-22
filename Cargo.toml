@@ -296,7 +296,7 @@ sentry = { version = "0.49", default-features = false, features = [
 # `nonce` feature pulls `getrandom`, which has no default backend on
 # `wasm32-unknown-unknown`, and a response header is not something the wasm client
 # builds anyway.
-csp-shell = { git = "https://github.com/TimSchoenle/csp-shell", tag = "csp-shell-v0.2.0", features = [
+csp-shell = { git = "https://github.com/TimSchoenle/csp-shell", tag = "csp-shell-v0.2.1", features = [
     "cloudflare",
 ] }
 
