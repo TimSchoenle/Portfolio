@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.2.1](https://github.com/TimSchoenle/Portfolio/compare/v3.2.0...v3.2.1) (2026-10-22)
+
+
+### Dependencies
+
+* **deps:** update rust crate csp-shell to csp-shell-v0.2.1 ([#1336](https://github.com/TimSchoenle/Portfolio/issues/1336)) ([80115f9](https://github.com/TimSchoenle/Portfolio/commit/80115f91294f4efb89a49eff33abf5e571a4f593))
+* **deps:** update rust to v1.99.1 ([#1324](https://github.com/TimSchoenle/Portfolio/issues/1324)) ([9be61e0](https://github.com/TimSchoenle/Portfolio/commit/9be61e052a18ffd69462ca4b43df36ade1e20dde))
+* **deps:** update rust:1.99-slim docker digest to aab4239 ([#1335](https://github.com/TimSchoenle/Portfolio/issues/1335)) ([286c609](https://github.com/TimSchoenle/Portfolio/commit/286c609e4595ad228269734d93a88a440bbc0885))
+* **deps:** update rust:1.99-slim docker digest to d5928c6 ([#1332](https://github.com/TimSchoenle/Portfolio/issues/1332)) ([7daef09](https://github.com/TimSchoenle/Portfolio/commit/7daef0974bd801dc93abd429e69dc30d54ca8134))
+
 ## [3.2.0](https://github.com/TimSchoenle/Portfolio/compare/v3.1.5...v3.2.0) (2026-10-21)
 
 
