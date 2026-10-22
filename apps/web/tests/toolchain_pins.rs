@@ -8,7 +8,7 @@
 //!
 //! The Rust toolchain is named three times: `channel` in `rust-toolchain.toml`, the
 //! `rust:<version>-slim` base image in the `Dockerfile`, and `rust-version` in `Cargo.toml`.
-//! Renovate moves the first two together and never the third.
+//! Renovate's `rust toolchain` group moves all three in one pull request.
 //!
 //! These tests are what notice when one copy moves without the others.
 

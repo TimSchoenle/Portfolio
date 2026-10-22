@@ -32,15 +32,15 @@ publish = false
 #
 # `rust-version` is the toolchain the image is built with — the release `rust-toolchain.toml`
 # pins and the `rust:<version>-slim` base in the Dockerfile carries — and not a floor anything
-# tests below. Renovate's `rust toolchain` group moves those two but not this line, so a minor
-# bump has to move it in the same pull request; `apps/web/tests/toolchain_pins.rs` fails until it
-# does.
+# tests below. Renovate's `rust toolchain` group moves this line together with those two (a
+# custom manager in the shared `rust-application` preset from TimSchoenle/actions), and
+# `apps/web/tests/toolchain_pins.rs` fails if they disagree.
 [package]
 name = "portfolio-platform"
 version = "3.2.0"
 publish = false
 edition = "2024"
-rust-version = "1.98"
+rust-version = "1.99"
 description = "Dioxus fullstack (SSR + hydration) portfolio served by Axum."
 homepage = "https://tim-schoenle.de"
 license = "LicenseRef-Proprietary"
@@ -338,6 +338,19 @@ codegen-units = 1
 # regardless and the bundle keeps its size.
 panic = "unwind"
 strip = true
+
+# The client wasm. `dx` would inject this profile itself (`inherits` and `opt-level` as below), but
+# it also strips the linked binary with the toolchain's `rust-objcopy`, using the `strip` setting
+# it finds by walking the profile's `inherits` chain. From `release` that is `--strip-all`, which
+# since LLVM 23 (Rust 1.99) deletes every custom wasm section, including the
+# `__wasm_bindgen_unstable` metadata `wasm-bindgen` runs on next. Declaring the profile with
+# `strip = false` stops that, and `release` keeps stripping the server. `dx bundle
+# --debug-symbols=false` still drops the client's debug info and `name` section afterwards, in
+# `wasm-bindgen` and `wasm-opt`.
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+strip = false
 
 # The two build-time generators (`update-repos`, `resume-generator`) run once
 # during the image build and are never shipped, so every property `release`

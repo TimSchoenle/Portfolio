@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>TimSchoenle/actions//configs/renovate/default"
+    "github>TimSchoenle/actions//configs/renovate/default",
+    "github>TimSchoenle/actions//configs/renovate/rust-application"
   ],
   "packageRules": [
     {
@@ -23,18 +24,6 @@
       "matchPackageNames": [
         "/^dioxus/",
         "dioxus-cli"
-      ]
-    },
-    {
-      "description": "The Rust toolchain moves in one pull request: `rust-toolchain.toml` and the `rust:<version>-slim` base image in the Dockerfile name the same release and must not drift apart. `rust-version` in Cargo.toml is the third copy and is moved by hand; apps/web/tests/toolchain_pins.rs fails this group's pull request until it is. Digest updates (same release, rebuilt image) stay ungrouped.",
-      "groupName": "rust toolchain",
-      "matchDepNames": [
-        "rust"
-      ],
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch"
       ]
     }
   ]
