@@ -134,9 +134,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # to fetch code
-    outputs:
-      config_variables: ${{ steps.config-schema.outputs.variables }}
-      readme_variables: ${{ steps.readme-variables.outputs.variables }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
@@ -190,6 +187,29 @@ jobs:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
+      # The payloads travel as an artifact rather than as job outputs: the runner drops any job
+      # output whose value contains a string it has registered as a mask ("Skip output … since it
+      # may contain secret"), and a payload that quotes the README and `docs/` index can contain
+      # one by coincidence. The values reach the files through the environment, never through
+      # template expansion inside the script.
+      - name: Write the payloads
+        env:
+          CONFIG_VARIABLES: ${{ steps.config-schema.outputs.variables }}
+          README_VARIABLES: ${{ steps.readme-variables.outputs.variables }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/render-payloads"
+          printf '%s' "$CONFIG_VARIABLES" > "$RUNNER_TEMP/render-payloads/config.json"
+          printf '%s' "$README_VARIABLES" > "$RUNNER_TEMP/render-payloads/readme.json"
+
+      - name: Upload the payloads
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: render-payloads
+          path: ${{ runner.temp }}/render-payloads
+          if-no-files-found: error
+          retention-days: 1
+
   render-generated-files:
     name: Ensure the Generated Files are Rendered from their Templates
     needs: generate-rendered-files
@@ -222,6 +242,30 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ steps.generate_token.outputs.token }}
 
+      - name: Download the payloads
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: render-payloads
+          path: ${{ runner.temp }}/render-payloads
+
+      # Step outputs, unlike job outputs, are not filtered against masks. Each value is written
+      # with a random heredoc delimiter, so no content in the payload can end it early and inject
+      # an output of its own.
+      - name: Load the payloads
+        id: payloads
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/render-payloads"
+          for name in config readme; do
+            delimiter="EOF_$(openssl rand -hex 16)"
+            {
+              echo "${name}<<${delimiter}"
+              cat "${dir}/${name}.json"
+              echo
+              echo "${delimiter}"
+            } >> "$GITHUB_OUTPUT"
+          done
+
       # Each render commits only its own output — `file_pattern` defaults to it — so a document
       # that did not change produces no commit, and neither can carry the other along. The example
       # configuration stays on the raw generator payload: it interpolates nothing the merge adds.
@@ -231,7 +275,7 @@ jobs:
         with:
           template: .github/templates/README.md.hbs
           output: README.md
-          variables: ${{ needs.generate-rendered-files.outputs.readme_variables }}
+          variables: ${{ steps.payloads.outputs.readme }}
           token: ${{ steps.generate_token.outputs.token }}
           commit_message: 'docs: render README from its template'
 
@@ -241,7 +285,7 @@ jobs:
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
-          variables: ${{ needs.generate-rendered-files.outputs.config_variables }}
+          variables: ${{ steps.payloads.outputs.config }}
           token: ${{ steps.generate_token.outputs.token }}
           commit_message: 'docs: render the example configuration from its template'
 
