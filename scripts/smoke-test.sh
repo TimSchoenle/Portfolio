@@ -112,10 +112,11 @@ expect_body_contains /api/v1/legal '"slug":"imprint"'
 # ── SSR pages and their language ─────────────────────────────────────────────
 expect_status / 200
 expect_body_contains / '<html'
-expect_status /some/client/route 200
-expect_body_contains /some/client/route '<html'
+# An unrouted path renders the localized not-found page, and says so in its status.
+expect_status /some/client/route 404
+expect_body_contains /some/client/route '<html' --no-fail
 expect_body_contains / '<html lang="en"'
-expect_body_contains /some/client/route '<html lang="en"'
+expect_body_contains /some/client/route '<html lang="en"' --no-fail
 expect_body_contains / '<html lang="de"' -H 'Accept-Language: de-DE,de'
 expect_body_contains / '<html lang="de"' -H 'Accept-Language: en;q=0.1, de;q=0.9'
 expect_body_contains '/?lang=de' '<html lang="de"'
@@ -201,6 +202,7 @@ expect_header / referrer-policy no-referrer
 expect_header / strict-transport-security 'max-age=31536000; includeSubDomains; preload'
 expect_header / cross-origin-opener-policy same-origin
 expect_header / cross-origin-resource-policy same-origin
+expect_header / permissions-policy 'camera=(), microphone=(), geolocation=(), browsing-topics=()'
 
 # Every inline script on the page is admitted by a hash, and none by 'unsafe-inline'.
 page_csp=$(header_of / content-security-policy)
@@ -237,6 +239,32 @@ case "$asset_csp" in
   *"sha256-"* | *"nonce-"*) error "a subresource carried a document policy: $asset_csp"; fail=1 ;;
   *) echo "ok: subresources carry the policy with no inline-script allowance" ;;
 esac
+
+# Last, because it ends the container. The server is PID 1 with no init in front of it, so
+# `SIGTERM` reaches it only through the handler it installs; without one every stop waits out the
+# grace period and ends in `SIGKILL`. `docker wait` is attached before the signal is sent, since
+# `--rm` removes the container the moment it exits.
+status_file=$(mktemp)
+docker wait "$name" >"$status_file" 2>/dev/null &
+waiter=$!
+sleep 1
+docker kill --signal TERM "$name" >/dev/null 2>&1
+stop_started=$SECONDS
+while kill -0 "$waiter" 2>/dev/null && [ $((SECONDS - stop_started)) -lt 10 ]; do sleep 0.2; done
+if kill -0 "$waiter" 2>/dev/null; then
+  kill "$waiter" 2>/dev/null
+  error "the server did not exit within 10s of SIGTERM"
+  fail=1
+else
+  exit_status=$(tr -d '[:space:]' <"$status_file")
+  if [ "$exit_status" = "0" ]; then
+    echo "ok: SIGTERM drains the server and it exits 0 within $((SECONDS - stop_started))s"
+  else
+    error "after SIGTERM the server exited with status '$exit_status', expected 0"
+    fail=1
+  fi
+fi
+rm -f "$status_file"
 
 if [ "$fail" != "0" ]; then
   error "container functional smoke tests failed"

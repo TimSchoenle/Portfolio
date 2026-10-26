@@ -15,10 +15,11 @@
 //!
 //! # This module owns the log subscriber, but only while Sentry is on
 //!
-//! A Sentry layer has to be a layer *of* the subscriber, and `dioxus::serve` installs one through
+//! A Sentry layer has to be a layer *of* the subscriber, and the serve loop (`dioxus::serve` in
+//! development, `super::serve_until_signalled` in release) installs one through
 //! `dioxus_logger::initialize_default`, which cannot be extended afterwards. It can, however, be
 //! declined: it returns early when `tracing::dispatcher::has_been_set()`, so installing ours
-//! first — before `dioxus::serve` — is the whole of the handover. [`init`] therefore builds a
+//! first — before the serve loop starts — is the whole of the handover. [`init`] therefore builds a
 //! subscriber that keeps the framework's contract (`RUST_LOG`, the same default verbosity, the
 //! same `hyper_util` mute) and adds the Sentry layer to it.
 //!
@@ -59,15 +60,13 @@ const IN_APP: &[&str] = &["web", "portfolio_config", "portfolio_data"];
 /// Bind it (`let _telemetry = …`) for as long as the process should report; `let _ = …` drops it
 /// immediately and closes the client before the server has served anything.
 ///
-/// # The drop is not a shutdown flush here
+/// # The drop is the shutdown flush
 ///
-/// `sentry::ClientInitGuard::drop` normally flushes what the transport has queued. In this binary
-/// it never runs: `dioxus::serve` diverges (`-> !`), and its release path awaits `axum::serve`
-/// with no shutdown signal, so a container stopping takes the default `SIGTERM` disposition and
-/// the process is gone before any destructor. That is why `shutdown_timeout_secs` is absent from
-/// the configuration surface — it would be a key describing a code path this server does not
-/// have. What actually gets events out is the SDK's background transport, which sends
-/// continuously rather than at exit.
+/// `sentry::ClientInitGuard::drop` flushes what the transport has queued, waiting up to the SDK's
+/// default shutdown timeout (two seconds). A release build reaches it: `SIGTERM` drains the
+/// server and `serve` returns, dropping the guard on the way out. A development build runs under
+/// `dioxus::serve`, which diverges, and never does. Either way the SDK's background transport
+/// sends continuously, so the flush only covers what was queued in the final moments.
 #[must_use = "dropping the guard closes the Sentry client and stops reporting"]
 pub struct TelemetryGuard(Option<sentry::ClientInitGuard>);
 
@@ -83,7 +82,7 @@ impl fmt::Debug for TelemetryGuard {
 
 /// Install the Sentry client and the subscriber that feeds it, or leave both alone.
 ///
-/// Called before `dioxus::serve`, which is the only moment the handover described in the module
+/// Called before the serve loop starts, which is the only moment the handover described in the module
 /// documentation is available. Returns a guard the caller has to hold.
 ///
 /// # Errors

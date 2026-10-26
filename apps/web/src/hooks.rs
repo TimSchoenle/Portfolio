@@ -152,11 +152,54 @@ pub fn add_window_listener(
     Some(ListenerGuard { event, closure })
 }
 
-/// Guard returned by [`add_window_listener_per_frame`]; removes the listener and
-/// releases the frame callback on drop.
+/// The one animation frame [`add_window_listener_per_frame`] may have requested and not yet
+/// seen run.
+///
+/// Kept apart from the `window` calls it brackets so the bookkeeping — request at most one frame
+/// at a time, forget it once it ran, cancel it if it never did — is testable without a browser.
+#[derive(Default)]
+struct FrameSlot(Cell<Option<i32>>);
+
+impl FrameSlot {
+    /// Calls `request` unless a frame is already pending, and records the id it returns.
+    fn schedule(&self, request: impl FnOnce() -> Option<i32>) {
+        if self.0.get().is_none() {
+            self.0.set(request());
+        }
+    }
+
+    /// Records that the pending frame ran.
+    fn ran(&self) {
+        self.0.set(None);
+    }
+
+    /// Hands a frame that never ran to `cancel`.
+    fn cancel(&self, cancel: impl FnOnce(i32)) {
+        if let Some(id) = self.0.take() {
+            cancel(id);
+        }
+    }
+}
+
+/// Guard returned by [`add_window_listener_per_frame`]; removes the listener, cancels a frame
+/// callback that is still pending and releases it on drop.
 pub struct FrameListenerGuard {
     _listener: ListenerGuard,
     _frame: Rc<Closure<dyn FnMut()>>,
+    pending: Rc<FrameSlot>,
+}
+
+impl Drop for FrameListenerGuard {
+    /// Runs before the fields drop. A frame requested by the last event and not yet painted would
+    /// otherwise call into the closure after `_frame` freed it, which wasm-bindgen reports as an
+    /// uncaught "closure invoked … after being dropped" error on every unmount mid-scroll.
+    fn drop(&mut self) {
+        self.pending.cancel(|id| {
+            if let Some(win) = web_sys::window() {
+                let _ = win.cancel_animation_frame(id);
+            }
+        });
+    }
 }
 
 /// Registers a passive `window` listener for `event` that runs `handler` at most
@@ -176,35 +219,34 @@ pub fn add_window_listener_per_frame(
     event: &'static str,
     handler: impl FnMut() + 'static,
 ) -> Option<FrameListenerGuard> {
-    let scheduled = Rc::new(Cell::new(false));
+    let pending = Rc::new(FrameSlot::default());
     let handler = Rc::new(RefCell::new(handler));
 
     let frame: Rc<Closure<dyn FnMut()>> = Rc::new(Closure::new({
-        let scheduled = scheduled.clone();
+        let pending = pending.clone();
         let handler = handler.clone();
         move || {
-            scheduled.set(false);
+            pending.ran();
             (handler.borrow_mut())();
         }
     }));
 
     let listener = add_window_listener(event, true, {
         let frame = frame.clone();
+        let pending = pending.clone();
         move |_| {
-            // `replace` returns the previous value, so a frame is requested only
-            // by the first event after each callback ran.
-            if scheduled.replace(true) {
-                return;
-            }
-            if let Some(win) = web_sys::window() {
-                let _ = win.request_animation_frame(frame.as_ref().as_ref().unchecked_ref());
-            }
+            pending.schedule(|| {
+                web_sys::window()?
+                    .request_animation_frame(frame.as_ref().as_ref().unchecked_ref())
+                    .ok()
+            });
         }
     })?;
 
     Some(FrameListenerGuard {
         _listener: listener,
         _frame: frame,
+        pending,
     })
 }
 
@@ -246,4 +288,69 @@ pub fn trap_tab_focus(container: &web_sys::Element, shift: bool) -> bool {
         _ => return false,
     };
     target.focus().is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FrameSlot;
+    use std::cell::Cell;
+
+    #[test]
+    fn a_frame_is_requested_once_until_it_runs() {
+        let slot = FrameSlot::default();
+        let requests = Cell::new(0);
+        let request = || {
+            requests.set(requests.get() + 1);
+            Some(requests.get())
+        };
+
+        slot.schedule(request);
+        slot.schedule(request);
+        assert_eq!(requests.get(), 1, "a second event requested another frame");
+
+        slot.ran();
+        slot.schedule(request);
+        assert_eq!(
+            requests.get(),
+            2,
+            "the next event after the frame ran requested none"
+        );
+    }
+
+    #[test]
+    fn only_a_frame_that_never_ran_is_cancelled() {
+        let slot = FrameSlot::default();
+        let cancelled = Cell::new(None);
+
+        slot.schedule(|| Some(7));
+        slot.cancel(|id| cancelled.set(Some(id)));
+        assert_eq!(cancelled.get(), Some(7));
+
+        cancelled.set(None);
+        slot.schedule(|| Some(8));
+        slot.ran();
+        slot.cancel(|id| cancelled.set(Some(id)));
+        assert_eq!(
+            cancelled.get(),
+            None,
+            "a frame that already ran was cancelled"
+        );
+    }
+
+    /// A refused request leaves nothing pending, so the next event tries again.
+    #[test]
+    fn a_failed_request_is_retried() {
+        let slot = FrameSlot::default();
+        let requests = Cell::new(0);
+
+        slot.schedule(|| {
+            requests.set(requests.get() + 1);
+            None
+        });
+        slot.schedule(|| {
+            requests.set(requests.get() + 1);
+            Some(1)
+        });
+        assert_eq!(requests.get(), 2);
+    }
 }

@@ -20,7 +20,10 @@
 
 use axum::{
     extract::Request,
-    http::header::{self, HeaderValue},
+    http::{
+        StatusCode,
+        header::{self, HeaderValue},
+    },
     middleware::Next,
     response::Response,
 };
@@ -34,6 +37,10 @@ const ONE_HOUR: &str = "public, max-age=3600";
 /// HTML / SSR fallback: cacheable but always revalidated against the origin so a
 /// new deploy is served the moment it lands.
 const REVALIDATE: &str = "no-cache";
+/// Any `4xx` or `5xx`: never stored. The TTLs above describe the asset a path names, not a
+/// failure to serve it, and a cache holds an error response with explicit freshness exactly as
+/// long as it would the asset (RFC 9111 §3).
+const NO_STORE: &str = "no-store";
 
 /// Picks the `Cache-Control` value for a static-asset request path.
 fn cache_control_for(path: &str) -> &'static str {
@@ -88,8 +95,22 @@ fn is_content_hashed(path: &str) -> bool {
     !hash.is_empty() && hash.len() <= 16 && hash.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
+/// The `Cache-Control` value for a response with `status` to a request for a path classified as
+/// `for_path`: the path's TTL, unless the response is an error.
+///
+/// Without the exception a missing font was a `404` every browser and shared cache kept for
+/// thirty days, and an asset requested from a replica that does not have it yet — the old pods
+/// of a rolling deploy — an error pinned for as long as its TTL.
+fn cache_control_for_response(for_path: &'static str, status: StatusCode) -> &'static str {
+    if status.is_client_error() || status.is_server_error() {
+        NO_STORE
+    } else {
+        for_path
+    }
+}
+
 /// Response middleware that sets a `Cache-Control` TTL for the request path
-/// unless the handler already provided one.
+/// unless the handler already provided one. Error responses get [`NO_STORE`] instead.
 pub async fn set_cache_control(request: Request, next: Next) -> Response {
     // Classified before the request is consumed. `cache_control_for` answers with
     // a `&'static str`, so carrying its verdict across the await costs nothing —
@@ -100,6 +121,7 @@ pub async fn set_cache_control(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
 
     if !response.headers().contains_key(header::CACHE_CONTROL) {
+        let value = cache_control_for_response(value, response.status());
         response
             .headers_mut()
             .insert(header::CACHE_CONTROL, HeaderValue::from_static(value));
@@ -173,6 +195,73 @@ mod tests {
         assert_eq!(cache_control_for("/"), REVALIDATE);
         assert_eq!(cache_control_for("/index.html"), REVALIDATE);
         assert_eq!(cache_control_for("/projects"), REVALIDATE);
+    }
+
+    #[test]
+    fn errors_are_never_stored_whatever_the_path() {
+        for status in [
+            StatusCode::NOT_FOUND,
+            StatusCode::INTERNAL_SERVER_ERROR,
+            StatusCode::SERVICE_UNAVAILABLE,
+        ] {
+            for path in [
+                "/assets/web_bg-dxhfc275e0429871eb.wasm",
+                "/fonts/jetbrains-mono-latin-400-normal.woff2",
+                "/resume/cv.pdf",
+                "/",
+            ] {
+                assert_eq!(
+                    cache_control_for_response(cache_control_for(path), status),
+                    NO_STORE,
+                    "{status} for {path}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn success_and_revalidation_keep_the_path_ttl() {
+        for status in [
+            StatusCode::OK,
+            StatusCode::NOT_MODIFIED,
+            StatusCode::PERMANENT_REDIRECT,
+        ] {
+            assert_eq!(
+                cache_control_for_response(IMMUTABLE_ONE_YEAR, status),
+                IMMUTABLE_ONE_YEAR
+            );
+        }
+    }
+
+    /// Through the middleware itself, so the status check is pinned where it runs.
+    #[tokio::test]
+    async fn the_middleware_marks_a_missing_asset_no_store() {
+        use axum::{Router, body::Body, routing::get};
+        use tower::ServiceExt;
+
+        let app = Router::new()
+            .route(
+                "/fonts/present.woff2",
+                get(|| async { (StatusCode::OK, "font") }),
+            )
+            .route(
+                "/fonts/missing.woff2",
+                get(|| async { StatusCode::NOT_FOUND }),
+            )
+            .layer(axum::middleware::from_fn(set_cache_control));
+        let cache_control = |path: &'static str| {
+            let app = app.clone();
+            async move {
+                let request = axum::http::Request::builder()
+                    .uri(path)
+                    .body(Body::empty())
+                    .unwrap();
+                app.oneshot(request).await.unwrap().headers()[header::CACHE_CONTROL].clone()
+            }
+        };
+
+        assert_eq!(cache_control("/fonts/present.woff2").await, THIRTY_DAYS);
+        assert_eq!(cache_control("/fonts/missing.woff2").await, NO_STORE);
     }
 
     #[test]
