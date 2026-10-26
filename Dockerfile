@@ -261,6 +261,16 @@ RUN RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
     cargo chef cook --locked --profile server-release --target "$(cat /etc/rust-target)" \
       --no-default-features --features server -p web --recipe-path recipe.json
 
+# The Tailwind toolchain, installed from the committed lockfile alone so the layer survives every
+# commit that does not touch it. Installed after `COPY . .` in `web-builder` it was re-downloaded
+# on every build; `.dockerignore` keeps a local `node_modules` out of that copy, so this one stays.
+#
+# `--ignore-scripts`: nothing the build runs needs an install script (the one in the tree,
+# `@parcel/watcher`'s, serves `watch:css`, which no image build calls), and leaving them off means
+# a compromised package gets no code execution at install time.
+COPY apps/web/package.json apps/web/package-lock.json apps/web/
+RUN npm ci --prefix apps/web --ignore-scripts --no-audit --no-fund
+
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
 FROM web-deps AS web-builder
 COPY . .
@@ -268,10 +278,9 @@ COPY . .
 COPY --from=generate /app/apps/web/repos.json apps/web/repos.json
 COPY --from=generate /app/apps/web/generated apps/web/generated
 WORKDIR /app/apps/web
-# `npm ci` installs exactly the committed package-lock.json; `build:css` compiles
-# Tailwind (scanning the .rs files) into assets/tailwind.css, which the app links
-# via manganis `asset!`.
-RUN npm ci && npm run build:css
+# `build:css` compiles Tailwind (scanning the .rs files) into assets/tailwind.css,
+# which the app links via manganis `asset!`. Its toolchain was installed in `web-deps`.
+RUN npm run build:css
 # Produces <target>/dx/web/release/web/{server, public/} — the server binary plus
 # the hashed client assets (the /resume PDFs are embedded, not bundled). The client stays wasm
 # while `@server --target …-musl` cross-links the SSR server fully static

@@ -31,7 +31,10 @@ hadolint*.yaml
 image.tar
 
 # -------- Package managers / caches / logs
-node_modules
+# Every depth, not only the root: a pattern without `**/` matches at the context root alone, and
+# a host's `apps/web/node_modules` (native bindings built for the host's platform) would otherwise
+# land on top of the one the image installs for its own.
+**/node_modules
 .pnpm-store
 npm-debug.log*
 yarn-debug.log*
