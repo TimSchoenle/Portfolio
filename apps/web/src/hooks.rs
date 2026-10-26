@@ -152,11 +152,24 @@ pub fn add_window_listener(
     Some(ListenerGuard { event, closure })
 }
 
-/// Guard returned by [`add_window_listener_per_frame`]; removes the listener and
-/// releases the frame callback on drop.
+/// Guard returned by [`add_window_listener_per_frame`]; removes the listener, cancels a frame
+/// callback that is still pending and releases it on drop.
 pub struct FrameListenerGuard {
     _listener: ListenerGuard,
     _frame: Rc<Closure<dyn FnMut()>>,
+    /// The id of the requested, not yet run animation frame, if any.
+    pending: Rc<Cell<Option<i32>>>,
+}
+
+impl Drop for FrameListenerGuard {
+    /// Runs before the fields drop. A frame requested by the last event and not yet painted would
+    /// otherwise call into the closure after `_frame` freed it, which wasm-bindgen reports as an
+    /// uncaught "closure invoked … after being dropped" error on every unmount mid-scroll.
+    fn drop(&mut self) {
+        if let (Some(id), Some(win)) = (self.pending.take(), web_sys::window()) {
+            let _ = win.cancel_animation_frame(id);
+        }
+    }
 }
 
 /// Registers a passive `window` listener for `event` that runs `handler` at most
@@ -176,28 +189,32 @@ pub fn add_window_listener_per_frame(
     event: &'static str,
     handler: impl FnMut() + 'static,
 ) -> Option<FrameListenerGuard> {
-    let scheduled = Rc::new(Cell::new(false));
+    // The id of the frame requested and not yet run; `Some` doubles as "a frame is scheduled".
+    let pending: Rc<Cell<Option<i32>>> = Rc::new(Cell::new(None));
     let handler = Rc::new(RefCell::new(handler));
 
     let frame: Rc<Closure<dyn FnMut()>> = Rc::new(Closure::new({
-        let scheduled = scheduled.clone();
+        let pending = pending.clone();
         let handler = handler.clone();
         move || {
-            scheduled.set(false);
+            pending.set(None);
             (handler.borrow_mut())();
         }
     }));
 
     let listener = add_window_listener(event, true, {
         let frame = frame.clone();
+        let pending = pending.clone();
         move |_| {
-            // `replace` returns the previous value, so a frame is requested only
-            // by the first event after each callback ran.
-            if scheduled.replace(true) {
+            // A frame is requested only by the first event after each callback ran.
+            if pending.get().is_some() {
                 return;
             }
             if let Some(win) = web_sys::window() {
-                let _ = win.request_animation_frame(frame.as_ref().as_ref().unchecked_ref());
+                pending.set(
+                    win.request_animation_frame(frame.as_ref().as_ref().unchecked_ref())
+                        .ok(),
+                );
             }
         }
     })?;
@@ -205,6 +222,7 @@ pub fn add_window_listener_per_frame(
     Some(FrameListenerGuard {
         _listener: listener,
         _frame: frame,
+        pending,
     })
 }
 
