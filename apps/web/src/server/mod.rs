@@ -46,9 +46,10 @@ use page::{PageMemo, PageState};
 /// so an operator can tell a bad config apart from a crash without reading the logs.
 const EX_CONFIG: i32 = 78;
 
-/// Runs the Axum SSR server. `dioxus::serve` sets up the async runtime and the
-/// default logger, then binds to `IP`/`PORT` (default `127.0.0.1:8080`) and
-/// serves the router below.
+/// Runs the Axum SSR server: sets up the async runtime and the default logger, then binds to
+/// `IP`/`PORT` (default `127.0.0.1:8080`) and serves the router below. A release build returns
+/// once `SIGTERM` or `SIGINT` has drained it (see `serve_until_signalled`); a development build
+/// runs under `dioxus::serve` and never returns.
 ///
 /// Configuration is read once, before the runtime exists: a value that cannot
 /// be loaded is a start-up failure, not a per-request one, and failing here
@@ -65,30 +66,134 @@ pub fn serve() {
     legal::install(legal.clone());
     let paths = PagePaths::new(&legal::hosted_paths(&legal));
 
-    // Before `dioxus::serve`, and that ordering is the whole of the handover: the framework
-    // installs its own subscriber unless one is already set, and a Sentry layer has to be a
-    // layer *of* the subscriber rather than something added to a finished one. With
+    // Before the serve loop, and that ordering is the whole of the handover: the framework's
+    // logger installs its own subscriber unless one is already set, and a Sentry layer has to be
+    // a layer *of* the subscriber rather than something added to a finished one. With
     // `sentry.enabled` off this installs nothing and the framework's subscriber stands.
     //
-    // The binding is held for the rest of `serve`, which is the rest of the process —
-    // `dioxus::serve` diverges. See `telemetry::TelemetryGuard` for why that means the
-    // drop-time flush is unreachable, and why no key claims otherwise.
+    // The binding is held for the rest of `serve`. In a release build that ends after a graceful
+    // shutdown, and dropping it is what flushes the Sentry transport; see
+    // `telemetry::TelemetryGuard`.
     let _telemetry = match telemetry::init(&config.sentry) {
         Ok(guard) => guard,
         Err(err) => refuse(&err),
     };
 
+    // Development keeps the framework's serve loop: it is the one that applies `dx serve`'s
+    // hot patches, and it diverges.
+    #[cfg(debug_assertions)]
     dioxus::serve(move || {
         let config = Arc::clone(&config);
         let legal = legal.clone();
         let paths = paths.clone();
         async move { Ok(router(&config, legal, paths)) }
     });
+
+    // A release build serves until it is told to stop, then returns, so `_telemetry` drops and
+    // the Sentry client flushes what its transport still holds.
+    #[cfg(not(debug_assertions))]
+    serve_until_signalled(move || router(&config, legal, paths));
+}
+
+/// Exit code for a listener that cannot be set up (`EX_OSERR` from `sysexits.h`): the address is
+/// taken or not bindable, which is the host's problem rather than the configuration's.
+#[cfg(not(debug_assertions))]
+const EX_OSERR: i32 = 71;
+
+/// The release serve loop: what `dioxus::serve` does outside development — the framework's
+/// logger, a listener on `IP`/`PORT`, `axum::serve` — plus the one thing it lacks, a graceful
+/// shutdown on `SIGTERM` or `SIGINT`.
+///
+/// That is not a nicety in this image. The server is PID 1 of a `scratch` container with no init
+/// process in front of it, and the kernel delivers no signal to a namespace's PID 1 whose default
+/// action is to terminate unless the process installed a handler for it. Without the handler
+/// below, `SIGTERM` is discarded: every `docker stop` and every pod deletion waits out the whole
+/// grace period (10 s for Docker, 30 s for Kubernetes) and then `SIGKILL`s the process, cutting
+/// off whatever requests were in flight. With it, the listener stops accepting, in-flight
+/// requests finish, and the process exits on its own.
+///
+/// `app` builds the router inside the runtime, which is where `dioxus::serve` builds it too.
+#[cfg(not(debug_assertions))]
+fn serve_until_signalled(app: impl FnOnce() -> Router) {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap_or_else(|err| exit_unavailable("cannot start the async runtime", &err));
+    runtime.block_on(async move {
+        // A no-op when telemetry has already installed a subscriber, as under `dioxus::serve`.
+        dioxus::logger::initialize_default();
+        let addr = dioxus::cli_config::fullstack_address_or_localhost();
+        let listener = tokio::net::TcpListener::bind(addr)
+            .await
+            .unwrap_or_else(|err| exit_unavailable(&format!("cannot listen on {addr}"), &err));
+        tracing::info!("listening on {addr}");
+        match axum::serve(listener, app())
+            .with_graceful_shutdown(shutdown_signal())
+            .await
+        {
+            Ok(()) => tracing::info!("every in-flight request finished; exiting"),
+            Err(err) => tracing::error!("the server stopped with an error: {err}"),
+        }
+    });
+    // Bounded, because a task still parked on the blocking pool would otherwise hold the exit
+    // open for as long as it likes, which is the wait this function exists to remove.
+    runtime.shutdown_timeout(RUNTIME_SHUTDOWN_TIMEOUT);
+}
+
+/// How long the runtime may take to wind down its worker and blocking threads once every
+/// connection has closed.
+#[cfg(not(debug_assertions))]
+const RUNTIME_SHUTDOWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// Ends the process with [`EX_OSERR`], naming what could not be set up.
+#[cfg(not(debug_assertions))]
+fn exit_unavailable(what: &str, err: &dyn std::fmt::Display) -> ! {
+    eprintln!("portfolio: {what}: {err}");
+    std::process::exit(EX_OSERR)
+}
+
+/// Resolves on the first `SIGTERM` (what Docker and the kubelet send) or `SIGINT` (Ctrl-C).
+///
+/// A signal stream that cannot be installed is logged and then waited on forever rather than
+/// treated as an immediate shutdown: a server that stops the moment it starts is worse than one
+/// that has to be killed.
+#[cfg(all(not(debug_assertions), unix))]
+async fn shutdown_signal() {
+    use tokio::signal::unix::{SignalKind, signal};
+
+    async fn received(kind: SignalKind, name: &str) {
+        match signal(kind) {
+            Ok(mut stream) => {
+                stream.recv().await;
+            }
+            Err(err) => {
+                tracing::error!("cannot listen for {name}: {err}");
+                std::future::pending::<()>().await;
+            }
+        }
+    }
+
+    let name = tokio::select! {
+        () = received(SignalKind::terminate(), "SIGTERM") => "SIGTERM",
+        () = received(SignalKind::interrupt(), "SIGINT") => "SIGINT",
+    };
+    tracing::info!("{name} received; no longer accepting connections, draining in-flight requests");
+}
+
+/// Resolves on Ctrl-C. No image targets a platform without Unix signals; this keeps a local
+/// release build compiling on one.
+#[cfg(all(not(debug_assertions), not(unix)))]
+async fn shutdown_signal() {
+    if let Err(err) = tokio::signal::ctrl_c().await {
+        tracing::error!("cannot listen for Ctrl-C: {err}");
+        std::future::pending::<()>().await;
+    }
+    tracing::info!("Ctrl-C received; no longer accepting connections, draining in-flight requests");
 }
 
 /// Ends the process with [`EX_CONFIG`], naming what could not be started with.
 ///
-/// Runs before `dioxus::serve` installs a logger — and, when Sentry is on, before this server
+/// Runs before the serve loop installs a logger — and, when Sentry is on, before this server
 /// installs one — so `tracing` would discard this; it goes to stderr directly.
 ///
 /// The error names the key; the report under it names the layer that supplied it, which is the
@@ -184,9 +289,11 @@ fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> Router {
             HeaderName::from_static("cross-origin-resource-policy"),
             "same-origin",
         ))
+        // `browsing-topics` opts out of the Topics API. It replaced `interest-cohort` (FLoC),
+        // which browsers no longer recognize and report as a console error on every page.
         .layer(static_header(
             HeaderName::from_static("permissions-policy"),
-            "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            PERMISSIONS_POLICY,
         ))
         // Compress text assets per Accept-Encoding; already-encoded payloads are
         // skipped, so this never double-compresses the SSR HTML.
@@ -210,6 +317,9 @@ fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> Router {
 
     app.layer(TraceLayer::new_for_http())
 }
+
+/// The browser features this site never uses, switched off for it and for anything it embeds.
+const PERMISSIONS_POLICY: &str = "camera=(), microphone=(), geolocation=(), browsing-topics=()";
 
 /// The response-compression predicate: which responses are worth the CPU.
 ///

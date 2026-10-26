@@ -13,6 +13,12 @@ use crate::routes::Route;
 #[component]
 pub fn NotFound(segments: Vec<String>) -> Element {
     let _ = segments;
+    // Answered as a `404`, not as the `200` a rendered route otherwise gets: a crawler treats a
+    // `200` here as a real, thin page at every mistyped URL (a "soft 404"), and a request for an
+    // asset this replica does not have — a client of a newer deploy, mid-rollout — gets an error
+    // it can recognize instead of a page of HTML where its script should be.
+    #[cfg(feature = "server")]
+    dioxus_fullstack_core::FullstackContext::commit_http_status(http::StatusCode::NOT_FOUND, None);
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
 

@@ -44,11 +44,11 @@
 //!    to the process for its lifetime — so a rebuilt configuration would carry the new DSN to a
 //!    client that cannot be told about it. Every other value the *server* reads changes only on
 //!    a redeploy.
-//! 2. **The serve loop is not ours to cancel.** `dioxus::serve` owns the listener and the accept
-//!    loop, and offers no shutdown handle, so a rebuild could not stop the previous generation
-//!    before the replacement binds the same address. Taking the supervisor would mean
-//!    reimplementing the framework's serve loop — including the devtools hot-patch path that
-//!    `dx serve` depends on in development — to gain a reload for configuration that a
+//! 2. **A rebuild would need two serve loops.** A release build of the server owns its accept
+//!    loop and shuts it down on `SIGTERM`, but a development build runs under `dioxus::serve`,
+//!    which owns the listener, carries the devtools hot-patch path `dx serve` depends on, and
+//!    offers no shutdown handle. A supervisor would have to stop the previous generation before
+//!    the replacement binds the same address in both, to gain a reload for configuration that a
 //!    redeploy already replaces.
 //!
 //! Both halves of that reasoning are recorded here rather than in a commit message because the

@@ -11,8 +11,8 @@
 //!
 //! # Why the server functions reach a process global
 //!
-//! A Dioxus server function has no router state to extract, and `dioxus::serve` owns the router
-//! it would be attached to. The configuration is read once, before the runtime exists, and never
+//! A Dioxus server function has no router state to extract, and the Dioxus fullstack router
+//! registers them itself. The configuration is read once, before the runtime exists, and never
 //! rebuilt (see `portfolio_config` for why the workspace takes no reload supervisor), so a
 //! [`OnceLock`] set in [`install`] holds exactly what a state parameter would have: one value
 //! for the life of the process. The JSON routes and the sitemap take the handle as ordinary

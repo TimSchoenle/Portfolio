@@ -16,6 +16,10 @@ It is built to satisfy the restricted Pod Security Standard:
 - `readOnlyRootFilesystem: true` and `allowPrivilegeEscalation: false`.
 - Every Linux capability dropped, `seccompProfile: RuntimeDefault`.
 - Listens on `:$PORT`, default `8080`.
+- Shuts down gracefully on `SIGTERM` or `SIGINT`: it stops accepting connections, lets in-flight
+  requests finish and exits 0. It runs as PID 1 with no init in front of it, and a namespace's
+  PID 1 never receives a signal it has no handler for, so this handler is what keeps every stop
+  from waiting out the full grace period and ending in `SIGKILL`.
 
 Everything else it reads comes from the layered configuration, so a `ConfigMap` fragment or a
 `Secret` volume is a first-class source rather than something the chart has to flatten into
@@ -31,7 +35,7 @@ Seven headers are set on every response, overriding whatever a handler produced:
 | `X-Frame-Options` | `DENY` |
 | `Referrer-Policy` | `no-referrer` |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` by default; `hsts.*` configures it |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), interest-cohort=()` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), browsing-topics=()` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
 | `Cross-Origin-Resource-Policy` | `same-origin` |
 
@@ -105,8 +109,8 @@ mounting the BuildKit secret and handing `update-repos` the path; a deployment d
 with `PORTFOLIO_SENTRY__DSN_FILE`, or with `sentry__dsn` in a mounted `Secret` volume.
 
 Only the loader half of `terrace-config` is used; its hot-reload supervisor is not. The reasoning —
-neither secret is one a reload could re-point, and `dioxus::serve` owns an accept loop with no
-shutdown handle — is recorded in `crates/config/src/lib.rs`.
+neither secret is one a reload could re-point, and the development serve loop (`dioxus::serve`)
+has no shutdown handle — is recorded in `crates/config/src/lib.rs`.
 
 ## Error reporting
 
