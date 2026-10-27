@@ -308,11 +308,16 @@ jobs:
             ${{ steps.readme.outputs.changes_detected == 'true' && '- `README.md`, from `.github/templates/README.md.hbs`' || '' }}
             ${{ steps.example-config.outputs.changes_detected == 'true' && '- `config.example.toml`, from `.github/templates/config.example.toml.hbs`' || '' }}
 
-  # The two artifacts the image publishes about its own configuration: `docs/config.contract.json`,
-  # which a chart's CI reads to check that what it renders is what this image loads, and the
-  # `LABEL` block that makes that document discoverable on the image without pulling a layer.
+  # The configuration contract the image publishes, `docs/config.contract.json`, which a chart's
+  # CI reads to check that what it renders is what this image loads.
   #
-  # Both were gate-only, and the gate had a case it could not clear on its own. `app.version` in
+  # The Dockerfile's `terrace-config:labels` region is deliberately not regenerated here, as in
+  # TankoVault and discord-alertmanager. Its three values (envelope version, in-image path, loader
+  # prefix) move only with a deliberate change to the prefix, and a bot editing the build recipe
+  # is a change nobody reviewed. `Config Contract` in `build.yaml` reports the drift, and
+  # `just regenerate` locally is the fix.
+  #
+  # The contract was gate-only, and the gate had a case it could not clear on its own. `app.version` in
   # the contract is `CARGO_PKG_VERSION`, so a release pull request — which moves the version and
   # nothing else — makes the committed contract stale by construction, and release-please has no
   # step that would regenerate it. Every release was therefore red on Config Contract until
@@ -353,26 +358,19 @@ jobs:
         with:
           tool: just
 
-      # The same two files, written by the same recipe a developer runs before pushing. Thirty
-      # lines of `sed` used to live here, and the region it cut was the one thing this workflow
-      # and the gate in `build.yaml` had to agree about — written by hand in one file and read by
-      # hand in another. Neither reads it by hand now: `just regenerate` writes the region and
-      # `rust/config-contract` compares it, and both cut at the markers `--format dockerfile`
-      # itself emits.
+      # The recipe a developer runs before pushing, minus `dockerfile-labels` (see the job comment).
       #
       # `--revision` and `--created` are deliberately not passed, exactly as in the gate: they
       # move between builds of the same source, so the committed copy carries neither and the
       # copy the image publishes carries both. What is committed here is the configuration half.
-      - name: Regenerate the configuration contract and the Dockerfile's labels
-        run: just regenerate
+      - name: Regenerate the configuration contract
+        run: just contract-json
 
       - name: Hand the regenerated files on
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: config-contract
-          path: |
-            docs/config.contract.json
-            Dockerfile
+          path: docs/config.contract.json
           if-no-files-found: error
           retention-days: 1
 
@@ -384,7 +382,7 @@ jobs:
       deployment: false
     runs-on: ubuntu-latest
     permissions:
-      contents: write # to push the regenerated contract and label block
+      contents: write # to push the regenerated contract
       pull-requests: write # to comment on PRs
     steps:
       - name: Harden Runner
@@ -415,15 +413,13 @@ jobs:
           name: config-contract
           path: ${{ runner.temp }}/config-contract
 
+      # A single uploaded file lands at the artifact's root, not under `docs/`.
       - name: Put the regenerated files in place
         run: |
           set -euo pipefail
-          cp "$RUNNER_TEMP/config-contract/docs/config.contract.json" docs/config.contract.json
-          cp "$RUNNER_TEMP/config-contract/Dockerfile" Dockerfile
+          cp "$RUNNER_TEMP/config-contract/config.contract.json" docs/config.contract.json
 
-      # Two commits rather than one: a change to the build recipe and a change to a published
-      # document are different things to review, and the version bump that motivates most of
-      # these touches only the contract. `file_pattern` keeps each commit to its own file.
+      # `file_pattern` keeps the commit to the contract, whatever else the checkout holds.
       - name: Commit the regenerated contract
         id: contract
         uses: TimSchoenle/actions/actions/common/commit-changes@8da2713994ba2b5f542e7e3334db287b1e22854a # tag=actions-common-commit-changes-v1.5.9
@@ -432,17 +428,8 @@ jobs:
           file_pattern: 'docs/config.contract.json'
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Commit the Dockerfile's contract labels
-        id: labels
-        uses: TimSchoenle/actions/actions/common/commit-changes@8da2713994ba2b5f542e7e3334db287b1e22854a # tag=actions-common-commit-changes-v1.5.9
-        with:
-          commit_message: 'build: sync the Dockerfile contract labels'
-          file_pattern: 'Dockerfile'
-          token: ${{ steps.generate_token.outputs.token }}
-
-      # One comment for both commits, on the same terms as the one in `render-generated-files`:
-      # literal lines gated on each commit step's output, and no comment at all when neither file
-      # moved.
+      # On the same terms as the comment in `render-generated-files`: a literal line gated on the
+      # commit step's output, and no comment at all when the contract did not move.
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: TimSchoenle/actions/actions/common/upsert-pr-comment@9414b1c665d3676efe832978d4e1728cf53119fd # tag=actions-common-upsert-pr-comment-v1.3.0
@@ -452,5 +439,4 @@ jobs:
           header: 'Regenerated from the configuration types in `crates/config`:'
           body_lines: |
             ${{ steps.contract.outputs.changes_detected == 'true' && '- `docs/config.contract.json`, from `config-schema --format contract`' || '' }}
-            ${{ steps.labels.outputs.changes_detected == 'true' && '- `Dockerfile`, from `config-schema --format dockerfile`' || '' }}
-          footer: 'The `Config Contract` job in **Build** gates these, and runs again on this push.'
+          footer: 'The `Config Contract` job in **Build** gates it, and runs again on this push.'

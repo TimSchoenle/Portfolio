@@ -38,8 +38,9 @@ jobs:
   # diffing makes a configuration change visible in the pull request that makes it: a removed key
   # shows up in the diff, next to the chart it is about to break.
   #
-  # The gate stays now that `update-files.yaml` regenerates both artifacts and commits them: the
-  # two answer different questions. That workflow makes a pull request converge on the contract
+  # The gate stays now that `update-files.yaml` regenerates the contract and commits it: the two
+  # answer different questions. The Dockerfile's label region is never written by a bot, so for
+  # that half this gate is the only check, and `just regenerate` locally is the fix. That workflow makes a pull request converge on the contract
   # its types produce; this one refuses to let one merge before it has. A copy that arrives a
   # commit late is a gate passing against the wrong document, and this job is what makes "late"
   # observable — which is also why it belongs in the repository's required checks and not only
