@@ -21,7 +21,8 @@ pub enum UpdateReposError {
     /// Only a listing can produce it: a named repository that does not exist fails as
     /// [`Self::Http`] instead.
     NoRepos,
-    /// The GitHub API request failed in transport or answered with a non-2xx status.
+    /// A GitHub API request failed in transport, answered with a non-2xx status, or returned a
+    /// body that could not be read or decoded.
     Http(Box<ureq::Error>),
     /// Reading or writing a file on disk failed.
     Io(std::io::Error),

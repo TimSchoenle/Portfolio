@@ -37,17 +37,39 @@ pub(crate) struct Photo<'a> {
 /// The typographic shorthands are left alone: `--`, `...` and `'` still become a dash, an
 /// ellipsis and a curly apostrophe, which is what the translations are written for.
 // `/` is escaped because `//` and `/*` open a comment, which would swallow the closing `]` and
-// fail the compile.
+// fail the compile. At the start of a line, `=`, `+`, `- ` and `1. ` open a heading or a list,
+// so those are escaped there too.
 pub(crate) fn esc(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
-    for c in s.chars() {
-        match c {
-            '\\' | '#' | '$' | '*' | '_' | '`' | '<' | '>' | '@' | '[' | ']' | '"' | '/' | '~' => {
-                out.push('\\');
-                out.push(c);
-            }
-            _ => out.push(c),
+    let mut line_start = true;
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        let next = chars.peek().copied();
+        let opens_block = line_start
+            && match c {
+                '=' | '+' => true,
+                '-' => next.is_none_or(char::is_whitespace),
+                _ => false,
+            };
+        if opens_block
+            || matches!(
+                c,
+                '\\' | '#' | '$' | '*' | '_' | '`' | '<' | '>' | '@' | '[' | ']' | '"' | '/' | '~'
+            )
+        {
+            out.push('\\');
         }
+        out.push(c);
+        if line_start && c.is_ascii_digit() {
+            // A run of digits then `.` at the start of a line is a numbered-list marker.
+            while let Some(d) = chars.next_if(char::is_ascii_digit) {
+                out.push(d);
+            }
+            if chars.next_if_eq(&'.').is_some() {
+                out.push_str("\\.");
+            }
+        }
+        line_start = c == '\n' || (line_start && (c == ' ' || c == '\t'));
     }
     out
 }
@@ -789,7 +811,12 @@ mod tests {
     #[test]
     fn escaped_text_parses_as_plain_text_inside_a_content_block() {
         let hostile = "C // Java /* x */ ] [ #let $a$ *b* _c_ `d` <e> @f \"g\" ~ \\";
-        let root = parse(&format!("#box[{}]", esc(hostile)));
+        let escaped = esc(hostile);
+        assert!(
+            escaped.contains(r"\/\/") && escaped.contains(r"\/\*"),
+            "{escaped}"
+        );
+        let root = parse(&format!("#box[{escaped}]"));
         let mut kinds = Vec::new();
         leaf_kinds(&root, &mut kinds);
 
@@ -810,6 +837,26 @@ mod tests {
             "{block:?}"
         );
         assert_eq!(kinds.last(), Some(&SyntaxKind::RightBracket));
+    }
+
+    #[test]
+    fn line_initial_block_markers_parse_as_plain_text() {
+        let lines = "intro\n= Heading\n+ item\n- item\n  12. item\n-- dash\nC++ = fine";
+        let escaped = esc(lines);
+        let root = parse(&format!("#box[{escaped}]"));
+        let (errors, _) = root.errors_and_warnings();
+        assert!(errors.is_empty(), "{errors:?}");
+        let mut kinds = Vec::new();
+        leaf_kinds(&root, &mut kinds);
+        for marker in [
+            SyntaxKind::HeadingMarker,
+            SyntaxKind::ListMarker,
+            SyntaxKind::EnumMarker,
+        ] {
+            assert!(!kinds.contains(&marker), "{marker:?} in {escaped}");
+        }
+        assert!(escaped.contains("\n-- dash"), "{escaped}");
+        assert!(escaped.contains("C++ = fine"), "{escaped}");
     }
 
     #[test]
