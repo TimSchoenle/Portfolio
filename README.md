@@ -313,6 +313,7 @@ layer that reports.
 | [Deployment](docs/DEPLOYMENT.md) | What the image contains, how it is built reproducibly, what it publishes about its own configuration, and where the chart that runs it lives. |
 | [Project data](docs/PROJECT_DATA.md) | How apps/web/repos.json is fetched, filtered, cached and embedded, and what the projects section reads out of it. |
 | [Security posture](docs/SECURITY_POSTURE.md) | The Content-Security-Policy the server builds per response, the headers around it, and what the process needs from the filesystem it runs on. |
+| [docs/config.contract.json](docs/config.contract.json) | — |
 
 ## Contributing
 

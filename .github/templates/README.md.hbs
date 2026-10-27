@@ -272,10 +272,7 @@ layer that reports.
 
 | Document | Purpose |
 | --- | --- |
-{{!-- Every Markdown page under docs/ has a summary. The one file without one is
-     docs/config.contract.json, a contract a chart's CI reads, with no title or summary to list. --}}
-{{#each docs}}{{#if summary}}| [{{ title }}]({{ path }}) | {{ mdCell summary }} |
-{{/if}}
+{{#each docs}}| [{{ title }}]({{ path }}) | {{ default (mdCell summary) "—" }} |
 {{/each}}
 
 ## Contributing
