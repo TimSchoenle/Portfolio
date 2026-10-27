@@ -126,8 +126,9 @@ impl SitePolicy {
     /// is minted per response by [`apply_to_document`](Self::apply_to_document). For a policy
     /// that does not hash, nothing is scanned and the result is empty.
     ///
-    /// A scanner limit, which means a script the browser will refuse, is logged at `error` the
-    /// first time it occurs.
+    /// A scanner limit can leave a script without a hash, or hash text that differs from what the
+    /// browser parses, so the browser may refuse it. Each limit is logged at `error` the first time
+    /// it occurs.
     pub fn scan(&self, html: &str) -> DocumentScan {
         match &self.document {
             DocumentPolicy::Constant(_) => DocumentScan(csp_shell::ScanResult::default()),
@@ -174,8 +175,9 @@ impl SitePolicy {
 
     /// Logs each scanner limit at `error` the first time a response hits it.
     ///
-    /// A warning means the hash this server computed is one the browser will not, so a script is
-    /// about to be refused, and the only other evidence is a blank page and a console message.
+    /// A warning means a script may have no hash or a hash that does not match what the browser
+    /// parses, so the browser may refuse it. The only other evidence is a blank page and a console
+    /// message.
     // A poisoned lock is ignored: nothing here can panic while it is held, and a request must not
     // fail over the bookkeeping for a log line.
     fn report(&self, warnings: &[ScanWarning]) {
