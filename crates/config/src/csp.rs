@@ -35,8 +35,9 @@ pub struct CspConfig {
     /// cases are a development server that injects a live-reload script downstream of this
     /// process, and a renderer change that emits script this server never sees.
     ///
-    /// A policy carrying any hash or nonce makes `'unsafe-inline'` inert, so one setting covers
-    /// both choices.
+    /// A policy carrying any hash or nonce makes `'unsafe-inline'` inert, so turning this off also
+    /// requires `csp.cloudflare.script_nonce = false`. [`validate`](Self::validate) refuses the
+    /// boot otherwise.
     #[serde(default = "CspConfig::default_hash_inline_scripts")]
     pub hash_inline_scripts: bool,
 
@@ -99,10 +100,11 @@ pub struct CloudflareConfig {
     /// nonce from the `Content-Security-Policy` response header and copies it onto what it
     /// injects.
     ///
-    /// The server sends `Cache-Control: no-cache` on every document, so a nonce is never shared
-    /// between readers. **No Cloudflare Cache Rule may cache the documents**: a "Cache
-    /// Everything" rule overrides that header at the edge, and nothing inside this process can
-    /// see it.
+    /// The server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a
+    /// stored copy with this origin before each reuse. A document carries no validator, so that
+    /// revalidation is a full render with a fresh nonce. **No Cloudflare Cache Rule may cache the
+    /// documents**: a "Cache Everything" rule overrides that header at the edge, and nothing
+    /// inside this process can see it.
     #[serde(default = "CloudflareConfig::default_script_nonce")]
     pub script_nonce: bool,
 

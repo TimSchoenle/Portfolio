@@ -50,8 +50,9 @@
 # cases are a development server that injects a live-reload script downstream of this
 # process, and a renderer change that emits script this server never sees.
 #
-# A policy carrying any hash or nonce makes `'unsafe-inline'` inert, so one setting covers
-# both choices.
+# A policy carrying any hash or nonce makes `'unsafe-inline'` inert, so turning this off also
+# requires `csp.cloudflare.script_nonce = false`. [`validate`](Self::validate) refuses the
+# boot otherwise.
 # Type: bool
 # Also from: PORTFOLIO_CSP__HASH_INLINE_SCRIPTS,
 #   PORTFOLIO_CSP__HASH_INLINE_SCRIPTS_FILE=/path/to/file, csp__hash_inline_scripts in the secrets
@@ -69,10 +70,11 @@
 # nonce from the `Content-Security-Policy` response header and copies it onto what it
 # injects.
 #
-# The server sends `Cache-Control: no-cache` on every document, so a nonce is never shared
-# between readers. **No Cloudflare Cache Rule may cache the documents**: a "Cache
-# Everything" rule overrides that header at the edge, and nothing inside this process can
-# see it.
+# The server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a
+# stored copy with this origin before each reuse. A document carries no validator, so that
+# revalidation is a full render with a fresh nonce. **No Cloudflare Cache Rule may cache the
+# documents**: a "Cache Everything" rule overrides that header at the edge, and nothing
+# inside this process can see it.
 # Type: bool
 # Also from: PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE,
 #   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE_FILE=/path/to/file, csp__cloudflare__script_nonce in
@@ -105,8 +107,10 @@
 [hsts]
 # How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.
 #
-# Zero is the documented way to withdraw HSTS: browsers drop the host from their list on the
-# next response. It is refused together with `preload`, which it would contradict.
+# Zero is the documented way to withdraw HSTS: a browser drops a host it learned from this
+# header on the next response. A host already on the preload list stays there until its
+# removal reaches browsers in a release. Zero is refused together with `preload`, which it
+# would contradict.
 # Type: u64
 # Also from: PORTFOLIO_HSTS__MAX_AGE_SECS, PORTFOLIO_HSTS__MAX_AGE_SECS_FILE=/path/to/file,
 #   hsts__max_age_secs in the secrets directory
@@ -143,9 +147,10 @@
 
 # The revalidation interval in seconds. Zero means a permanent cache.
 #
-# Every page renders from compile-time data, so only a new build changes the output, and a
-# new build starts from an empty cache. A positive value is useful only when a persistent
-# cache volume is shared across deploys.
+# A page changes only with a new build or a new `legal.*` configuration, and the server keeps
+# whatever the directory holds at boot. Permanent suits the image's default, a directory that
+# starts empty with every container. A cache volume that outlives a deploy needs a positive
+# value, or it keeps serving pages rendered by the earlier build or configuration.
 # Type: u64
 # Also from: PORTFOLIO_ISR__TTL_SECS, PORTFOLIO_ISR__TTL_SECS_FILE=/path/to/file, isr__ttl_secs in
 #   the secrets directory
@@ -278,8 +283,9 @@
 # Whether the server records one Sentry transaction per request, named by the matched route.
 #
 # Naming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.
-# Whether a started transaction is kept is `sentry.traces_sample_rate`'s decision; this
-# setting removes the middleware entirely.
+# Whether a started transaction is kept is `sentry.traces_sample_rate`'s decision. Off starts
+# no transaction, but the HTTP middleware stays installed and still attaches the request to
+# events.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__HTTP_TRANSACTIONS,
 #   PORTFOLIO_SENTRY__HTTP_TRANSACTIONS_FILE=/path/to/file, sentry__http_transactions in the

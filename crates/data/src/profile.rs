@@ -66,8 +66,8 @@ impl Skill {
 pub struct ProfileSkill {
     /// The confidence from `0.0` to `1.0`, unrounded.
     ///
-    /// Every skill is published, so a consumer can apply its own floor in place of
-    /// [`crate::MIN_CONFIDENCE`].
+    /// Every skill in the three published quadrants is published whatever its confidence, so a
+    /// consumer can apply its own floor in place of [`crate::MIN_CONFIDENCE`].
     pub confidence: f32,
     /// The tool's name, untranslated.
     pub name: &'static str,

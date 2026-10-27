@@ -33,9 +33,10 @@ pub struct Experience {
     pub end: Option<YearMonth>,
     /// The number of translated bullets, keyed `…bullets.b1` through `…bullets.b<n>`.
     pub bullet_count: u8,
-    /// The most bullets the generated resume renders, or `None` for all of them.
+    /// The most bullets the generated resume renders for this role, or `None` for no cap.
     ///
-    /// Only the PDF is trimmed. The website always shows [`bullet_count`](Self::bullet_count)
+    /// The single-page fitting can still trim an older role below the cap. Only the PDF is
+    /// trimmed. The website always shows [`bullet_count`](Self::bullet_count)
     /// bullets.
     pub resume_bullet_cap: Option<u8>,
     /// The chip run under the entry, in the order given.

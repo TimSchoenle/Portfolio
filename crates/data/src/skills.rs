@@ -119,8 +119,9 @@ const fn r(name: &'static str, quadrant: Quadrant, confidence: f32) -> Skill {
 
 /// The full skill inventory.
 ///
-/// Matrix skills, written `s(…)`, reach the skill section, the resume and the radar. Radar-only
-/// skills, written `r(…)`, reach the radar alone.
+/// Matrix skills, written `s(…)`, reach the skill section, the resume and the radar when their
+/// confidence is at least [`MIN_CONFIDENCE`]. Radar-only skills, written `r(…)`, reach the radar
+/// alone, whatever their confidence.
 pub const SKILLS: &[Skill] = &{
     use Quadrant::{Build, Frameworks, Infra, Languages};
     [
