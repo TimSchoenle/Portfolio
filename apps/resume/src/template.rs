@@ -349,13 +349,25 @@ fn experience_entry(
     index: usize,
     e: &portfolio_data::Experience,
 ) -> String {
-    let key = |field: &str| format!("experience.entries.{}.{field}", e.id);
-    let mut s = String::new();
+    let mut s = entry_title_line(t, l, e);
+    s.push_str(&entry_org_line(t, l, e));
+    let bullets = detail.bullet_count(index, e);
+    if bullets > 0 {
+        s.push_str(&entry_bullets(t, l, e, bullets));
+    }
+    s.push_str(&entry_stack(t, l, e));
+    s
+}
 
-    // Line 1: role (left) | date range (right). The date follows the title in
-    // source order so extraction reads role-then-date.
-    let _ = write!(
-        s,
+/// The translation key of `field` on entry `e`, such as `experience.entries.<id>.role`.
+fn entry_key(e: &portfolio_data::Experience, field: &str) -> String {
+    format!("experience.entries.{}.{field}", e.id)
+}
+
+/// Line 1: the role on the left and the date range on the right.
+fn entry_title_line(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> String {
+    // The date follows the title in source order so extraction reads role-then-date.
+    format!(
         "#grid(columns: (1fr, auto), column-gutter: {gutter}, \
          align: (left + bottom, right + bottom),\n[{role}],\n[{dates}],\n)",
         gutter = l.pt(style::ENTRY_DATE_GAP),
@@ -364,7 +376,7 @@ fn experience_entry(
             style::FS_TITLE,
             style::W_TITLE,
             style::INK,
-            &esc(&t.get(&key("role"))),
+            &esc(&t.get(&entry_key(e, "role"))),
         ),
         dates = run(
             l,
@@ -373,11 +385,12 @@ fn experience_entry(
             style::INK_MUTED,
             &esc(&t.period(e.start, e.end)),
         ),
-    );
+    )
+}
 
-    // Line 2: company (kept whole via `#box`) · location (muted).
-    let _ = write!(
-        s,
+/// Line 2: the company, kept whole with `#box`, then ` · ` and the location in muted ink.
+fn entry_org_line(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> String {
+    format!(
         "\n\n{gap}\n\n#box[{org}]{loc}",
         gap = v(l, style::TITLE_TO_ORG),
         org = run(
@@ -385,7 +398,7 @@ fn experience_entry(
             style::FS_ORG,
             style::W_REGULAR,
             style::INK_SOFT,
-            &esc(&t.get(&key("org"))),
+            &esc(&t.get(&entry_key(e, "org"))),
         ),
         loc = run(
             l,
@@ -394,42 +407,47 @@ fn experience_entry(
             style::INK_MUTED,
             &format!(" · {}", esc(e.location)),
         ),
-    );
+    )
+}
 
-    // Bullets (native list, so the marker precedes the text).
-    let bullets = detail.bullet_count(index, e);
-    if bullets > 0 {
-        let (top_edge, bottom_edge) = Layout::edges(l.sp().lh_bullet);
-        let items = (1..=bullets).fold(String::new(), |mut items, b| {
-            let bullet = esc(&t.get(&key(&format!("bullets.b{b}"))));
-            let _ = writeln!(items, "[{}],", keep_compounds(&bullet));
-            items
-        });
-        let _ = write!(
-            s,
-            "\n\n{gap}\n\n#[\n\
-             #set text(size: {fs}, fill: rgb(\"{ink}\"), \
-             top-edge: {top_edge}, bottom-edge: {bottom_edge})\n\
-             #set list(marker: text(fill: rgb(\"{marker}\"))[–], spacing: {bgap}, \
-             body-indent: {indent}, indent: 0pt)\n\
-             #list(\n{items})\n]",
-            gap = v(l, l.sp().bullets_top),
-            fs = l.pt(style::FS_BULLET),
-            ink = style::INK_BODY,
-            marker = style::ACCENT_SOFT,
-            bgap = l.pt(l.sp().bullet_gap),
-            // The design sets the marker/text gutter in pixels; as a fraction of
-            // the bullet size it survives the fit ladder unchanged.
-            indent = format_args!("{:.4}em", style::BULLET_INDENT / style::FS_BULLET),
-            items = items,
-        );
-    }
+/// The first `count` bullets of `e` as a native Typst list, so the marker precedes the text.
+fn entry_bullets(
+    t: &Translations,
+    l: &Layout,
+    e: &portfolio_data::Experience,
+    count: u8,
+) -> String {
+    let (top_edge, bottom_edge) = Layout::edges(l.sp().lh_bullet);
+    let items = (1..=count).fold(String::new(), |mut items, b| {
+        let bullet = esc(&t.get(&entry_key(e, &format!("bullets.b{b}"))));
+        let _ = writeln!(items, "[{}],", keep_compounds(&bullet));
+        items
+    });
+    format!(
+        "\n\n{gap}\n\n#[\n\
+         #set text(size: {fs}, fill: rgb(\"{ink}\"), \
+         top-edge: {top_edge}, bottom-edge: {bottom_edge})\n\
+         #set list(marker: text(fill: rgb(\"{marker}\"))[–], spacing: {bgap}, \
+         body-indent: {indent}, indent: 0pt)\n\
+         #list(\n{items})\n]",
+        gap = v(l, l.sp().bullets_top),
+        fs = l.pt(style::FS_BULLET),
+        ink = style::INK_BODY,
+        marker = style::ACCENT_SOFT,
+        bgap = l.pt(l.sp().bullet_gap),
+        // The design sets the marker/text gutter in pixels; as a fraction of
+        // the bullet size it survives the fit ladder unchanged.
+        indent = format_args!("{:.4}em", style::BULLET_INDENT / style::FS_BULLET),
+        items = items,
+    )
+}
 
+/// The bold `Stack:` label and the entry's technologies joined by ` · `.
+fn entry_stack(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> String {
     // Explicit technology keywords (`·` run) so resume parsers pick them up.
     // The bold `Stack:` label stays in ink; the tech run is soft ink, not
     // accent, so the accent color reads as structure only.
-    let _ = write!(
-        s,
+    format!(
         "\n\n{gap}\n\n{label}{tech}",
         gap = v(l, l.sp().stack_top),
         label = run(
@@ -446,9 +464,7 @@ fn experience_entry(
             style::INK_SOFT,
             &esc(&e.tech.join(" · ")),
         ),
-    );
-
-    s
+    )
 }
 
 /// Tinted reference sidebar: Contact, Skills, Education, Languages — with the
