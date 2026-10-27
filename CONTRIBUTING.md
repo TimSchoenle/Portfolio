@@ -52,7 +52,7 @@ code. The rest of this document describes the development workflow the maintaine
 Before opening a pull request, run the same checks CI runs:
 
 ```bash
-just verify   # fmt, lint, docs, test, deny
+just verify   # fmt, lint, docs, test, deny, prose
 ```
 
 `just lint` runs Clippy three times: over the workspace with every feature, then over the web app

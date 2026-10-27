@@ -25,8 +25,16 @@ jobs:
   # the key out of the runner's memory (the runner user has passwordless `sudo`) or leave a
   # process behind to collect the token once it was minted — a compromised crate arriving in a
   # Renovate pull request would be enough.
+  #
+  # A pull request from a fork gets no secrets, and its branch does not exist in this repository,
+  # so every checkout of `github.head_ref` below would fail. The jobs form one chain, and this
+  # first one is skipped for a fork, which skips the rest. The three that hold the App token carry
+  # the same condition so that reordering the chain cannot run them for a fork. The gates in
+  # `build.yaml` still run, and report a stale README, example configuration or contract on a
+  # fork.
   generate-lock-file:
     name: Sync Cargo.lock with Cargo.toml
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read # to fetch code
@@ -59,6 +67,7 @@ jobs:
   update-lock-file:
     name: Ensure Cargo Lock File is Up-to-Date
     needs: generate-lock-file
+    if: github.event.pull_request.head.repo.full_name == github.repository
     environment:
       name: ci
       deployment: false
@@ -182,7 +191,7 @@ jobs:
       # fail that gate for a reason absent from its diff.
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@8da2713994ba2b5f542e7e3334db287b1e22854a # tag=actions-common-readme-variables-v1.2.9
+        uses: TimSchoenle/actions/actions/common/readme-variables@7fad0f1921ffec7dc6eda32e8fb07c9bd4688624 # tag=actions-common-readme-variables-v2.0.1
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
@@ -213,6 +222,7 @@ jobs:
   render-generated-files:
     name: Ensure the Generated Files are Rendered from their Templates
     needs: generate-rendered-files
+    if: github.event.pull_request.head.repo.full_name == github.repository
     environment:
       name: ci
       deployment: false
@@ -377,6 +387,7 @@ jobs:
   sync-config-contract:
     name: Ensure the Config Contract and its Labels Match the Types
     needs: generate-config-contract
+    if: github.event.pull_request.head.repo.full_name == github.repository
     environment:
       name: ci
       deployment: false

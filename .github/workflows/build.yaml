@@ -122,18 +122,38 @@ jobs:
 
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@8da2713994ba2b5f542e7e3334db287b1e22854a # tag=actions-common-readme-variables-v1.2.9
+        uses: TimSchoenle/actions/actions/common/readme-variables@7fad0f1921ffec7dc6eda32e8fb07c9bd4688624 # tag=actions-common-readme-variables-v2.0.1
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
       - name: Verify README.md is current
-        uses: TimSchoenle/actions/actions/common/render-template@8da2713994ba2b5f542e7e3334db287b1e22854a # tag=actions-common-render-template-v1.2.9
+        uses: TimSchoenle/actions/actions/common/render-template@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-render-template-v3.0.0
         with:
           template: .github/templates/README.md.hbs
           output: README.md
           variables: ${{ steps.readme-variables.outputs.variables }}
           check: 'true'
+
+      # Update Files renders the example configuration beside the README, from the configuration
+      # payload alone. That job is skipped for a fork's pull request, so this is the only check
+      # that reports a stale example there. It runs after a failed README check, so one push
+      # reports both.
+      - name: Verify config.example.toml is current
+        if: ${{ !cancelled() && steps.config-schema.outcome == 'success' }}
+        uses: TimSchoenle/actions/actions/common/render-template@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-render-template-v3.0.0
+        with:
+          template: .github/templates/config.example.toml.hbs
+          output: config.example.toml
+          variables: ${{ steps.config-schema.outputs.variables }}
+          check: 'true'
+
+      # The budgets PROSE.md and the doc-comment GUIDE.md define as mechanical: banned doc-comment
+      # openers across the workspace, and the em-dash and bold-frame counts of the README. It runs
+      # after a failed render too, so one push reports both.
+      - name: Check the prose budgets
+        if: ${{ !cancelled() }}
+        run: bash scripts/prose-check.sh README.md
 
   # The documentation gate. `missing_docs` and the clippy doc lints are compiled by `check` and
   # `clippy` already; the rustdoc lints in `[workspace.lints.rustdoc]` are not, because rustdoc is
