@@ -81,8 +81,9 @@ enum DocumentPolicy {
 impl SitePolicy {
     /// Builds the subresource and document policies from the configuration.
     ///
-    /// Validate `config` with `CspConfig::validate` first: a nonce beside `'unsafe-inline'`
-    /// makes the browser ignore the latter, so the site's own inline scripts would be refused.
+    /// Validate `config` with `CspConfig::validate` first, which refuses `script_nonce` without
+    /// `hash_inline_scripts`. Unvalidated, that combination takes the constant `'unsafe-inline'`
+    /// policy and the nonce setting is silently dropped.
     #[must_use]
     pub fn new(config: &CspConfig) -> Self {
         let base = base_policy(config);
