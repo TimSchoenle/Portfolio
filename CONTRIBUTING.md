@@ -3,7 +3,7 @@
 This repository is the source of a personal website and is published under a proprietary license
 (see [LICENSE](LICENSE)). Bug reports and security reports are welcome. Pull requests from outside
 contributors are not accepted, because the license grants no right to modify or redistribute the
-code. The rest of this document describes the development workflow the maintainer follows.
+code.
 
 ## Development setup
 
@@ -11,8 +11,10 @@ code. The rest of this document describes the development workflow the maintaine
 
 - Rust, at the version in `rust-version` of the root `Cargo.toml`, with the WebAssembly target:
   `rustup target add wasm32-unknown-unknown`
-- The [Dioxus CLI](https://dioxuslabs.com) (`dx`), at the version the image pins in
-  `DIOXUS_CLI_VERSION` in the `Dockerfile`: `cargo install --locked dioxus-cli --version 0.7.10`
+- The [Dioxus CLI](https://dioxuslabs.com) (`dx`), at the version `DIOXUS_CLI_VERSION` pins in the
+  `Dockerfile`, which `apps/web/tests/toolchain_pins.rs` holds equal to `dioxus` in `Cargo.lock`.
+  From a checkout:
+  `cargo install --locked dioxus-cli --version "$(sed -n 's/^ARG DIOXUS_CLI_VERSION=//p' Dockerfile)"`
 - [cargo-about](https://github.com/EmbarkStudios/cargo-about), only to render the third-party
   license page: `cargo install --locked cargo-about`
 - [just](https://github.com/casey/just), which runs every check CI runs

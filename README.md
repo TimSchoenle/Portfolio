@@ -136,12 +136,15 @@ each release bumps it to the new image digest.
 ### From source
 
 ```bash
-rustup target add wasm32-unknown-unknown
-cargo install --locked dioxus-cli --version 0.7.10  # match DIOXUS_CLI_VERSION in the Dockerfile
-cargo install --locked cargo-about
 git clone https://github.com/TimSchoenle/Portfolio.git
 cd Portfolio
+rustup target add wasm32-unknown-unknown
+cargo install --locked dioxus-cli --version "$(sed -n 's/^ARG DIOXUS_CLI_VERSION=//p' Dockerfile)"
+cargo install --locked cargo-about
 ```
+
+The Dioxus CLI has to match the `dioxus` crate in `Cargo.lock`, so the install reads the version
+the image pins.
 
 Node.js is needed for the Tailwind step, and `just` runs every recipe CI runs.
 
@@ -248,7 +251,7 @@ environment, and child processes inherit it.
 
 `github.token` is the builder's, and the Docker build already mounts it as a
 BuildKit secret and hands `portfolio-update-repos` the path. `sentry.dsn` is the server's, read
-only when error reporting is switched on — supply it as `PORTFOLIO_SENTRY__DSN_FILE=/path`, or as
+only when error reporting is switched on. Supply it as `PORTFOLIO_SENTRY__DSN_FILE=/path`, or as
 `sentry__dsn` in a mounted `Secret` volume.
 
 `IP`, `PORT` and `RUST_LOG` sit outside this namespace deliberately. They are the Dioxus toolchain's
@@ -294,8 +297,8 @@ does not also switch performance data on. `sentry.send_default_pii` is `false` a
 there: on, every event carries the client IP and the full request header set, `Cookie` included.
 
 While Sentry is off, `RUST_LOG` and the log format are the Dioxus toolchain's as before; while it is
-on, the server installs the subscriber itself — same variable, same default verbosity, plus the
-layer that reports.
+on, the server installs the subscriber itself, with the same variable, the same default verbosity
+and the layer that reports.
 
 ## Compatibility
 

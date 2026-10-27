@@ -5,8 +5,8 @@ The Content-Security-Policy the server builds per response, the headers around i
 ## Runtime
 
 The server reads its bundle directory and writes to stdout. Nothing else, unless error reporting is
-switched on — the one thing that gives the process an outbound connection, and it is off by
-default; see [Error reporting](#error-reporting). It runs with a read-only root filesystem. The
+switched on. That is the one thing that gives the process an outbound connection, and it is off by
+default ([Error reporting](#error-reporting)). It runs with a read-only root filesystem. The
 only path it writes to is the ISR cache described in [DEPLOYMENT.md](DEPLOYMENT.md), and it
 renders every request fresh when that path is not writable.
 
@@ -85,8 +85,8 @@ The ISR cache is unaffected. It stores the body, and the nonce lives only in the
 minted after the cached render is read.
 
 Turnstile and Web Analytics are off. Switching either on admits its origins in the directives that
-product actually needs them in — Turnstile in `script-src` **and** `frame-src`, since admitting only
-the first renders an empty box.
+product actually needs them in. Turnstile goes in `script-src` **and** `frame-src`, because admitting
+only the first renders an empty box.
 
 ### If a page renders blank
 
@@ -99,7 +99,7 @@ carries a nonce, and supplying one without the other fails the boot with a messa
 
 `github.token` belongs to the build-time repository lister, which the server never loads.
 `sentry.dsn` belongs to the server and is read only when error reporting is switched on, which no
-default does. Both are a `secrecy::SecretString` in the process — no `Debug`, no `Display` — and
+default does. Both are a `secrecy::SecretString` in the process, with no `Debug` and no `Display`, and
 each has exactly one place it becomes a `&str`: the `Authorization` header for the token, and the
 call to `sentry::init` for the DSN.
 
@@ -108,21 +108,21 @@ environment, and child processes inherit it. The Docker build already does this 
 mounting the BuildKit secret and handing `portfolio-update-repos` the path; a deployment does it for the DSN
 with `PORTFOLIO_SENTRY__DSN_FILE`, or with `sentry__dsn` in a mounted `Secret` volume.
 
-Only the loader half of `terrace-config` is used; its hot-reload supervisor is not. The reasoning —
-neither secret is one a reload could re-point, and the development serve loop (`dioxus::serve`)
-has no shutdown handle — is recorded in `crates/config/src/lib.rs`.
+Only the loader half of `terrace-config` is used, not its hot-reload supervisor. Neither secret is
+one a reload could re-point, and the development serve loop (`dioxus::serve`) has no shutdown
+handle. `crates/config/src/lib.rs` records the reasoning.
 
 ## Error reporting
 
 The server sends nothing anywhere until `sentry.enabled` is set with a DSN. Off, no client is
 constructed, no panic hook is installed, no `tracing` layer is added and the two `sentry-tower`
-middlewares are absent from the stack — the default deployment has no egress at all beyond the
+middlewares are absent from the stack. The default deployment has no egress at all beyond the
 responses it serves.
 
 Switched on, the egress is one destination: the DSN's host, over TLS, from the SDK's own
 background thread. What travels is `tracing` records at or above `sentry.capture_level` (errors
-only, by default), panics, and — at `sentry.traces_sample_rate`, `0.0` by default — request
-transactions named by the matched route rather than by the URI.
+only, by default), panics, and request transactions named by the matched route rather than by the
+URI. Transactions are sampled at `sentry.traces_sample_rate`, `0.0` by default.
 
 `sentry.send_default_pii` is off and is the key to leave alone. On, it attaches the client IP, the
 full request header set including `Cookie`, and the resolved user to every event, and it also
@@ -132,5 +132,5 @@ recipient, so switching error reporting on requires a matching section in the pu
 notice; this key on would additionally make that section describe IP addresses and cookies.
 
 There is no browser SDK. Nothing is loaded by the page, the Content-Security-Policy admits no new
-origin, and a client-side error is still invisible to the operator — which is the trade made
-deliberately, since the alternative is a third-party script on every page load.
+origin, and a client-side error is still invisible to the operator. That trade is deliberate: the alternative
+is a third-party script on every page load.
