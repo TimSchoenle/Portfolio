@@ -163,7 +163,7 @@ pub fn external() -> External {
                 .owner("tracing")
                 .ty("String")
                 .default("info")
-                .docs("Verbosity, as `tracing` directives — `info`, `web=debug,info`."),
+                .docs("Verbosity, as `tracing` directives — `info`, `portfolio_web=debug,info`."),
         )
         // What a pod carries that no image asked for, which `Unknown::Reject` names: the API
         // server's five, and the container runtime's one. An image on `scratch` contributes none
