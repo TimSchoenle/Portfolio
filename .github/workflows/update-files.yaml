@@ -30,7 +30,8 @@ jobs:
   # so every checkout of `github.head_ref` below would fail. The jobs form one chain, and this
   # first one is skipped for a fork, which skips the rest. The three that hold the App token carry
   # the same condition so that reordering the chain cannot run them for a fork. The gates in
-  # `build.yaml` still run, and report a stale README or contract on a fork.
+  # `build.yaml` still run, and report a stale README, example configuration or contract on a
+  # fork.
   generate-lock-file:
     name: Sync Cargo.lock with Cargo.toml
     if: github.event.pull_request.head.repo.full_name == github.repository

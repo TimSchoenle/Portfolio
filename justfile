@@ -161,10 +161,13 @@ docs:
 test:
     cargo test --workspace --all-features
 
+# `$@` rather than `{{ files }}`: a path is handed on as one argument even when it holds a space.
+
 [doc('The mechanical prose and doc-comment checks; see scripts/prose-check.sh')]
 [group('check')]
+[positional-arguments]
 prose *files:
-    bash scripts/prose-check.sh {{ files }}
+    bash scripts/prose-check.sh "$@"
 
 # Both need a built image; `docker build -t portfolio:local .` makes one.
 
