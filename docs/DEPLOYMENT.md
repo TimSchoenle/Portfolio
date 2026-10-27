@@ -110,18 +110,25 @@ brings the API calls down to one per ten hours per builder. An empty cache is a 
 normal state, hence `|| true` on the restore. The mount is `sharing=locked` because a release builds
 both platforms at once and `tools` differs per `$TARGETARCH`.
 
+BuildKit reuses the `generate` layers while their inputs are unchanged, and a secret is not one of
+them. A rebuild of the same commit therefore keeps the earlier `repos.json` without running the
+ten-hour check, and a changed photo alone does not reach the PDF. `docker build --no-cache-filter
+generate` reruns the stage.
+
 The license inventory is generated, not committed, because the attribution a build publishes has to
 describe the graph that build linked. `--locked` asserts the committed `Cargo.lock` resolves
 unchanged, so the inventory describes what `dx bundle` is about to compile.
 
 The resume generator's optional `resume_photo` secret is the German sheet's application photo. A
-portrait is personal data, so it is never a build-context file, and the secret mount exists only
-for that `RUN`. The German PDF the generator renders from it is embedded in the server binary and
-served under `/resume/`, so an image built with the photo publishes it. The generator reads the format from the file header, so the
-extensionless mount works.
+portrait is personal data, so the file stays outside the build context, as in the Dockerfile's
+example, and the secret mount exists only for that `RUN`. A copy inside the context would land in
+the `COPY . .` layers, which the build cache exports. The German PDF the generator renders from it is embedded in the server binary and
+served under `/resume/`, so an image built with the photo publishes it. The generator reads the
+format from the file header, so the extensionless mount works.
 
-The contract has its own stage on `deps`, because it reads nothing `generate` produces, and
-`serde_json`, `syn` and the derive that `config-schema` links never reach the runtime image.
+The contract has its own stage on `deps`, because it reads nothing `generate` produces, and the
+derive and contract emitter that `config-schema` adds never reach the runtime image. `serde_json`
+does, because the server uses it on its own.
 
 ### The bundle
 

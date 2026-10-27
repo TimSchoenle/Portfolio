@@ -30,10 +30,10 @@
 //! The file is a **build input, never a committed asset**: a portrait is
 //! personal data that belongs neither in the repository nor in an image layer.
 //! The image build takes it as a `BuildKit` secret that exists only for the step
-//! that reads it:
+//! that reads it, from a file kept outside the build context:
 //!
 //! ```text
-//! docker build --secret id=resume_photo,src=./photo.jpg .
+//! docker build --secret id=resume_photo,src="$HOME/photo.jpg" .
 //! ```
 //!
 //! JPEG, PNG and WebP are accepted, and the format is read from the file's own

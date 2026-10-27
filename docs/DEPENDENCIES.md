@@ -67,7 +67,7 @@ The rest are left out:
   `config-schema` feature, so the generator's argument parser never reaches a shipped binary.
   `schema` alone still reaches the server through `terrace-legal`, whose `LegalConfig` derives
   `Describe` unconditionally, and Cargo unifies the feature.
-- `testing` is a dev-dependency of `crates/config`, the only crate that loads anything.
+- `testing` is a dev-dependency of `crates/config`, whose tests are the only ones that use it.
 
 ## terrace-legal
 
@@ -89,8 +89,9 @@ resolves to the same `terrace-config`, so the workspace links one loader.
 
 Only the base component set, `dio`, is enabled. `dio-ssr` wires i18nrs's own cookie negotiation
 through a `#[server]` round-trip, and upstream discards the `get_cookie` result. The site negotiates
-the locale itself, synchronously from the request headers on the server and from `document.cookie`
-on the client, so no server endpoint is needed.
+the locale itself, so no server endpoint is needed. The server reads `?lang=`, the `lang` cookie
+and `Accept-Language` from the request, and the client starts from the `<html lang>` the server
+rendered and falls back to `document.cookie`.
 
 ## Sentry
 
@@ -204,10 +205,11 @@ faster at runtime, because Typst's layout pass is compute-bound and `z` trades s
 ## Member manifests
 
 `portfolio-config`'s `config-schema` feature is off by default and has to stay off.
-`terrace-config/schema-cli` links `serde_json` and compiles a proc macro, and a running binary
-needs neither. Only `cargo run -p portfolio-config --features config-schema --example
-config-schema`, the `--all-features` CI gates and the Dockerfile's `contract-builder` stage turn it
-on, and that stage's output is a JSON file, not a binary in the runtime image. It takes `schema-cli` and not `schema`, because
+It compiles a proc macro and the contract emitter, and a running binary needs neither. Only `cargo
+run -p portfolio-config --features config-schema --example config-schema`, the `--all-features` CI
+gates and two Dockerfile stages turn it on: `deps` cooks its dependencies and `contract-builder`
+runs the example. Neither stage's output is a binary in the runtime image, and `contract-builder`
+hands over only a JSON file. It takes `schema-cli` and not `schema`, because
 `schema-cli` is the `--format` vocabulary, argument parsing and dispatch every consumer of `schema`
 was writing by hand, and it pulls no new dependency. The `#[config(...)]` helper attributes are
 gated with it, because they belong to the derive: a build without the derive fails with

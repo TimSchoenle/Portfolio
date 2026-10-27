@@ -112,7 +112,7 @@ RUN mkdir -p apps/web/generated \
 # optional `resume_photo` secret is the German sheet's application photo, kept out of the
 # repository and the build context. The German PDF carries it into the image all the same:
 #
-#     docker build --secret id=resume_photo,src=./photo.jpg .
+#     docker build --secret id=resume_photo,src="$HOME/photo.jpg" .
 RUN --mount=type=secret,id=resume_photo \
     cargo run --profile tools --locked -p portfolio-resume -- /app/resume-out \
       $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
@@ -124,7 +124,7 @@ RUN --mount=type=secret,id=resume_photo \
 
 # ── the configuration contract ────────────────────────────────────────────────
 # Its own stage on `deps`, because it reads nothing `generate` produces. Nothing the
-# `config-schema` feature links reaches the runtime image.
+# `config-schema` feature adds reaches the runtime image.
 FROM deps AS contract-builder
 COPY . .
 RUN mkdir -p /out \
