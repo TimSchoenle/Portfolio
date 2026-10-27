@@ -25,21 +25,38 @@ const LICENSES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/licenses.jso
 /// the empty default) and a document that failed to parse — collapse into one
 /// `None` on purpose: the page says the same thing either way, and only the
 /// second is worth a console warning.
-static LICENSES: LazyLock<Option<LicensesFile>> =
-    LazyLock::new(
-        || match serde_json::from_str::<LicensesFile>(LICENSES_JSON) {
-            Ok(file) if !file.is_empty() => Some(file),
-            Ok(_) => None,
-            Err(err) => {
-                crate::console::warn(format_args!("licenses.json parse failed: {err}"));
-                None
-            }
-        },
-    );
+static LICENSES: LazyLock<Option<LicensesFile>> = LazyLock::new(|| parse(LICENSES_JSON));
+
+/// Parses an inventory; `None` when it lists no third-party crate or does not parse.
+fn parse(json: &str) -> Option<LicensesFile> {
+    match serde_json::from_str::<LicensesFile>(json) {
+        Ok(file) if !file.is_empty() => Some(file),
+        Ok(_) => None,
+        Err(err) => {
+            crate::console::warn(format_args!("licenses.json parse failed: {err}"));
+            None
+        }
+    }
+}
 
 /// The embedded inventory, or `None` when this build carries none. Resolves
 /// identically on the server (SSR) and the wasm client, so the rendered page
 /// matches across hydration.
 pub fn load_licenses() -> Option<&'static LicensesFile> {
     LICENSES.as_ref()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse;
+
+    #[test]
+    fn the_empty_default_is_none() {
+        assert!(parse(r#"{"summary":[],"texts":[],"crates":[]}"#).is_none());
+    }
+
+    #[test]
+    fn a_malformed_inventory_is_none() {
+        assert!(parse("{").is_none());
+    }
 }
