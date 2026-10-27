@@ -34,7 +34,8 @@ pub enum RenderArea {
 }
 
 impl RenderArea {
-    /// Every area in render order, which is where a skill that is not radar-only appears.
+    /// Every area in render order, which is where a skill that is not radar-only is eligible to
+    /// appear.
     pub const ALL: [RenderArea; 3] = [
         RenderArea::Resume,
         RenderArea::Section,
@@ -43,9 +44,11 @@ impl RenderArea {
 }
 
 impl Skill {
-    /// Returns the areas the skill is rendered in.
+    /// Returns the areas the skill is eligible for, before the [`crate::MIN_CONFIDENCE`] filter.
     ///
-    /// A radar-only skill appears on the tech radar alone; every other skill appears everywhere.
+    /// A radar-only skill is eligible for the tech radar alone and is drawn there whatever its
+    /// confidence. Every other skill is eligible everywhere but appears only at or above the
+    /// floor.
     #[must_use]
     pub fn render_areas(&self) -> Vec<RenderArea> {
         if self.radar_only {
@@ -71,7 +74,7 @@ pub struct ProfileSkill {
     pub confidence: f32,
     /// The tool's name, untranslated.
     pub name: &'static str,
-    /// Every area this skill appears in.
+    /// Every area this skill is eligible for, before the site's confidence floor.
     pub render_area: Vec<RenderArea>,
 }
 

@@ -124,7 +124,9 @@ fn assets_ready(dist: &Path) -> bool {
 }
 
 /// Answers the readiness probe, mounted at `GET /api/health/ready` and `GET /readyz`: `200` when
-/// the client bundle is present in the configured directory, `503` otherwise.
+/// `index.html` exists in the configured directory, `503` otherwise.
+///
+/// The rest of the bundle is not checked.
 pub async fn ready(State(assets): State<AssetsConfig>) -> impl IntoResponse {
     let (status, payload) = if assets_ready(assets.dist_dir()) {
         (StatusCode::OK, "ready")

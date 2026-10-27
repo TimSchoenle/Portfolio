@@ -1,6 +1,9 @@
 //! The skill matrix: quadrants, confidence values and what the matrix and resume show.
 
-/// The confidence below which a skill is left out of the matrix and the resume.
+/// The confidence below which a skill that is not radar-only is left out of the matrix, the radar
+/// and the resume.
+///
+/// A radar-only skill is drawn on the radar whatever its confidence.
 pub const MIN_CONFIDENCE: f32 = 0.6;
 
 /// A region of the tech radar, which is also a group of the skill matrix.
@@ -67,8 +70,8 @@ pub struct Skill {
     pub quadrant: Quadrant,
     /// The hands-on depth, from `0.0` to `1.0`.
     ///
-    /// It decides the radar distance, the matrix order and, against [`MIN_CONFIDENCE`], whether
-    /// the skill is listed at all.
+    /// It decides the radar distance, the matrix order and, against [`MIN_CONFIDENCE`], whether a
+    /// skill that is not radar-only is listed at all.
     pub confidence: f32,
     /// Whether the skill appears on the radar alone, never in the matrix or on the resume.
     pub radar_only: bool,
