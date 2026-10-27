@@ -18,8 +18,8 @@ use serde::Deserialize;
 //
 //  1. **The two aggregates share one prefix.** `ServerConfig` and `BuilderConfig` are both
 //     rooted at `PORTFOLIO_`, so a closed `ServerConfig` refuses `PORTFOLIO_GITHUB__TOKEN` —
-//     the build-time credential `update-repos` reads — and any environment carrying both
-//     would fail the server's boot on a key that is simply not its own.
+//     the build-time credential `portfolio-update-repos` reads — and any environment carrying
+//     both would fail the server's boot on a key that is simply not its own.
 //  2. **It would publish nothing.** `deny_unknown_fields` reaches the schema as
 //     `additionalProperties: false` only for a type published through `#[config(element)]`,
 //     and every struct here is `#[config(nested)]`, which contributes keys rather than an

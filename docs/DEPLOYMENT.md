@@ -83,7 +83,7 @@ docker build \
   -t portfolio .
 ```
 
-`update-repos` runs inside the build and needs the GitHub token. It arrives as a BuildKit secret
+`portfolio-update-repos` runs inside the build and needs the GitHub token. It arrives as a BuildKit secret
 mounted as a file, so nothing survives into a layer:
 
 ```bash

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use portfolio_data::CONFIG;
 
-use crate::github::ReposState;
+use crate::embedded::repos::ReposState;
 use crate::ui::about::About;
 use crate::ui::canonical::Canonical;
 use crate::ui::chapter_rail::ChapterRail;

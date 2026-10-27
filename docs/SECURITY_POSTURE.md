@@ -105,7 +105,7 @@ call to `sentry::init` for the DSN.
 
 Supply both as files. `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry the
 environment, and child processes inherit it. The Docker build already does this for the token,
-mounting the BuildKit secret and handing `update-repos` the path; a deployment does it for the DSN
+mounting the BuildKit secret and handing `portfolio-update-repos` the path; a deployment does it for the DSN
 with `PORTFOLIO_SENTRY__DSN_FILE`, or with `sentry__dsn` in a mounted `Secret` volume.
 
 Only the loader half of `terrace-config` is used; its hot-reload supervisor is not. The reasoning —

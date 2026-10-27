@@ -10,6 +10,10 @@
 //! `rust:<version>-slim` base image in the `Dockerfile`, and `rust-version` in `Cargo.toml`.
 //! Renovate's `rust toolchain` group moves all three in one pull request.
 //!
+//! The root `Cargo.toml` states every `[workspace.package]` value a second time in its own
+//! `[package]` table, because the README payload action reads that table alone. Each member
+//! states the workspace version, because release-please refuses `version.workspace = true`.
+//!
 //! These tests are what notice when one copy moves without the others.
 
 use std::path::Path;
@@ -102,4 +106,59 @@ fn the_rust_toolchain_pin_matches_the_base_image_and_rust_version() {
         rust_version, image,
         "rust-version in Cargo.toml must equal the Dockerfile's rust:{image} base image"
     );
+}
+
+/// The value of `key = "…"` inside the `[table]` section of a TOML file, or `None` when the table
+/// has no such line. Reads line by line, the way [`toml_string`] does: no TOML parser is a
+/// dependency of this crate, and these manifests keep one key per line.
+fn table_string(file: &str, table: &str, key: &str) -> Option<String> {
+    let header = format!("[{table}]");
+    let prefix = format!("{key} = \"");
+    file.lines()
+        .skip_while(|line| line.trim() != header)
+        .skip(1)
+        .take_while(|line| !line.trim_start().starts_with('['))
+        .find_map(|line| line.strip_prefix(&prefix))
+        .map(|rest| rest[..rest.find('"').expect("a closing quote")].to_owned())
+}
+
+#[test]
+fn the_root_package_repeats_the_workspace_package() {
+    let manifest = workspace_file("Cargo.toml");
+    for key in ["edition", "rust-version", "homepage"] {
+        let workspace = table_string(&manifest, "workspace.package", key)
+            .unwrap_or_else(|| panic!("[workspace.package] sets no `{key}`"));
+        let root = table_string(&manifest, "package", key)
+            .unwrap_or_else(|| panic!("the root [package] sets no `{key}`"));
+        assert_eq!(
+            root, workspace,
+            "`{key}` in the root [package] must equal `{key}` in [workspace.package]"
+        );
+    }
+}
+
+#[test]
+fn every_member_carries_the_workspace_version() {
+    let manifest = workspace_file("Cargo.toml");
+    let version =
+        table_string(&manifest, "package", "version").expect("the root [package] has a version");
+    let members: Vec<&str> = manifest
+        .lines()
+        .skip_while(|line| line.trim() != "members = [")
+        .skip(1)
+        .take_while(|line| line.trim() != "]")
+        .filter_map(|line| line.trim().strip_prefix('"')?.strip_suffix("\","))
+        .collect();
+    assert!(
+        !members.is_empty(),
+        "the root Cargo.toml lists no workspace members"
+    );
+    for member in members {
+        let member_manifest = workspace_file(&format!("{member}/Cargo.toml"));
+        assert_eq!(
+            table_string(&member_manifest, "package", "version").as_deref(),
+            Some(version.as_str()),
+            "{member}/Cargo.toml must carry the workspace version {version}"
+        );
+    }
 }

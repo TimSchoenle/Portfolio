@@ -8,7 +8,7 @@
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, language_or_default};
 
-use crate::github::load_resume_fingerprints;
+use crate::embedded::resume::load_resume_fingerprints;
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;

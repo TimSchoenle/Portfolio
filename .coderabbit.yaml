@@ -25,7 +25,7 @@ reviews:
     - "!README.md" # rendered from .github/templates/README.md.hbs
     - "!config.example.toml" # rendered from .github/templates/config.example.toml.hbs
     - "!docs/config.contract.json" # emitted from crates/config, drift-gated in CI
-    - "!apps/resume-generator/fonts/**" # vendored font binaries and licences
+    - "!apps/resume/fonts/**" # vendored font binaries and licences
     - "!apps/web/assets/fonts/**" # vendored by apps/web/scripts/vendor-fonts.mjs
 
   path_instructions:
@@ -75,7 +75,7 @@ reviews:
         Build-time tool calling the GitHub REST API. Check token handling (never logged, never
         written into output), request timeouts, pagination and rate-limit handling, and that
         failures leave the previous `repos.json` intact rather than writing a partial file.
-    - path: "apps/resume-generator/**"
+    - path: "apps/resume/**"
       instructions: |
         Build-time Typst PDF generator. Output must be deterministic (fixed timestamps, stable
         ordering) because the SHA-256 fingerprints are published. Flag data interpolated into Typst

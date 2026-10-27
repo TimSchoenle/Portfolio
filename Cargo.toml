@@ -3,7 +3,7 @@ members = [
     "crates/config",
     "crates/data",
     "apps/web",
-    "apps/resume-generator",
+    "apps/resume",
     "apps/update-repos",
 ]
 # Every member, not only the root package. With a root `[package]`, a bare `cargo clippy` or
@@ -13,15 +13,26 @@ default-members = [
     "crates/config",
     "crates/data",
     "apps/web",
-    "apps/resume-generator",
+    "apps/resume",
     "apps/update-repos",
 ]
 resolver = "2"
 
+# What every member inherits. Two fields are left out on purpose. `version`: release-please's
+# `cargo-workspace` plugin reads `[package] version` from each member and refuses
+# `version.workspace = true`, so every manifest carries its own copy and a release moves them
+# together. `license`: the members are licensed to no one, and `cargo about` in
+# `apps/web/about.toml` would refuse `LicenseRef-Proprietary` on the crates it inventories.
 [workspace.package]
 edition = "2024"
 publish = false
+rust-version = "1.99"
+homepage = "https://tim-schoenle.de"
 
+# The root package states the inherited values again, because the README payload action described
+# below reads this table alone and does not resolve `.workspace = true`.
+# `apps/web/tests/toolchain_pins.rs` fails if a copy here disagrees with `[workspace.package]`.
+#
 # The five fields below `name` are what the README payload action
 # (`TimSchoenle/actions/actions/common/readme-variables`) reads. It refuses to
 # take the description from the GitHub API on purpose: one edited in the web UI
@@ -32,7 +43,7 @@ publish = false
 #
 # `rust-version` is the toolchain the image is built with — the release `rust-toolchain.toml`
 # pins and the `rust:<version>-slim` base in the Dockerfile carries — and not a floor anything
-# tests below. Renovate's `rust toolchain` group moves this line together with those two (a
+# tests below. Renovate's `rust toolchain` group moves both `rust-version` lines with those two (a
 # custom manager in the shared `rust-application` preset from TimSchoenle/actions), and
 # `apps/web/tests/toolchain_pins.rs` fails if they disagree.
 [package]
@@ -198,7 +209,7 @@ web-sys = { version = "0.3", features = [
 ] }
 gloo-timers = { version = "0.4.0", features = ["futures"] }
 
-# Blocking, pure-Rust HTTP client used by the `update-repos` builder to call the
+# Blocking, pure-Rust HTTP client used by the `portfolio-update-repos` builder to call the
 # GitHub REST API from CI (no async runtime needed for a one-shot fetch).
 ureq = { version = "3", features = ["json"] }
 
@@ -252,10 +263,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # `rustls-platform-verifier`, which looks for an OS trust store that `scratch` does not have.
 #
 # `ureq` is the transport that costs nothing. The crate is already in `Cargo.lock` — the
-# `update-repos` builder calls the GitHub API with it — and ureq's own `rustls` feature is `ring`
-# plus bundled `webpki-roots`, which is exactly the stack the runtime image is built for. It is a
-# blocking client, which is not a compromise: the SDK owns a background transport thread and
-# never sends on a request path.
+# `portfolio-update-repos` builder calls the GitHub API with it — and ureq's own `rustls` feature
+# is `ring` plus bundled `webpki-roots`, which is exactly the stack the runtime image is built
+# for. It is a blocking client, which is not a compromise: the SDK owns a background transport
+# thread and never sends on a request path.
 #
 # The defaults also include `logs`, `metrics` and `release-health` — three separate Sentry
 # products this site does not use, and each one an egress channel with no key in the
@@ -353,13 +364,13 @@ inherits = "release"
 opt-level = "s"
 strip = false
 
-# The two build-time generators (`update-repos`, `resume-generator`) run once
+# The two build-time generators (`portfolio-update-repos`, `portfolio-resume`) run once
 # during the image build and are never shipped, so every property `release`
 # optimizes for is the wrong trade for them: `opt-level = "z"`, fat LTO and a
 # single codegen unit buy a smaller binary nobody keeps, at the cost of the
 # slowest possible compile of a 296-crate tree (typst).
 #
-# Measured on `resume-generator` from a cold target directory: 5m03s under
+# Measured on `portfolio-resume` from a cold target directory: 5m03s under
 # `release`, 1m29s under this profile — and `opt-level = 1` is the faster of the
 # two at *runtime* as well, since typst's layout pass is compute-bound and `z`
 # trades speed for size. `inherits = "release"` rather than "dev" so the

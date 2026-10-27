@@ -8,7 +8,7 @@
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, next_language, resume_file};
 
-use crate::github::ReposState;
+use crate::embedded::repos::ReposState;
 use terrace_legal_dioxus::legal_title;
 
 use crate::i18n::{switch_language, use_i18n};

@@ -62,17 +62,17 @@ component_management:
       name: portfolio-platform
       paths: ['src/**']
     - component_id: web
-      name: web
+      name: portfolio-web
       paths: ['apps/web/**']
-    - component_id: resume_generator
-      name: resume-generator
-      paths: ['apps/resume-generator/**']
+    - component_id: resume
+      name: portfolio-resume
+      paths: ['apps/resume/**']
     - component_id: update_repos
-      name: update-repos
+      name: portfolio-update-repos
       paths: ['apps/update-repos/**']
     - component_id: config
-      name: config
+      name: portfolio-config
       paths: ['crates/config/**']
     - component_id: data
-      name: data
+      name: portfolio-data
       paths: ['crates/data/**']

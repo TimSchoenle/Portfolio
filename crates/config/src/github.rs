@@ -1,4 +1,4 @@
-//! What the `update-repos` builder needs to talk to the GitHub REST API.
+//! What the `portfolio-update-repos` builder needs to talk to the GitHub REST API.
 
 use secrecy::SecretString;
 use serde::Deserialize;

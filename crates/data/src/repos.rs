@@ -1,10 +1,10 @@
-//! The `repos.json` schema `update-repos` writes and the web binary reads.
+//! The `repos.json` schema `portfolio-update-repos` writes and the web binary reads.
 
 use serde::{Deserialize, Serialize};
 
 use crate::CONFIG;
 
-/// One repository, as `update-repos` read it out of the GitHub REST API.
+/// One repository, as `portfolio-update-repos` read it out of the GitHub REST API.
 ///
 /// This deserializes GitHub's own response, which is why the field names are GitHub's and why
 /// all but three default rather than failing the listing. The same type is then written to
@@ -33,7 +33,7 @@ pub struct Repo {
     #[serde(default)]
     pub forks_count: u32,
     /// RFC 3339 timestamp of GitHub's `updated_at`: the last change to the repository object,
-    /// which a push, a description edit or a topic change each move. `update-repos` drops
+    /// which a push, a description edit or a topic change each move. `portfolio-update-repos` drops
     /// anything older than a year.
     #[serde(default)]
     pub updated_at: String,
@@ -69,8 +69,8 @@ impl Repo {
 /// The generated `repos.json`.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ReposFile {
-    /// RFC 3339 timestamp the listing was taken at. `update-repos` reads it back on the next
-    /// build to decide whether the file is fresh enough to skip the API call.
+    /// RFC 3339 timestamp the listing was taken at. `portfolio-update-repos` reads it back on the
+    /// next build to decide whether the file is fresh enough to skip the API call.
     pub generated_at: String,
     /// The account the repositories were listed for.
     pub user: String,

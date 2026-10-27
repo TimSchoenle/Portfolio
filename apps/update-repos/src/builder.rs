@@ -1,4 +1,4 @@
-//! The GitHub half of `update-repos`: what is listed, what is kept, and what is thrown away.
+//! The GitHub half of `portfolio-update-repos`: what is listed, what is kept and what is dropped.
 //!
 //! Two modes, and they are not variations of one another. With no explicit names the builder
 //! pages through everything the user owns and then filters: archived, blacklisted, or untouched
@@ -43,8 +43,8 @@ impl ReposBuilder {
     /// A builder against the public GitHub API, unauthenticated, with no repository named.
     ///
     /// The agent it constructs has a 30-second global timeout covering connect, send and read
-    /// together. `update-repos` runs inside an image build, where a hung socket is a hung build
-    /// and no retry is attempted.
+    /// together. `portfolio-update-repos` runs inside an image build, where a hung socket is a hung
+    /// build and no retry is attempted.
     pub fn new(user: impl Into<String>) -> Self {
         let agent: ureq::Agent = ureq::Agent::config_builder()
             .timeout_global(Some(Duration::from_secs(30)))

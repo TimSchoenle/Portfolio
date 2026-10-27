@@ -12,19 +12,18 @@
 //! renderer-agnostic component code is type-checked.
 
 mod app;
-mod github;
+mod clock;
+mod console;
+mod embedded;
 /// Client-side interaction primitives and DOM helpers (wasm only).
 #[cfg(feature = "web")]
 mod hooks;
 mod i18n;
 mod legal;
-/// The third-party license inventory embedded at build time (`cargo about`).
-mod licenses;
 mod pages;
 mod routes;
 mod sections;
 mod ui;
-mod util;
 
 /// Native SSR server (Axum router, public API, SEO routes, security headers).
 /// `cfg`-gated so none of its dependencies enter the wasm client build.

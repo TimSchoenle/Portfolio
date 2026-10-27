@@ -3,6 +3,8 @@ name = "portfolio-config"
 version = "3.2.0"
 edition.workspace = true
 publish.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
 
 # Off by default, and it has to stay that way: `terrace-config/schema-cli` links
 # `serde_json` and compiles a proc macro, neither of which a running binary has

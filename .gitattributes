@@ -39,7 +39,7 @@ LICENSE      text eol=lf linguist-documentation
 # ---------- Fonts (vendored, binary) ----------
 *.ttf   binary linguist-vendored
 *.woff2 binary linguist-vendored
-apps/resume-generator/fonts/** linguist-vendored
+apps/resume/fonts/** linguist-vendored
 apps/web/assets/fonts/**       linguist-vendored
 
 # ---------- Other binary/media ----------

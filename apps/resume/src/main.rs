@@ -18,7 +18,7 @@
 //! # Usage
 //!
 //! ```text
-//! resume-generator [<out-dir>] [--photo <file>]
+//! portfolio-resume [<out-dir>] [--photo <file>]
 //! ```
 //!
 //! `--photo` (or `PORTFOLIO_RESUME__PHOTO_FILE`) supplies the application photo
@@ -90,7 +90,7 @@ const PHOTO_FORMATS: [(&[u8], &str); 3] = [
 
 fn main() {
     if let Err(err) = run() {
-        eprintln!("resume-generator: {err}");
+        eprintln!("portfolio-resume: {err}");
         std::process::exit(1);
     }
 }

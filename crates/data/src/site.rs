@@ -7,14 +7,14 @@ pub const OG_IMAGE_FILE: &str = "og-image.png";
 /// The web manifest's raster icons as `(edge length in pixels, file name)`.
 ///
 /// Each is served from `/<file name>`. Browsers offer to install a site only when its manifest
-/// lists a 192 and a 512 pixel raster icon; `resume-generator` renders them from the favicon.
+/// lists a 192 and a 512 pixel raster icon; `portfolio-resume` renders them from the favicon.
 pub const APP_ICONS: [(u32, &str); 2] = [(192, "icon-192.png"), (512, "icon-512.png")];
 
 /// Pixel size of that card: the 1.91:1 box every major link-preview consumer
 /// crops to.
 ///
 /// Shared because both ends of the pipeline need it and they have to agree —
-/// `resume-generator` renders the image at exactly this size, and the web app
+/// `portfolio-resume` renders the image at exactly this size, and the web app
 /// declares it in `og:image:width` / `og:image:height` so a consumer can reserve
 /// the space before the bytes arrive. A card that disagrees with its own
 /// declared size is letterboxed or dropped, and nothing warns about it.
@@ -92,7 +92,8 @@ pub struct Config {
     /// GitHub profile page. Contains [`github_username`](Self::github_username), which a test
     /// asserts, because the two are rendered as one link.
     pub github: &'static str,
-    /// The account `update-repos` lists repositories for unless `github.username` names another.
+    /// The account `portfolio-update-repos` lists repositories for, unless `github.username` names
+    /// another.
     pub github_username: &'static str,
     /// LinkedIn profile page, linked from the footer and from the resume sidebar.
     pub linkedin: &'static str,
@@ -115,7 +116,7 @@ pub struct Config {
     pub featured_repos: &'static [&'static str],
     /// Repositories that must never appear in `repos.json`, regardless of their
     /// activity. Matched case-insensitively by name when listing all of the
-    /// user's repositories in `update-repos`.
+    /// user's repositories in `portfolio-update-repos`.
     pub blacklisted_repos: &'static [&'static str],
 }
 

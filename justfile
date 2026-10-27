@@ -138,8 +138,8 @@ fmt:
 [group('check')]
 lint:
     cargo clippy --workspace --all-features --all-targets -- -D warnings
-    cargo clippy -p web --no-default-features --features server --all-targets -- -D warnings
-    cargo clippy -p web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
+    cargo clippy -p portfolio-web --no-default-features --features server --all-targets -- -D warnings
+    cargo clippy -p portfolio-web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
 
 [doc('Advisories, licenses, bans and sources, per deny.toml')]
 [group('check')]
@@ -154,7 +154,7 @@ deny:
 [group('check')]
 docs:
     RUSTDOCFLAGS='-D warnings' cargo doc --workspace --all-features --no-deps
-    RUSTDOCFLAGS='-D warnings' cargo doc -p web --no-default-features --features web --no-deps
+    RUSTDOCFLAGS='-D warnings' cargo doc -p portfolio-web --no-default-features --features web --no-deps
     cargo test --workspace --doc --all-features
 
 [group('check')]

@@ -4,14 +4,14 @@ Six packages in one Cargo workspace: two libraries every binary reads, three bin
 
 ## The packages
 
-| Package | Purpose |
-| --- | --- |
-| `crates/config` | The typed configuration blocks each binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader |
-| `crates/data` | Language-neutral data — the site languages (`SITE_LANGUAGES`), site config, skills, experience, the `repos.json` schema — and the embedded `i18n/{en,de}.json` translations |
-| `apps/web` | The site. One crate that builds twice: a WASM client under the `web` feature and a native Axum SSR server under `server`, carrying the JSON API, the SEO documents, the security headers and the probes |
-| `apps/resume-generator` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterizes the 1200×630 social card and the 192/512 px app icons, with its fonts embedded |
-| `apps/update-repos` | Lists the owner's active GitHub repositories and rewrites `apps/web/repos.json` through the shared `Repo`/`ReposFile` models |
-| `.` (`portfolio-platform`) | `src/lib.rs` is a placeholder. release-please's Rust strategy needs a root package to bump, and the version it writes there is the one the README payload and the image's contract document both read |
+| Path | Package | Purpose |
+| --- | --- | --- |
+| `crates/config` | `portfolio-config` | The typed configuration blocks each binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader |
+| `crates/data` | `portfolio-data` | Language-neutral data — the site languages (`SITE_LANGUAGES`), site config, skills, experience, the `repos.json` schema — and the embedded `i18n/{en,de}.json` translations |
+| `apps/web` | `portfolio-web` | The site. One crate that builds twice: a WASM client under the `web` feature and a native Axum SSR server under `server`, carrying the JSON API, the SEO documents, the security headers and the probes |
+| `apps/resume` | `portfolio-resume` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterizes the 1200×630 social card and the 192/512 px app icons, with its fonts embedded |
+| `apps/update-repos` | `portfolio-update-repos` | Lists the owner's active GitHub repositories and rewrites `apps/web/repos.json` through the shared `Repo`/`ReposFile` models |
+| `.` | `portfolio-platform` | `src/lib.rs` is a placeholder. release-please's Rust strategy needs a root package to bump, and the version it writes there is the one the README payload and the image's contract document both read |
 
 ## One crate, two builds
 
@@ -86,9 +86,9 @@ compiles and the affected page renders its empty state.
 | --- | --- | --- |
 | `apps/web/repos.json` | `apps/update-repos` | the projects section — see [PROJECT_DATA.md](PROJECT_DATA.md) |
 | `apps/web/generated/licenses.json` | `cargo about`, through `just licenses` | `/licenses` — see [DEPLOYMENT.md](DEPLOYMENT.md) |
-| `apps/web/generated/resume/*.pdf` | `apps/resume-generator` | `/resume/<file>`, linked from the contact card and the command palette |
-| `apps/web/generated/resume-fingerprint.json` | `apps/resume-generator` | the contact card, which shows each PDF's SHA-256 |
-| `apps/web/generated/og-image.png` | `apps/resume-generator` | `/og-image.png`, the `og:image` of every page |
+| `apps/web/generated/resume/*.pdf` | `apps/resume` | `/resume/<file>`, linked from the contact card and the command palette |
+| `apps/web/generated/resume-fingerprint.json` | `apps/resume` | the contact card, which shows each PDF's SHA-256 |
+| `apps/web/generated/og-image.png` | `apps/resume` | `/og-image.png`, the `og:image` of every page |
 
 The resume generator is a Typst document builder rather than a PDF library. It embeds Inter, with
 Liberation Sans as a metric-compatible last resort, and emits a tagged PDF 1.7 with live link

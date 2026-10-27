@@ -7,7 +7,7 @@ use std::rc::Rc;
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, Repo, lang_color};
 
-use crate::github::ReposState;
+use crate::embedded::repos::ReposState;
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;

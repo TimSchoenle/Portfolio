@@ -61,7 +61,7 @@ pub struct ServerConfig {
     pub legal: LegalConfig,
 }
 
-/// What the `update-repos` builder loads.
+/// What the `portfolio-update-repos` builder loads.
 ///
 /// One block, so the aggregate looks redundant — it is not: it is what fixes the key path to
 /// `github.*` rather than to the bare field names underneath.
