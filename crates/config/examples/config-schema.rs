@@ -10,12 +10,12 @@
 //! the pull request. Neither document can drift from the types: a key renamed in `crates/config`
 //! is a key renamed in both, in the same commit.
 //!
-//! The same workflow regenerates the two artifacts the image publishes about itself —
-//! `docs/config.contract.json` and the Dockerfile's `dev.terrace.config.*` label block — through
-//! `just regenerate`, and the Config Contract job in `build.yaml` checks both afterwards. That
-//! job is the gate; this is what keeps a pull request from having to clear it by hand, including
-//! the release pull request, whose only change is the version the contract stamps into the
-//! document.
+//! The same workflow regenerates `docs/config.contract.json` through `just contract-json`, and the
+//! Config Contract job in `build.yaml` checks it afterwards. That job is the gate; this is what
+//! keeps a pull request from having to clear it by hand, including the release pull request,
+//! whose only change is the version the contract stamps into the document. The Dockerfile's
+//! `dev.terrace.config.*` label block is checked by the same job but written only by
+//! `just regenerate` on a developer's machine, never by a bot.
 //!
 //! Nothing here reads the environment, so the output is the same on a developer's machine and on
 //! a runner where none of the variables it describes are set. That is what makes the render
