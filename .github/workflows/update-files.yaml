@@ -415,6 +415,56 @@ jobs:
           name: config-contract
           path: ${{ runner.temp }}/config-contract
 
+      # The Dockerfile is the build recipe of the published image, and the copy received here
+      # came out of a job that ran the pull request's code: copied whole, a generator that
+      # rewrote a `RUN` line would have it committed by the App, under the App's name. So the
+      # copy has to equal the checked-out Dockerfile everywhere outside the
+      # `terrace-config:labels` markers, with each marker exactly once and nothing between them
+      # but `LABEL key="value"` lines and their continuations, which is all `--format dockerfile`
+      # emits. Anything else fails here before either file is put in place, and nothing is
+      # committed; regenerate it locally with `just regenerate` and push it by hand.
+      - name: Refuse Dockerfile changes outside the LABEL region
+        env:
+          RECEIVED: ${{ runner.temp }}/config-contract/Dockerfile
+          BEGIN: '# terrace-config:labels:begin'
+          END: '# terrace-config:labels:end'
+        run: |
+          set -euo pipefail
+          if cmp -s Dockerfile "$RECEIVED"; then
+            echo "The regenerated Dockerfile is unchanged."
+            exit 0
+          fi
+          for marker in "$BEGIN" "$END"; do
+            if [ "$(grep -cxF -- "$marker" "$RECEIVED")" != 1 ]; then
+              echo "::error file=Dockerfile::'${marker}' must appear exactly once."
+              exit 1
+            fi
+          done
+          if [ "$(grep -nxF -- "$BEGIN" "$RECEIVED" | cut -d: -f1)" -gt "$(grep -nxF -- "$END" "$RECEIVED" | cut -d: -f1)" ]; then
+            echo "::error file=Dockerfile::'${BEGIN}' must come before '${END}'."
+            exit 1
+          fi
+          outside() { awk -v b="$BEGIN" -v e="$END" '$0 == b { skip = 1; print "<region>"; next } $0 == e { skip = 0; next } !skip' "$1"; }
+          if ! diff -u <(outside Dockerfile) <(outside "$RECEIVED"); then
+            echo "::error file=Dockerfile::The regenerated Dockerfile differs outside the LABEL region; nothing was committed."
+            exit 1
+          fi
+          if ! awk -v b="$BEGIN" -v e="$END" '
+            $0 == e { inside = 0 }
+            inside {
+              if (cont) { ok = $0 ~ /^[ \t]+[A-Za-z0-9._-]+="[^"\\$]*"( \\)?$/ }
+              else { ok = $0 ~ /^LABEL [A-Za-z0-9._-]+="[^"\\$]*"( \\)?$/ }
+              if (!ok) { print "unexpected line in the LABEL region: " $0; bad = 1 }
+              cont = $0 ~ / \\$/
+            }
+            $0 == b { inside = 1; cont = 0 }
+            END { exit (bad || cont) }
+          ' "$RECEIVED"; then
+            echo "::error file=Dockerfile::The LABEL region holds something other than LABEL instructions; nothing was committed."
+            exit 1
+          fi
+          echo "The regenerated Dockerfile changes only its LABEL region."
+
       - name: Put the regenerated files in place
         run: |
           set -euo pipefail
