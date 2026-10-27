@@ -41,14 +41,18 @@ impl ReposState {
 // Parsing a compile-time constant a second time answers the same question twice. That mattered
 // most on the server, where `App` mounts once per render: every incremental-cache miss re-parsed
 // the entire document.
-static REPOS: LazyLock<ReposState> =
-    LazyLock::new(|| match serde_json::from_str::<ReposFile>(REPOS_JSON) {
+static REPOS: LazyLock<ReposState> = LazyLock::new(|| parse(REPOS_JSON));
+
+/// Parses a repository list, or returns [`ReposState::Failed`] when it does not parse.
+fn parse(json: &str) -> ReposState {
+    match serde_json::from_str::<ReposFile>(json) {
         Ok(file) => ReposState::Ready(Arc::new(file)),
         Err(err) => {
             crate::console::warn(format_args!("repos.json parse failed: {err}"));
             ReposState::Failed
         }
-    });
+    }
+}
 
 /// Returns the embedded repository list.
 ///
@@ -56,4 +60,23 @@ static REPOS: LazyLock<ReposState> =
 /// matches across hydration.
 pub fn load_repos() -> ReposState {
     REPOS.clone()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ReposState, parse};
+
+    #[test]
+    fn the_empty_default_is_ready_and_empty() {
+        let state = parse(r#"{"generated_at":"","user":"","repos":[]}"#);
+        assert!(matches!(state, ReposState::Ready(_)));
+        assert_eq!(state.repos(), []);
+    }
+
+    #[test]
+    fn a_malformed_list_fails_with_no_repos() {
+        let state = parse("{");
+        assert!(matches!(state, ReposState::Failed));
+        assert_eq!(state.repos(), []);
+    }
 }

@@ -17,19 +17,22 @@ const LICENSES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/licenses.jso
 // and on the server `App` mounts once per render, so every incremental-cache miss would otherwise
 // re-parse the whole document. Borrowed, not shared through an `Arc` the way `super::repos`
 // shares the repository list, because this has exactly one reader and a `LazyLock` hands it a
-// `&'static` for free. The two ways to have nothing collapse into one `None` because the page
-// says the same thing either way; only a parse failure is worth a console warning.
-static LICENSES: LazyLock<Option<LicensesFile>> =
-    LazyLock::new(
-        || match serde_json::from_str::<LicensesFile>(LICENSES_JSON) {
-            Ok(file) if !file.is_empty() => Some(file),
-            Ok(_) => None,
-            Err(err) => {
-                crate::console::warn(format_args!("licenses.json parse failed: {err}"));
-                None
-            }
-        },
-    );
+// `&'static` for free.
+static LICENSES: LazyLock<Option<LicensesFile>> = LazyLock::new(|| parse(LICENSES_JSON));
+
+/// Parses an inventory, or returns `None` when it lists no third-party crate or does not parse.
+// The two ways to have nothing collapse into one `None` because the page says the same thing
+// either way; only a parse failure is worth a console warning.
+fn parse(json: &str) -> Option<LicensesFile> {
+    match serde_json::from_str::<LicensesFile>(json) {
+        Ok(file) if !file.is_empty() => Some(file),
+        Ok(_) => None,
+        Err(err) => {
+            crate::console::warn(format_args!("licenses.json parse failed: {err}"));
+            None
+        }
+    }
+}
 
 /// Returns the embedded inventory, or `None` when this build carries none.
 ///
@@ -37,4 +40,19 @@ static LICENSES: LazyLock<Option<LicensesFile>> =
 /// hydration.
 pub fn load_licenses() -> Option<&'static LicensesFile> {
     LICENSES.as_ref()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse;
+
+    #[test]
+    fn the_empty_default_is_none() {
+        assert!(parse(r#"{"summary":[],"texts":[],"crates":[]}"#).is_none());
+    }
+
+    #[test]
+    fn a_malformed_inventory_is_none() {
+        assert!(parse("{").is_none());
+    }
 }
