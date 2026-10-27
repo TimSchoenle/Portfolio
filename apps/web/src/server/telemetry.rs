@@ -50,10 +50,15 @@ const RELEASE_PREFIX: &str = "portfolio";
 
 /// The module paths a stack trace should treat as application code.
 ///
-/// The crate names as the linker spells them, so `apps/web`'s own frames and the two workspace
+/// The crate names as the linker spells them, so `apps/web`'s own frames and the workspace
 /// libraries are in-app and everything under `dioxus`, `axum` and `hyper` is not. That is what
 /// makes a trace open on the handler rather than on a framework internal ten frames above it.
-const IN_APP: &[&str] = &["portfolio_web", "portfolio_config", "portfolio_data"];
+const IN_APP: &[&str] = &[
+    "portfolio_web",
+    "portfolio_config",
+    "portfolio_data",
+    "portfolio_server",
+];
 
 /// Keeps the Sentry client alive.
 ///
