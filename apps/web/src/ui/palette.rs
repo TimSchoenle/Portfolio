@@ -6,6 +6,7 @@
 //! work here.
 
 use dioxus::prelude::*;
+use i18nrs::I18n;
 use portfolio_data::{CONFIG, next_language, resume_file};
 
 use crate::embedded::repos::ReposState;
@@ -53,111 +54,10 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
 
     let lang = i18n.read().get_current_language().to_string();
     let legal_indexes = try_consume_context::<LegalIndexes>();
-    let entry_repos = repos.clone();
     // Everything the palette can do, with each entry's lowercased search text. It depends on
     // the language and on nothing typed, so it is built when the language changes rather than
     // on every keystroke.
-    let entries = use_memo(move || {
-        let lang = i18n.read().get_current_language().to_string();
-        let g_nav = t("palette.groupNav");
-        let g_work = t("palette.groupWork");
-        let g_act = t("palette.groupActions");
-
-        let mut entries: Vec<Entry> = SECTIONS
-            .iter()
-            .map(|(slug, key)| Entry {
-                group: g_nav.clone(),
-                label: t(key),
-                hint: format!("§ {}", section_num(slug)),
-                action: Action::Section(slug),
-            })
-            .collect();
-        // Every published legal document, under the operator's title and in their order.
-        let legal_text = SiteText::new(i18n);
-        let docs = legal_indexes
-            .as_ref()
-            .and_then(|indexes| indexes.get(&lang).cloned())
-            .unwrap_or_default();
-        for doc in docs {
-            let label = legal_title(&legal_text, &doc);
-            let (hint, action) = match doc.url.clone().filter(|_| !is_hosted(&doc)) {
-                Some(url) => ("↗".to_owned(), Action::Open(url)),
-                None => (
-                    document_path(&doc.slug),
-                    Action::Goto(Route::LegalDocument { slug: doc.slug }),
-                ),
-            };
-            entries.push(Entry {
-                group: g_nav.clone(),
-                label,
-                hint,
-                action,
-            });
-        }
-        entries.push(Entry {
-            group: g_nav.clone(),
-            label: t("palette.licenses"),
-            hint: "/licenses".into(),
-            action: Action::Goto(Route::Licenses {}),
-        });
-
-        for r in entry_repos
-            .repos()
-            .iter()
-            .filter(|r| !r.fork && !r.archived)
-        {
-            entries.push(Entry {
-                group: g_work.clone(),
-                label: r.name.clone(),
-                hint: r.language.clone().unwrap_or_else(|| "—".into()),
-                action: Action::Open(r.html_url.clone()),
-            });
-        }
-
-        let email_hint = CONFIG.email.split('@').next().unwrap_or("").to_string() + "@…";
-        entries.extend([
-            Entry {
-                group: g_act.clone(),
-                label: t("palette.copyEmail"),
-                hint: email_hint,
-                action: Action::CopyEmail,
-            },
-            Entry {
-                group: g_act.clone(),
-                label: t("palette.toggleLang"),
-                hint: next_language(&lang).code.to_uppercase(),
-                action: Action::ToggleLang,
-            },
-            Entry {
-                group: g_act.clone(),
-                label: t("palette.openGithub"),
-                hint: "↗".into(),
-                action: Action::Open(CONFIG.github.into()),
-            },
-            Entry {
-                group: g_act.clone(),
-                label: t("palette.openLinkedin"),
-                hint: "↗".into(),
-                action: Action::Open(CONFIG.linkedin.into()),
-            },
-            Entry {
-                group: g_act,
-                label: t("palette.downloadResume"),
-                hint: "PDF".into(),
-                action: Action::Open(format!("/resume/{}", resume_file(&lang))),
-            },
-        ]);
-
-        entries
-            .into_iter()
-            .map(|entry| {
-                (
-                    format!("{}\n{}", entry.label, entry.group).to_lowercase(),
-                    entry,
-                )
-            })
-            .collect::<Vec<_>>()
-    });
+    let entries = use_memo(move || searchable_entries(i18n, legal_indexes.as_ref(), &repos));
 
     let needle = q().to_lowercase();
     let filtered: Vec<Entry> = entries
@@ -179,30 +79,8 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
             Action::Goto(target) => {
                 navigator.push(target.clone());
             }
-            Action::Open(url) => {
-                // `window.open` — unlike `<a target="_blank">` — does not imply
-                // `noopener`, so without the feature string the opened page
-                // could reach back through `window.opener` and navigate this
-                // tab (reverse tabnabbing). Every anchor elsewhere in the app
-                // sets the same pair.
-                #[cfg(feature = "web")]
-                if let Some(win) = web_sys::window() {
-                    let _ = win.open_with_url_and_target_and_features(
-                        url,
-                        "_blank",
-                        "noopener,noreferrer",
-                    );
-                }
-                #[cfg(not(feature = "web"))]
-                let _ = url;
-            }
-            Action::CopyEmail =>
-            {
-                #[cfg(feature = "web")]
-                if let Some(win) = web_sys::window() {
-                    let _ = win.navigator().clipboard().write_text(CONFIG.email);
-                }
-            }
+            Action::Open(url) => open_in_new_tab(url),
+            Action::CopyEmail => copy_email(),
             Action::ToggleLang => {
                 switch_language(&ctx, next_language(&lang).code);
             }
@@ -212,24 +90,57 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
         }
     });
 
-    // Group entries preserving first-seen order, keeping the flat index so the
-    // highlight matches keyboard-navigation order.
-    let mut grouped: Vec<(String, Vec<(usize, Entry)>)> = Vec::new();
-    for (flat_i, e) in filtered.iter().enumerate() {
-        if let Some(slot) = grouped.iter_mut().find(|(g, _)| *g == e.group) {
-            slot.1.push((flat_i, e.clone()));
-        } else {
-            grouped.push((e.group.clone(), vec![(flat_i, e.clone())]));
-        }
-    }
-
-    let n = filtered.len().max(1);
+    let groups = group_in_first_seen_order(&filtered);
     let placeholder = t("palette.placeholder");
     let no_matches = t("palette.noMatches");
     let hint = t("palette.hint");
     let dialog_label = t("palette.dialogLabel");
-    let is_empty = filtered.is_empty();
 
+    let active_id = (!filtered.is_empty()).then(|| format!("cmdk-opt-{}", selected()));
+    let list_label = dialog_label.clone();
+
+    rsx! {
+        PaletteDialog { label: dialog_label, on_close,
+            div { class: "cmdk-search",
+                span { class: "mono text-accent", ">_" }
+                // The ARIA combobox pattern: focus stays in the field, and the highlighted
+                // option is announced through `aria-activedescendant` as the arrows move it.
+                input {
+                    autofocus: true,
+                    role: "combobox",
+                    "aria-expanded": "true",
+                    "aria-controls": "cmdk-list",
+                    "aria-autocomplete": "list",
+                    "aria-activedescendant": active_id,
+                    value: "{q}",
+                    placeholder: "{placeholder}",
+                    oninput: move |e| {
+                        q.set(e.value());
+                        selected.set(0);
+                    },
+                    onkeydown: move |e| on_search_key(&e, selected, &filtered, activate, on_close),
+                }
+                span { class: "mono text-muted", "ESC" }
+            }
+            PaletteResults {
+                groups,
+                selected,
+                activate,
+                label: list_label,
+                empty_text: no_matches,
+            }
+            div { class: "cmdk-footer",
+                span { class: "mono text-muted", "{hint}" }
+            }
+        }
+    }
+}
+
+/// The modal frame around the palette: the overlay that closes it on an outside click, the
+/// dialog role and label, Tab kept inside, and focus handed back on close to whatever held it
+/// before the palette opened.
+#[component]
+fn PaletteDialog(label: String, on_close: EventHandler<()>, children: Element) -> Element {
     // The modal element, so Tab can be kept inside it (client only).
     #[cfg(feature = "web")]
     let mut modal_el = use_signal(|| None::<web_sys::Element>);
@@ -252,9 +163,6 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
         });
     }
 
-    let active_id = (!is_empty).then(|| format!("cmdk-opt-{}", selected()));
-    let list_label = dialog_label.clone();
-
     rsx! {
         div { class: "cmdk-overlay", onclick: move |_| on_close.call(()),
             div {
@@ -265,7 +173,7 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
                 // of dropping the user into unlabelled content.
                 role: "dialog",
                 "aria-modal": "true",
-                "aria-label": "{dialog_label}",
+                "aria-label": "{label}",
                 onmounted: move |e| {
                     #[cfg(feature = "web")]
                     {
@@ -290,87 +198,248 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
                     #[cfg(not(feature = "web"))]
                     let _ = e;
                 },
-                div { class: "cmdk-search",
-                    span { class: "mono text-accent", ">_" }
-                    // The ARIA combobox pattern: focus stays in the field, and the highlighted
-                    // option is announced through `aria-activedescendant` as the arrows move it.
-                    input {
-                        autofocus: true,
-                        role: "combobox",
-                        "aria-expanded": "true",
-                        "aria-controls": "cmdk-list",
-                        "aria-autocomplete": "list",
-                        "aria-activedescendant": active_id,
-                        value: "{q}",
-                        placeholder: "{placeholder}",
-                        oninput: move |e| {
-                            q.set(e.value());
-                            selected.set(0);
-                        },
-                        onkeydown: move |e| {
-                            match e.key() {
-                                Key::ArrowDown => {
-                                    e.prevent_default();
-                                    selected.set((selected() + 1) % n);
-                                }
-                                Key::ArrowUp => {
-                                    e.prevent_default();
-                                    selected.set((selected() + n - 1) % n);
-                                }
-                                Key::Enter => {
-                                    e.prevent_default();
-                                    if let Some(entry) = filtered.get(selected()) {
-                                        activate.call(entry.action.clone());
-                                    }
-                                }
-                                Key::Escape => on_close.call(()),
-                                _ => {}
+                {children}
+            }
+        }
+    }
+}
+
+/// The listbox under the search field: the matching entries in their groups, or the empty state.
+///
+/// `groups` carries each entry's index in the flat filtered list, which is the index the arrow
+/// keys move `selected` through.
+#[component]
+fn PaletteResults(
+    groups: Vec<(String, Vec<(usize, Entry)>)>,
+    selected: Signal<usize>,
+    activate: Callback<Action>,
+    label: String,
+    empty_text: String,
+) -> Element {
+    let is_empty = groups.is_empty();
+    rsx! {
+        div {
+            id: "cmdk-list",
+            class: "cmdk-list",
+            role: "listbox",
+            "aria-label": "{label}",
+            {groups.into_iter().map(|(g, items)| rsx! {
+                div { key: "{g}", class: "cmdk-group", role: "group", "aria-label": "{g}",
+                    span { class: "mono text-muted", "aria-hidden": "true", "{g}" }
+                    {items.into_iter().map(|(i, e)| {
+                        let is_sel = i == selected();
+                        let cls = if is_sel { "cmdk-item active" } else { "cmdk-item" };
+                        let action = e.action.clone();
+                        rsx! {
+                            // Not in the Tab order: the field owns focus, and the
+                            // arrows move the selection.
+                            button {
+                                key: "{i}",
+                                id: "cmdk-opt-{i}",
+                                class: "{cls}",
+                                role: "option",
+                                tabindex: "-1",
+                                "aria-selected": if is_sel { "true" } else { "false" },
+                                onclick: move |_| activate.call(action.clone()),
+                                onmouseenter: move |_| selected.set(i),
+                                span { "{e.label}" }
+                                span { class: "mono text-muted", "{e.hint}" }
                             }
-                        },
-                    }
-                    span { class: "mono text-muted", "ESC" }
-                }
-                div {
-                    id: "cmdk-list",
-                    class: "cmdk-list",
-                    role: "listbox",
-                    "aria-label": "{list_label}",
-                    {grouped.into_iter().map(|(g, items)| rsx! {
-                        div { key: "{g}", class: "cmdk-group", role: "group", "aria-label": "{g}",
-                            span { class: "mono text-muted", "aria-hidden": "true", "{g}" }
-                            {items.into_iter().map(|(i, e)| {
-                                let is_sel = i == selected();
-                                let cls = if is_sel { "cmdk-item active" } else { "cmdk-item" };
-                                let action = e.action.clone();
-                                rsx! {
-                                    // Not in the Tab order: the field owns focus, and the
-                                    // arrows move the selection.
-                                    button {
-                                        key: "{i}",
-                                        id: "cmdk-opt-{i}",
-                                        class: "{cls}",
-                                        role: "option",
-                                        tabindex: "-1",
-                                        "aria-selected": if is_sel { "true" } else { "false" },
-                                        onclick: move |_| activate.call(action.clone()),
-                                        onmouseenter: move |_| selected.set(i),
-                                        span { "{e.label}" }
-                                        span { class: "mono text-muted", "{e.hint}" }
-                                    }
-                                }
-                            })}
                         }
                     })}
-                    if is_empty {
-                        div { class: "cmdk-empty",
-                            span { class: "mono text-muted", "{no_matches}" }
-                        }
-                    }
                 }
-                div { class: "cmdk-footer",
-                    span { class: "mono text-muted", "{hint}" }
+            })}
+            if is_empty {
+                div { class: "cmdk-empty",
+                    span { class: "mono text-muted", "{empty_text}" }
                 }
             }
         }
+    }
+}
+
+/// Moves the selection with the arrow keys, runs the selected entry on Enter, and closes on
+/// Escape. Arrow keys wrap at both ends of `filtered`.
+fn on_search_key(
+    e: &KeyboardEvent,
+    mut selected: Signal<usize>,
+    filtered: &[Entry],
+    activate: Callback<Action>,
+    on_close: EventHandler<()>,
+) {
+    let n = filtered.len().max(1);
+    match e.key() {
+        Key::ArrowDown => {
+            e.prevent_default();
+            selected.set((selected() + 1) % n);
+        }
+        Key::ArrowUp => {
+            e.prevent_default();
+            selected.set((selected() + n - 1) % n);
+        }
+        Key::Enter => {
+            e.prevent_default();
+            if let Some(entry) = filtered.get(selected()) {
+                activate.call(entry.action.clone());
+            }
+        }
+        Key::Escape => on_close.call(()),
+        _ => {}
+    }
+}
+
+/// Groups entries by `group` in the order each group first appears, keeping every entry's flat
+/// index so the highlight matches keyboard-navigation order.
+fn group_in_first_seen_order(filtered: &[Entry]) -> Vec<(String, Vec<(usize, Entry)>)> {
+    let mut grouped: Vec<(String, Vec<(usize, Entry)>)> = Vec::new();
+    for (flat_i, e) in filtered.iter().enumerate() {
+        if let Some(slot) = grouped.iter_mut().find(|(g, _)| *g == e.group) {
+            slot.1.push((flat_i, e.clone()));
+        } else {
+            grouped.push((e.group.clone(), vec![(flat_i, e.clone())]));
+        }
+    }
+    grouped
+}
+
+/// Every entry the palette offers in the current language, each paired with the lowercased text
+/// a query is matched against.
+fn searchable_entries(
+    i18n: Signal<I18n>,
+    legal_indexes: Option<&LegalIndexes>,
+    repos: &ReposState,
+) -> Vec<(String, Entry)> {
+    let t = move |k: &str| i18n.read().t(k);
+    let lang = i18n.read().get_current_language().to_string();
+    let g_nav = t("palette.groupNav");
+    let g_work = t("palette.groupWork");
+    let g_act = t("palette.groupActions");
+
+    let mut entries: Vec<Entry> = SECTIONS
+        .iter()
+        .map(|(slug, key)| Entry {
+            group: g_nav.clone(),
+            label: t(key),
+            hint: format!("§ {}", section_num(slug)),
+            action: Action::Section(slug),
+        })
+        .collect();
+    entries.extend(legal_entries(i18n, legal_indexes, &lang, &g_nav));
+    entries.push(Entry {
+        group: g_nav,
+        label: t("palette.licenses"),
+        hint: "/licenses".into(),
+        action: Action::Goto(Route::Licenses {}),
+    });
+    entries.extend(
+        repos
+            .repos()
+            .iter()
+            .filter(|r| !r.fork && !r.archived)
+            .map(|r| Entry {
+                group: g_work.clone(),
+                label: r.name.clone(),
+                hint: r.language.clone().unwrap_or_else(|| "—".into()),
+                action: Action::Open(r.html_url.clone()),
+            }),
+    );
+    entries.extend(action_entries(&t, &lang, &g_act));
+
+    entries
+        .into_iter()
+        .map(|entry| {
+            (
+                format!("{}\n{}", entry.label, entry.group).to_lowercase(),
+                entry,
+            )
+        })
+        .collect()
+}
+
+/// Every published legal document, under the operator's title and in their order. A document
+/// hosted elsewhere opens in a new tab; one this site hosts is a route.
+fn legal_entries(
+    i18n: Signal<I18n>,
+    legal_indexes: Option<&LegalIndexes>,
+    lang: &str,
+    group: &str,
+) -> Vec<Entry> {
+    let legal_text = SiteText::new(i18n);
+    let docs = legal_indexes
+        .and_then(|indexes| indexes.get(lang).cloned())
+        .unwrap_or_default();
+    docs.into_iter()
+        .map(|doc| {
+            let label = legal_title(&legal_text, &doc);
+            let (hint, action) = match doc.url.clone().filter(|_| !is_hosted(&doc)) {
+                Some(url) => ("↗".to_owned(), Action::Open(url)),
+                None => (
+                    document_path(&doc.slug),
+                    Action::Goto(Route::LegalDocument { slug: doc.slug }),
+                ),
+            };
+            Entry {
+                group: group.to_owned(),
+                label,
+                hint,
+                action,
+            }
+        })
+        .collect()
+}
+
+/// The fixed actions: copy the email, switch the language, open the profiles, get the resume.
+fn action_entries(t: &impl Fn(&str) -> String, lang: &str, group: &str) -> [Entry; 5] {
+    let entry = |label: &str, hint: String, action: Action| Entry {
+        group: group.to_owned(),
+        label: t(label),
+        hint,
+        action,
+    };
+    let email_hint = CONFIG.email.split('@').next().unwrap_or("").to_string() + "@…";
+    [
+        entry("palette.copyEmail", email_hint, Action::CopyEmail),
+        entry(
+            "palette.toggleLang",
+            next_language(lang).code.to_uppercase(),
+            Action::ToggleLang,
+        ),
+        entry(
+            "palette.openGithub",
+            "↗".into(),
+            Action::Open(CONFIG.github.into()),
+        ),
+        entry(
+            "palette.openLinkedin",
+            "↗".into(),
+            Action::Open(CONFIG.linkedin.into()),
+        ),
+        entry(
+            "palette.downloadResume",
+            "PDF".into(),
+            Action::Open(format!("/resume/{}", resume_file(lang))),
+        ),
+    ]
+}
+
+/// Opens `url` in a new tab with `noopener,noreferrer`. A no-op outside the wasm client.
+///
+/// `window.open` — unlike `<a target="_blank">` — does not imply `noopener`, so without the
+/// feature string the opened page could reach back through `window.opener` and navigate this
+/// tab (reverse tabnabbing). Every anchor elsewhere in the app sets the same pair.
+fn open_in_new_tab(url: &str) {
+    #[cfg(feature = "web")]
+    if let Some(win) = web_sys::window() {
+        let _ = win.open_with_url_and_target_and_features(url, "_blank", "noopener,noreferrer");
+    }
+    #[cfg(not(feature = "web"))]
+    let _ = url;
+}
+
+/// Copies the contact address to the clipboard. A no-op outside the wasm client.
+fn copy_email() {
+    #[cfg(feature = "web")]
+    if let Some(win) = web_sys::window() {
+        let _ = win.navigator().clipboard().write_text(CONFIG.email);
     }
 }

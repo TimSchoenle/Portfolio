@@ -1,7 +1,7 @@
 //! Skill radar (radar-v3): four quadrants with named, hoverable dots plus
 //! seeded filler dots, concentric rings and a rotating sweep wedge.
 
-use std::rc::Rc;
+use std::sync::LazyLock;
 
 use dioxus::prelude::*;
 use portfolio_data::{Quadrant, SKILLS, Skill, matrix_skills};
@@ -75,6 +75,12 @@ fn radius_for(confidence: f32, jitter: f32) -> f32 {
     (confidence + (jitter - 0.5) * 0.04).clamp(0.05, 0.97)
 }
 
+/// The dot layout, a pure function of compile-time data, computed once per process.
+///
+/// Recomputing it per render would re-run `matrix_skills()`, the layout of ~170 dots and an
+/// O(named x filler) proximity pass on every pointer move, since those write the hover signals.
+static DOTS: LazyLock<(Vec<NamedDot>, Vec<FillerDot>)> = LazyLock::new(build_dots);
+
 fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
     let skills = matrix_skills();
     let mut named = Vec::new();
@@ -145,35 +151,7 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
 #[component]
 pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
     let i18n = use_i18n().i18n;
-    let mut hovered = use_signal(|| None::<usize>);
-    let mut hovered_filler = use_signal(|| None::<usize>);
-
-    // The dot layout is a pure function of compile-time data, so it is computed
-    // once per mounted radar. Rebuilding it per render would re-run
-    // `matrix_skills()`, the layout of ~170 dots and an O(named x filler)
-    // proximity pass on every pointer move, since those write the hover signals
-    // below.
-    let dots = use_hook(|| Rc::new(build_dots()));
-    let (named, filler) = (&dots.0, &dots.1);
-
-    let label = move |q: Quadrant| i18n.read().t(q.i18n_key()).to_uppercase();
-    let label_opacity = move |q: Quadrant| {
-        if active.is_none() || active == Some(q) {
-            "1"
-        } else {
-            "0.3"
-        }
-    };
-
-    let wedge_end = polar(-30.0, MAX_R);
     let view_box = format!("0 0 {SIZE} {SIZE}");
-    let sweep_path = format!(
-        "M {CX} {CY} L {} {CY} A {MAX_R} {MAX_R} 0 0 0 {} {} Z",
-        CX + MAX_R,
-        wedge_end.0,
-        wedge_end.1
-    );
-
     let radar_label = i18n.read().t("skills.radarLabel");
 
     rsx! {
@@ -186,137 +164,185 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
                 // plotted here is also reachable as text in the adjacent list.
                 role: "img",
                 "aria-label": "{radar_label}",
-                defs {
-                    radialGradient { id: "radarGlow", cx: "50%", cy: "50%", r: "50%",
-                        stop { offset: "0%", "stop-color": "rgba(96,165,250,0.06)" }
-                        stop { offset: "100%", "stop-color": "rgba(96,165,250,0)" }
-                    }
-                    linearGradient { id: "sweepGrad", x1: "0%", y1: "50%", x2: "100%", y2: "50%",
-                        stop { offset: "0%", "stop-color": "var(--accent)", "stop-opacity": "0" }
-                        stop { offset: "100%", "stop-color": "var(--accent)", "stop-opacity": "0.55" }
-                    }
-                }
-
-                circle { cx: "{CX}", cy: "{CY}", r: "{MAX_R}", fill: "url(#radarGlow)" }
-
-                {[0.3_f32, 0.5, 0.7, 0.9].iter().enumerate().map(|(i, f)| {
-                    let r = MAX_R * f;
-                    let dash = if i == 3 { "" } else { "2 3" };
-                    rsx! {
-                        circle {
-                            key: "{i}",
-                            cx: "{CX}", cy: "{CY}", r: "{r}",
-                            fill: "none", stroke: "rgba(200,220,255,0.08)",
-                            "stroke-width": "0.6", "stroke-dasharray": "{dash}",
-                        }
-                    }
-                })}
-                circle {
-                    cx: "{CX}", cy: "{CY}", r: "{MAX_R}",
-                    fill: "none", stroke: "rgba(200,220,255,0.14)", "stroke-width": "0.8",
-                }
-
-                line {
-                    x1: "{CX}", y1: "{CY - MAX_R}", x2: "{CX}", y2: "{CY + MAX_R}",
-                    stroke: "rgba(200,220,255,0.1)", "stroke-width": "0.6",
-                }
-                line {
-                    x1: "{CX - MAX_R}", y1: "{CY}", x2: "{CX + MAX_R}", y2: "{CY}",
-                    stroke: "rgba(200,220,255,0.1)", "stroke-width": "0.6",
-                }
-
-                g { class: "radar-sweep-g", style: "transform-origin: {CX}px {CY}px",
-                    path { d: "{sweep_path}", fill: "url(#sweepGrad)", opacity: "0.7" }
-                    line {
-                        x1: "{CX}", y1: "{CY}", x2: "{CX + MAX_R}", y2: "{CY}",
-                        stroke: "var(--accent)", "stroke-width": "1.3", opacity: "0.55",
-                    }
-                }
-
-                {Quadrant::all().into_iter().map(|q| {
-                    let (tx, ty) = match q {
-                        Quadrant::Languages => (CX - MAX_R + 8.0, CY - MAX_R + 16.0),
-                        Quadrant::Frameworks => (CX + MAX_R - 90.0, CY - MAX_R + 16.0),
-                        Quadrant::Build => (CX + MAX_R - 100.0, CY + MAX_R - 6.0),
-                        Quadrant::Infra => (CX - MAX_R + 8.0, CY + MAX_R - 6.0),
-                    };
-                    let color = q.color();
-                    let op = label_opacity(q);
-                    let text = label(q);
-                    rsx! {
-                        text {
-                            key: "{color}",
-                            x: "{tx}", y: "{ty}", fill: "{color}", "font-size": "10",
-                            "font-family": "JetBrains Mono, monospace", "letter-spacing": "0.14em",
-                            opacity: "{op}",
-                            "{text}"
-                        }
-                    }
-                })}
-
-                {filler.iter().enumerate().map(|(i, d)| {
-                    let dim = active.is_some() && active != Some(d.skill.quadrant);
-                    let is_hover = hovered_filler() == Some(i);
-                    let skill = d.skill;
-                    let color = d.skill.quadrant.color();
-                    let r = if is_hover { d.size + 1.5 } else { d.size };
-                    let opacity = if dim { 0.15 } else if is_hover { 0.95 } else { d.opacity };
-                    let style = if d.near_named { "pointer-events: none" } else { "cursor: pointer" };
-                    rsx! {
-                        circle {
-                            key: "f{i}",
-                            cx: "{d.x}", cy: "{d.y}", r: "{r}", fill: "{color}",
-                            opacity: "{opacity:.2}", style: "{style}",
-                            // Decorative scatter: hovering one is a sighted-only
-                            // affordance, and turning 80-odd dots into tab stops
-                            // would bury the rest of the page. The labeled
-                            // `role="img"` on the svg covers them.
-                            "aria-hidden": "true",
-                            onmouseenter: move |_| { hovered_filler.set(Some(i)); on_hover.call(Some(skill)); },
-                            onmouseleave: move |_| { hovered_filler.set(None); on_hover.call(None); },
-                        }
-                    }
-                })}
-
-                {named.iter().enumerate().map(|(i, d)| {
-                    let dim = active.is_some() && active != Some(d.skill.quadrant);
-                    let is_hover = hovered() == Some(i);
-                    let skill = d.skill;
-                    let color = d.skill.quadrant.color();
-                    let r = if is_hover { d.size + 3.0 } else { d.size };
-                    let stroke = if is_hover { "var(--fg)" } else { "none" };
-                    let g_opacity = if dim { "0.15" } else { "1" };
-                    // Named dots are the radar's interactive layer, so they are
-                    // reachable by keyboard: focusing one announces its label
-                    // and drives the same live-region readout as hovering.
-                    let dot_label = format!("{} — {}%", skill.name, (skill.confidence * 100.0).round());
-                    rsx! {
-                        g {
-                            key: "n{i}",
-                            style: "cursor: pointer", opacity: "{g_opacity}",
-                            tabindex: "0",
-                            role: "img",
-                            "aria-label": "{dot_label}",
-                            onmouseenter: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
-                            onmouseleave: move |_| { hovered.set(None); on_hover.call(None); },
-                            onfocus: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
-                            onblur: move |_| { hovered.set(None); on_hover.call(None); },
-                            circle {
-                                cx: "{d.x}", cy: "{d.y}", r: "{r}", fill: "{color}",
-                                stroke: "{stroke}", "stroke-width": "1.3",
-                            }
-                            if active.is_none() {
-                                circle {
-                                    cx: "{d.x}", cy: "{d.y}", r: "{d.size + 3.0}", fill: "none",
-                                    stroke: "{color}", "stroke-width": "0.6", opacity: "0.35",
-                                }
-                            }
-                        }
-                    }
-                })}
-
+                RadarBackdrop {}
+                QuadrantLabels { active }
+                FillerDots { active, on_hover }
+                NamedDots { active, on_hover }
                 circle { cx: "{CX}", cy: "{CY}", r: "2", fill: "var(--accent)" }
             }
         }
+    }
+}
+
+/// The parts of the radar that carry no data: the glow, the rings, the axes and the sweep.
+#[component]
+fn RadarBackdrop() -> Element {
+    let wedge_end = polar(-30.0, MAX_R);
+    let sweep_path = format!(
+        "M {CX} {CY} L {} {CY} A {MAX_R} {MAX_R} 0 0 0 {} {} Z",
+        CX + MAX_R,
+        wedge_end.0,
+        wedge_end.1
+    );
+    rsx! {
+        defs {
+            radialGradient { id: "radarGlow", cx: "50%", cy: "50%", r: "50%",
+                stop { offset: "0%", "stop-color": "rgba(96,165,250,0.06)" }
+                stop { offset: "100%", "stop-color": "rgba(96,165,250,0)" }
+            }
+            linearGradient { id: "sweepGrad", x1: "0%", y1: "50%", x2: "100%", y2: "50%",
+                stop { offset: "0%", "stop-color": "var(--accent)", "stop-opacity": "0" }
+                stop { offset: "100%", "stop-color": "var(--accent)", "stop-opacity": "0.55" }
+            }
+        }
+
+        circle { cx: "{CX}", cy: "{CY}", r: "{MAX_R}", fill: "url(#radarGlow)" }
+
+        {[0.3_f32, 0.5, 0.7, 0.9].iter().enumerate().map(|(i, f)| {
+            let r = MAX_R * f;
+            let dash = if i == 3 { "" } else { "2 3" };
+            rsx! {
+                circle {
+                    key: "{i}",
+                    cx: "{CX}", cy: "{CY}", r: "{r}",
+                    fill: "none", stroke: "rgba(200,220,255,0.08)",
+                    "stroke-width": "0.6", "stroke-dasharray": "{dash}",
+                }
+            }
+        })}
+        circle {
+            cx: "{CX}", cy: "{CY}", r: "{MAX_R}",
+            fill: "none", stroke: "rgba(200,220,255,0.14)", "stroke-width": "0.8",
+        }
+
+        line {
+            x1: "{CX}", y1: "{CY - MAX_R}", x2: "{CX}", y2: "{CY + MAX_R}",
+            stroke: "rgba(200,220,255,0.1)", "stroke-width": "0.6",
+        }
+        line {
+            x1: "{CX - MAX_R}", y1: "{CY}", x2: "{CX + MAX_R}", y2: "{CY}",
+            stroke: "rgba(200,220,255,0.1)", "stroke-width": "0.6",
+        }
+
+        g { class: "radar-sweep-g", style: "transform-origin: {CX}px {CY}px",
+            path { d: "{sweep_path}", fill: "url(#sweepGrad)", opacity: "0.7" }
+            line {
+                x1: "{CX}", y1: "{CY}", x2: "{CX + MAX_R}", y2: "{CY}",
+                stroke: "var(--accent)", "stroke-width": "1.3", opacity: "0.55",
+            }
+        }
+    }
+}
+
+/// The four quadrant names, one per corner, dimmed unless their quadrant is `active` or none is.
+#[component]
+fn QuadrantLabels(active: Option<Quadrant>) -> Element {
+    let i18n = use_i18n().i18n;
+    let label = move |q: Quadrant| i18n.read().t(q.i18n_key()).to_uppercase();
+    let label_opacity = move |q: Quadrant| {
+        if active.is_none() || active == Some(q) {
+            "1"
+        } else {
+            "0.3"
+        }
+    };
+    rsx! {
+        {Quadrant::all().into_iter().map(|q| {
+            let (tx, ty) = match q {
+                Quadrant::Languages => (CX - MAX_R + 8.0, CY - MAX_R + 16.0),
+                Quadrant::Frameworks => (CX + MAX_R - 90.0, CY - MAX_R + 16.0),
+                Quadrant::Build => (CX + MAX_R - 100.0, CY + MAX_R - 6.0),
+                Quadrant::Infra => (CX - MAX_R + 8.0, CY + MAX_R - 6.0),
+            };
+            let color = q.color();
+            let op = label_opacity(q);
+            let text = label(q);
+            rsx! {
+                text {
+                    key: "{color}",
+                    x: "{tx}", y: "{ty}", fill: "{color}", "font-size": "10",
+                    "font-family": "JetBrains Mono, monospace", "letter-spacing": "0.14em",
+                    opacity: "{op}",
+                    "{text}"
+                }
+            }
+        })}
+    }
+}
+
+/// The seeded scatter of radar-only skills: hoverable for sighted users, hidden from assistive
+/// technology.
+#[component]
+fn FillerDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
+    let mut hovered = use_signal(|| None::<usize>);
+    rsx! {
+        {DOTS.1.iter().enumerate().map(|(i, d)| {
+            let dim = active.is_some() && active != Some(d.skill.quadrant);
+            let is_hover = hovered() == Some(i);
+            let skill = d.skill;
+            let color = d.skill.quadrant.color();
+            let r = if is_hover { d.size + 1.5 } else { d.size };
+            let opacity = if dim { 0.15 } else if is_hover { 0.95 } else { d.opacity };
+            let style = if d.near_named { "pointer-events: none" } else { "cursor: pointer" };
+            rsx! {
+                circle {
+                    key: "f{i}",
+                    cx: "{d.x}", cy: "{d.y}", r: "{r}", fill: "{color}",
+                    opacity: "{opacity:.2}", style: "{style}",
+                    // Decorative scatter: hovering one is a sighted-only
+                    // affordance, and turning 80-odd dots into tab stops
+                    // would bury the rest of the page. The labeled
+                    // `role="img"` on the svg covers them.
+                    "aria-hidden": "true",
+                    onmouseenter: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
+                    onmouseleave: move |_| { hovered.set(None); on_hover.call(None); },
+                }
+            }
+        })}
+    }
+}
+
+/// The matrix skills, one labeled dot each: the radar's interactive layer, reachable by mouse
+/// and by keyboard.
+#[component]
+fn NamedDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
+    let mut hovered = use_signal(|| None::<usize>);
+    rsx! {
+        {DOTS.0.iter().enumerate().map(|(i, d)| {
+            let dim = active.is_some() && active != Some(d.skill.quadrant);
+            let is_hover = hovered() == Some(i);
+            let skill = d.skill;
+            let color = d.skill.quadrant.color();
+            let r = if is_hover { d.size + 3.0 } else { d.size };
+            let stroke = if is_hover { "var(--fg)" } else { "none" };
+            let g_opacity = if dim { "0.15" } else { "1" };
+            // Named dots are the radar's interactive layer, so they are
+            // reachable by keyboard: focusing one announces its label
+            // and drives the same live-region readout as hovering.
+            let dot_label = format!("{} — {}%", skill.name, (skill.confidence * 100.0).round());
+            rsx! {
+                g {
+                    key: "n{i}",
+                    style: "cursor: pointer", opacity: "{g_opacity}",
+                    tabindex: "0",
+                    role: "img",
+                    "aria-label": "{dot_label}",
+                    onmouseenter: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
+                    onmouseleave: move |_| { hovered.set(None); on_hover.call(None); },
+                    onfocus: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
+                    onblur: move |_| { hovered.set(None); on_hover.call(None); },
+                    circle {
+                        cx: "{d.x}", cy: "{d.y}", r: "{r}", fill: "{color}",
+                        stroke: "{stroke}", "stroke-width": "1.3",
+                    }
+                    if active.is_none() {
+                        circle {
+                            cx: "{d.x}", cy: "{d.y}", r: "{d.size + 3.0}", fill: "none",
+                            stroke: "{color}", "stroke-width": "0.6", opacity: "0.35",
+                        }
+                    }
+                }
+            }
+        })}
     }
 }

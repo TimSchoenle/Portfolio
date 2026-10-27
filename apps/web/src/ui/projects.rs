@@ -33,18 +33,6 @@ enum Filter {
     Language(String),
 }
 
-impl Filter {
-    /// A key that is unique across both pseudo-filters and every language name,
-    /// for the rendered chip's `key`.
-    fn key(&self) -> String {
-        match self {
-            Filter::Favorites => "favorites".to_string(),
-            Filter::All => "all".to_string(),
-            Filter::Language(lang) => format!("lang:{lang}"),
-        }
-    }
-}
-
 /// The repositories worth showing, most-starred first, and the languages found
 /// among them — derived once rather than on every render of the section.
 ///
@@ -77,8 +65,8 @@ fn base_lists(state: &ReposState) -> (Vec<Repo>, Vec<String>) {
 pub fn Projects(state: ReposState) -> Element {
     let i18n = use_i18n().i18n;
     let t = move |k: &str| i18n.read().t(k);
-    let mut filter = use_signal(|| Filter::Favorites);
-    let mut page = use_signal(|| 0usize);
+    let filter = use_signal(|| Filter::Favorites);
+    let page = use_signal(|| 0usize);
 
     let offline = matches!(state, ReposState::Failed);
 
@@ -93,27 +81,7 @@ pub fn Projects(state: ReposState) -> Element {
     let (repos, langs) = (&base.0, &base.1);
 
     let current = filter();
-    // Borrowed, not cloned: this is re-derived on every render (it depends on the
-    // active chip) and only the handful of cards actually rendered below need an
-    // owned `Repo`.
-    let filtered: Vec<&Repo> = match &current {
-        Filter::Favorites => {
-            let favs: Vec<&Repo> = repos.iter().filter(|r| r.is_featured()).collect();
-            // Fall back to the full list rather than showing an empty section
-            // when none of the featured repositories survived the fetch.
-            if favs.is_empty() {
-                repos.iter().collect()
-            } else {
-                favs
-            }
-        }
-        Filter::All => repos.iter().collect(),
-        Filter::Language(lang) => repos
-            .iter()
-            .filter(|r| r.language.as_deref() == Some(lang.as_str()))
-            .collect(),
-    };
-
+    let filtered = shown(repos, &current);
     let pages = filtered.len().div_ceil(PAGE_SIZE).max(1);
     let cur = page().min(pages - 1);
 
@@ -128,30 +96,6 @@ pub fn Projects(state: ReposState) -> Element {
             let _ = write!(line, " · {}", t("projects.offline"));
         }
         line
-    };
-
-    let make_filter = move |value: Filter, label: String, is_active: bool| {
-        let cls = if is_active {
-            "filter-chip active"
-        } else {
-            "filter-chip"
-        };
-        let key = value.key();
-        rsx! {
-            button {
-                key: "{key}",
-                class: "{cls}",
-                // The chips form a single-choice group, so each one reports
-                // whether it is the current selection instead of leaving that
-                // information in the styling alone.
-                "aria-pressed": "{is_active}",
-                onclick: move |_| {
-                    filter.set(value.clone());
-                    page.set(0);
-                },
-                span { class: "mono", "{label}" }
-            }
-        }
     };
 
     rsx! {
@@ -170,12 +114,10 @@ pub fn Projects(state: ReposState) -> Element {
                     Reveal { delay: 120,
                         div { class: "work-filter",
                             span { class: "mono text-muted", {t("common.filter")} }
-                            {make_filter(Filter::Favorites, t("projects.favorites"), current == Filter::Favorites)}
-                            {make_filter(Filter::All, t("common.all"), current == Filter::All)}
-                            {langs.iter().map(|l| {
-                                let value = Filter::Language(l.clone());
-                                let is_active = current == value;
-                                make_filter(value, l.clone(), is_active)
+                            FilterChip { value: Filter::Favorites, label: t("projects.favorites"), filter, page }
+                            FilterChip { value: Filter::All, label: t("common.all"), filter, page }
+                            {langs.iter().map(|l| rsx! {
+                                FilterChip { key: "{l}", value: Filter::Language(l.clone()), label: l.clone(), filter, page }
                             })}
                             span { class: "flex-1" }
                             span { class: "mono text-muted", "{count_line}" }
@@ -188,7 +130,7 @@ pub fn Projects(state: ReposState) -> Element {
                                 div { key: "p{pi}", class: "project-grid",
                                     {chunk.iter().enumerate().map(|(i, r)| rsx! {
                                         Reveal { key: "{r.name}", delay: u32::try_from((180 + i * 60).min(600)).unwrap_or(600),
-                                            ProjectCard { repo: (*r).clone(), index: pi * PAGE_SIZE + i }
+                                            ProjectCard { repo: (*r).clone() }
                                         }
                                     })}
                                 }
@@ -197,39 +139,7 @@ pub fn Projects(state: ReposState) -> Element {
                     }
 
                     if pages > 1 {
-                        div { class: "slider-nav",
-                            button {
-                                class: "slider-btn",
-                                disabled: cur == 0,
-                                "aria-label": t("projects.prevPage"),
-                                onclick: move |_| { let c = page(); if c > 0 { page.set(c - 1); } },
-                                "←"
-                            }
-                            div { class: "slider-dots",
-                                {(0..pages).map(|pi| {
-                                    let cls = if pi == cur { "slider-dot active" } else { "slider-dot" };
-                                    let page_label = t("projects.pageLabel")
-                                        .replace("{n}", &(pi + 1).to_string())
-                                        .replace("{total}", &pages.to_string());
-                                    rsx! {
-                                        button {
-                                            key: "{pi}",
-                                            class: "{cls}",
-                                            "aria-label": "{page_label}",
-                                            "aria-current": if pi == cur { "true" } else { "false" },
-                                            onclick: move |_| page.set(pi),
-                                        }
-                                    }
-                                })}
-                            }
-                            button {
-                                class: "slider-btn",
-                                disabled: cur + 1 >= pages,
-                                "aria-label": t("projects.nextPage"),
-                                onclick: move |_| { let c = page(); if c + 1 < pages { page.set(c + 1); } },
-                                "→"
-                            }
-                        }
+                        Pager { pages, cur, page }
                     }
 
                     div { class: "view-all-wrap",
@@ -247,9 +157,104 @@ pub fn Projects(state: ReposState) -> Element {
     }
 }
 
+/// The repositories `filter` selects, borrowed from `repos` in their order.
+///
+/// [`Filter::Favorites`] falls back to every repository when none of the featured ones survived
+/// the fetch, so the section never opens empty.
+fn shown<'a>(repos: &'a [Repo], filter: &Filter) -> Vec<&'a Repo> {
+    match filter {
+        Filter::Favorites => {
+            let favs: Vec<&Repo> = repos.iter().filter(|r| r.is_featured()).collect();
+            if favs.is_empty() {
+                repos.iter().collect()
+            } else {
+                favs
+            }
+        }
+        Filter::All => repos.iter().collect(),
+        Filter::Language(lang) => repos
+            .iter()
+            .filter(|r| r.language.as_deref() == Some(lang.as_str()))
+            .collect(),
+    }
+}
+
+/// One chip of the single-choice filter group. Choosing it sets `filter` to `value` and returns
+/// to the first page.
 #[component]
-fn ProjectCard(repo: Repo, index: usize) -> Element {
-    let _ = index;
+fn FilterChip(
+    value: Filter,
+    label: String,
+    filter: Signal<Filter>,
+    page: Signal<usize>,
+) -> Element {
+    let is_active = filter() == value;
+    let cls = if is_active {
+        "filter-chip active"
+    } else {
+        "filter-chip"
+    };
+    rsx! {
+        button {
+            class: "{cls}",
+            // The chips form a single-choice group, so each one reports
+            // whether it is the current selection instead of leaving that
+            // information in the styling alone.
+            "aria-pressed": "{is_active}",
+            onclick: move |_| {
+                filter.set(value.clone());
+                page.set(0);
+            },
+            span { class: "mono", "{label}" }
+        }
+    }
+}
+
+/// The previous and next buttons and one dot per page. `cur` is the page shown, out of `pages`.
+#[component]
+fn Pager(pages: usize, cur: usize, page: Signal<usize>) -> Element {
+    let i18n = use_i18n().i18n;
+    let t = move |k: &str| i18n.read().t(k);
+    rsx! {
+        div { class: "slider-nav",
+            button {
+                class: "slider-btn",
+                disabled: cur == 0,
+                "aria-label": t("projects.prevPage"),
+                onclick: move |_| { let c = page(); if c > 0 { page.set(c - 1); } },
+                "←"
+            }
+            div { class: "slider-dots",
+                {(0..pages).map(|pi| {
+                    let cls = if pi == cur { "slider-dot active" } else { "slider-dot" };
+                    let page_label = t("projects.pageLabel")
+                        .replace("{n}", &(pi + 1).to_string())
+                        .replace("{total}", &pages.to_string());
+                    rsx! {
+                        button {
+                            key: "{pi}",
+                            class: "{cls}",
+                            "aria-label": "{page_label}",
+                            "aria-current": if pi == cur { "true" } else { "false" },
+                            onclick: move |_| page.set(pi),
+                        }
+                    }
+                })}
+            }
+            button {
+                class: "slider-btn",
+                disabled: cur + 1 >= pages,
+                "aria-label": t("projects.nextPage"),
+                onclick: move |_| { let c = page(); if c + 1 < pages { page.set(c + 1); } },
+                "→"
+            }
+        }
+    }
+}
+
+/// One repository as a card linking to it on GitHub.
+#[component]
+fn ProjectCard(repo: Repo) -> Element {
     let lang_label = repo.language.clone().unwrap_or_else(|| "—".to_string());
     let color = lang_color(&lang_label);
     let card_cls = if repo.is_featured() {
