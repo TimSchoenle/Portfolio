@@ -53,7 +53,7 @@ const RELEASE_PREFIX: &str = "portfolio";
 /// The crate names as the linker spells them, so `apps/web`'s own frames and the two workspace
 /// libraries are in-app and everything under `dioxus`, `axum` and `hyper` is not. That is what
 /// makes a trace open on the handler rather than on a framework internal ten frames above it.
-const IN_APP: &[&str] = &["web", "portfolio_config", "portfolio_data"];
+const IN_APP: &[&str] = &["portfolio_web", "portfolio_config", "portfolio_data"];
 
 /// Keeps the Sentry client alive.
 ///
