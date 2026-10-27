@@ -50,7 +50,7 @@ middleware has not already set a stricter one, which is what the section below i
 
 ## Content-Security-Policy
 
-Built with [csp-shell](https://github.com/TimSchoenle/csp-shell) in `apps/web/src/server/csp.rs`,
+Built with [csp-shell](https://github.com/TimSchoenle/csp-shell) in `crates/server/src/csp.rs`,
 from the bytes of the document being served rather than written out as a string. Two policies leave
 the server.
 

@@ -17,29 +17,100 @@ use axum::{
     response::IntoResponse,
 };
 
-use super::csp;
-use super::isr::{PagePaths, with_locale_query};
-use crate::i18n::{Negotiated, lang_cookie, negotiate_locale};
+use portfolio_data::lang_cookie;
+
+use crate::csp::{DocumentScan, SitePolicy};
+use crate::isr_marker::with_locale_query;
+use crate::locale::{Negotiated, negotiate_locale};
 
 /// What [`localize_page`] carries per request.
 ///
 /// Cloned for every request the middleware sees, so the policy and the memo are behind an
 /// [`Arc`] rather than copied.
 #[derive(Clone)]
-pub(super) struct PageState {
+pub struct PageState {
     /// Whether the incremental cache is active, and therefore whether the request URI has to
     /// carry the negotiated language for the cache to key on.
-    pub(super) isr_enabled: bool,
-    /// The Content-Security-Policy this server serves. See [`csp`].
-    pub(super) policy: Arc<csp::SitePolicy>,
+    isr_enabled: bool,
+    /// The Content-Security-Policy this server serves. See [`crate::csp`].
+    policy: Arc<SitePolicy>,
     /// Finished pages, memoized per `(path, language)`. See [`PageMemo`].
-    pub(super) pages: Arc<PageMemo>,
+    pages: Arc<PageMemo>,
     /// The pages worth remembering. See [`PagePaths`].
-    pub(super) paths: PagePaths,
-    /// How long a memoized page may be served: the incremental cache's TTL, so configuring
-    /// time-based revalidation revalidates this too. `None` keeps a page for the process's
-    /// lifetime, like the cache.
-    pub(super) ttl: Option<Duration>,
+    paths: PagePaths,
+    /// How long a memoized page may be served. `None` keeps a page for the process's lifetime.
+    ttl: Option<Duration>,
+}
+
+impl PageState {
+    /// Creates the state for one router, with an empty page memo.
+    ///
+    /// `isr_enabled` says whether the incremental cache is active, so the request URI has to
+    /// carry the negotiated language. `ttl` should be the incremental cache's own, so that
+    /// configuring time-based revalidation revalidates the memo too; `None` keeps a page for the
+    /// process's lifetime, like the cache.
+    #[must_use]
+    pub fn new(
+        policy: Arc<SitePolicy>,
+        paths: PagePaths,
+        isr_enabled: bool,
+        ttl: Option<Duration>,
+    ) -> Self {
+        Self {
+            isr_enabled,
+            policy,
+            pages: Arc::new(PageMemo::default()),
+            paths,
+            ttl,
+        }
+    }
+}
+
+/// The page paths whose rendered HTML is worth persisting.
+///
+/// The list holds the application's fixed routes, plus one path per document the configuration
+/// hosts. A catch-all route is deliberately absent, and so is every slug nothing is published
+/// under.
+///
+/// The incremental cache is keyed by path, and the catch-all matches every URL that exists — so
+/// without this allowlist an unauthenticated client could mint an unbounded number of cache
+/// entries (one directory and one HTML file each) by requesting `/1`, `/2`, … until the volume
+/// filled up. The same holds for `/legal/:slug`, whose segment is request text. Routes outside
+/// the list still render normally; their output is just never stored.
+///
+/// Cheap to clone: the list is shared.
+#[derive(Clone)]
+pub struct PagePaths(Arc<[&'static str]>);
+
+impl PagePaths {
+    /// Creates the allowlist from the `fixed` routes, then the `configured` paths.
+    ///
+    /// The configured paths are leaked into `&'static str` on purpose. Call this once per
+    /// process, from a configuration that is never reloaded: that lets the page memo key on a
+    /// program-lifetime string instead of on request text or a per-request allocation.
+    #[must_use]
+    pub fn new(fixed: &[&'static str], configured: &[String]) -> Self {
+        let configured = configured
+            .iter()
+            .map(|path| &*Box::leak(path.clone().into_boxed_str()));
+        Self(fixed.iter().copied().chain(configured).collect())
+    }
+
+    /// Returns the stored entry equal to `path`.
+    ///
+    /// Returning the stored entry rather than a `bool` is what lets the page memo key on a
+    /// `&'static str`: the request's own path is borrowed from a URI that does not outlive the
+    /// request, whereas this one lives as long as the process.
+    #[must_use]
+    pub fn get(&self, path: &str) -> Option<&'static str> {
+        self.0.iter().copied().find(|known| *known == path)
+    }
+
+    /// Reports whether a request path is one of these.
+    #[must_use]
+    pub fn contains(&self, path: &str) -> bool {
+        self.get(path).is_some()
+    }
 }
 
 /// A finished page: the headers and body exactly as they will be sent, and the inline-script
@@ -47,14 +118,14 @@ pub(super) struct PageState {
 ///
 /// Stored and served as a unit and never mixed, which is what makes memoizing them safe: a
 /// policy is only ever applied to the document it was scanned from.
-pub(super) struct RenderedPage {
+struct RenderedPage {
     /// The render's own response headers, without the per-response ones
     /// ([`finish_page`] adds those).
     headers: HeaderMap,
     /// The body with `lang` already stamped onto its `<html>` tag.
     body: axum::body::Bytes,
-    /// What [`csp::SitePolicy::scan`] found in [`Self::body`].
-    scan: csp::DocumentScan,
+    /// What [`SitePolicy::scan`] found in [`Self::body`].
+    scan: DocumentScan,
     /// When the render happened, for [`PageState::ttl`].
     rendered_at: Instant,
 }
@@ -70,40 +141,41 @@ pub(super) struct RenderedPage {
 /// path and the negotiated language for the life of the process (or for [`PageState::ttl`],
 /// when one is configured). Both halves of the key are `&'static str` drawn from fixed lists,
 /// which bounds the map at `paths.len() * LANGUAGES.len()` entries — it needs no eviction.
-pub(super) type PageMemo = RwLock<HashMap<(&'static str, &'static str), Arc<RenderedPage>>>;
+#[derive(Default)]
+struct PageMemo(RwLock<HashMap<(&'static str, &'static str), Arc<RenderedPage>>>);
 
 /// The memoized page for `key`, if one has been rendered and is still within `ttl`.
 ///
 /// A poisoned lock is recovered from rather than propagated: nothing can panic while it is
 /// held, and a request must not fail over a structure it could just as well have missed in.
-fn memo_get(
-    memo: &PageMemo,
-    key: (&'static str, &'static str),
-    ttl: Option<Duration>,
-) -> Option<Arc<RenderedPage>> {
-    memo.read()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .get(&key)
-        .filter(|page| ttl.is_none_or(|ttl| page.rendered_at.elapsed() < ttl))
-        .cloned()
-}
+impl PageMemo {
+    fn get(
+        &self,
+        key: (&'static str, &'static str),
+        ttl: Option<Duration>,
+    ) -> Option<Arc<RenderedPage>> {
+        self.0
+            .read()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .get(&key)
+            .filter(|page| ttl.is_none_or(|ttl| page.rendered_at.elapsed() < ttl))
+            .cloned()
+    }
 
-/// Records a finished page under `key` and hands back the shared handle to it.
-fn memo_insert(
-    memo: &PageMemo,
-    key: (&'static str, &'static str),
-    page: RenderedPage,
-) -> Arc<RenderedPage> {
-    let page = Arc::new(page);
-    memo.write()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .insert(key, Arc::clone(&page));
-    page
+    /// Records a finished page under `key` and hands back the shared handle to it.
+    fn insert(&self, key: (&'static str, &'static str), page: RenderedPage) -> Arc<RenderedPage> {
+        let page = Arc::new(page);
+        self.0
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(key, Arc::clone(&page));
+        page
+    }
 }
 
 /// Middleware finishing every `GET` the server answers with a document:
 ///
-/// 1. A [`PagePaths`] page already rendered in this language is answered from [`PageMemo`]
+/// 1. A [`PagePaths`] page already rendered in this language is answered from the page memo
 ///    without reaching the router at all.
 /// 2. When `isr_enabled`, the language is folded into the URI query, so the incremental
 ///    renderer — which keys its cache by path and query only — keeps one entry per language.
@@ -115,12 +187,12 @@ fn memo_insert(
 /// 5. The `lang` cookie is written when the request's does not match, including on pages the
 ///    incremental cache answered, whose render never ran.
 /// 6. The document gets its own Content-Security-Policy, derived from the inline scripts in the
-///    bytes about to be sent (see [`csp`]).
+///    bytes about to be sent (see [`crate::csp`]).
 ///
 /// The language is decided by `negotiate_locale`, as it is for the render, so the cache key,
 /// the `<html lang>`, the cookie and the HTML always agree. Requests that are not `GET` —
 /// server-function calls are `POST`s — pass straight through.
-pub(super) async fn localize_page(
+pub async fn localize_page(
     axum::extract::State(state): axum::extract::State<PageState>,
     mut request: axum::extract::Request,
     next: middleware::Next,
@@ -145,7 +217,7 @@ pub(super) async fn localize_page(
     // unknown URL, so remembering one of their renders would answer the next with it.
     let memo_key = state.paths.get(request.uri().path());
 
-    if let Some(page) = memo_key.and_then(|path| memo_get(&state.pages, (path, lang), state.ttl)) {
+    if let Some(page) = memo_key.and_then(|path| state.pages.get((path, lang), state.ttl)) {
         let mut response = axum::response::Response::new(Body::empty());
         *response.headers_mut() = page.headers.clone();
         return finish_page(response.into_parts().0, &state.policy, &page, negotiated);
@@ -230,7 +302,7 @@ async fn rewrite_html_response(
         rendered_at: Instant::now(),
     };
     let page = match key {
-        Some(key) => memo_insert(&state.pages, key, page),
+        Some(key) => state.pages.insert(key, page),
         None => Arc::new(page),
     };
     finish_page(parts, &state.policy, &page, negotiated)
@@ -243,7 +315,7 @@ async fn rewrite_html_response(
 /// over the `Content-Length` below, which is wrong on either path.
 fn finish_page(
     mut parts: axum::http::response::Parts,
-    policy: &csp::SitePolicy,
+    policy: &SitePolicy,
     page: &RenderedPage,
     negotiated: Negotiated,
 ) -> axum::response::Response {
@@ -291,28 +363,32 @@ fn with_html_lang(html: &str, locale: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::server::isr::tests::paths;
-    use crate::server::{legal, router::api_router};
     use axum::{
-        Router,
+        Json, Router,
         body::to_bytes,
         http::{Request, StatusCode},
         routing::get,
     };
-    use portfolio_config::AssetsConfig;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use tower::ServiceExt;
     use tower_http::set_header::SetResponseHeaderLayer;
 
     /// The middleware state, with the policy the deployment's defaults produce.
     fn page_state(isr_enabled: bool) -> PageState {
-        PageState {
+        PageState::new(
+            Arc::new(SitePolicy::new(&portfolio_config::CspConfig::default())),
+            PagePaths::new(&["/", "/licenses"], &["/legal/imprint".to_owned()]),
             isr_enabled,
-            policy: Arc::new(csp::SitePolicy::new(&portfolio_config::CspConfig::default())),
-            pages: Arc::new(PageMemo::default()),
-            paths: paths(),
-            ttl: None,
-        }
+            None,
+        )
+    }
+
+    /// A router answering `/api` with JSON, the way every non-document route does.
+    fn json_router() -> Router {
+        Router::new().route(
+            "/api",
+            get(|| async { Json(serde_json::json!({ "ok": true })) }),
+        )
     }
 
     /// A `GET` for a page, optionally advertising a preferred language and a cookie.
@@ -359,7 +435,7 @@ mod tests {
 
     /// A router whose page handler renders something different on every call, and the number
     /// of calls it received — so a response that repeats itself, with the count unchanged, can
-    /// only have come from [`PageMemo`].
+    /// only have come from the page memo.
     fn counting_page_router(state: PageState) -> (Router, Arc<AtomicUsize>) {
         let renders = Arc::new(AtomicUsize::new(0));
         let counter = Arc::clone(&renders);
@@ -432,14 +508,14 @@ mod tests {
 
     #[tokio::test]
     async fn non_page_responses_are_left_alone() {
-        let response = api_router(AssetsConfig::default(), legal::tests::fixture())
+        let response = json_router()
             .layer(middleware::from_fn_with_state(
                 page_state(false),
                 localize_page,
             ))
             .oneshot(
                 Request::builder()
-                    .uri("/api/v1/profile")
+                    .uri("/api")
                     .header(header::ACCEPT, "text/html")
                     .body(Body::empty())
                     .unwrap(),
@@ -561,10 +637,12 @@ mod tests {
     /// would be.
     #[tokio::test]
     async fn an_expired_memo_entry_is_rendered_again() {
-        let state = PageState {
-            ttl: Some(Duration::ZERO),
-            ..page_state(false)
-        };
+        let state = PageState::new(
+            Arc::new(SitePolicy::new(&portfolio_config::CspConfig::default())),
+            PagePaths::new(&["/"], &[]),
+            false,
+            Some(Duration::ZERO),
+        );
         let (router, renders) = counting_page_router(state);
 
         router
@@ -728,17 +806,12 @@ mod tests {
 
     #[tokio::test]
     async fn non_documents_are_left_to_the_subresource_policy() {
-        let response = api_router(AssetsConfig::default(), legal::tests::fixture())
+        let response = json_router()
             .layer(middleware::from_fn_with_state(
                 page_state(false),
                 localize_page,
             ))
-            .oneshot(
-                Request::builder()
-                    .uri("/api/v1/profile")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(Request::builder().uri("/api").body(Body::empty()).unwrap())
             .await
             .unwrap();
 

@@ -1,6 +1,6 @@
 # Architecture
 
-Six packages in one Cargo workspace: two libraries every binary reads, three binaries, and a placeholder at the root that exists so release-please has a version to move.
+Seven packages in one Cargo workspace: two libraries every binary reads, the server library behind the site, three binaries, and a placeholder at the root that exists so release-please has a version to move.
 
 ## The packages
 
@@ -8,7 +8,8 @@ Six packages in one Cargo workspace: two libraries every binary reads, three bin
 | --- | --- | --- |
 | `crates/config` | `portfolio-config` | The typed configuration blocks each binary reads, plus the Portfolio dialect of the [terrace-config](https://github.com/TimSchoenle/terrace-config) layered loader |
 | `crates/data` | `portfolio-data` | Language-neutral data — the site languages (`SITE_LANGUAGES`), site config, skills, experience, the `repos.json` schema — and the embedded `i18n/{en,de}.json` translations |
-| `apps/web` | `portfolio-web` | The site. One crate that builds twice: a WASM client under the `web` feature and a native Axum SSR server under `server`, carrying the JSON API, the SEO documents, the security headers and the probes |
+| `crates/server` | `portfolio-server` | The half of the SSR server that needs no Dioxus: the JSON API and probes, the embedded assets, the cache and Content-Security-Policy headers, the language negotiation, and the middleware that finishes every document |
+| `apps/web` | `portfolio-web` | The site. One crate that builds twice: a WASM client under the `web` feature and a native Axum SSR server under `server`, which builds the router around `portfolio-server` and adds the SEO documents, the legal routes, the render cache and telemetry |
 | `apps/resume` | `portfolio-resume` | Typesets one resume PDF per language, writes `resume-fingerprint.json`, and rasterizes the 1200×630 social card and the 192/512 px app icons, with its fonts embedded |
 | `apps/update-repos` | `portfolio-update-repos` | Lists the owner's active GitHub repositories and rewrites `apps/web/repos.json` through the shared `Repo`/`ReposFile` models |
 | `.` | `portfolio-platform` | `src/lib.rs` is a placeholder. release-please's Rust strategy needs a root package to bump, and the version it writes there is the one the README payload and the image's contract document both read |
@@ -18,7 +19,13 @@ Six packages in one Cargo workspace: two libraries every binary reads, three bin
 `apps/web` selects its renderer with a feature rather than splitting into two crates, because the
 route table, the page components and the `<head>` metadata are shared and would otherwise be a
 third crate that both depend on. `web` pulls `dioxus-web` and `web-sys`; `server` pulls axum,
-`tower-http`, `csp-shell` and the Sentry SDK. The Dioxus CLI (`dx`) drives both halves.
+`tower-http`, `portfolio-server` and the Sentry SDK. The Dioxus CLI (`dx`) drives both halves.
+
+`portfolio-server` holds the server code that does not touch Dioxus, so it compiles and tests
+without the renderer and its public items fall under `missing_docs`. The Dioxus-facing parts stay
+in `apps/web/src/server/`: the router that mounts the Dioxus app, the render cache, the SEO
+documents, the legal routes and telemetry. The embedded files are passed in as data, so the
+`include_bytes!` paths stay next to `build.rs`.
 
 Sentry is on the server side only, and there is deliberately no browser SDK: reporting a client
 error would mean a third-party script on every page load, a `connect-src` in the
@@ -27,10 +34,10 @@ switched on by `sentry.enabled` rather than by a Cargo feature, so an image cann
 and silently do nothing with it — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
 
 Server-side rendering is not a fallback here. The locale is negotiated from the request in
-`apps/web/src/i18n.rs` and applied before the document is serialized, so nothing arrives in the
-wrong language and gets swapped once hydration runs.
+`crates/server/src/locale.rs` and applied before the document is serialized, so nothing arrives
+in the wrong language and gets swapped once hydration runs.
 
-Every document then passes through `apps/web/src/server/page.rs`, which sits outside the Dioxus
+Every document then passes through `crates/server/src/page.rs`, which sits outside the Dioxus
 router and so also sees pages the incremental cache answers without rendering. It stamps
 `<html lang>`, writes the `lang` cookie when the request's disagrees, and gives the document a
 Content-Security-Policy hashed from the bytes it is about to send — see

@@ -1,4 +1,4 @@
-//! Glue around the i18nrs Dioxus integration, and the site's language negotiation.
+//! Glue around the i18nrs Dioxus integration, and the site's language selection.
 //!
 //! The `I18nProvider` is mounted in [`crate::app::App`]; every component reads
 //! the active language and translations through [`use_i18n`], which returns the
@@ -7,61 +7,17 @@
 //!
 //! # Where the language comes from
 //!
-//! On the server, `negotiate_locale` decides, in this order: a `?lang=` query parameter, a
-//! valid `lang` cookie, the `Accept-Language` header, the default language. The query
-//! parameter is what gives every language a URL of its own, which is what a crawler — it
-//! sends neither a cookie nor, usually, an `Accept-Language` — needs in order to index it.
-//!
-//! The server stamps the outcome onto `<html lang>` of every page it sends, including pages
-//! answered from the incremental cache, whose render never ran. The wasm client reads that
-//! attribute first ([`detect_locale`]), so it hydrates in the language the HTML is written in
-//! whatever the cookie says.
+//! On the server, `portfolio_server::locale` negotiates it from the request. The server stamps
+//! the outcome onto `<html lang>` of every page it sends, including pages answered from the
+//! incremental cache, whose render never ran. The wasm client reads that attribute first
+//! ([`detect_locale`]), so it hydrates in the language the HTML is written in whatever the
+//! cookie says.
 
 use dioxus::prelude::*;
 use i18nrs::dioxus::I18nContext;
-use portfolio_data::{DEFAULT_LANGUAGE, Language};
-
-/// Storage key holding the selected language ("en" / "de"). Documented in the
-/// privacy notice (the template in `legal/privacy.toml`, and the published text a
-/// deployment mounts in its place) — keep all of them in sync.
-pub const LANG_STORAGE_KEY: &str = "lang";
-
-/// The query parameter naming a language explicitly: `/?lang=de`.
-///
-/// The same name as the cookie on purpose: both carry a [`Language::code`].
-pub const LANG_QUERY_PARAM: &str = LANG_STORAGE_KEY;
-
-/// [`LANG_STORAGE_KEY`] with the `=` that separates a cookie pair's name from
-/// its value, as a constant rather than a `format!` at each use site.
-///
-/// Both cookie readers below scan every pair in the header looking for this
-/// needle, and building it inside that loop allocated a `String` per pair.
-const LANG_COOKIE_PREFIX: &str = "lang=";
-
-/// Compile-time proof that the two constants above have not drifted apart. They
-/// are separate literals because `concat!` takes only literals, so nothing but
-/// this check stops a rename of one from silently leaving the other behind —
-/// which would read the cookie under a name nothing ever writes.
-const _: () = {
-    let key = LANG_STORAGE_KEY.as_bytes();
-    let prefix = LANG_COOKIE_PREFIX.as_bytes();
-    assert!(prefix.len() == key.len() + 1);
-    assert!(prefix[key.len()] == b'=');
-    let mut i = 0;
-    while i < key.len() {
-        assert!(prefix[i] == key[i]);
-        i += 1;
-    }
-};
-
-/// The `Set-Cookie` value persisting `code` for a year.
-///
-/// `SameSite=Lax` and no `Secure`: the value is a UI preference with no authority, and a
-/// development server on plain HTTP has to be able to set it too.
-#[must_use]
-pub fn lang_cookie(code: &str) -> String {
-    format!("{LANG_COOKIE_PREFIX}{code}; Path=/; Max-Age=31536000; SameSite=Lax")
-}
+use portfolio_data::{DEFAULT_LANGUAGE, LANG_QUERY_PARAM, Language};
+#[cfg(feature = "web")]
+use portfolio_data::{LANG_PAIR_PREFIX, lang_cookie};
 
 /// The i18n context provided by the `I18nProvider`.
 pub fn use_i18n() -> I18nContext {
@@ -73,42 +29,6 @@ pub fn use_i18n() -> I18nContext {
 pub fn switch_language(ctx: &I18nContext, code: &str) {
     persist_locale(code);
     ctx.set_language.call(code.to_owned());
-}
-
-/// What [`negotiate_locale`] decided, and whether the response has to write it back.
-#[cfg(feature = "server")]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Negotiated {
-    /// The language the page is rendered in.
-    pub language: &'static Language,
-    /// Whether the request's `lang` cookie is absent or names something else, so the response
-    /// must set it — otherwise the client could read a cookie that disagrees with the HTML.
-    pub persist: bool,
-}
-
-/// Negotiates the request's language from its raw query string and headers, *without side
-/// effects*: `?lang=` wins, then a valid `lang` cookie, then `Accept-Language`, then the
-/// default.
-///
-/// This is the one decision every server-side reader shares — the render
-/// ([`detect_locale`]), the page middleware that stamps `<html lang>`, keys the incremental
-/// cache and writes the cookie back — so the language of the HTML, its cache entry and the
-/// cookie always agree.
-#[cfg(feature = "server")]
-#[must_use]
-pub fn negotiate_locale(
-    query: Option<&str>,
-    cookie_header: Option<&str>,
-    accept_language: Option<&str>,
-) -> Negotiated {
-    let cookie = cookie_locale(cookie_header);
-    let language = query_locale(query)
-        .or(cookie)
-        .unwrap_or_else(|| accept_language_locale(accept_language));
-    Negotiated {
-        language,
-        persist: cookie != Some(language),
-    }
 }
 
 /// Server-side initial language, resolved synchronously from the request so the
@@ -129,7 +49,7 @@ pub fn detect_locale() -> String {
     };
     let parts = ctx.parts_mut();
     let header = |name: &str| parts.headers.get(name).and_then(|v| v.to_str().ok());
-    negotiate_locale(
+    portfolio_server::locale::negotiate_locale(
         parts.uri.query(),
         header("cookie"),
         header("accept-language"),
@@ -137,73 +57,6 @@ pub fn detect_locale() -> String {
     .language
     .code
     .to_owned()
-}
-
-/// The language a `lang=` pair in `query` names, if it names a site language.
-#[cfg(feature = "server")]
-fn query_locale(query: Option<&str>) -> Option<&'static Language> {
-    query?
-        .split('&')
-        .filter_map(|pair| pair.strip_prefix(LANG_COOKIE_PREFIX))
-        .find_map(portfolio_data::language)
-}
-
-/// The language named by a valid `lang` cookie in `cookie_header`, if present.
-/// Unknown languages are ignored so the caller falls back to negotiation.
-#[cfg(feature = "server")]
-fn cookie_locale(cookie_header: Option<&str>) -> Option<&'static Language> {
-    let value = cookie_header?
-        .split(';')
-        .map(str::trim)
-        .find_map(|pair| pair.strip_prefix(LANG_COOKIE_PREFIX))?;
-    portfolio_data::language(value)
-}
-
-/// The site language `Accept-Language` prefers most, or the default.
-///
-/// Honors quality values (RFC 9110 §12.5.4): the highest-weighted range whose primary subtag
-/// is a site language wins, earlier ranges win ties, and `q=0` excludes a range. `*` and
-/// malformed entries are ignored rather than guessed at.
-#[cfg(feature = "server")]
-fn accept_language_locale(accept_language: Option<&str>) -> &'static Language {
-    let mut best: Option<(&'static Language, u16)> = None;
-    for range in accept_language.unwrap_or_default().split(',') {
-        let mut params = range.split(';');
-        let tag = params.next().unwrap_or_default().trim();
-        let primary = tag.split('-').next().unwrap_or_default();
-        let Some(candidate) = portfolio_data::SITE_LANGUAGES
-            .iter()
-            .find(|lang| lang.code.eq_ignore_ascii_case(primary))
-        else {
-            continue;
-        };
-        let Some(weight) = params
-            .find_map(|param| param.trim().strip_prefix("q="))
-            .map_or(Some(1000), parse_qvalue)
-        else {
-            continue;
-        };
-        if weight > 0 && best.is_none_or(|(_, top)| weight > top) {
-            best = Some((candidate, weight));
-        }
-    }
-    best.map_or(DEFAULT_LANGUAGE, |(lang, _)| lang)
-}
-
-/// A `qvalue` in thousandths (`"0.8"` is 800), or `None` when it is not one.
-#[cfg(feature = "server")]
-fn parse_qvalue(raw: &str) -> Option<u16> {
-    let (whole, fraction) = raw.split_once('.').unwrap_or((raw, ""));
-    if fraction.len() > 3 || !fraction.bytes().all(|b| b.is_ascii_digit()) {
-        return None;
-    }
-    let digits = |s: &str| s.bytes().fold(0u16, |n, b| n * 10 + u16::from(b - b'0'));
-    let milli = match whole {
-        "0" => digits(&format!("{fraction:0<3}")),
-        "1" if fraction.bytes().all(|b| b == b'0') => 1000,
-        _ => return None,
-    };
-    Some(milli)
 }
 
 /// Client-side initial language: the `lang` the server stamped onto `<html>`, then the `lang`
@@ -231,7 +84,7 @@ pub fn detect_locale() -> String {
                 cookie
                     .split(';')
                     .map(str::trim)
-                    .find_map(|pair| pair.strip_prefix(LANG_COOKIE_PREFIX))
+                    .find_map(|pair| pair.strip_prefix(LANG_PAIR_PREFIX))
                     .and_then(portfolio_data::language)
             })
     };
@@ -267,7 +120,7 @@ fn persist_locale(code: &str) {
     let query = search.trim_start_matches('?');
     let kept: Vec<&str> = query
         .split('&')
-        .filter(|pair| !pair.is_empty() && !pair.starts_with(LANG_COOKIE_PREFIX))
+        .filter(|pair| !pair.is_empty() && !pair.starts_with(LANG_PAIR_PREFIX))
         .collect();
     if kept.len() == query.split('&').filter(|p| !p.is_empty()).count() {
         return;
@@ -304,84 +157,9 @@ pub fn localized_url(path: &str, lang: &Language) -> String {
     }
 }
 
-#[cfg(all(test, feature = "server"))]
+#[cfg(test)]
 mod tests {
     use super::*;
-
-    fn code(query: Option<&str>, cookie: Option<&str>, accept: Option<&str>) -> &'static str {
-        negotiate_locale(query, cookie, accept).language.code
-    }
-
-    #[test]
-    fn a_valid_lang_cookie_wins_over_accept_language() {
-        assert_eq!(code(None, Some("lang=de"), Some("en-US,en")), "de");
-        assert_eq!(code(None, Some("lang=en"), Some("de-DE,de")), "en");
-    }
-
-    #[test]
-    fn the_query_parameter_wins_over_everything() {
-        assert_eq!(code(Some("lang=de"), Some("lang=en"), Some("en")), "de");
-        assert_eq!(
-            code(Some("ref=x&lang=en"), Some("lang=de"), Some("de")),
-            "en"
-        );
-        // An unknown value is ignored rather than trusted.
-        assert_eq!(code(Some("lang=fr"), Some("lang=de"), None), "de");
-    }
-
-    #[test]
-    fn the_lang_cookie_is_found_among_others() {
-        assert_eq!(
-            code(None, Some("theme=dark; lang=de; consent=1"), None),
-            "de"
-        );
-    }
-
-    #[test]
-    fn an_unknown_cookie_language_falls_through_to_accept_language() {
-        assert_eq!(code(None, Some("lang=fr"), Some("de-DE")), "de");
-        assert_eq!(code(None, Some("lang=fr"), Some("en")), "en");
-    }
-
-    #[test]
-    fn accept_language_decides_when_no_cookie_is_present() {
-        assert_eq!(code(None, None, Some("de-DE,de;q=0.9")), "de");
-        assert_eq!(code(None, None, Some("de")), "de");
-        assert_eq!(code(None, None, Some("fr-FR,fr")), "en");
-        assert_eq!(code(None, None, None), "en");
-    }
-
-    #[test]
-    fn accept_language_honors_quality_values() {
-        assert_eq!(code(None, None, Some("en;q=0.1, de;q=0.9")), "de");
-        assert_eq!(code(None, None, Some("fr, de;q=0.5, en;q=0.4")), "de");
-        // Ties go to the earlier range; `q=0` rules a range out.
-        assert_eq!(code(None, None, Some("de;q=0.5, en;q=0.5")), "de");
-        assert_eq!(code(None, None, Some("DE;q=0, en;q=0.2")), "en");
-        // Malformed weights are skipped, not guessed at.
-        assert_eq!(code(None, None, Some("de;q=2, en;q=0.3")), "en");
-        assert_eq!(code(None, None, Some("de;q=abc")), "en");
-    }
-
-    #[test]
-    fn the_cookie_is_written_back_only_when_it_disagrees() {
-        assert!(!negotiate_locale(None, Some("lang=de"), None).persist);
-        assert!(negotiate_locale(None, None, Some("de")).persist);
-        assert!(negotiate_locale(Some("lang=en"), Some("lang=de"), None).persist);
-        assert!(negotiate_locale(None, Some("lang=fr"), None).persist);
-    }
-
-    #[test]
-    fn qvalues_parse_to_thousandths() {
-        assert_eq!(parse_qvalue("1"), Some(1000));
-        assert_eq!(parse_qvalue("1.000"), Some(1000));
-        assert_eq!(parse_qvalue("0.8"), Some(800));
-        assert_eq!(parse_qvalue("0.125"), Some(125));
-        assert_eq!(parse_qvalue("0"), Some(0));
-        for bad in ["1.5", "2", "0.1234", "", "x", "-0.5"] {
-            assert_eq!(parse_qvalue(bad), None, "{bad}");
-        }
-    }
 
     #[test]
     fn every_language_has_its_own_url() {

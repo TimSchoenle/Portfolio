@@ -8,21 +8,18 @@
 //!   with its graceful shutdown;
 //! - `config` loads and validates the configuration, and refuses to start without a usable one;
 //! - `router` assembles the application router and its header, compression and cache layers;
-//! - `page` finishes every document: language, cookie, policy, and the memo that answers a
-//!   repeat request without rendering;
 //! - `isr` is the on-disk incremental render cache and the allowlist keeping it bounded;
-//! - `compression`, `csp`, `cache`, `assets`, `api`, `seo`, `legal` and `telemetry` are what
-//!   their names say.
+//! - `assets` embeds the files `portfolio_server::assets` serves;
+//! - `compression`, `seo`, `legal` and `telemetry` are what their names say.
+//!
+//! The API, the asset routes, the cache and security policies and the middleware that finishes
+//! every document live in `portfolio_server`, which needs no Dioxus.
 
-mod api;
 mod assets;
-mod cache;
 mod compression;
 mod config;
-mod csp;
 mod isr;
 pub(crate) mod legal;
-mod page;
 mod router;
 mod seo;
 mod serve;

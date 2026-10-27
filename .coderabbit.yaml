@@ -52,7 +52,7 @@ reviews:
         never key on unvalidated request text (cache poisoning, unbounded growth). No blocking
         work on the async runtime; probes must stay cheap. Telemetry must not send IPs, query
         strings or other personal data to Sentry without need.
-    - path: "apps/web/src/server/csp.rs"
+    - path: "crates/server/src/csp.rs"
       instructions: |
         Reject any loosening of the policy (`'unsafe-inline'`, `'unsafe-eval'`, wildcard or
         `data:`/`blob:` sources, new third-party origins) unless the change explains exactly which

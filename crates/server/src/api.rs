@@ -7,6 +7,11 @@
 //! The profile endpoint's shape is a contract with consumers older than this crate; see
 //! [`portfolio_data::profile`].
 
+#![expect(
+    clippy::unused_async,
+    reason = "axum takes a handler as an `async fn` even when its body never awaits"
+)]
+
 use std::path::Path;
 use std::sync::LazyLock;
 

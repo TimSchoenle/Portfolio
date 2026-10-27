@@ -109,8 +109,9 @@ fn cache_control_for_response(for_path: &'static str, status: StatusCode) -> &'s
     }
 }
 
-/// Response middleware that sets a `Cache-Control` TTL for the request path
-/// unless the handler already provided one. Error responses get [`NO_STORE`] instead.
+/// Sets the `Cache-Control` TTL for the request path unless the handler already provided one.
+///
+/// This is a response middleware. Error responses get `no-store` instead of the path's TTL.
 pub async fn set_cache_control(request: Request, next: Next) -> Response {
     // Classified before the request is consumed. `cache_control_for` answers with
     // a `&'static str`, so carrying its verdict across the await costs nothing —

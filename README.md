@@ -309,7 +309,7 @@ layer that reports.
 
 | Document | Purpose |
 | --- | --- |
-| [Architecture](docs/ARCHITECTURE.md) | Six packages in one Cargo workspace: two libraries every binary reads, three binaries, and a placeholder at the root that exists so release-please has a version to move. |
+| [Architecture](docs/ARCHITECTURE.md) | Seven packages in one Cargo workspace: two libraries every binary reads, the server library behind the site, three binaries, and a placeholder at the root that exists so release-please has a version… |
 | [Deployment](docs/DEPLOYMENT.md) | What the image contains, how it is built reproducibly, what it publishes about its own configuration, and where the chart that runs it lives. |
 | [Project data](docs/PROJECT_DATA.md) | How apps/web/repos.json is fetched, filtered, cached and embedded, and what the projects section reads out of it. |
 | [Security posture](docs/SECURITY_POSTURE.md) | The Content-Security-Policy the server builds per response, the headers around it, and what the process needs from the filesystem it runs on. |

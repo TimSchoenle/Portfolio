@@ -9,7 +9,7 @@ use std::sync::Arc;
 #[cfg(not(debug_assertions))]
 use axum::Router;
 
-use super::isr::PagePaths;
+use super::isr;
 use super::{config, legal, router, telemetry};
 
 /// Runs the Axum SSR server: sets up the async runtime and the default logger, then binds to
@@ -30,7 +30,7 @@ pub fn serve() {
         Err(issues) => config::refuse(&issues),
     };
     legal::install(legal.clone());
-    let paths = PagePaths::new(&legal::hosted_paths(&legal));
+    let paths = isr::page_paths(&legal::hosted_paths(&legal));
 
     // Before the serve loop, and that ordering is the whole of the handover: the framework's
     // logger installs its own subscriber unless one is already set, and a Sentry layer has to be

@@ -76,3 +76,6 @@ component_management:
     - component_id: data
       name: portfolio-data
       paths: ['crates/data/**']
+    - component_id: server
+      name: portfolio-server
+      paths: ['crates/server/**']
