@@ -124,7 +124,7 @@ dev port="8080":
 
 [doc('Format, lint and test — what a pull request is going to run anyway')]
 [group('check')]
-verify: fmt lint docs test deny
+verify: fmt lint docs test deny prose
 
 [group('check')]
 fmt:
@@ -160,6 +160,11 @@ docs:
 [group('check')]
 test:
     cargo test --workspace --all-features
+
+[doc('The mechanical prose and doc-comment checks; see scripts/prose-check.sh')]
+[group('check')]
+prose *files:
+    bash scripts/prose-check.sh {{ files }}
 
 # Both need a built image; `docker build -t portfolio:local .` makes one.
 
