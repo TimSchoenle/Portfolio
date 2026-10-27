@@ -8,7 +8,7 @@ The server reads its bundle directory and writes to stdout. Nothing else, unless
 switched on. That is the one thing that gives the process an outbound connection, and it is off by
 default ([Error reporting](#error-reporting)). It runs with a read-only root filesystem. The
 only path it writes to is the ISR cache described in [DEPLOYMENT.md](DEPLOYMENT.md), and it
-renders every request fresh when that path is not writable.
+runs without that cache when the path is not writable.
 
 It is built to satisfy the restricted Pod Security Standard:
 
@@ -75,7 +75,9 @@ has hashed what it rendered. No hash can cover it. A nonce can, because Cloudfla
 `csp.cloudflare.script_nonce` reserves, on by default.
 
 It brings one obligation the server discharges and one it cannot. Every document is served
-`Cache-Control: no-cache`, so a nonce is never shared between readers. The other:
+`Cache-Control: no-cache`, so a cache has to revalidate a stored copy before reusing it. A
+document carries no validator, so every reuse goes back to this server, which mints a fresh nonce
+per response. The other:
 
 > **Deployment checklist.** No Cloudflare Cache Rule may cache the shell. A "Cache Everything" rule
 > overrides the origin's `Cache-Control` and pins one nonce across every reader for the lifetime of
@@ -99,8 +101,8 @@ carries a nonce, and supplying one without the other fails the boot with a messa
 
 `github.token` belongs to the build-time repository lister, which the server never loads.
 `sentry.dsn` belongs to the server and is read only when error reporting is switched on, which no
-default does. Both are a `secrecy::SecretString` in the process, with no `Debug` and no `Display`, and
-each has exactly one place it becomes a `&str`: the `Authorization` header for the token, and the
+default does. Both are a `secrecy::SecretString` in the process, whose `Debug` prints
+`[REDACTED]` and which has no `Display`, and each has exactly one place it becomes a `&str`: the `Authorization` header for the token, and the
 call to `sentry::init` for the DSN.
 
 Supply both as files. `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry the

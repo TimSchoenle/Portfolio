@@ -28,8 +28,8 @@ together.
 The image sets the ISR cache directory to `/tmp/isr` and bakes an empty one owned by the runtime
 user, because a non-root process on a `scratch` root cannot create it. Under
 `readOnlyRootFilesystem: true` the chart mounts a writable volume there; a plain `docker run` uses
-the baked-in copy. Where the path is not writable at all, the server renders every request fresh
-instead of failing.
+the baked-in copy. Where the path is not writable at all, the server runs without the on-disk cache
+instead of failing, and only the in-memory page memo holds rendered pages.
 
 The cache is permanent by default. The only thing that changes a page is a new build, and a new
 build starts from an empty cache. A positive TTL is for a persistent cache volume shared across
