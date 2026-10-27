@@ -71,10 +71,10 @@
 # injects.
 #
 # The server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a
-# stored copy with this origin before each reuse. A document carries no validator, so that
-# revalidation is a full render with a fresh nonce. **No Cloudflare Cache Rule may cache the
-# documents**: a "Cache Everything" rule overrides that header at the edge, and nothing
-# inside this process can see it.
+# stored copy with this origin before each reuse. A document carries no validator, so every
+# reuse reaches the server, which mints a fresh nonce per response. **No Cloudflare Cache
+# Rule may cache the documents**: a "Cache Everything" rule overrides that header at the
+# edge, and nothing inside this process can see it.
 # Type: bool
 # Also from: PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE,
 #   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE_FILE=/path/to/file, csp__cloudflare__script_nonce in
