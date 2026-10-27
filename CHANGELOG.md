@@ -1,5 +1,25 @@
 # Changelog
 
+## [3.2.1](https://github.com/TimSchoenle/Portfolio/compare/v3.2.0...v3.2.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* security and performance audit findings ([#1343](https://github.com/TimSchoenle/Portfolio/issues/1343)) ([9aaa335](https://github.com/TimSchoenle/Portfolio/commit/9aaa335e9d189dbd25b9c695e3d51b6d1202cf47))
+
+
+### Dependencies
+
+* **deps:** update rust crate csp-shell to csp-shell-v0.2.1 ([#1336](https://github.com/TimSchoenle/Portfolio/issues/1336)) ([80115f9](https://github.com/TimSchoenle/Portfolio/commit/80115f91294f4efb89a49eff33abf5e571a4f593))
+* **deps:** update rust crate jsonschema to 0.60 ([#1340](https://github.com/TimSchoenle/Portfolio/issues/1340)) ([31ebeb5](https://github.com/TimSchoenle/Portfolio/commit/31ebeb58754db4788fb1166c90366f71e747ce0a))
+* **deps:** update rust crate tokio to v1.54.1 ([#1341](https://github.com/TimSchoenle/Portfolio/issues/1341)) ([4ecf577](https://github.com/TimSchoenle/Portfolio/commit/4ecf577427a0276349fa309b1e9b6ab61bb6721a))
+* **deps:** update rust crate ureq to v3.4.3 ([#1339](https://github.com/TimSchoenle/Portfolio/issues/1339)) ([8be5756](https://github.com/TimSchoenle/Portfolio/commit/8be575681ff0b256a57d84a5d770a80b4a1aac44))
+* **deps:** update rust crate ureq to v3.5.0 ([#1342](https://github.com/TimSchoenle/Portfolio/issues/1342)) ([8e55835](https://github.com/TimSchoenle/Portfolio/commit/8e55835f638b2aa7468b79134eed694e39292f09))
+* **deps:** update rust to v1.99.1 ([#1324](https://github.com/TimSchoenle/Portfolio/issues/1324)) ([9be61e0](https://github.com/TimSchoenle/Portfolio/commit/9be61e052a18ffd69462ca4b43df36ade1e20dde))
+* **deps:** update rust:1.99-slim docker digest to aab4239 ([#1335](https://github.com/TimSchoenle/Portfolio/issues/1335)) ([286c609](https://github.com/TimSchoenle/Portfolio/commit/286c609e4595ad228269734d93a88a440bbc0885))
+* **deps:** update rust:1.99-slim docker digest to d5928c6 ([#1332](https://github.com/TimSchoenle/Portfolio/issues/1332)) ([7daef09](https://github.com/TimSchoenle/Portfolio/commit/7daef0974bd801dc93abd429e69dc30d54ca8134))
+* **deps:** update terrace-config and terrace-legal ([#1326](https://github.com/TimSchoenle/Portfolio/issues/1326)) ([d1ee756](https://github.com/TimSchoenle/Portfolio/commit/d1ee7563fbdf3ecb2f6a8267d69ca4c214f3753d))
+
 ## [3.2.0](https://github.com/TimSchoenle/Portfolio/compare/v3.1.5...v3.2.0) (2026-10-21)
 
 
