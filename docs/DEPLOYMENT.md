@@ -112,8 +112,12 @@ both platforms at once and `tools` differs per `$TARGETARCH`.
 
 BuildKit reuses the `generate` layers while their inputs are unchanged, and a secret is not one of
 them. A rebuild of the same commit therefore keeps the earlier `repos.json` without running the
-ten-hour check, and a changed photo alone does not reach the PDF. `docker build --no-cache-filter
-generate` reruns the stage.
+ten-hour check, and a changed photo alone does not reach the PDF. `--no-cache-filter` reruns the
+stage, with the secret passed again when the image should carry the photo:
+
+```sh
+docker build --no-cache-filter generate --secret id=resume_photo,src="$HOME/photo.jpg" .
+```
 
 The license inventory is generated, not committed, because the attribution a build publishes has to
 describe the graph that build linked. `--locked` asserts the committed `Cargo.lock` resolves
