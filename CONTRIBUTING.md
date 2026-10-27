@@ -11,8 +11,8 @@ code.
 
 - Rust, at the version in `rust-version` of the root `Cargo.toml`, with the WebAssembly target:
   `rustup target add wasm32-unknown-unknown`
-- The [Dioxus CLI](https://dioxuslabs.com) (`dx`), at the version `DIOXUS_CLI_VERSION` pins in the
-  `Dockerfile`, which `apps/web/tests/toolchain_pins.rs` holds equal to `dioxus` in `Cargo.lock`.
+- The [Dioxus CLI](https://dioxuslabs.com) (`dx`), at the version pinned by `DIOXUS_CLI_VERSION` in
+  the `Dockerfile`, which `apps/web/tests/toolchain_pins.rs` holds equal to `dioxus` in `Cargo.lock`.
   From the repository root:
   `cargo install --locked dioxus-cli --version "$(sed -n 's/^ARG DIOXUS_CLI_VERSION=//p' Dockerfile)"`
 - [cargo-about](https://github.com/EmbarkStudios/cargo-about), only to render the third-party
