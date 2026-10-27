@@ -11,7 +11,8 @@ use crate::clock::{current_month, current_year};
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_label, section_num};
 
-/// Full years since the earliest experience entry, e.g. 7 -> "7+".
+/// Returns the full years since the earliest experience entry started, or `0` when there is
+/// none.
 fn years_of_experience() -> u32 {
     let Some(earliest) = EXPERIENCE
         .iter()
@@ -26,11 +27,10 @@ fn years_of_experience() -> u32 {
     u32::try_from(years).unwrap_or(0)
 }
 
-/// The full name split into hero lines, coloring "ö" and the trailing dot.
+/// Renders the full name as two hero lines, coloring "ö" and the trailing dot.
 ///
-/// The first whitespace-separated token is the given name; everything after it
-/// forms the second line, so a middle name or a multi-word family name is
-/// rendered rather than silently dropped.
+/// The first whitespace-separated token is the first line, and everything after it forms the
+/// second, so a middle name or a multi-word family name is kept.
 fn hero_name_lines() -> Element {
     let mut parts = CONFIG.full_name.split_whitespace();
     let first = parts.next().unwrap_or_default();
@@ -50,8 +50,8 @@ fn hero_name_lines() -> Element {
     }
 }
 
-/// Renders the hero. The years-of-experience figure comes from [`EXPERIENCE`] against the current
-/// date, so it advances without an edit here.
+/// Renders the hero, with the years-of-experience figure derived from [`EXPERIENCE`] and the
+/// current date.
 #[component]
 pub fn Hero() -> Element {
     let i18n = use_i18n().i18n;

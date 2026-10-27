@@ -1,9 +1,8 @@
 //! Error model for the `portfolio-update-repos` builder.
 //!
-//! A single [`UpdateReposError`] enum covers every failure mode of fetching the
-//! GitHub repositories and writing `repos.json`, so the binary's `main` can
-//! report a precise, human-readable cause and exit non-zero without leaking
-//! panics or `Box<dyn Error>` opaqueness through the public builder API.
+//! A single [`UpdateReposError`] covers every failure of fetching the GitHub repositories and
+//! writing `repos.json`, so `main` can report a precise cause and exit non-zero without a panic
+//! or an opaque `Box<dyn Error>`.
 
 use std::error::Error;
 use std::fmt;
@@ -11,16 +10,17 @@ use std::fmt;
 /// Everything that can go wrong while building `repos.json`.
 #[derive(Debug)]
 pub enum UpdateReposError {
-    /// The layered configuration could not be loaded: a value failed to parse,
-    /// a mounted file could not be read, or one key was supplied twice.
+    /// The layered configuration could not be loaded: a value failed to parse, a mounted file
+    /// could not be read, or one key was supplied twice.
     Config(portfolio_config::ConfigError),
     /// The GitHub username to query was empty.
     MissingUser,
-    /// No repositories were found to write (the user has no non-archived
-    /// repositories, or the explicitly configured set was empty).
+    /// The account has no active repository to write.
+    ///
+    /// Only a listing can produce it: a named repository that does not exist fails as
+    /// [`Self::Http`] instead.
     NoRepos,
-    /// An HTTP transport failure or a non-2xx response from the GitHub API
-    /// (`ureq` surfaces HTTP status codes as errors by default).
+    /// The GitHub API request failed in transport or answered with a non-2xx status.
     Http(Box<ureq::Error>),
     /// Reading or writing a file on disk failed.
     Io(std::io::Error),
@@ -38,7 +38,7 @@ impl fmt::Display for UpdateReposError {
                 "no GitHub username configured (set PORTFOLIO_GITHUB__USERNAME, or `github.username`)",
             ),
             UpdateReposError::NoRepos => f.write_str(
-                "no repositories found to write (none active, or `github.repos` named none)",
+                "no repositories found to write (the account has no active repository)",
             ),
             UpdateReposError::Http(e) => write!(f, "GitHub API request failed: {e}"),
             UpdateReposError::Io(e) => write!(f, "file I/O failed: {e}"),

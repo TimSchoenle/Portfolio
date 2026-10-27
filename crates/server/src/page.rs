@@ -175,7 +175,7 @@ impl PageMemo {
 /// 1. A [`PagePaths`] page already rendered in this language is answered from the page memo
 ///    without reaching the router at all.
 /// 2. When `isr_enabled`, the language is folded into the URI query, so the incremental
-///    renderer — which keys its cache by path and query only — keeps one entry per language.
+///    renderer, which keys its cache by path and query only, keeps one entry per language.
 /// 3. The response declares `Vary: Accept-Language, Cookie`, the request headers its content
 ///    depends on, so a shared cache in front of the origin does not hand one language to
 ///    another's reader.
@@ -312,9 +312,8 @@ async fn rewrite_html_response(
 
 /// Assembles the response for a finished page: the policy for the scripts in its body, the
 /// `lang` cookie when the request's disagrees, then the body itself.
-///
-/// Reached from both the memo hit and the first render, which must not drift — in particular
-/// over the `Content-Length` below, which is wrong on either path.
+// Reached from both the memo hit and the first render, which must not drift. In particular the
+// original `Content-Length` is dropped on both paths, because the rewritten body differs from it.
 fn finish_page(
     mut parts: axum::http::response::Parts,
     policy: &SitePolicy,

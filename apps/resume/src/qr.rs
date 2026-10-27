@@ -1,6 +1,6 @@
 //! The header band's QR code, as Typst vector graphics.
 //!
-//! The modules are emitted as filled rectangles rather than a raster image, so
+//! The modules are emitted as filled rectangles instead of a raster image, so
 //! the code stays crisp at any print resolution, adds no image data to the PDF
 //! and needs nothing from the [`world`](crate::world) beyond what is already
 //! there. Runs of adjacent dark modules on a row collapse into one rectangle,
@@ -12,14 +12,12 @@ use qrcode::{Color, EcLevel, QrCode};
 
 use crate::style::{self, Layout};
 
-/// Builds the QR module field for `url` as a Typst box, sized
-/// [`style::QR_SIZE`] square including its quiet zone.
+/// Builds the QR module field for `url` as a Typst box, sized [`style::QR_SIZE`] square
+/// including its quiet zone.
 ///
 /// # Errors
 ///
-/// Returns the encoder's message when `url` does not fit any QR version — for
-/// the site URL this cannot happen, but the generator would rather fail the
-/// image build than emit a sheet with a blank square in the header.
+/// Returns the encoder's message when `url` does not fit any QR version.
 pub(crate) fn field(l: &Layout, url: &str) -> Result<String, String> {
     let code = QrCode::with_error_correction_level(url.as_bytes(), EcLevel::M)
         .map_err(|err| format!("cannot encode {url:?} as a QR code: {err}"))?;

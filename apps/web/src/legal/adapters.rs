@@ -12,13 +12,13 @@ use crate::routes::Route;
 ///
 /// The index is answered from the [`LegalIndexes`] the shell already resolved for the first
 /// render, so the provider's own index fetch costs no request. A document is fetched through
-/// [`legal_document`], which is what the page itself uses too.
+/// [`legal_document`].
 pub struct SiteTransport {
     indexes: LegalIndexes,
 }
 
 impl SiteTransport {
-    /// Serves the index out of `indexes`.
+    /// Creates a transport that serves the index out of `indexes`.
     pub fn new(indexes: LegalIndexes) -> Self {
         Self { indexes }
     }
@@ -54,7 +54,8 @@ pub struct SiteText {
 }
 
 impl SiteText {
-    /// Reads translations through `i18n`, so a language switch is picked up on the next render.
+    /// Creates the text adapter over `i18n`, so a language switch is picked up on the next
+    /// render.
     pub fn new(i18n: Signal<I18n>) -> Self {
         Self { i18n }
     }
@@ -65,9 +66,9 @@ impl SiteText {
 }
 
 impl LegalText for SiteText {
-    /// Every document this site requires carries a configured title in both languages, so this
-    /// is reached only for an optional document an operator left untitled — which then reads as
-    /// its slug rather than as a name this site made up for it.
+    /// Returns `None`, so an optional document an operator left untitled reads as its slug.
+    // Every document this site requires carries a configured title in both languages, so this is
+    // reached only for an optional one. Its slug is better than a name this site made up.
     fn known_title(&self, _slug: &str) -> Option<String> {
         None
     }
@@ -104,8 +105,7 @@ impl LegalRouting for SiteRouting {
     }
 }
 
-/// The site's classes for each part a component renders. They are defined in
-/// `assets/input.css`, next to the rest of the page styles.
+/// The site's classes for each part a component renders, defined in `assets/input.css`.
 pub struct SiteSkin;
 
 impl LegalSkin for SiteSkin {

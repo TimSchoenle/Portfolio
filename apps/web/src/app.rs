@@ -9,21 +9,16 @@ use portfolio_data::{
 
 use crate::routes::Route;
 
-/// The web font faces the first paint actually uses: the hero name — the largest
-/// contentful element on the page — and the monospace labels in the masthead and
-/// chapter rail.
+/// The web font faces the first paint uses, which the head preloads: the hero name, the largest
+/// contentful element on the page, and the monospace labels in the masthead and chapter rail.
 ///
-/// They are preloaded because `fonts.css` is a separate stylesheet, so without a
-/// hint the browser cannot discover them until it has fetched *and parsed* that
-/// file: HTML, then CSS, then font, three round trips deep before the text they
-/// style can be painted in them. `font-display: swap` keeps the page readable
-/// throughout — the preload is what shortens the swap.
-///
-/// Deliberately only these two. Every other face is either below the fold or in
-/// a weight the first screen never reaches, and a preload the page does not
-/// consume within a few seconds is bandwidth taken from the wasm bundle and a
-/// console warning besides. Keep the paths in sync with `assets/fonts.css` and
-/// the embedded table in `server::assets`.
+/// The paths must match `assets/fonts.css` and the embedded table in `server::assets`.
+// `fonts.css` is a separate stylesheet, so without a hint the browser cannot discover these
+// faces until it has fetched and parsed it: HTML, then CSS, then font, three round trips deep.
+// `font-display: swap` keeps the page readable throughout; the preload shortens the swap.
+// Only these two: every other face is below the fold or in a weight the first screen never
+// reaches, and a preload the page does not consume within a few seconds is bandwidth taken from
+// the wasm bundle and a console warning besides.
 const PRELOADED_FONTS: [&str; 2] = [
     "/fonts/space-grotesk-latin-700-normal.woff2",
     "/fonts/jetbrains-mono-latin-400-normal.woff2",
@@ -94,14 +89,11 @@ pub fn App() -> Element {
     }
 }
 
-/// Site-wide document metadata rendered into the `<head>` on both the server
-/// (so crawlers and link-unfurlers see it in the initial HTML) and the client
-/// (where `dioxus-web`'s document provider re-applies it during hydration).
+/// Renders the site-wide, route-independent `<head>` metadata derived from [`CONFIG`].
 ///
-/// The per-page `<title>` and `rel="canonical"` live with each page
-/// (`document::Title`, [`crate::ui::canonical::Canonical`]); everything here is
-/// route-independent and derived from [`CONFIG`], the single source of truth.
-/// `lang` is the request-negotiated locale, used only for `og:locale`.
+/// It renders on the server, so crawlers and link unfurlers see it in the initial HTML, and on the
+/// client, where hydration re-applies it. The per-page `<title>` and `rel="canonical"` live with
+/// each page. `lang` is the negotiated locale, used only for `og:locale`.
 #[component]
 fn SiteHead(lang: String) -> Element {
     let keywords = CONFIG.keywords.join(", ");

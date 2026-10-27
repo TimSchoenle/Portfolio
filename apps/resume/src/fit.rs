@@ -1,6 +1,7 @@
-//! Dynamic single-page fitting. Recent roles keep full bullets while older
-//! roles get fewer, so content is condensed before the type is shrunk below
-//! readable sizes. The order is: prefer detail, then tighten density
+//! Single-page fitting, which condenses content before it shrinks the type.
+//!
+//! Recent roles keep full bullets while older roles get fewer, so the type never drops below a
+//! readable size to make room. The order is: prefer detail, then tighten density
 //! (Comfortable → Compact), and only then ease the type scale.
 //!
 //! Page count comes straight from Typst's compiled [`typst_layout::PagedDocument`]
@@ -12,11 +13,12 @@ use crate::template::{Photo, build_typ};
 use crate::translations::Translations;
 use crate::world::{self, Asset};
 
-/// Preferred lower bound while at Comfortable density: keeps the body type close
-/// to its 10 pt design size. The ladder switches to Compact density before
-/// pushing the scale below this.
+/// Lowest type scale tried at Comfortable density, which keeps the body type close to its 10 pt
+/// design size.
+///
+/// The ladder switches to Compact density before it pushes the scale below this.
 const PREFERRED_MIN_SCALE: f64 = 0.90;
-/// Hard floor; below this the generator refuses and fails the build.
+/// Lowest type scale at all; a resume that needs less fails the build.
 const ABSOLUTE_MIN_SCALE: f64 = 0.80;
 
 /// How much detail the experience section carries.
@@ -31,14 +33,14 @@ pub(crate) enum Detail {
 }
 
 impl Detail {
-    /// How many leading entries of the sorted work history keep every bullet at this level.
-    ///
-    /// The two condensing levels differed by whether a role was ongoing rather than by how many
-    /// roles they protected. That exemption never fired — both ongoing entries already sort into
-    /// the first two positions — and it ranked the wrong role: the freelance engagement is the
-    /// ongoing one, and the senior employment trimmed in its place is not. Protecting a count
-    /// instead makes the two levels a gradient, and moves the most recent senior role out of the
-    /// first thing the ladder cuts.
+    /// Returns how many leading entries of the sorted work history keep every bullet at this
+    /// level.
+    // The two condensing levels used to differ by whether a role was ongoing, not by how many
+    // roles they protected. That exemption never fired, because both ongoing entries already sort
+    // into the first two positions, and it ranked the wrong role: the freelance engagement is the
+    // ongoing one, and the senior employment trimmed in its place is not. Protecting a count makes
+    // the two levels a gradient, and moves the most recent senior role out of the first thing the
+    // ladder cuts.
     fn protected(self) -> usize {
         match self {
             Detail::Full => usize::MAX,
@@ -47,8 +49,8 @@ impl Detail {
         }
     }
 
-    /// How many bullets the entry at `entry_index` of the sorted work history renders at this
-    /// detail level.
+    /// Returns how many bullets the entry at `entry_index` of the sorted work history renders at
+    /// this detail level.
     ///
     /// `entry_index` is the position in [`portfolio_data::experiences_sorted`], so "leading" means
     /// the front of that order rather than the most recent by date.
@@ -67,7 +69,8 @@ impl Detail {
         n.min(e.resume_bullet_cap.unwrap_or(u8::MAX))
     }
 
-    /// The phrase the generator prints for this level, for the line naming what it took to fit.
+    /// Returns the phrase the generator prints for this level, in the line naming what it took to
+    /// fit.
     pub(crate) fn describe(self) -> &'static str {
         match self {
             Detail::Full => "full detail",
@@ -89,9 +92,15 @@ pub(crate) struct Fitted {
     pub(crate) detail: Detail,
 }
 
-/// Fitting ladder: full detail at Comfortable density, then condensed, then
-/// Compact density, condensing further, and only last letting the scale drift
-/// toward the floor.
+/// Renders the resume at the most detail and the largest type scale that fit one page.
+///
+/// The ladder tries full detail at Comfortable density, then condensed, then Compact density
+/// condensing further, and only last lets the scale drift toward [`ABSOLUTE_MIN_SCALE`].
+///
+/// # Errors
+///
+/// Returns an error when the resume overflows one page even at the floor, or when Typst fails to
+/// compile or export it.
 pub(crate) fn fit_single_page(
     t: &Translations,
     lang: &str,
@@ -127,8 +136,10 @@ pub(crate) fn fit_single_page(
     Err("does not fit one page even condensed".to_string())
 }
 
-/// Binary-searches the largest scale within `[lo, hi]` that renders as a single
-/// page. Returns `Ok(None)` if even `lo` overflows; `Err` on a compile failure.
+/// Binary-searches the largest scale within `[lo, hi]` that renders as a single page.
+///
+/// Returns `Ok(None)` when even `lo` overflows, and an error when Typst fails to compile or
+/// export.
 #[expect(
     clippy::too_many_arguments,
     reason = "one search over the ladder's own coordinates, all of which vary per attempt"

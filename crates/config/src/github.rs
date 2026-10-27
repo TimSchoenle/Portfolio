@@ -84,7 +84,7 @@ impl GithubConfig {
     }
 }
 
-/// Whether a supplied value carries anything. See [`GithubConfig::username`].
+/// Reports whether a supplied value carries anything, as [`GithubConfig::username`] reads it.
 fn is_present(value: &&str) -> bool {
     !value.is_empty()
 }

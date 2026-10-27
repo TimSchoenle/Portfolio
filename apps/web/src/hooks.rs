@@ -5,7 +5,7 @@
 //! never the SSR server binary. Components call it from inside their own
 //! `#[cfg(feature = "web")]` effects and keep their reactive state at the
 //! "final, fully visible" value on the server, so the SSR HTML (and the no-JS
-//! view) always shows complete content and hydration never mismatches — the
+//! view) always shows complete content and hydration never mismatches. The
 //! entrance animations are armed only after the client has hydrated.
 
 use std::cell::{Cell, RefCell};
@@ -14,9 +14,10 @@ use std::rc::Rc;
 use web_sys::wasm_bindgen::closure::Closure;
 use web_sys::wasm_bindgen::{JsCast, JsValue};
 
-/// True when the user has requested reduced motion at the OS/browser level. The
-/// scroll-driven hero motion and the reveal / type-in entrance animations are
-/// skipped when this holds.
+/// Reports whether the user has requested reduced motion in the OS or browser.
+///
+/// The scroll-driven hero motion and the reveal and type-in entrance animations are skipped when
+/// this holds.
 pub fn prefers_reduced_motion() -> bool {
     web_sys::window()
         .and_then(|w| {
@@ -27,7 +28,7 @@ pub fn prefers_reduced_motion() -> bool {
         .is_some_and(|m| m.matches())
 }
 
-/// The current viewport height in CSS pixels (fallback `800.0`).
+/// Returns the current viewport height in CSS pixels, or `800.0` when it cannot be read.
 pub fn viewport_height() -> f64 {
     web_sys::window()
         .and_then(|w| w.inner_height().ok())
@@ -35,15 +36,15 @@ pub fn viewport_height() -> f64 {
         .unwrap_or(800.0)
 }
 
-/// True if the element's top edge is above `ratio` of the viewport height, i.e.
-/// it is already on screen (or nearly so) at call time. Used to decide whether a
-/// block should animate in (below the fold) or render statically (already seen).
+/// Reports whether the element's top edge is above `ratio` of the viewport height, so it is
+/// already on screen or nearly so.
+///
+/// A block that is already in view renders statically instead of animating in.
 pub fn element_in_view(el: &web_sys::Element, ratio: f64) -> bool {
     el.get_bounding_client_rect().top() <= viewport_height() * ratio
 }
 
-/// Smooth-scrolls to the element with the given id (CSS `scroll-behavior:
-/// smooth` on `<html>` makes the motion smooth).
+/// Scrolls to the element with the given id, smoothly through the page's CSS `scroll-behavior`.
 pub fn scroll_to(id: &str) {
     if let Some(el) = web_sys::window()
         .and_then(|w| w.document())
@@ -53,8 +54,9 @@ pub fn scroll_to(id: &str) {
     }
 }
 
-/// Scrolls to a section shortly after the next paint — used right after a route
-/// change to the home page, once the target section exists in the DOM.
+/// Scrolls to a section shortly after the next paint, once the target exists in the DOM.
+///
+/// Call it right after a route change to the home page.
 pub fn scroll_to_soon(id: String) {
     wasm_bindgen_futures::spawn_local(async move {
         gloo_timers::future::TimeoutFuture::new(80).await;
@@ -62,8 +64,7 @@ pub fn scroll_to_soon(id: String) {
     });
 }
 
-/// Guard returned by [`observe_once`]; disconnects the observer when dropped
-/// (i.e. when the owning component unmounts).
+/// Disconnects the observer [`observe_once`] created when dropped, typically on unmount.
 pub struct InViewGuard {
     observer: web_sys::IntersectionObserver,
     _on_intersect: Closure<dyn FnMut(js_sys::Array)>,
@@ -75,9 +76,10 @@ impl Drop for InViewGuard {
     }
 }
 
-/// Fires `on_enter` the first time `el` reaches the given intersection
-/// `threshold`, then disconnects. Returns a guard that also disconnects on drop;
-/// store it for the element's lifetime.
+/// Calls `on_enter` the first time `el` reaches the given intersection `threshold`, then
+/// disconnects.
+///
+/// The returned guard also disconnects on drop, so store it for the element's lifetime.
 pub fn observe_once(
     el: &web_sys::Element,
     threshold: f64,
@@ -112,7 +114,7 @@ pub fn observe_once(
     })
 }
 
-/// Guard returned by [`add_window_listener`]; removes the listener on drop.
+/// Removes the listener [`add_window_listener`] registered when dropped.
 pub struct ListenerGuard {
     event: &'static str,
     closure: Closure<dyn FnMut(web_sys::Event)>,
@@ -130,10 +132,10 @@ impl Drop for ListenerGuard {
     }
 }
 
-/// Registers `handler` as a `window` listener for `event`, returning a guard
-/// that removes it on drop. `passive` must be `false` for handlers that call
-/// `prevent_default` (e.g. the ⌘K shortcut). The handler reads live component
-/// state through captured signals, so it never needs re-registering.
+/// Registers `handler` as a `window` listener for `event` until the returned guard drops.
+///
+/// `passive` must be `false` for a handler that calls `prevent_default`, such as the ⌘K shortcut.
+/// A handler that reads component state through captured signals never needs re-registering.
 pub fn add_window_listener(
     event: &'static str,
     passive: bool,
@@ -154,9 +156,8 @@ pub fn add_window_listener(
 
 /// The one animation frame [`add_window_listener_per_frame`] may have requested and not yet
 /// seen run.
-///
-/// Kept apart from the `window` calls it brackets so the bookkeeping — request at most one frame
-/// at a time, forget it once it ran, cancel it if it never did — is testable without a browser.
+// Kept apart from the `window` calls it brackets so the bookkeeping (request at most one frame at
+// a time, forget it once it ran, cancel it if it never did) is testable without a browser.
 #[derive(Default)]
 struct FrameSlot(Cell<Option<i32>>);
 
@@ -181,8 +182,8 @@ impl FrameSlot {
     }
 }
 
-/// Guard returned by [`add_window_listener_per_frame`]; removes the listener, cancels a frame
-/// callback that is still pending and releases it on drop.
+/// Removes the listener [`add_window_listener_per_frame`] registered, and cancels a frame callback
+/// that is still pending, when dropped.
 pub struct FrameListenerGuard {
     _listener: ListenerGuard,
     _frame: Rc<Closure<dyn FnMut()>>,
@@ -190,9 +191,9 @@ pub struct FrameListenerGuard {
 }
 
 impl Drop for FrameListenerGuard {
-    /// Runs before the fields drop. A frame requested by the last event and not yet painted would
-    /// otherwise call into the closure after `_frame` freed it, which wasm-bindgen reports as an
-    /// uncaught "closure invoked … after being dropped" error on every unmount mid-scroll.
+    // Runs before the fields drop. A frame requested by the last event and not yet painted would
+    // otherwise call into the closure after `_frame` freed it, which wasm-bindgen reports as an
+    // uncaught "closure invoked … after being dropped" error on every unmount mid-scroll.
     fn drop(&mut self) {
         self.pending.cancel(|id| {
             if let Some(win) = web_sys::window() {
@@ -205,16 +206,13 @@ impl Drop for FrameListenerGuard {
 /// Registers a passive `window` listener for `event` that runs `handler` at most
 /// once per animation frame, no matter how many events arrive in between.
 ///
-/// Scroll fires far faster than the screen refreshes, and handlers that read
-/// layout (`getBoundingClientRect`, `scrollY`) or write signals force a
-/// synchronous reflow and a re-render each time they do. Coalescing onto the
-/// frame means at most one such pass per painted frame, which is the most the
-/// user can perceive anyway. The frame callback is created once and reused, so
-/// scrolling allocates nothing.
-///
-/// Only for handlers that observe; anything calling `prevent_default` must stay
-/// on [`add_window_listener`], since a deferred handler runs too late to cancel
-/// the event.
+/// Only for handlers that observe: a handler calling `prevent_default` must use
+/// [`add_window_listener`], because a deferred handler runs too late to cancel the event. Scrolling
+/// allocates nothing, because the frame callback is created once and reused.
+// Scroll fires far faster than the screen refreshes, and handlers that read layout
+// (`getBoundingClientRect`, `scrollY`) or write signals force a synchronous reflow and a re-render
+// each time they do. Coalescing onto the frame means at most one such pass per painted frame,
+// which is the most the user can perceive anyway.
 pub fn add_window_listener_per_frame(
     event: &'static str,
     handler: impl FnMut() + 'static,
@@ -250,9 +248,10 @@ pub fn add_window_listener_per_frame(
     })
 }
 
-/// CSS selector matching the elements a user can Tab to. `tabindex="-1"` takes an element
-/// out of the Tab order, which is how the palette's options stay reachable by the arrow keys
-/// only, so every clause excludes it.
+/// The CSS selector matching the elements a user can Tab to.
+///
+/// Every clause excludes `tabindex="-1"`, which is how the palette's options stay reachable by the
+/// arrow keys only.
 const FOCUSABLE: &str = "a[href]:not([tabindex='-1']), \
                          button:not([disabled]):not([tabindex='-1']), \
                          input:not([disabled]):not([tabindex='-1']), \
@@ -260,11 +259,13 @@ const FOCUSABLE: &str = "a[href]:not([tabindex='-1']), \
                          textarea:not([disabled]):not([tabindex='-1']), \
                          [tabindex]:not([tabindex='-1'])";
 
-/// Keeps Tab focus inside `container` for a keydown that is already known to be
-/// a Tab press, wrapping from the last focusable element to the first (and back
-/// with Shift). Call it from a modal's key handler: a dialog that lets focus
-/// escape into the page behind it strands keyboard and screen-reader users, who
-/// have no way to see that they have left it.
+/// Keeps Tab focus inside `container` by wrapping from the last focusable element to the first,
+/// and back with `shift`.
+///
+/// Call it from a modal's handler for a keydown already known to be Tab. It returns `true` when it
+/// moved focus, in which case the caller must prevent the browser's default.
+// A dialog that lets focus escape into the page behind it strands keyboard and screen-reader
+// users, who have no way to see that they have left it.
 pub fn trap_tab_focus(container: &web_sys::Element, shift: bool) -> bool {
     let Ok(nodes) = container.query_selector_all(FOCUSABLE) else {
         return false;

@@ -12,14 +12,12 @@ use axum::Router;
 use super::isr;
 use super::{config, legal, router, telemetry};
 
-/// Runs the Axum SSR server: sets up the async runtime and the default logger, then binds to
-/// `IP`/`PORT` (default `127.0.0.1:8080`) and serves [`router::router`]. A release build returns
-/// once `SIGTERM` or `SIGINT` has drained it (see `serve_until_signalled`); a development build
-/// runs under `dioxus::serve` and never returns.
+/// Runs the SSR server on `IP`/`PORT`, default `127.0.0.1:8080`, until it is stopped.
 ///
-/// Configuration is read once, before the runtime exists: a value that cannot
-/// be loaded is a start-up failure, not a per-request one, and failing here
-/// means the container never reports ready rather than serving a degraded site.
+/// A release build returns once `SIGTERM` or `SIGINT` has drained it. A development build runs
+/// under `dioxus::serve` and never returns. Configuration is read once, before the runtime exists,
+/// and a configuration that cannot be loaded ends the process with a non-zero exit code.
+// Failing at start-up means the container never reports ready instead of serving a degraded site.
 pub fn serve() {
     let config = Arc::new(config::load());
     // The legal catalog is part of the configuration's validity: a deployment without an
@@ -61,24 +59,24 @@ pub fn serve() {
     serve_until_signalled(move || router::router(&config, legal, paths));
 }
 
-/// Exit code for a listener that cannot be set up (`EX_OSERR` from `sysexits.h`): the address is
-/// taken or not bindable, which is the host's problem rather than the configuration's.
+/// The exit code for a listener that cannot be set up, `EX_OSERR` from `sysexits.h`.
+///
+/// The address is taken or not bindable, which is the host's problem instead of the
+/// configuration's.
 #[cfg(not(debug_assertions))]
 const EX_OSERR: i32 = 71;
 
-/// The release serve loop: what `dioxus::serve` does outside development — the framework's
-/// logger, a listener on `IP`/`PORT`, `axum::serve` — plus the one thing it lacks, a graceful
-/// shutdown on `SIGTERM` or `SIGINT`.
+/// Serves `app` until `SIGTERM` or `SIGINT`, then drains in-flight requests and returns.
 ///
-/// That is not a nicety in this image. The server is PID 1 of a `scratch` container with no init
-/// process in front of it, and the kernel delivers no signal to a namespace's PID 1 whose default
-/// action is to terminate unless the process installed a handler for it. Without the handler
-/// below, `SIGTERM` is discarded: every `docker stop` and every pod deletion waits out the whole
-/// grace period (10 s for Docker, 30 s for Kubernetes) and then `SIGKILL`s the process, cutting
-/// off whatever requests were in flight. With it, the listener stops accepting, in-flight
-/// requests finish, and the process exits on its own.
-///
-/// `app` builds the router inside the runtime, which is where `dioxus::serve` builds it too.
+/// It does what `dioxus::serve` does outside development (the framework's logger, a listener on
+/// `IP`/`PORT`, `axum::serve`) plus the graceful shutdown that one lacks. `app` builds the router
+/// inside the runtime, which is where `dioxus::serve` builds it too.
+// The shutdown is not a nicety in this image. The server is PID 1 of a `scratch` container with no
+// init process in front of it, and the kernel delivers no signal to a namespace's PID 1 whose
+// default action is to terminate unless the process installed a handler for it. Without the
+// handler, `SIGTERM` is discarded: every `docker stop` and every pod deletion waits out the whole
+// grace period (10 s for Docker, 30 s for Kubernetes) and then `SIGKILL`s the process, cutting off
+// whatever requests were in flight.
 #[cfg(not(debug_assertions))]
 fn serve_until_signalled(app: impl FnOnce() -> Router) {
     let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -118,11 +116,11 @@ fn exit_unavailable(what: &str, err: &dyn std::fmt::Display) -> ! {
     std::process::exit(EX_OSERR)
 }
 
-/// Resolves on the first `SIGTERM` (what Docker and the kubelet send) or `SIGINT` (Ctrl-C).
+/// Resolves on the first `SIGTERM`, which Docker and the kubelet send, or `SIGINT` (Ctrl-C).
 ///
-/// A signal stream that cannot be installed is logged and then waited on forever rather than
-/// treated as an immediate shutdown: a server that stops the moment it starts is worse than one
-/// that has to be killed.
+/// A signal stream that cannot be installed is logged and then never resolves.
+// Waiting forever beats an immediate shutdown: a server that stops the moment it starts is worse
+// than one that has to be killed.
 #[cfg(all(not(debug_assertions), unix))]
 async fn shutdown_signal() {
     use tokio::signal::unix::{SignalKind, signal};
@@ -146,8 +144,9 @@ async fn shutdown_signal() {
     tracing::info!("{name} received; no longer accepting connections, draining in-flight requests");
 }
 
-/// Resolves on Ctrl-C. No image targets a platform without Unix signals; this keeps a local
-/// release build compiling on one.
+/// Resolves on Ctrl-C.
+// No image targets a platform without Unix signals; this keeps a local release build compiling
+// on one.
 #[cfg(all(not(debug_assertions), not(unix)))]
 async fn shutdown_signal() {
     if let Err(err) = tokio::signal::ctrl_c().await {

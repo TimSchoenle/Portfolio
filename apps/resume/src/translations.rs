@@ -1,9 +1,9 @@
 //! Read-only view over one embedded translation file.
 //!
 //! A missing key panics instead of returning an `Option` nobody would have anything useful to do
-//! with, so a drifted translation file fails the image build rather than emitting a resume with a
+//! with, so a drifted translation file fails the image build instead of emitting a resume with a
 //! blank heading on it. `portfolio_data`'s `translation_key_sets_match` holds the two files to one
-//! key set, so a key missing here is missing from both languages rather than one.
+//! key set, so a key missing here is missing from both languages.
 
 use std::error::Error;
 
@@ -20,8 +20,13 @@ impl Translations {
     /// Parses a translation document and resolves the twelve month names and the "present"
     /// label out of it.
     ///
-    /// Errors on malformed JSON. Panics if any of those thirteen keys is missing, for the reason
-    /// in the module comment.
+    /// # Errors
+    ///
+    /// Returns an error when `json` is not valid JSON.
+    ///
+    /// # Panics
+    ///
+    /// Panics when any of those thirteen keys is missing.
     pub(crate) fn parse(json: &str) -> Result<Self, Box<dyn Error>> {
         let root: serde_json::Value = serde_json::from_str(json)?;
         let mut t = Translations {
@@ -36,7 +41,11 @@ impl Translations {
         Ok(t)
     }
 
-    /// Looks up a dotted key, panicking when it is absent or does not hold a string.
+    /// Looks up a dotted key such as `resume.summary`.
+    ///
+    /// # Panics
+    ///
+    /// Panics when the key is absent or does not hold a string.
     pub(crate) fn get(&self, key: &str) -> String {
         let mut value = &self.root;
         for part in key.split('.') {
@@ -48,8 +57,8 @@ impl Translations {
             .to_string()
     }
 
-    /// A date range in this language, e.g. `Nov 2018 – Jan 2023`, open-ended when `end` is
-    /// `None`.
+    /// Formats a date range in this language, such as `Nov 2018 – Jan 2023`, open-ended when
+    /// `end` is `None`.
     pub(crate) fn period(&self, start: YearMonth, end: Option<YearMonth>) -> String {
         format_period(start, end, &self.months, &self.present)
     }

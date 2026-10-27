@@ -11,20 +11,14 @@ use portfolio_data::licenses::LicensesFile;
 /// `licenses.json`, embedded at compile time.
 const LICENSES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/licenses.json"));
 
-/// The parsed inventory, or `None` when there is nothing to show.
-///
-/// Parsed once per process rather than per render: this is a quarter of a
-/// megabyte of license text, and on the server `App` mounts once per render, so
-/// every incremental-cache miss would otherwise re-parse the whole document.
-///
-/// Borrowed, not shared through an `Arc` the way [`super::repos`] shares the repository
-/// list: the repo list lives in a Dioxus context that several components clone out of, whereas
-/// this has exactly one reader and a `LazyLock` hands it a `&'static` for free.
-///
-/// The two ways to have nothing — an absent generator run (`build.rs` embedded
-/// the empty default) and a document that failed to parse — collapse into one
-/// `None` on purpose: the page says the same thing either way, and only the
-/// second is worth a console warning.
+/// The parsed inventory, or `None` when the generator did not run or the document failed to
+/// parse.
+// Parsed once per process instead of per render: this is a quarter of a megabyte of license text,
+// and on the server `App` mounts once per render, so every incremental-cache miss would otherwise
+// re-parse the whole document. Borrowed, not shared through an `Arc` the way `super::repos`
+// shares the repository list, because this has exactly one reader and a `LazyLock` hands it a
+// `&'static` for free. The two ways to have nothing collapse into one `None` because the page
+// says the same thing either way; only a parse failure is worth a console warning.
 static LICENSES: LazyLock<Option<LicensesFile>> =
     LazyLock::new(
         || match serde_json::from_str::<LicensesFile>(LICENSES_JSON) {
@@ -37,9 +31,10 @@ static LICENSES: LazyLock<Option<LicensesFile>> =
         },
     );
 
-/// The embedded inventory, or `None` when this build carries none. Resolves
-/// identically on the server (SSR) and the wasm client, so the rendered page
-/// matches across hydration.
+/// Returns the embedded inventory, or `None` when this build carries none.
+///
+/// It resolves identically on the server and the wasm client, so the rendered page matches across
+/// hydration.
 pub fn load_licenses() -> Option<&'static LicensesFile> {
     LICENSES.as_ref()
 }

@@ -3,21 +3,17 @@
 use axum::http::{StatusCode, header};
 use tower_http::compression::predicate::{NotForContentType, Predicate, SizeAbove};
 
-/// The response-compression predicate: which responses are worth the CPU.
+/// Builds the response-compression predicate, which decides which responses are worth the CPU.
 ///
-/// Assembled from tower-http's parts rather than started from its
-/// `DefaultPredicate`, because one of the exclusions that default bundles has to
-/// be *narrowed*. `NotForContentType::IMAGES` skips everything under `image/`,
-/// which silently included this site's `image/svg+xml` favicon — markup, and the
-/// one image here that is worth compressing. Predicates compose only with AND,
-/// so an exclusion cannot be taken back once it is in; the rule is therefore
-/// stated directly (see [`not_for_raster_images`]) instead of being applied and
-/// then undone.
-///
-/// The remaining default exclusions are kept verbatim — tiny bodies, gRPC and
-/// server-sent-event streams — and two of our own are added: woff2 fonts and the
-/// resume PDFs are already compressed, so running br/gzip over them only burns
-/// CPU and can grow the payload rather than shrink it.
+/// It skips tiny bodies, gRPC, server-sent-event streams, raster images, woff2 fonts and PDFs. SVG
+/// is compressed.
+// Assembled from tower-http's parts instead of its `DefaultPredicate`, because one exclusion that
+// default bundles has to be narrowed. `NotForContentType::IMAGES` skips everything under `image/`,
+// which silently included this site's `image/svg+xml` favicon: markup, and the one image here worth
+// compressing. Predicates compose only with AND, so an exclusion cannot be taken back once it is
+// in, and the rule is stated directly in `not_for_raster_images` instead. woff2 fonts and the
+// resume PDFs are already compressed, so br/gzip over them only burns CPU and can grow the
+// payload.
 pub(super) fn compression_predicate() -> impl Predicate {
     SizeAbove::default()
         .and(NotForContentType::GRPC)
@@ -27,14 +23,13 @@ pub(super) fn compression_predicate() -> impl Predicate {
         .and(NotForContentType::const_new("application/pdf"))
 }
 
-/// The raster half of tower-http's `NotForContentType::IMAGES`: everything under
-/// `image/` is skipped except `image/svg+xml`, which is text and compresses to
-/// roughly a third of its size.
+/// Reports whether a response may be compressed, skipping everything under `image/` except
+/// `image/svg+xml`.
 ///
-/// Written as a bare `fn` because `Predicate` is implemented for any
-/// `Fn(StatusCode, Version, &HeaderMap, &Extensions) -> bool + Clone`, which is
-/// the whole signature — the body is never inspected, so nothing here needs the
-/// `http-body` trait bound a manual `impl Predicate` would.
+/// SVG is text and compresses to roughly a third of its size.
+// A bare `fn` because `Predicate` is implemented for any
+// `Fn(StatusCode, Version, &HeaderMap, &Extensions) -> bool + Clone`. The body is never inspected,
+// so nothing here needs the `http-body` trait bound a manual `impl Predicate` would.
 fn not_for_raster_images(
     _status: StatusCode,
     _version: axum::http::Version,

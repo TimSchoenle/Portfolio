@@ -7,8 +7,8 @@
 //!   og-image.png                       (1200×630 social card, see [`og_image`])
 //!   icon-192.png, icon-512.png         (web manifest icons, see [`icons`])
 //!
-//! Layout: a two-column design rendered with Typst — a full-width header band
-//! (QR code, name, availability) over a tinted sidebar (Contact, Skills,
+//! Layout: a two-column design rendered with Typst. A full-width header band
+//! (QR code, name, availability) sits over a tinted sidebar (Contact, Skills,
 //! Education, Languages) and a wide main column (Summary, Experience). The main
 //! column is emitted *first* so a text extractor reads it in order (identity →
 //! summary → experience → contact → skills) despite the sidebar showing on the
@@ -27,7 +27,7 @@
 //! photo-less pair of sheets it has always been. The English sheet never renders
 //! it at all.
 //!
-//! The file is a **build input, never a committed asset** — a portrait is
+//! The file is a **build input, never a committed asset**: a portrait is
 //! personal data that belongs neither in the repository nor in an image layer.
 //! The image build takes it as a `BuildKit` secret that exists only for the step
 //! that reads it:
@@ -69,17 +69,14 @@ use crate::template::Photo;
 use crate::translations::Translations;
 use crate::world::Asset;
 
-/// Environment variable the photo path may arrive through instead of `--photo`,
-/// named for the `PORTFOLIO_` convention the rest of the estate uses.
+/// The environment variable the photo path may arrive through instead of `--photo`.
 const PHOTO_ENV: &str = "PORTFOLIO_RESUME__PHOTO_FILE";
 
 /// The image formats the photo may arrive in, as `(magic bytes, extension)`.
 ///
-/// The format is read from the file's own header rather than from its name,
-/// because the path this arrives on is usually not a name at all — a `BuildKit`
-/// secret mounts as `/run/secrets/<id>` with no extension. Typst picks its
-/// decoder from the extension, so the sniffed one is what the asset is
-/// registered under.
+/// The asset is registered under the sniffed extension, because Typst picks its decoder from it.
+// The format is read from the file's own header instead of its name, because the path is usually
+// not a name at all: a `BuildKit` secret mounts as `/run/secrets/<id>` with no extension.
 const PHOTO_FORMATS: [(&[u8], &str); 3] = [
     (b"\xFF\xD8\xFF", "jpg"),
     (b"\x89PNG\r\n\x1A\n", "png"),
@@ -216,8 +213,8 @@ fn load_photo(path: &Path) -> Result<Asset, String> {
     })
 }
 
-/// The extension for `bytes`, read from its file header, or `None` when it is
-/// not one of [`PHOTO_FORMATS`].
+/// Returns the extension for `bytes`, read from its file header, or `None` when it is not one of
+/// [`PHOTO_FORMATS`].
 fn photo_format(bytes: &[u8]) -> Option<&'static str> {
     PHOTO_FORMATS
         .into_iter()
@@ -229,8 +226,10 @@ fn photo_format(bytes: &[u8]) -> Option<&'static str> {
         .map(|(_, extension)| extension)
 }
 
-/// The social card's closing line: `description` without the leading `"{full_name} — {role}"`,
-/// which the card already sets in large type directly above it, starting with a capital.
+/// Returns the social card's closing line: `description` without the leading [`CONFIG`]`.title`,
+/// starting with a capital.
+///
+/// The card already sets the title in large type directly above this line.
 ///
 /// A description that does not open with [`CONFIG`]`.title` is returned unchanged.
 fn card_tagline(description: &str) -> String {
@@ -244,7 +243,7 @@ fn card_tagline(description: &str) -> String {
     }
 }
 
-/// Lowercase hex encoding of a byte slice (for SHA-256 digests).
+/// Encodes `bytes` as lowercase hex.
 fn hex(bytes: &[u8]) -> String {
     use std::fmt::Write as _;
     bytes

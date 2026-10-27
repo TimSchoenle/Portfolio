@@ -1,11 +1,11 @@
-//! `/licenses` — the third-party attribution page.
+//! `/licenses`: the third-party attribution page.
 //!
 //! Rendered from the inventory `cargo about` produced for *this* build (see
 //! [`crate::embedded::licenses`]), so what the page claims and what the binary links are
 //! the same fact. Nothing here is fetched at runtime and nothing is
 //! hand-maintained: adding a dependency changes this page on the next build.
 //!
-//! Two views: which licenses are involved, then every dependency — each one
+//! Two views: which licenses are involved, then every dependency, each one
 //! expanding to the license text it ships under. The texts are not a section of
 //! their own, because that section could only have listed the same dependency
 //! names a second time to say which text belonged to which.
@@ -48,11 +48,9 @@ pub fn Licenses() -> Element {
     }
 }
 
-/// The two views over a present inventory.
-///
-/// A separate component so the page above reads as one decision — there is an
-/// inventory or there is not — and so everything below can take the document as
-/// a plain `&'static` borrow rather than an `Option` each block has to unwrap.
+/// Renders the two views over a present inventory.
+// A separate component so the page above reads as one decision, inventory or not, and so
+// everything below can take the document as a plain `&'static` borrow instead of an `Option`.
 #[component]
 fn Inventory(file: &'static LicensesFile) -> Element {
     let i18n = use_i18n().i18n;

@@ -1,4 +1,4 @@
-//! Routed page components. Their names match the `Route` variants.
+//! Routed page components, named after the `Route` variants.
 
 mod home;
 mod legal;

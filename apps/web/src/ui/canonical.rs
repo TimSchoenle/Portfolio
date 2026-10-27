@@ -3,8 +3,8 @@
 //! Every page must declare *itself* as canonical. A single site-wide canonical
 //! rendered from the shared head would point `/licenses` and every `/legal/…` page at the
 //! homepage, which tells search engines to fold those pages into `/` and drop
-//! them — while `sitemap.xml` simultaneously submits all three. The two signals
-//! have to agree, so the URL is built per route here.
+//! them, while `sitemap.xml` submits all three. The two signals have to agree,
+//! so the URL is built per route here.
 //!
 //! The same component declares the page's language variants: one
 //! `<link rel="alternate" hreflang>` per site language plus `x-default`, each pointing at the
@@ -16,10 +16,11 @@ use portfolio_data::{DEFAULT_LANGUAGE, SITE_LANGUAGES, language_or_default};
 
 use crate::i18n::{localized_url, use_i18n};
 
-/// Renders `<link rel="canonical">` and the `hreflang` alternates for `path`, a route path
-/// such as `/` or `/legal/imprint`, in the page's current language. Every URL is absolute and
-/// built from `CONFIG.url`, so the canonical host stays the configured one even when the page
-/// is reached through another hostname.
+/// Renders `<link rel="canonical">` and the `hreflang` alternates for `path`, a route path such as
+/// `/` or `/legal/imprint`, in the page's current language.
+///
+/// Every URL is absolute and built from `CONFIG.url`, so the canonical host stays the configured
+/// one even when the page is reached through another hostname.
 #[component]
 pub fn Canonical(#[props(into)] path: String) -> Element {
     let i18n = use_i18n().i18n;

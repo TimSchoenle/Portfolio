@@ -19,27 +19,26 @@ use portfolio_data::{DEFAULT_LANGUAGE, LANG_QUERY_PARAM, Language};
 #[cfg(feature = "web")]
 use portfolio_data::{LANG_PAIR_PREFIX, lang_cookie};
 
-/// The i18n context provided by the `I18nProvider`.
+/// Returns the i18n context provided by the `I18nProvider`.
 pub fn use_i18n() -> I18nContext {
     use_context::<I18nContext>()
 }
 
-/// Switches the page to `code`: persists it as the cookie, drops a `?lang=` the address may
-/// carry (it would otherwise override the new choice on the next load) and re-renders.
+/// Switches the page to `code`: persists it as the cookie, drops any `?lang=` from the address
+/// and re-renders.
+// A `?lang=` left in the address would override the new choice on the next load.
 pub fn switch_language(ctx: &I18nContext, code: &str) {
     persist_locale(code);
     ctx.set_language.call(code.to_owned());
 }
 
-/// Server-side initial language, resolved synchronously from the request so the
-/// SSR renders the correct language on the first (and only) server render.
+/// Returns the server-side initial language, negotiated synchronously from the request.
 ///
-/// i18nrs detects the cookie in a `use_future`, which resolves *after* the
-/// synchronous `use_signal` that initializes its `I18n` — too late for SSR — so
-/// its provider falls back to `default_language`, which is this.
-///
-/// Writes nothing: the cookie is set by the page middleware, which also sees the responses
-/// the incremental cache answers without running this.
+/// It writes nothing: the page middleware sets the cookie, because it also sees the responses the
+/// incremental cache answers without running this.
+// i18nrs detects the cookie in a `use_future`, which resolves after the synchronous `use_signal`
+// that initializes its `I18n`, too late for SSR. Its provider then falls back to
+// `default_language`, which is this.
 #[cfg(feature = "server")]
 pub fn detect_locale() -> String {
     use dioxus_fullstack_core::FullstackContext;
@@ -59,12 +58,11 @@ pub fn detect_locale() -> String {
     .to_owned()
 }
 
-/// Client-side initial language: the `lang` the server stamped onto `<html>`, then the `lang`
-/// cookie, then the default.
-///
-/// `<html lang>` comes first because it is the one signal guaranteed to describe the HTML
-/// being hydrated. A page answered from the incremental cache carries whatever language it
-/// was negotiated for, and the cookie can be absent or stale by then.
+/// Returns the client-side initial language: the `lang` the server stamped onto `<html>`, then
+/// the `lang` cookie, then the default.
+// `<html lang>` comes first because it is the one signal guaranteed to describe the HTML being
+// hydrated. A page answered from the incremental cache carries whatever language it was
+// negotiated for, and the cookie can be absent or stale by then.
 #[cfg(all(feature = "web", not(feature = "server")))]
 pub fn detect_locale() -> String {
     use web_sys::wasm_bindgen::JsCast;
@@ -95,8 +93,8 @@ pub fn detect_locale() -> String {
         .to_owned()
 }
 
-/// Persists the selected language in the `lang` cookie on the client and removes a
-/// `?lang=` from the address bar, which would otherwise outrank the cookie on the next load.
+/// Persists the selected language in the `lang` cookie and removes any `?lang=` from the address
+/// bar.
 #[cfg(feature = "web")]
 fn persist_locale(code: &str) {
     use web_sys::wasm_bindgen::JsCast;
@@ -136,15 +134,15 @@ fn persist_locale(code: &str) {
     }
 }
 
-/// No-op off the wasm client (the SSR binary and feature-less checks never touch
-/// `document.cookie`), so language-switch call sites can call it unconditionally.
+/// Does nothing off the wasm client, so language-switch call sites can call it unconditionally.
 #[cfg(not(feature = "web"))]
 fn persist_locale(_code: &str) {}
 
-/// The absolute URL of `path` in `lang`: bare for the default language, `?lang=` otherwise.
+/// Returns the absolute URL of `path` in `lang`: bare for the default language, with `?lang=`
+/// otherwise.
 ///
-/// These are the URLs the canonical link, the `hreflang` alternates and the sitemap
-/// advertise, so every language is reachable — and indexable — at an address of its own.
+/// The canonical link, the `hreflang` alternates and the sitemap advertise these URLs, so every
+/// language is reachable and indexable at an address of its own.
 #[must_use]
 pub fn localized_url(path: &str, lang: &Language) -> String {
     let base = portfolio_data::CONFIG.url;

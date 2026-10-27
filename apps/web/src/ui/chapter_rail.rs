@@ -8,7 +8,7 @@ use dioxus::prelude::*;
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_index};
 
-/// (section slug, i18n key of the name the rail reveals).
+/// The rail's chapters as `(section slug, i18n key of the name the rail reveals)`.
 const CHAPTERS: [(&str, &str); 6] = [
     ("identity", "nav.intro"),
     ("about", "nav.about"),
@@ -18,7 +18,7 @@ const CHAPTERS: [(&str, &str); 6] = [
     ("contact", "nav.contact"),
 ];
 
-/// Lowercase roman numeral for `n`, e.g. 1 -> "i", 4 -> "iv", 6 -> "vi".
+/// Formats `n` as a lowercase roman numeral, such as `"iv"` for 4.
 fn to_roman(mut n: usize) -> String {
     const TABLE: [(usize, &str); 13] = [
         (1000, "m"),
@@ -45,8 +45,8 @@ fn to_roman(mut n: usize) -> String {
     out
 }
 
-/// Rail label: the identity hero keeps "00"; every other chapter uses the roman
-/// numeral of its section number.
+/// Returns the rail label for `slug`: `"00"` for the identity hero, otherwise the roman numeral of
+/// its section number.
 fn chapter_label(slug: &str) -> String {
     let n = section_index(slug);
     if n == 0 {
@@ -56,7 +56,7 @@ fn chapter_label(slug: &str) -> String {
     }
 }
 
-/// The identity hero lives under `top`; everything else uses [`section_id`].
+/// Returns the anchor id for `slug`: `top` for the identity hero, otherwise its [`section_id`].
 fn chapter_id(slug: &str) -> String {
     if slug == "identity" {
         "top".to_string()
@@ -65,8 +65,8 @@ fn chapter_id(slug: &str) -> String {
     }
 }
 
-/// The furthest chapter whose section has scrolled past the 35%-viewport line;
-/// `0` until the DOM is laid out. Client-only (reads the live layout).
+/// Returns the furthest chapter whose section has scrolled past the 35% viewport line, or `0`
+/// until the DOM is laid out.
 #[cfg(feature = "web")]
 fn active_chapter() -> usize {
     let Some(doc) = web_sys::window().and_then(|w| w.document()) else {
@@ -84,7 +84,7 @@ fn active_chapter() -> usize {
     current
 }
 
-/// Renders the rail. Each dot is a plain `#id` anchor, so the rail navigates without JavaScript.
+/// Renders the rail, whose dots are plain `#id` anchors that navigate without JavaScript.
 #[component]
 pub fn ChapterRail() -> Element {
     let i18n = use_i18n().i18n;

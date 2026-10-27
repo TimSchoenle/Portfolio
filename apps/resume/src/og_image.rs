@@ -1,4 +1,4 @@
-//! The Open Graph card — the image a link to this site unfurls to in Facebook,
+//! The Open Graph card, which is the image a link to this site unfurls to in Facebook,
 //! LinkedIn, Slack, X and every other preview surface.
 //!
 //! # Why this exists at all
@@ -8,10 +8,10 @@
 //! be a raster, and the conventional size is 1200 × 630 (the 1.91:1 box every
 //! major consumer crops to).
 //!
-//! # Why it is generated rather than drawn
+//! # Why it is generated instead of drawn
 //!
 //! A committed PNG would be a second copy of facts that already live in
-//! [`CONFIG`] — the name, the role, the site's own address — free to drift the
+//! [`CONFIG`] (the name, the role, the site's own address), free to drift the
 //! moment one of them changes, and silently, because nobody looks at their own
 //! link previews. Generating it here keeps the card a *function* of the same
 //! data the page is built from, and costs one more tiny document from a Typst
@@ -26,19 +26,20 @@ use portfolio_data::{CONFIG, OG_IMAGE_SIZE};
 use crate::template::esc;
 use crate::world::render_png;
 
-/// Page size in typographic points. Rendered at [`SCALE`] to reach the published
-/// [`OG_IMAGE_SIZE`]; laying out at half of it keeps the type sizes below in
-/// ordinary point values rather than doubled ones.
+/// The page width in typographic points, half of [`OG_IMAGE_SIZE`] because it renders at
+/// [`SCALE`].
+// Laying out at half size keeps the type sizes below in ordinary point values instead of doubled
+// ones.
 const WIDTH_PT: f64 = 600.0;
+/// The page height in typographic points, half of [`OG_IMAGE_SIZE`] like [`WIDTH_PT`].
 const HEIGHT_PT: f64 = 315.0;
 
 /// Device pixels per typographic point.
 const SCALE: f64 = 2.0;
 
-/// Compile-time proof that this layout produces the size the web app declares.
-/// The two live in different crates — the renderer here, the `og:image:width` /
-/// `og:image:height` there — and a card whose bytes disagree with its declared
-/// dimensions is letterboxed or dropped by the consumer, silently.
+// Compile-time proof that this layout produces the size the web app declares. The renderer lives
+// here and `og:image:width` / `og:image:height` in the web app, and a card whose bytes disagree
+// with its declared dimensions is letterboxed or dropped by the consumer, silently.
 #[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
@@ -51,19 +52,21 @@ const _: () = {
 
 // The site's dark palette (`apps/web/assets/input.css`). `--accent` is authored
 // there in oklch, which is a wider gamut than PNG carries, so it is stated here
-// as the sRGB a browser clamps it to — the same color a visitor sees.
+// as the sRGB a browser clamps it to, which is the color a visitor sees.
 const BG: &str = "#0a0d14";
 const FG: &str = "#e8ecf2";
 const MUTED: &str = "#6b7689";
 const LINE: &str = "#232936";
 const ACCENT: &str = "#00b6ff";
 
-/// Renders the card as PNG bytes.
+/// Renders the card as PNG bytes, with `job_title` under the name and `description` under the
+/// rule.
 ///
-/// `job_title` is set under the name and `description` under the rule. Both are
-/// parameters rather than read from [`CONFIG`] here, so a per-locale card needs
-/// no change to this module; today one English card is published, matching the
-/// single global `og:image`.
+/// # Errors
+///
+/// Returns the Typst diagnostics when the card fails to compile or encode.
+// Both texts are parameters instead of read from `CONFIG`, so a per-locale card needs no change to
+// this module. Today one English card is published, matching the single global `og:image`.
 pub(crate) fn render(job_title: &str, description: &str) -> Result<Vec<u8>, String> {
     render_png(build_typ(job_title, description), SCALE, &[])
 }
