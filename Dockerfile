@@ -1,15 +1,13 @@
 # syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
+# How each stage is built, and why, is in docs/DEPLOYMENT.md § How the image is built.
+
 ARG USER_ID=1001
 ARG GROUP_ID=1001
 
-# Pinned build-tool versions. Bump alongside the base image digests and the
-# committed Cargo.lock / package-lock.json.
-#
-# `dx` has to match the `dioxus` crates in Cargo.lock exactly: the CLI writes the
-# asset manifest and the hydration bootstrap the library reads. Renovate's
-# "dioxus" group moves both in one pull request, and
-# `apps/web/tests/toolchain_pins.rs` fails the test suite when they disagree.
+# `dx` must match the `dioxus` crates in Cargo.lock exactly, because the CLI writes the asset
+# manifest and hydration bootstrap the library reads. `apps/web/tests/toolchain_pins.rs` fails
+# when they disagree, and Renovate's "dioxus" group moves both together.
 # renovate: datasource=crate depName=dioxus-cli
 ARG DIOXUS_CLI_VERSION=0.7.10
 # renovate: datasource=crate depName=cargo-about
@@ -18,48 +16,28 @@ ARG CARGO_ABOUT_VERSION=0.9.2
 ARG CARGO_CHEF_VERSION=0.1.78
 
 # ── shared build tools ────────────────────────────────────────────────────────
-# Rust + the wasm target + Node (Tailwind CLI) + the Dioxus CLI (`dx`).
-#
-# Pinned to $BUILDPLATFORM: every build stage runs natively on the builder and
-# *cross-compiles* the SSR server to $TARGETPLATFORM. Running the whole Rust +
-# wasm + npm build under QEMU for a foreign arch would be an order of magnitude
-# slower, and nothing here but the final server binary is arch-dependent (the
-# client is wasm; repos.json, the resume PDFs and the Tailwind CSS are data).
+# Every build stage runs natively on $BUILDPLATFORM and cross-compiles the SSR server to
+# $TARGETPLATFORM. Only the server binary is architecture-dependent.
 FROM --platform=$BUILDPLATFORM rust:1.99-slim@sha256:aab42391a986424e22d6a3ec14f37bc6dd3dacff4d457ca7cccd781e02297cc6 AS tools
 
 ARG DIOXUS_CLI_VERSION
 ARG CARGO_ABOUT_VERSION
 ARG CARGO_CHEF_VERSION
 ARG TARGETARCH
-# Honored by tooling that supports it so embedded timestamps stay deterministic.
 ARG SOURCE_DATE_EPOCH
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
-# Docker's TARGETARCH → Rust musl triple, resolved once and recorded so the
-# mapping (and the list of supported architectures) lives in exactly one place.
-# Unknown architectures fail loudly here rather than silently building the wrong
-# thing further down.
+# The one place that maps Docker's TARGETARCH to a Rust musl triple. Any other architecture
+# fails here.
 RUN case "${TARGETARCH}" in \
       amd64) echo 'x86_64-unknown-linux-musl' ;; \
       arm64) echo 'aarch64-unknown-linux-musl' ;; \
       *) echo "unsupported TARGETARCH: '${TARGETARCH}'" >&2; exit 1 ;; \
     esac > /etc/rust-target
 
-# `musl-tools` provides musl-gcc for the native x86_64 musl target;
-# `gcc-aarch64-linux-gnu` is the cross toolchain for the arm64 target. Both are
-# only ever used to compile ring's C and to drive the link — rustc supplies its
-# own bundled musl libc.a and crt objects for the musl targets
-# (`self-contained` linking), so the glibc-flavoured cross gcc never contributes
-# a libc and the result stays fully static.
-#
-# `libc6-dev-arm64-cross` is required and easy to miss: gcc-aarch64-linux-gnu
-# only *recommends* it, so under --no-install-recommends the cross compiler ends
-# up with no target headers at all and ring's first .c file fails on <stdlib.h>.
-# Its headers are glibc's, but they are only ever preprocessed — nothing from
-# this package reaches the linked binary.
-#
-# No `libssl-dev`/`pkg-config`: nothing in the graph links OpenSSL — ureq and
-# sentry use rustls on ring, which only needs the C compiler above.
+# The C toolchains compile ring and drive the link, while rustc supplies the musl libc, so the
+# binary stays fully static. `libc6-dev-arm64-cross` is only recommended by the arm64 cross gcc,
+# and without it ring's first C file fails on <stdlib.h>.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl nodejs npm ca-certificates musl-tools \
     && if [ "${TARGETARCH}" = "arm64" ]; then \
@@ -70,28 +48,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# The compiler `rust-toolchain.toml` pins, with the wasm32 target it lists for the client. The
-# base image above carries the same `major.minor` (`apps/web/tests/toolchain_pins.rs` asserts
-# it), but installing from the file is what guarantees the exact patch: every later stage that
-# `COPY . .` would otherwise switch to the pin halfway through the build. Copied on its own so
-# that no other change to the tree invalidates this layer.
+# Installs the exact toolchain `rust-toolchain.toml` pins, copied alone so no other change
+# invalidates the layer.
 COPY rust-toolchain.toml ./
 RUN rustup toolchain install --no-self-update
 
-# musl for a fully static SSR server (see runtime stage), added to the pinned toolchain.
 RUN rustup target add "$(cat /etc/rust-target)"
 
-# Pin the binstalled Dioxus CLI and cargo-about for reproducible builds.
-#
-# The bootstrap script is pinned to a commit, not to `main`: it is piped
-# straight into a shell, so fetching whatever `main` happens to hold would make
-# every build depend on the current state of a repository we do not control —
-# the one unpinned input in a file where the base images, actions and CLI
-# version are all pinned. Renovate tracks the SHA via the annotation below.
-#
-# `cargo-about` renders the third-party license inventory the `/licenses` page is
-# built from (see the `generate` stage). A build tool like `dx`: it runs once
-# during the image build and nothing it links reaches the runtime image.
+# The bootstrap script is pinned to a commit because it is piped straight into a shell.
 # renovate: datasource=github-tags depName=cargo-bins/cargo-binstall
 ARG CARGO_BINSTALL_REF=e00d2c94cc0067b77737821097a62d91c0301baa # tag=v1.21.1
 RUN curl -L --proto '=https' --tlsv1.2 -sSf \
@@ -100,31 +64,19 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf \
     && cargo binstall --no-confirm --locked "cargo-about@${CARGO_ABOUT_VERSION}" \
     && cargo binstall --no-confirm --locked "cargo-chef@${CARGO_CHEF_VERSION}"
 
-# Compiled dependencies live in the cooked layers below, not in cache mounts: a
-# cache mount starts empty on every CI runner and hides whatever layer is under
-# its target path. The one mount left, `/repos-cache` in `generate`, is
-# `sharing=locked`: the release workflow builds both platforms in one build, and
-# `tools` differs per $TARGETARCH, so each platform runs its own copy of every
-# stage below at the same time.
+# Compiled dependencies live in the cooked layers below, not in cache mounts, which start empty
+# on every CI runner.
 ENV CARGO_TARGET_DIR=/cargo-target
 
 # ── dependency recipe ─────────────────────────────────────────────────────────
-# Every manifest and the lockfile, reduced to what `cargo chef cook` needs. The
-# recipe changes only when a manifest or Cargo.lock does, so the cooked layers
-# below stay cached across every source-only change.
 FROM tools AS planner
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 # ── dependencies of the build-time tools ──────────────────────────────────────
-# Each cook names the package, profile and features of the build it stands in
-# for. Cooking two packages in one call resolves features across both, and
-# `cargo run -p` resolves them for one: every crate whose features differ would
-# compile a second time after `COPY . .`.
-#
-# `cargo fetch` downloads every crate in Cargo.lock, for every target, into this
-# layer. `cargo about` in `generate` reads all of them, and without the fetch it
-# downloaded the rest itself into a 540 MB layer that changed with every commit.
+# Each cook names the package, profile and features of the build it stands in for, or a crate
+# whose features differ compiles a second time. `cargo fetch` puts every crate `cargo about`
+# reads into this layer.
 FROM tools AS deps
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --locked --profile tools -p portfolio-update-repos --recipe-path recipe.json \
@@ -136,27 +88,9 @@ RUN cargo chef cook --locked --profile tools -p portfolio-update-repos --recipe-
 # ── generate build-time data: repos.json, resume PDFs + fingerprint ───────────
 FROM deps AS generate
 COPY . .
-# repos.json from the GitHub API (build.rs embeds it into the web binary). CI=1
-# selects the long cache TTL so a fresh committed/cached file is reused; an
-# optional `gh_token` build secret lifts the API rate limit.
-#
-# The secret is handed over as a *path*, not as an environment variable: the
-# builder resolves `PORTFOLIO_GITHUB__TOKEN_FILE` through the layered config, so
-# the token is never in the process environment where a crash dump, `ps e` or a
-# child process would carry it. BuildKit omits the mount entirely when the
-# secret was not supplied (a fork's pull request has none), so the path is only
-# exported when it actually exists — pointing the indirection at a missing file
-# is an error, and correctly so.
-#
-# The cache mount is what makes `CI=1` mean anything. `portfolio-update-repos` skips the
-# fetch entirely when its output file is still fresh (ten hours on CI, see
-# apps/update-repos/src/cache.rs) — but repos.json is not committed, so every
-# build started from nothing and the freshness check could never hit. Carrying
-# the file across builds in a cache mount lets that logic do what it was written
-# to do: one API call per ten hours per builder, instead of one per build.
-#
-# `|| true` on the restore: an empty cache is the normal state of a fresh builder,
-# and a missing file is exactly the "stale" the generator already handles.
+# The `gh_token` secret is passed as a file path, so the token never enters the process
+# environment, and only when BuildKit mounted it. The cache mount carries `repos.json` across
+# builds, so `CI=1`'s ten-hour freshness window can skip the API call.
 RUN --mount=type=secret,id=gh_token \
     --mount=type=cache,target=/repos-cache,sharing=locked \
     if [ -s /run/secrets/gh_token ]; then \
@@ -165,42 +99,19 @@ RUN --mount=type=secret,id=gh_token \
     cp /repos-cache/repos.json apps/web/repos.json 2>/dev/null || true; \
     CI=1 cargo run --profile tools --locked -p portfolio-update-repos -- apps/web/repos.json \
     && cp apps/web/repos.json /repos-cache/repos.json
-# The third-party license inventory, embedded by build.rs and rendered by the
-# `/licenses` route. Runs here rather than being committed for the same reason
-# repos.json is not committed: the attribution a build publishes has to describe
-# the dependency set that build linked, and the only place both are known is the
-# build itself.
-#
-# `--all-features` covers both halves of the fullstack app in one pass — the
-# wasm client's web-sys and the SSR server's axum are behind the crate's platform
-# features, and a run without them attributes neither. `--locked` asserts the
-# committed Cargo.lock resolves unchanged, so the inventory describes the same
-# graph `dx bundle` is about to compile.
-#
-# This step is also the license gate: `accepted` in apps/web/about.toml lists the
-# terms this site ships under, and a dependency arriving with anything else exits
-# non-zero here — the image fails to build rather than being published with a
-# licenses page that does not mention it.
+# The license inventory for `/licenses`, generated from the graph this build links. It is also
+# the license gate: a dependency under terms missing from `accepted` in apps/web/about.toml fails
+# the image.
 RUN mkdir -p apps/web/generated \
     && cargo about generate --locked --all-features \
          --manifest-path apps/web/Cargo.toml \
          --output-file apps/web/generated/licenses.json \
          apps/web/about.hbs
-# Resume PDFs + resume-fingerprint.json, both embedded into the web binary by
-# build.rs (the PDFs are served at /resume/ from memory; the fingerprint is shown
-# on the contact card). Embedding keeps the runtime a single self-contained
-# binary with no on-disk asset tree.
-#
-# The `resume_photo` secret is the application photo the German sheet puts at
-# the top of its sidebar. It is optional and deliberately not a build context
-# file: a portrait is personal data that has no business in the repository or in
-# an image layer, so it arrives as a secret mount that exists only for this RUN.
-# Without it both sheets render exactly as they do today.
+# The resume PDFs, fingerprint, Open Graph card and app icons, which build.rs embeds. The
+# optional `resume_photo` secret is the German sheet's application photo, kept out of the
+# repository and every layer:
 #
 #     docker build --secret id=resume_photo,src=./photo.jpg .
-#
-# The generator reads the format from the file's own header, so the mount having
-# no extension is fine.
 RUN --mount=type=secret,id=resume_photo \
     cargo run --profile tools --locked -p portfolio-resume -- /app/resume-out \
       $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
@@ -211,18 +122,8 @@ RUN --mount=type=secret,id=resume_photo \
     && rm -rf /cargo-target /app/resume-out
 
 # ── the configuration contract ────────────────────────────────────────────────
-# The document a deployment pipeline reads to check that what it renders is what
-# this image loads: every key in every spelling, the same keys as a JSON Schema,
-# and the variables outside the `PORTFOLIO_` namespace this container reads.
-#
-# On `deps`, whose cook covers this build, and its own stage rather than a step
-# inside `web-builder`: it reads nothing `generate` produces. Nothing the
-# `config-schema` feature links — `serde_json`, `syn`, the derive — reaches the
-# binary the runtime stage copies.
-#
-# `generate` and this stage delete the target directory in their last RUN: only
-# their output files are used, and the compiled workspace crates would otherwise
-# be a new layer of 50–100 MB on every commit.
+# Its own stage on `deps`, because it reads nothing `generate` produces. Nothing the
+# `config-schema` feature links reaches the runtime image.
 FROM deps AS contract-builder
 COPY . .
 RUN mkdir -p /out \
@@ -232,27 +133,15 @@ RUN mkdir -p /out \
 
 # ── dependencies of the fullstack app ─────────────────────────────────────────
 FROM deps AS web-deps
-# Per-target C toolchain for ring's build script (CC_*/AR_*) and for the link
-# step (CARGO_TARGET_*_LINKER). Only the entries matching /etc/rust-target are
-# consulted, so declaring both architectures unconditionally is harmless.
-#
-# The x86_64 target deliberately sets no linker here: the repository's
-# `.cargo/config.toml` already points it at `x86_64-linux-musl-gcc` (installed
-# with `musl-tools` above), and cargo picks that up from the workspace root. Keep
-# the two in sync — a linker named in only one of them is a silent build break.
+# Per-target C toolchain for ring and the link. The x86_64 linker is set in `.cargo/config.toml`
+# instead, and the two must agree.
 ENV CC_x86_64_unknown_linux_musl=musl-gcc \
     CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
     AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
-# The two compilations `dx bundle` runs below, cooked the way dioxus-cli 0.7.10
-# calls cargo (`build/request.rs`), or `dx` compiles every dependency again.
-# `wasm-release` is declared in Cargo.toml (see the comment there for why), so
-# `dx` uses it as written and only adds `strip=false`, which it already says.
-# `server-release` is not declared, so `dx` defines it through `--config`:
-# inheriting `release` with `strip=false`, which the `CARGO_PROFILE_*` variables
-# repeat. The client also gets `--cfg getrandom_backend="wasm_js"` in RUSTFLAGS.
-# A `dx` bump that changes any of this shows up as `Compiled` lines for
-# dependencies under `dx bundle`.
+# The two compilations `dx bundle` runs, cooked exactly the way dioxus-cli 0.7.10 calls cargo.
+# A `dx` bump that changes its invocation shows up as `Compiled` lines for dependencies under
+# `dx bundle`.
 RUN RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
     cargo chef cook --locked --profile wasm-release --target wasm32-unknown-unknown \
       --no-default-features --features web -p portfolio-web --recipe-path recipe.json \
@@ -261,106 +150,46 @@ RUN RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
     cargo chef cook --locked --profile server-release --target "$(cat /etc/rust-target)" \
       --no-default-features --features server -p portfolio-web --recipe-path recipe.json
 
-# The Tailwind toolchain, installed from the committed lockfile alone so the layer survives every
-# commit that does not touch it. Installed after `COPY . .` in `web-builder` it was re-downloaded
-# on every build; `.dockerignore` keeps a local `node_modules` out of that copy, so this one stays.
-#
-# `--ignore-scripts`: nothing the build runs needs an install script (the one in the tree,
-# `@parcel/watcher`'s, serves `watch:css`, which no image build calls), and leaving them off means
-# a compromised package gets no code execution at install time.
+# The Tailwind toolchain, from the lockfile alone so the layer survives source changes.
+# `--ignore-scripts`, because no install script is needed and none gets to run.
 COPY apps/web/package.json apps/web/package-lock.json apps/web/
 RUN npm ci --prefix apps/web --ignore-scripts --no-audit --no-fund
 
 # ── build the fullstack app (client wasm + native SSR server) ─────────────────
 FROM web-deps AS web-builder
 COPY . .
-# What `generate` produced for build.rs to embed.
 COPY --from=generate /app/apps/web/repos.json apps/web/repos.json
 COPY --from=generate /app/apps/web/generated apps/web/generated
 WORKDIR /app/apps/web
-# `build:css` compiles Tailwind (scanning the .rs files) into assets/tailwind.css,
-# which the app links via manganis `asset!`. Its toolchain was installed in `web-deps`.
 RUN npm run build:css
-# Produces <target>/dx/portfolio-web/release/web/{server, public/} — the server binary plus
-# the hashed client assets (the /resume PDFs are embedded, not bundled). The client stays wasm
-# while `@server --target …-musl` cross-links the SSR server fully static
-# (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
-# explicitly keeps proc-macros/build-scripts on the host toolchain.
-#
-# `PORTFOLIO_REQUIRE_GENERATED=1` makes `apps/web/build.rs` refuse to embed an
-# empty default for anything the stages above should have produced — a missing
-# license inventory or stylesheet fails the image instead of shipping.
+# Makes `apps/web/build.rs` fail on any generated input the stages above did not produce.
 ENV PORTFOLIO_REQUIRE_GENERATED=1
-# `--debug-symbols=false` strips the client wasm's DWARF debug info and `name`
-# section for production: it shrinks the payload substantially and avoids the
-# malformed `name` custom section that Firefox rejects at validation. We already
-# don't `--keep-names`, so no readable backtraces are lost.
-#
-# The bundle is copied out to /out/web, and the target directory and the tools
-# `dx` downloads into ~/.local/share/.dx (wasm-bindgen, wasm-opt, esbuild,
-# 114 MB) are deleted in the same RUN. This layer is new on every commit and
-# `mode=max` exports it, so it holds the bundle and nothing else.
-#
-# `RUSTUP_AUTO_INSTALL=0`: to size its progress bar, `dx` runs
-# `cargo +nightly rustc --unit-graph`, and rustup installed whatever nightly was
-# current, about 620 MB, on every build. Without auto-install the call fails and
-# `dx` estimates the unit count from `cargo metadata` instead; only the `[n/m]`
-# totals in the log change.
+# Bundles the wasm client and the static musl server. `--debug-symbols=false` drops the client's
+# DWARF and `name` section, which Firefox rejects when malformed. `RUSTUP_AUTO_INSTALL=0` stops
+# `dx` installing a 620 MB nightly to size its progress bar. Only the bundle leaves this layer.
 RUN RUSTUP_AUTO_INSTALL=0 dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
     && cp -r /cargo-target/dx/portfolio-web/release/web /out/web \
     && rm -rf /cargo-target /root/.local/share/.dx
-# An empty, staged ISR cache directory. The `scratch` runtime has no shell to
-# `mkdir` with and its non-root user cannot create directories under `/`, so the
-# directory (and its ownership) has to be baked in here and COPYed across to
-# /tmp/isr (see the runtime stage).
+# The ISR cache directory, staged here because the `scratch` runtime has no shell to create it.
 RUN mkdir -p /isr-cache
 
 # ── runtime ───────────────────────────────────────────────────────────────────
-# `scratch`: the smallest possible attack surface — no shell, no package
-# manager, no libc, nothing but our own files. This is viable because the SSR
-# server is a fully static musl binary (see web-builder) and serves only
-# compile-time data, so it needs no tzdata or /etc/passwd (a numeric USER needs
-# no passwd entry) and no CA bundle: its one possible outbound connection, to
-# Sentry when error reporting is on, verifies TLS against the webpki-roots
-# bundle compiled into the binary.
-#
-# Unlike every stage above — which deliberately pins itself to $BUILDPLATFORM —
-# this stage takes the default, $TARGETPLATFORM (stating it explicitly trips
-# BuildKit's RedundantTargetPlatform check). It is the one stage that must carry
-# the requested architecture, and the binary COPYed into it was cross-compiled
-# to match.
+# `scratch` holds nothing but the static server, its assets and the contract. The stage takes
+# the default $TARGETPLATFORM, which is the architecture the server was cross-compiled to.
 FROM scratch AS runtime
 
-# Re-declared so the globals above are in scope for the `USER` instruction.
 ARG USER_ID
 ARG GROUP_ID
 ARG VCS_REF=unknown
 ARG VERSION=dev
 ARG CREATED=unknown
 ARG SOURCE_URL
-# How anything finds the contract without pulling a layer. All three values are
-# constants for this service — the envelope version, where the file was COPYed,
-# and the loader's prefix — so this block is written out rather than
-# interpolated, and no ARG and no host-side generator run stands between the
-# source and the image.
-#
-# Literal text can be wrong in ways a source diff alone cannot see, so the built
-# image is checked too:
-#
-#   docker inspect -f '{{json .Config.Labels}}' "$image" |
-#     cargo run -p portfolio-config --features config-schema --example verify-labels
-#
-# `--format dockerfile` emits the block between the markers below. The Update
-# Files workflow rewrites that region from the generator and commits the result;
-# the Config Contract job diffs it afterwards, so the copy here cannot drift from
-# the document it points at. Edit the types, not these three lines.
-#
-# The markers are what make the region machine-writable: they delimit it by name
-# rather than by line count, so a fourth label added upstream is rewritten like
-# the first three instead of falling silently outside the slice.
+# Generated: `just regenerate` rewrites the region between the markers from the config types, and
+# the Config Contract job checks it against the committed contract and a built image. Edit the
+# types, not these lines.
 # terrace-config:labels:begin
 LABEL dev.terrace.config.contract.version="1" \
       dev.terrace.config.contract.path="/config/contract.json" \
@@ -375,85 +204,15 @@ LABEL org.opencontainers.image.title="portfolio" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${CREATED}"
 
-# The whole bundle: the `server` binary and its sibling `public/` asset dir. The
-# server resolves `public/` relative to itself, so keep them together and run
-# from that directory.
+# The server resolves `public/` relative to itself, so the bundle stays together.
 COPY --from=web-builder /out/web /app
-# The ISR cache directory, owned by the runtime user so it is writable even on
-# the read-only `scratch` root (the non-root user cannot create it at runtime).
-# It lives under /tmp, which the deployment (Helm chart) already mounts as a
-# writable volume; a plain `docker run` uses this baked-in copy instead.
+# Owned by the runtime user, which cannot create a directory on the read-only root.
 COPY --from=web-builder --chown=${USER_ID}:${GROUP_ID} /isr-cache /tmp/isr
-# The offline copy of the contract: what makes the image self-describing with no
-# registry at all — an exported tarball, an air-gapped mirror, an initContainer
-# reading it in-cluster. The canonical copy is the OCI referrer attached to the
-# pushed digest; this one costs a few kilobytes and needs nothing to fetch it.
 COPY --from=contract-builder /out/contract.json /config/contract.json
 WORKDIR /app
 
-# The server reads its own settings through the layered `PORTFOLIO_` config
-# (struct defaults < TOML at $PORTFOLIO_CONFIG < PORTFOLIO_* environment <
-# $PORTFOLIO_SECRETS_DIR < PORTFOLIO_<KEY>_FILE), so every key below can equally
-# be supplied as a mounted ConfigMap fragment or Secret file. See README.md and
-# config.example.toml. PORT, IP and RUST_LOG are *not* in that namespace: they
-# belong to the Dioxus toolchain, which reads them itself.
-#
-# Incremental static regeneration (ISR) is ON by default: the cache directory
-# points at /tmp/isr, which the deployment (Helm chart) already mounts as a
-# writable volume (so it works under `readOnlyRootFilesystem: true` with no extra
-# setup); a plain `docker run` falls back to the baked-in copy above. The server
-# is locale-aware — it tags each render with the negotiated language, so the
-# cache keeps a separate entry per locale — and the site has only a handful of
-# pages built entirely from compile-time data, so caching every rendered page is
-# safe and cheap. If /tmp/isr is ever not writable, the server fails safe and
-# renders every request fresh.
-#
-# The cache is permanent by default (no time-based TTL): the only thing that
-# changes a page is a new build, which starts from an empty cache. Set the TTL to
-# a positive number of seconds only when you share a *persistent* cache volume
-# across deploys and want time-based revalidation; set the cache directory empty
-# to turn ISR off entirely. Keep the path outside /app/public so the immutable,
-# content-hashed assets stay read-only.
-#   PORTFOLIO_ISR__CACHE_DIR=/tmp/isr  # empty disables ISR
-#   PORTFOLIO_ISR__TTL_SECS=0          # 0/unset = permanent; positive = finite TTL
-#   PORTFOLIO_ASSETS__DIST_DIR=public  # what the readiness probe checks
-#
-# The Content-Security-Policy is built per document from the inline scripts that
-# document carries, with a per-response nonce for the script Cloudflare's bot
-# products inject at the edge. The ISR cache above is unaffected: it stores the
-# body, and the nonce lives only in the response header, minted after the cached
-# render is read. Both keys default to on and move together — see README.md.
-#   PORTFOLIO_CSP__HASH_INLINE_SCRIPTS=true       # false restores 'unsafe-inline'
-#   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE=true  # false drops the edge nonce
-#   PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE=false    # admit the Turnstile widget
-#   PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS=false
-#
-# Sentry error reporting is OFF, and nothing here turns it on: a DSN is an egress
-# destination for whatever a log line carries, so it is a per-deployment decision
-# rather than an image default. Nothing below is baked in for the same reason a
-# working default DSN would be a credential in a published Dockerfile. Switched
-# on without a usable DSN the server refuses to start, rather than reporting into
-# a dashboard whose emptiness reads as a healthy site.
-#
-# Mount the DSN rather than setting it: PORTFOLIO_SENTRY__DSN_FILE names a file
-# holding it, and `sentry__dsn` inside $PORTFOLIO_SECRETS_DIR is the same value
-# as a key in a mounted Secret. TRACES_SAMPLE_RATE stays 0 until performance data
-# is wanted; 0.1 is an ordinary production figure. SEND_DEFAULT_PII stays false —
-# on, every event carries the client IP and the full request header set, Cookie
-# included. See README.md § Error reporting.
-#   PORTFOLIO_SENTRY__ENABLED=false
-#   PORTFOLIO_SENTRY__DSN_FILE=/run/secrets/sentry_dsn
-#   PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE=0
-#   PORTFOLIO_SENTRY__SEND_DEFAULT_PII=false
-#
-# The legal documents are configuration too (`legal.*`), and REQUIRED: the
-# server refuses to start without an imprint and a privacy notice in English and
-# German, naming every missing key. None is baked in — the text is the
-# operator's, and a default one would be published by whoever forgot to replace
-# it. The repository's `legal/` directory holds templates with placeholders in
-# the same layout: mount a directory of the operator's own `*.toml` files (as a
-# ConfigMap, say) and point the loader at it.
-#   PORTFOLIO_CONFIG=/config/legal
+# PORT, IP and RUST_LOG belong to the Dioxus toolchain, outside the `PORTFOLIO_` namespace. Every
+# other key, including the required `legal.*` documents, is described in config.example.toml.
 ENV PORT=8080 \
     IP=0.0.0.0 \
     RUST_LOG=info \

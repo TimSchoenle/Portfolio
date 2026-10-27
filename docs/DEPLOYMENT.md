@@ -36,6 +36,121 @@ build starts from an empty cache. A positive TTL is for a persistent cache volum
 deploys. Each entry is keyed by the negotiated locale, so the German and English renders of a page
 do not overwrite each other.
 
+## How the image is built
+
+The Dockerfile keeps one short comment per instruction. The reasoning behind each stage is here.
+
+### Cross-compilation
+
+Every build stage is pinned to `$BUILDPLATFORM`. Running the Rust, WASM and npm build under QEMU
+for a foreign architecture would be an order of magnitude slower, and only the server binary
+depends on the architecture. The runtime stage is the exception: it takes the default
+`$TARGETPLATFORM`, because it has to carry the requested architecture. Writing
+`--platform=$TARGETPLATFORM` out explicitly trips BuildKit's `RedundantTargetPlatform` check.
+
+`musl-tools` provides `musl-gcc` for x86_64, and `gcc-aarch64-linux-gnu` is the arm64 cross
+compiler. Both only compile ring's C sources and drive the link. rustc links its own bundled musl
+`libc.a` and crt objects (`self-contained` linking), so the glibc-flavoured cross gcc never
+contributes a libc and the result stays static. `libc6-dev-arm64-cross` is easy to miss: the cross
+gcc only recommends it, so under `--no-install-recommends` it has no target headers and ring's
+first C file fails on `<stdlib.h>`. Its headers are only preprocessed, and nothing from it reaches
+the binary. No `libssl-dev` is installed, because ureq and sentry use rustls on ring.
+
+The x86_64 linker is named in `.cargo/config.toml`, which Cargo also reads for the `dx bundle` run
+in `apps/web`. The arm64 linker is set by `ENV` in the `web-deps` stage, because its toolchain
+exists only on that leg. A linker named in only one of the two is a silent build break.
+
+### Toolchain and build tools
+
+The `rust:<version>-slim` base carries the same `major.minor` as `rust-toolchain.toml`, which
+`apps/web/tests/toolchain_pins.rs` asserts. Installing from the file is what fixes the patch
+release. Without it, every later stage that runs `COPY . .` would switch to the pin halfway through
+the build.
+
+`dx`, `cargo-about` and `cargo-chef` come from cargo-binstall at exact versions. The binstall
+bootstrap script is fetched by commit, because it is piped into a shell and `main` would make every
+build depend on a repository this one does not control.
+
+### Dependency layers
+
+Compiled dependencies live in layers that `cargo chef cook` produces, not in cache mounts. A cache
+mount starts empty on every CI runner, and it hides whatever layer sits under its target path. The
+recipe changes only when a manifest or `Cargo.lock` does, so the cooked layers survive every
+source-only commit.
+
+Each cook names exactly the package, profile and features of the build it stands in for. Cooking
+two packages in one call resolves features across both, while `cargo run -p` resolves them for one,
+so every crate whose features differ would compile again after `COPY . .`. For the same reason the
+two `web-deps` cooks copy how dioxus-cli 0.7.10 calls cargo (`build/request.rs`): `wasm-release` is
+declared in `Cargo.toml` and used as written, `server-release` is defined by `dx` through
+`--config` as `release` with `strip = false`, which the `CARGO_PROFILE_*` variables repeat, and the
+client gets `--cfg getrandom_backend="wasm_js"`.
+
+`cargo fetch` downloads every crate in `Cargo.lock` into the `deps` layer. `cargo about` reads all
+of them, and without the fetch it downloaded the rest itself into a 540 MB layer that changed with
+every commit.
+
+`generate`, `contract-builder` and `web-builder` delete the target directory in their last `RUN`.
+Only their output files are used, and the compiled workspace crates would otherwise add a new layer
+of 50 to 100 MB on every commit. `web-builder` also deletes the 114 MB of tools `dx` downloads into
+`~/.local/share/.dx`, because `mode=max` exports that layer.
+
+### Generated data
+
+`portfolio-update-repos` receives the GitHub token as `PORTFOLIO_GITHUB__TOKEN_FILE`, a path,
+never as a variable holding the token. A token in the process environment is visible to a crash
+dump, `ps e` and every child process. BuildKit omits the secret mount when no secret was supplied,
+as on a fork's pull request, so the variable is exported only when the file exists.
+
+`repos.json` is not committed, so without help every build started from nothing and the ten-hour
+CI freshness check could never hit. The `/repos-cache` mount carries the file between builds, which
+brings the API calls down to one per ten hours per builder. An empty cache is a fresh builder's
+normal state, hence `|| true` on the restore. The mount is `sharing=locked` because a release builds
+both platforms at once and `tools` differs per `$TARGETARCH`.
+
+The license inventory is generated, not committed, because the attribution a build publishes has to
+describe the graph that build linked. `--locked` asserts the committed `Cargo.lock` resolves
+unchanged, so the inventory describes what `dx bundle` is about to compile.
+
+The resume generator's optional `resume_photo` secret is the German sheet's application photo. A
+portrait is personal data, so it is neither a build-context file nor in any layer, and the secret
+mount exists only for that `RUN`. The generator reads the format from the file header, so the
+extensionless mount works.
+
+The contract has its own stage on `deps`, because it reads nothing `generate` produces, and
+`serde_json`, `syn` and the derive that `config-schema` links never reach the runtime image.
+
+### The bundle
+
+`npm ci` runs from `package.json` and `package-lock.json` alone, before `COPY . .`, so the Tailwind
+toolchain is not downloaded again on every commit. `.dockerignore` keeps a local `node_modules` out
+of the later copy. `--ignore-scripts` is safe because the one install script in the tree,
+`@parcel/watcher`'s, serves `watch:css`, which no image build calls, and it denies a compromised
+package code execution at install time.
+
+`PORTFOLIO_REQUIRE_GENERATED=1` makes `apps/web/build.rs` refuse an empty default for any input the
+earlier stages should have produced, so a missing license inventory or stylesheet fails the image.
+
+`dx bundle --debug-symbols=false` strips the client's DWARF and `name` section, which shrinks the
+payload and avoids the malformed `name` section Firefox rejects at validation. The build never
+passes `--keep-names`, so no readable backtraces are lost. To size its progress bar, `dx` runs
+`cargo +nightly rustc --unit-graph`, and rustup installed whatever nightly was current, about
+620 MB, on every build. `RUSTUP_AUTO_INSTALL=0` makes that call fail, and `dx` estimates the unit
+count from `cargo metadata` instead. Only the `[n/m]` totals in the log change.
+
+The ISR cache directory is created in `web-builder` and copied into the runtime owned by the
+runtime user, because `scratch` has no shell and a non-root user cannot create a directory under
+`/`.
+
+### Checking the labels
+
+The contract labels are literal text, so the built image is checked as well as the source:
+
+```bash
+docker inspect -f '{{json .Config.Labels}}' "$image" |
+  cargo run -p portfolio-config --features config-schema --example verify-labels
+```
+
 ## The configuration contract
 
 The image describes its own configuration surface twice, so a consumer can find it with or without

@@ -75,7 +75,7 @@ mod tests {
     }
 
     /// An SVG is markup, not a raster image. tower-http's default predicate skips
-    /// everything under `image/`, which took the favicon with it — this asserts
+    /// everything under `image/`, which took the favicon with it. This asserts
     /// the narrowing that puts it back without admitting the raster types.
     #[test]
     fn svg_is_compressed_but_raster_images_are_not() {

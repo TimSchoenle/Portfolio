@@ -282,7 +282,7 @@ mod tests {
     }
 
     /// An inventory holding nothing but this repository's own crates is as empty
-    /// as no inventory at all — otherwise the page would render three headings
+    /// as no inventory at all. Otherwise the page would render three headings
     /// over an empty list instead of saying there is nothing to show.
     #[test]
     fn an_inventory_of_only_path_dependencies_is_empty() {

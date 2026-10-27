@@ -6,79 +6,41 @@ publish.workspace = true
 rust-version.workspace = true
 homepage.workspace = true
 
-# Off by default, and it has to stay that way: `terrace-config/schema-cli` links
-# `serde_json` and compiles a proc macro, neither of which a running binary has
-# any use for. Only `cargo run --example config-schema` and the `--all-features`
-# CI gates ever turn it on, so nothing it costs reaches the image — the
-# Dockerfile builds no feature flags at all.
-#
-# `schema-cli` rather than `schema`: it is the half of the generator every
-# consumer of `schema` was writing by hand — the `--format` vocabulary, the
-# argument parsing and the dispatch — and it pulls no dependency `schema` did
-# not already. `examples/config-schema.rs` is what is left after taking it.
-#
-# The `#[config(...)]` helper attributes are gated with it rather than left in
-# place: they are the derive's, so a build without the derive fails with
-# `cannot find attribute config` the moment one is unconditional.
+# Off by default, and it has to stay off: only the generator examples and the `--all-features`
+# gates need the derive and `serde_json`. See docs/DEPENDENCIES.md § Member manifests.
 [features]
 config-schema = ["terrace-config/schema-cli"]
 
-# The generator that renders the configuration reference in `README.md`. Listed
-# so `cargo clippy --all-targets --all-features` compiles it, which is the only
-# thing standing between a new config block and a README that silently omits it.
+# Renders the configuration reference, and is compiled by `cargo clippy --all-targets
+# --all-features` so it cannot fall behind a new block.
 [[example]]
 name = "config-schema"
 required-features = ["config-schema"]
 
-# The post-build check on the image's `LABEL` block. It needs `config-schema` for the
-# contract it compares the labels against. All three values are
-# constants, so the block is written out in the `Dockerfile` rather than
-# generated — which means the ways it goes wrong are invisible to a source diff:
-# a line dropped on a branch nobody read, a base image contributing its own.
-# `Contract::verify_labels` reads back what `docker inspect` reports and names
-# the first label missing or wrong.
+# Checks a built image's `LABEL` block against the contract and names the first label missing or
+# wrong.
 [[example]]
 name = "verify-labels"
 required-features = ["config-schema"]
 
 [dependencies]
 serde.workspace = true
-# The loader itself. This crate owns the *schema* and the Portfolio dialect
-# (`src/loader.rs`) and none of the layering, the secrets-directory provider or
-# the shadow-key rejection.
+# The loader itself; this crate owns only the schema and the Portfolio dialect.
 terrace-config.workspace = true
-# Config is where the GitHub token enters the process, so it is where the
-# wrapper has to start: a `SecretString` field cannot be unwrapped by the
-# struct that nests it, so the token stays wrapped until the one line that
-# builds the `Authorization` header.
+# The GitHub token and the Sentry DSN are wrapped from the moment they are loaded.
 secrecy.workspace = true
-# `legal.*`: the documents' configuration type, and the validation this crate adds to it in
-# `src/legal.rs`. Here rather than only in the server so the configuration reference, the example
-# file and the contract describe the legal block with everything else the server loads.
+# `legal.*`, here so the configuration reference describes it with every other block.
 terrace-legal.workspace = true
 
 [dev-dependencies]
-# The loader's own test harness, which is why `src/loader.rs` arranges a mount
-# rather than a variable name: every name it writes is derived from the
-# `Terrace` under test, so a test cannot keep passing against a spelling this
-# crate no longer reads. A development dependency because `testing` is
-# deliberately outside `full` — a service asking for everything the crate does
-# at runtime should not link a test harness.
+# The loader's test harness, which derives every name a test writes from the dialect under test.
 terrace-config = { workspace = true, features = ["testing"] }
-# The `--format variables` payload the documentation job forwards to the
-# template action. `serde_json` reaches this crate only as a development
-# dependency, so it stays where `terrace-config/schema` already puts it — in
-# the generator — and out of every binary this workspace ships.
+# Used by the generator examples and the tests only, so it stays out of every shipped binary.
 serde_json.workspace = true
-# The site's languages, which `legal_catalog_builder` validates every hosted document against.
-# The schema module takes them as a parameter because this crate does not depend on the data crate
-# at runtime; the examples and the tests hand it `portfolio_data::LANGUAGES`, so the list that
-# refines the published contract is the list the server boots with. A development dependency is
-# possible because `portfolio-data` depends on nothing in this workspace.
+# The site's languages, which the examples and tests hand to `legal_catalog_builder` so the
+# contract is refined with the list the server boots with.
 portfolio-data.workspace = true
-# Validates configurations against the JSON Schema inside the published contract, the way a
-# consumer of that contract does. Not reachable through terrace-config, which takes it only as a
-# development dependency of its own.
+# Validates configurations against the published contract's JSON Schema, as a consumer would.
 jsonschema.workspace = true
 
 [lints]

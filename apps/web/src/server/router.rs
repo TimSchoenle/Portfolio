@@ -50,7 +50,7 @@ pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> R
     ));
 
     // The policy for everything that is not a document, and only where the layer
-    // above has not already set a stricter, document-specific one — hence
+    // above has not already set a stricter, document-specific one, hence
     // `if_not_present` rather than the `overriding` every other header uses.
     let app = app
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -94,7 +94,7 @@ pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> R
     // reported with its request attached. Absent entirely when Sentry is off, rather than
     // present as a no-op: a request must not pay for a feature nobody switched on.
     //
-    // Two layers, and the order between them matters — the last `.layer` call is the outermost,
+    // Two layers, and the order between them matters: the last `.layer` call is the outermost,
     // so the hub is bound first and the metadata layer below writes onto the hub it bound.
     // Mounted through `Router::layer`, which runs after routing, which is what puts the
     // `MatchedPath` extension in place for the route-named transaction.
@@ -238,14 +238,14 @@ mod tests {
     }
 
     /// The two Sentry middlewares are mounted on the live stack in [`router`], where nothing else
-    /// in this suite reaches — that function builds the Dioxus app router, which wants a bundle on
+    /// in this suite reaches. That function builds the Dioxus app router, which wants a bundle on
     /// disk. What is worth pinning without one is that the pair is transparent: the hub layer and
     /// the request-metadata layer sit outside every handler, and a response that goes through them
     /// has to be the response the handler produced, header for header and byte for byte.
     ///
     /// That comparison only means something over a route whose answer depends on nothing but the
     /// request, hence `/api/v1/profile`: a `&'static str` rendered once at startup. The probes
-    /// cannot stand in — each stamps the current time to the millisecond, so two of their
+    /// cannot stand in: each stamps the current time to the millisecond, so two of their
     /// responses differ whenever the clock ticks between the calls, which says nothing about the
     /// layers.
     ///

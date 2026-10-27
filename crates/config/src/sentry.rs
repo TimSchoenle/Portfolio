@@ -73,7 +73,7 @@ pub struct SentryConfig {
     /// process inherits it.
     ///
     /// Absent while `sentry.enabled` is set, it fails the boot.
-    // Not rustdoc: `skip_serializing` is here for the same reason it is on `github.token` —
+    // Not rustdoc: `skip_serializing` is here for the same reason it is on `github.token`:
     // `SecretString` has no `Serialize`, and the schema generator serializes a default config to
     // read the `Default` column out of it. The key still appears in the table, with `unset` for
     // a default it never had.

@@ -398,7 +398,7 @@ mod tests {
         let err = init(&config).expect_err("a malformed DSN must not install a client");
         let message = err.to_string();
         assert!(message.contains("sentry.dsn"), "{message}");
-        // The credential must not reach a log line, even the malformed one — an operator who
+        // The credential must not reach a log line, even the malformed one. An operator who
         // pasted the wrong secret into the right key would otherwise publish it.
         assert!(!message.contains("not-a-dsn"), "{message}");
     }

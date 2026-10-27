@@ -400,7 +400,7 @@ pub(super) mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// A path under a regular file can never be created — the one "unwritable" shape that
+    /// A path under a regular file can never be created, which is the one "unwritable" shape that
     /// reproduces on every platform (root ignores a mode-0555 directory).
     #[test]
     fn an_unusable_cache_directory_disables_isr_instead_of_failing() {
