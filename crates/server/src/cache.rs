@@ -1,19 +1,19 @@
-//! `Cache-Control` TTLs for served assets.
+//! The `Cache-Control` policy for every response the server sends.
 //!
-//! Content-hashed JS/WASM/CSS can be cached forever; the SSR HTML must always be
-//! revalidated to pick up a fresh deploy. Web fonts get a moderate TTL, and the
-//! resume PDFs and generated metadata (robots.txt, sitemap.xml, web manifest) a
-//! short one.
+//! Content-hashed JS, WASM and CSS can be cached forever; the SSR HTML must always be
+//! revalidated to pick up a fresh deploy. Web fonts get a moderate TTL, and the resume PDFs and
+//! generated metadata (`robots.txt`, `sitemap.xml`, the web manifest) a short one. An error
+//! response is never stored.
 //!
-//! Implemented as a response middleware that only sets `Cache-Control` when a
-//! handler has not already done so, so the API's own headers win.
+//! [`set_cache_control`] sets the header only when a handler has not, so the API's own headers
+//! win.
 //!
 //! What counts as content-hashed is the `dx`/`manganis` naming: a filename stem ending in a
 //! `dxh`-prefixed hex segment, as in `tailwind-dxh31cffa1cc71c7bb.css`. `dx bundle` puts the
 //! whole client bundle under those names, the loader and the wasm binary alike, so everything
-//! under `public/assets/` is immutable. The hex run is not fixed-width — plain hex comes out
-//! fifteen digits about as often as sixteen — and a rule that assumed sixteen served the two
-//! largest files on the page uncached.
+//! under `public/assets/` is immutable. The hex run is not fixed-width: plain hex drops leading
+//! zero nibbles, and a rule that assumed sixteen digits served the two largest files on the page
+//! uncached.
 //!
 //! Nothing is served from `/wasm/`. That path exists inside the build tree only, before
 //! bundling renames and hashes it.
@@ -28,18 +28,19 @@ use axum::{
     response::Response,
 };
 
-/// Immutable, content-hashed assets: cache for a year and never revalidate.
+/// The value for immutable, content-hashed assets: a year, never revalidated.
 const IMMUTABLE_ONE_YEAR: &str = "public, max-age=31536000, immutable";
-/// Stable-but-unhashed media (web fonts): thirty days.
+/// The value for stable but unhashed media, the web fonts: thirty days.
 const THIRTY_DAYS: &str = "public, max-age=2592000";
-/// Generated metadata and the resume PDFs: one hour.
+/// The value for generated metadata and the resume PDFs: one hour.
 const ONE_HOUR: &str = "public, max-age=3600";
-/// HTML / SSR fallback: cacheable but always revalidated against the origin so a
-/// new deploy is served the moment it lands.
+/// The value for documents: cacheable, but revalidated against the origin on every use, so a new
+/// deploy is served the moment it lands.
 const REVALIDATE: &str = "no-cache";
-/// Any `4xx` or `5xx`: never stored. The TTLs above describe the asset a path names, not a
-/// failure to serve it, and a cache holds an error response with explicit freshness exactly as
-/// long as it would the asset (RFC 9111 §3).
+/// The value for any `4xx` or `5xx`: never stored.
+///
+/// The TTLs above describe the asset a path names, not a failure to serve it, and a cache holds
+/// an error response with explicit freshness exactly as long as it would the asset (RFC 9111 §3).
 const NO_STORE: &str = "no-store";
 
 /// Picks the `Cache-Control` value for a static-asset request path.
@@ -65,24 +66,18 @@ fn cache_control_for(path: &str) -> &'static str {
     REVALIDATE
 }
 
-/// Whether the path's final segment ends in `.<ext>`, compared ASCII case-insensitively.
+/// Reports whether the path's final segment ends in `.<ext>`, ignoring ASCII case.
 fn has_extension(path: &str, ext: &str) -> bool {
     std::path::Path::new(path)
         .extension()
         .is_some_and(|found| found.eq_ignore_ascii_case(ext))
 }
 
-/// Whether the path's filename carries a `dx`/manganis content hash: a
-/// `dxh`-prefixed hex segment at the end of the stem, e.g.
-/// `tailwind-dxh31cffa1cc71c7bb.css`.
-///
-/// The digit count is **not** fixed. manganis renders the 64-bit asset hash as
-/// plain hex, so a hash with leading zero nibbles is written short — one real
-/// `dx bundle` produced `web-dxh9c6f94a783aca5d3.js` (16 digits)
-/// and `web_bg-dxhfc275e0429871eb.wasm` (15) side by side. Requiring exactly 16
-/// therefore failed to recognize roughly one asset in sixteen as hashed, and
-/// those fell through to `no-cache`: the wasm binary and the stylesheet, the two
-/// largest and most cacheable files on the page, were revalidated on every visit.
+/// Reports whether the path's file name carries a `dx`/manganis content hash: a `dxh`-prefixed
+/// hex segment of any length at the end of the stem, as in `tailwind-dxh31cffa1cc71c7bb.css`.
+// manganis renders the 64-bit asset hash as plain hex, so a hash with leading zero nibbles is
+// written short: one real `dx bundle` produced a 16-digit `.js` and a 15-digit `.wasm` side by
+// side. Requiring exactly 16 left the wasm binary and the stylesheet revalidated on every visit.
 fn is_content_hashed(path: &str) -> bool {
     let file = path.rsplit('/').next().unwrap_or(path);
     let stem = file.split('.').next().unwrap_or(file);
@@ -95,12 +90,11 @@ fn is_content_hashed(path: &str) -> bool {
     !hash.is_empty() && hash.len() <= 16 && hash.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
-/// The `Cache-Control` value for a response with `status` to a request for a path classified as
-/// `for_path`: the path's TTL, unless the response is an error.
-///
-/// Without the exception a missing font was a `404` every browser and shared cache kept for
-/// thirty days, and an asset requested from a replica that does not have it yet — the old pods
-/// of a rolling deploy — an error pinned for as long as its TTL.
+/// Returns the `Cache-Control` value for a response with `status` to a path classified as
+/// `for_path`: the path's TTL, or [`NO_STORE`] for an error.
+// Without the exception a missing font was a `404` every browser and shared cache kept for
+// thirty days, and an asset requested from a replica that does not have it yet, such as an old
+// pod during a rolling deploy, was an error pinned for as long as its TTL.
 fn cache_control_for_response(for_path: &'static str, status: StatusCode) -> &'static str {
     if status.is_client_error() || status.is_server_error() {
         NO_STORE

@@ -1,8 +1,9 @@
-//! The public JSON API, and the two probes Kubernetes calls.
+//! The handlers of the public JSON API and of the health probes.
 //!
-//! The two profile documents are functions of compile-time data, so each is rendered once into a
-//! `&'static str` and changes on redeploy or not at all. The probes carry a live timestamp and
-//! are built per request. Nothing here touches the database this site does not have.
+//! The two profile documents are functions of compile-time data, so each is rendered once and
+//! changes only on a redeploy. The probes carry a live timestamp and are built per request. The
+//! router in `apps/web` decides the paths; each handler's documentation names the one it is
+//! mounted at.
 //!
 //! The profile endpoint's shape is a contract with consumers older than this crate; see
 //! [`portfolio_data::profile`].
@@ -42,16 +43,14 @@ static SCHEMA_JSON: LazyLock<String> = LazyLock::new(|| {
     serde_json::to_string(&schemars::schema_for!(Profile)).expect("the profile schema serializes")
 });
 
-/// The profile document and its schema derive solely from compile-time data, so
-/// they only change on redeploy: a one-hour public TTL keeps them edge/browser
-/// cacheable while staying fresh enough.
+/// The `Cache-Control` of both profile documents: public, for one hour.
 const CACHE_CONTROL: &str = "public, max-age=3600";
 
-/// Stated explicitly because the two handlers below bypass `Json`, which would
-/// otherwise set it. Exactly `application/json`, the value `Json` sends.
+/// The content type of the two profile documents, exactly the value `Json` sends.
+// Stated because the profile handlers bypass `Json`, which would otherwise set it.
 const JSON_CONTENT_TYPE: &str = "application/json";
 
-/// `GET /api/v1/profile` — the static, language-neutral profile document.
+/// Serves the language-neutral profile document, mounted at `GET /api/v1/profile`.
 pub async fn profile() -> impl IntoResponse {
     (
         [
@@ -62,7 +61,7 @@ pub async fn profile() -> impl IntoResponse {
     )
 }
 
-/// `GET /api/v1/profile/schema` — JSON Schema describing the profile document.
+/// Serves the JSON Schema of the profile document, mounted at `GET /api/v1/profile/schema`.
 pub async fn schema() -> impl IntoResponse {
     (
         [
@@ -81,7 +80,7 @@ struct HealthResponse {
     timestamp: String,
 }
 
-/// The current UTC time as `YYYY-MM-DDTHH:MM:SS.sssZ`.
+/// Returns the current UTC time as `YYYY-MM-DDTHH:MM:SS.sssZ`.
 ///
 /// Millisecond precision and a literal `Z`, which is what `Date.prototype.toISOString` emits and
 /// therefore what anything already parsing this endpoint expects.
@@ -93,7 +92,7 @@ fn now_iso8601() -> String {
         .expect("static format description is always valid")
 }
 
-/// `GET /api/health` — reports service status and the current UTC time.
+/// Reports the service status and the current UTC time, mounted at `GET /api/health`.
 pub async fn health() -> impl IntoResponse {
     (
         [(header::CACHE_CONTROL, "no-store")],
@@ -104,9 +103,10 @@ pub async fn health() -> impl IntoResponse {
     )
 }
 
-/// Liveness probe. Succeeds while the async runtime can service the request; the
-/// server holds no degradable state, so this is a cheap "is the process wedged?"
-/// check.
+/// Answers the liveness probe, succeeding while the async runtime can service a request.
+///
+/// The server holds no state that can degrade, so this only tells whether the process is
+/// wedged.
 pub async fn live() -> impl IntoResponse {
     (
         [(header::CACHE_CONTROL, "no-store")],
@@ -117,14 +117,13 @@ pub async fn live() -> impl IntoResponse {
     )
 }
 
-/// Whether the directory at `dist` contains a servable SPA/SSR entrypoint.
+/// Reports whether the directory at `dist` contains the client bundle's `index.html`.
 fn assets_ready(dist: &Path) -> bool {
     dist.join("index.html").is_file()
 }
 
-/// Readiness probe. Confirms the built client assets are present under the
-/// configured bundle directory before Kubernetes routes traffic to this
-/// instance.
+/// Answers the readiness probe: `200` when the client bundle is present in the configured
+/// directory, `503` otherwise.
 pub async fn ready(State(assets): State<AssetsConfig>) -> impl IntoResponse {
     let (status, payload) = if assets_ready(assets.dist_dir()) {
         (StatusCode::OK, "ready")

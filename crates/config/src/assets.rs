@@ -4,12 +4,10 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-/// The built client assets the server reads.
+/// The location of the built client assets the server reads.
 ///
-/// Only the readiness probe consults this: the bundle is served by the Dioxus asset router,
-/// which resolves `public/` relative to the binary on its own. What the probe answers is
-/// whether that bundle is actually there, so a pod missing it is removed from the Service
-/// endpoints instead of serving a page with no wasm.
+/// Only the readiness probe consults it, to report whether the bundle is there. The Dioxus asset
+/// router that serves the bundle resolves `public/` relative to the binary on its own.
 // No `deny_unknown_fields` on any block in this crate, and it is not an oversight — though the
 // reason it used to give was. The `PORTFOLIO_<KEY>_FILE` indirection is *not* the obstacle:
 // terrace-config resolves the suffix into the key it names before anything is deserialized, so a
@@ -48,12 +46,10 @@ impl AssetsConfig {
         PathBuf::from("public")
     }
 
-    /// The configured bundle directory, falling back to the default when the value supplied was
-    /// empty.
-    ///
-    /// Container platforms routinely inject `KEY=` for a declared-but-unset variable, and an
-    /// empty path here would resolve the readiness probe against the working directory — which
-    /// answers "ready" for a deploy that shipped no assets at all.
+    /// Returns the configured bundle directory, or `public` when the supplied value is empty.
+    // Container platforms inject `KEY=` for a declared-but-unset variable, and an empty path would
+    // resolve the readiness probe against the working directory, which answers "ready" for a
+    // deploy that shipped no assets at all.
     #[must_use]
     pub fn dist_dir(&self) -> &Path {
         if self.dist_dir.as_os_str().is_empty() {

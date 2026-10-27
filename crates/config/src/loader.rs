@@ -1,9 +1,14 @@
 //! The Portfolio dialect of [`terrace_config`].
 //!
-//! The layering itself — the TOML fragments, the `PORTFOLIO_` environment layer, the
-//! secrets-directory provider, the `_FILE` indirection and the shadow-key rejection — belongs
-//! to `terrace-config`. What stays here is the one thing that is ours: which environment names
-//! this deployment spells.
+//! The layering itself belongs to `terrace-config`: the TOML fragments, the `PORTFOLIO_`
+//! environment layer, the secrets-directory provider, the `_FILE` indirection and the shadow-key
+//! rejection. What stays here is which environment names this deployment spells.
+//!
+//! Nothing is reserved beyond the two names `terrace-config` reserves itself, `PORTFOLIO_CONFIG`
+//! and `PORTFOLIO_SECRETS_DIR`. Reserving exists for keys read straight from the environment
+//! outside the layered config, and every other variable this workspace reads is outside the
+//! `PORTFOLIO_` namespace: `IP`, `PORT` and `RUST_LOG` belong to the Dioxus toolchain and `CI` to
+//! the CI provider, so no file layer could name one.
 
 use serde::de::DeserializeOwned;
 use terrace_config::Terrace;
@@ -13,25 +18,16 @@ pub use terrace_config::Error as ConfigError;
 /// The prefix every configuration variable carries.
 const PREFIX: &str = "PORTFOLIO_";
 
-/// The loader every binary in this workspace boots through.
+/// Returns the loader every binary in this workspace boots through.
 ///
 /// Layers, lowest precedence first: struct defaults, TOML at `$PORTFOLIO_CONFIG` (a file, or
 /// every `*.toml` in it if it names a directory), `PORTFOLIO_`-prefixed `__`-nested environment
 /// variables, `$PORTFOLIO_SECRETS_DIR`, and `PORTFOLIO_<KEY>_FILE` indirection. The last three
-/// are mutually exclusive per key: a key supplied by two of them is refused at boot rather than
-/// resolved by precedence, because a stale environment variable shadowing a rotated mounted
-/// secret keeps the process running on the old credential.
-///
-/// Nothing is [`reserved`](Terrace::reserve) beyond the two names `terrace-config` reserves
-/// itself (`PORTFOLIO_CONFIG` and `PORTFOLIO_SECRETS_DIR`, both read to decide what the layers
-/// *are*). Reserving exists for keys read straight from the environment outside the layered
-/// config, and this workspace has none: every remaining variable it reads —  `IP`, `PORT` and
-/// `RUST_LOG`, which belong to the Dioxus toolchain, and `CI`, which belongs to the CI provider
-/// — is outside the `PORTFOLIO_` namespace entirely, so no file layer could name one.
-///
-/// Both variable names are stated as literals rather than left to the derivation
-/// `Terrace::new(PREFIX)` performs, so the documented surface in `README.md` can be checked
-/// against this file instead of against a dependency's internals.
+/// are mutually exclusive per key: a key supplied by two of them is refused at boot, because a
+/// stale environment variable shadowing a rotated mounted secret keeps the process running on
+/// the old credential.
+// Both variable names are literals, not the derivation `Terrace::new(PREFIX)` performs, so the
+// surface documented in `README.md` can be checked against this file.
 #[must_use]
 pub fn terrace() -> Terrace {
     Terrace::new(PREFIX)
@@ -39,37 +35,36 @@ pub fn terrace() -> Terrace {
         .secrets_dir_var("PORTFOLIO_SECRETS_DIR")
 }
 
-/// Load a typed config through the layers above.
+/// Loads a typed configuration through the layers [`terrace`] describes.
 ///
 /// # Errors
-/// Returns [`ConfigError`] if a required value is missing, a value fails to parse, a
-/// file-backed source cannot be read, or one key is supplied by more than one of the last three
-/// layers.
+///
+/// Returns [`ConfigError`] when a required value is missing, a value fails to parse, a
+/// file-backed source cannot be read, or one key is supplied by more than one of the
+/// environment, the secrets directory and `_FILE` indirection.
+///
+/// # Examples
+///
+/// ```no_run
+/// # fn main() -> Result<(), portfolio_config::ConfigError> {
+/// let config: portfolio_config::ServerConfig = portfolio_config::load()?;
+/// config.hsts.validate().expect("a servable HSTS block");
+/// # Ok(())
+/// # }
+/// ```
 pub fn load<T: DeserializeOwned>() -> Result<T, ConfigError> {
     terrace().load()
 }
 
-/// Which layer supplied each key, as a block to print beside a failure.
+/// Returns a report of which layer supplied each key, to print beside a failure from [`load`].
 ///
-/// [`load`]'s error names the key; this names the mount. Between them they answer the question
-/// an operator is actually asking — *why is the value not the one I set* — without a debugger,
-/// a rebuild, or a shell in an image that has none.
+/// The error names the key and this names the mount, which together answer why a value is not
+/// the one the operator set. A key supplied twice appears once with both of its sources, so the
+/// report still works for the configuration that stopped the boot.
 ///
-/// Assembled independently of the shadow policy, so the configuration this is most useful for
-/// is the one it can still report: a key supplied twice appears once with both of its sources
-/// rather than stopping the report the way it stopped the boot.
-///
-/// # Nothing here holds a value
-///
-/// The report records *where* each key came from and never *what* it was — a property of
-/// `terrace-config`'s `Explanation` type, which has no field to leak, rather than of remembering
-/// to redact. That is what makes printing one into a log that is shipped and retained safe by
-/// default, and it is why [`GithubConfig::token`](crate::GithubConfig::token) needs no special
-/// handling here.
-///
-/// Returns text whatever happens, the failure to assemble it included: this is called on a path
-/// that is already ending the process, and a diagnostic with an error of its own to handle would
-/// not be one.
+/// The report records where each key came from and never its value, so it is safe to print into
+/// a log that is shipped and retained. It is text whatever happens: a failure to assemble it is
+/// reported in the text.
 #[must_use]
 pub fn provenance() -> String {
     match terrace().explain() {

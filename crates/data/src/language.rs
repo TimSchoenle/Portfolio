@@ -1,33 +1,39 @@
-//! The site languages: their translation files, and everything else that differs by
-//! language without being prose.
+//! The site languages: their translation files, and everything else that differs by language
+//! without being prose.
+//!
+//! Every list here is derived from [`SITE_LANGUAGES`], so adding a language is one entry there
+//! and one translation file.
 
-/// English translations, embedded at compile time.
+/// The English translation file, embedded at compile time.
 pub const I18N_EN: &str = include_str!("../i18n/en.json");
-/// German translations, embedded at compile time.
+/// The German translation file, embedded at compile time.
 pub const I18N_DE: &str = include_str!("../i18n/de.json");
 
 /// Everything about one site language that is not prose.
 ///
-/// Adding a language is one entry in [`SITE_LANGUAGES`] and one translation file; every list
-/// below and every consumer in the web app and the resume generator is derived from it.
+/// The only values are the entries of [`SITE_LANGUAGES`]; look one up with [`language`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Language {
-    /// The primary language subtag (`en`), which is also the value of the `lang` cookie and
-    /// the `?lang=` query parameter.
+    /// The primary language subtag, such as `en`.
+    ///
+    /// It is also the value of the `lang` cookie and the `?lang=` query parameter.
     pub code: &'static str,
-    /// The `og:locale` value (`en_US`).
+    /// The `og:locale` value, such as `en_US`.
     pub og_locale: &'static str,
     /// The embedded translation file.
     pub translations: &'static str,
-    /// The resume PDF's published file name, served under `/resume/`. Non-ASCII on purpose;
-    /// browsers percent-encode it.
+    /// The resume PDF's published file name, served under `/resume/`.
+    ///
+    /// It may be non-ASCII; browsers percent-encode it.
     pub resume_file: &'static str,
     /// The translation key labelling the resume download.
     pub resume_label_key: &'static str,
 }
 
-/// The site languages. The first entry is the default: what a request with no usable
-/// preference gets, and what the unparameterized URLs serve to crawlers.
+/// The site languages, the default first.
+///
+/// The default is what a request with no usable preference gets, and what the unparameterized
+/// URLs serve to crawlers.
 pub const SITE_LANGUAGES: [Language; 2] = [
     Language {
         code: "en",
@@ -48,8 +54,7 @@ pub const SITE_LANGUAGES: [Language; 2] = [
 /// The default language, `SITE_LANGUAGES[0]`.
 pub const DEFAULT_LANGUAGE: &Language = &SITE_LANGUAGES[0];
 
-/// Language codes supported by the site, in [`SITE_LANGUAGES`] order. The first entry is the
-/// default.
+/// The language codes of [`SITE_LANGUAGES`], in the same order.
 pub const LANGUAGES: [&str; SITE_LANGUAGES.len()] = {
     let mut codes = [""; SITE_LANGUAGES.len()];
     let mut i = 0;
@@ -60,7 +65,7 @@ pub const LANGUAGES: [&str; SITE_LANGUAGES.len()] = {
     codes
 };
 
-/// Resume PDF file names per language code, served under `/resume/`.
+/// The resume PDF file name of each language, as `(code, file name)` pairs.
 pub const RESUME_FILES: [(&str, &str); SITE_LANGUAGES.len()] = {
     let mut files = [("", ""); SITE_LANGUAGES.len()];
     let mut i = 0;
@@ -71,7 +76,7 @@ pub const RESUME_FILES: [(&str, &str); SITE_LANGUAGES.len()] = {
     files
 };
 
-/// The name of the cookie, and of the i18nrs storage entry, that holds the selected language.
+/// The name of the cookie and of the i18nrs storage entry holding the selected language.
 ///
 /// The privacy notice documents it (the template in `legal/privacy.toml`, and the
 /// published text a deployment mounts in its place), so a rename has to reach both.
@@ -82,11 +87,8 @@ pub const LANG_STORAGE_KEY: &str = "lang";
 /// The same name as the cookie on purpose: both carry a [`Language::code`].
 pub const LANG_QUERY_PARAM: &str = LANG_STORAGE_KEY;
 
-/// [`LANG_STORAGE_KEY`] followed by the `=` that separates a cookie or query pair's name from
-/// its value.
-///
-/// The readers scan every pair of a header or query for this needle, so it is a constant
-/// rather than a `format!` per pair.
+/// [`LANG_STORAGE_KEY`] followed by `=`, the prefix of a `lang` cookie or query pair.
+// A constant so the readers, which test every pair of a header or query, do not `format!` it.
 pub const LANG_PAIR_PREFIX: &str = "lang=";
 
 // `concat!` takes only literals, so nothing but this check stops a rename of one constant from
@@ -117,7 +119,7 @@ pub fn lang_cookie(code: &str) -> String {
     format!("{LANG_PAIR_PREFIX}{code}; Path=/; Max-Age=31536000; SameSite=Lax")
 }
 
-/// The site language whose code equals `code` exactly, if any.
+/// Returns the site language whose code equals `code` exactly, if any.
 ///
 /// ```
 /// # use portfolio_data::language;
@@ -129,14 +131,15 @@ pub fn language(code: &str) -> Option<&'static Language> {
     SITE_LANGUAGES.iter().find(|lang| lang.code == code)
 }
 
-/// The site language for `code`, or [`DEFAULT_LANGUAGE`] when it names none.
+/// Returns the site language for `code`, or [`DEFAULT_LANGUAGE`] when it names none.
 #[must_use]
 pub fn language_or_default(code: &str) -> &'static Language {
     language(code).unwrap_or(DEFAULT_LANGUAGE)
 }
 
-/// The language after `code` in [`SITE_LANGUAGES`], wrapping around: what the language toggle
-/// switches to.
+/// Returns the language after `code` in [`SITE_LANGUAGES`], wrapping around.
+///
+/// This is what the language toggle switches to. An unknown `code` counts as the default.
 ///
 /// ```
 /// # use portfolio_data::next_language;
@@ -153,7 +156,7 @@ pub fn next_language(code: &str) -> &'static Language {
     &SITE_LANGUAGES[(index + 1) % SITE_LANGUAGES.len()]
 }
 
-/// The resume file name for a language code, falling back to English.
+/// Returns the resume file name for a language code, or the default language's.
 ///
 /// ```
 /// # use portfolio_data::resume_file;

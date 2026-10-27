@@ -8,7 +8,7 @@
 pub struct YearMonth {
     /// Four-digit calendar year.
     pub year: u16,
-    /// `1..=12`. [`format_period`] indexes the localized month names with it.
+    /// The month, from `1` to `12`.
     pub month: u8,
 }
 
@@ -19,32 +19,33 @@ pub(crate) const fn ym(year: u16, month: u8) -> YearMonth {
 /// One role in the work history.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Experience {
-    /// Stable id used as translation key segment (`experience.entries.<id>`).
-    /// The localized role, organization and bullets live in the i18n files.
+    /// The stable id under which the role, organization and bullets are translated, as in
+    /// `experience.entries.<id>`.
     pub id: &'static str,
-    /// Where the role is worked from, e.g. `Remote`. Not localized.
+    /// The place the role is worked from, such as `Remote`, which is not translated.
     pub location: &'static str,
     /// First month of the role.
     pub start: YearMonth,
-    /// Last month, or `None` while the role is ongoing. Ongoing roles sort ahead of every ended
-    /// one in [`experiences_sorted`], however recently the ended one started.
+    /// The last month, or `None` while the role is ongoing.
+    ///
+    /// An ongoing role sorts ahead of every ended one in [`experiences_sorted`], however recently
+    /// the ended one started.
     pub end: Option<YearMonth>,
-    /// Number of localized bullets (`…bullets.b1` ..= `…bullets.b<n>`).
+    /// The number of translated bullets, keyed `…bullets.b1` through `…bullets.b<n>`.
     pub bullet_count: u8,
-    /// Caps how many localized bullets the generated resume renders
-    /// (`None` = uncapped). Only trims the PDF; the website always shows every
-    /// bullet via [`bullet_count`](Self::bullet_count). Used to drop a redundant
-    /// third bullet from the two oldest roles on the resume.
+    /// The most bullets the generated resume renders, or `None` for all of them.
+    ///
+    /// Only the PDF is trimmed. The website always shows [`bullet_count`](Self::bullet_count)
+    /// bullets.
     pub resume_bullet_cap: Option<u8>,
     /// The chip run under the entry, in the order given.
     pub tech: &'static [&'static str],
 }
 
-/// Raw work-history entries, in no meaningful order.
+/// The work history, in no meaningful order.
 ///
-/// The site and the resume never read this slice directly. Both go through
-/// [`experiences_sorted`], which derives the rendering order from the dates, so an entry appended
-/// here lands wherever its dates put it. Localized roles and bullets live in the i18n files.
+/// Read it through [`experiences_sorted`], which derives the rendering order from the dates, so an
+/// entry appended here lands wherever its dates put it.
 pub const EXPERIENCE: &[Experience] = &[
     Experience {
         id: "sixtwenty",
@@ -102,11 +103,11 @@ pub const EXPERIENCE: &[Experience] = &[
     },
 ];
 
-/// Work history in the order the site and the resume render it.
+/// Returns the work history in the order the site and the resume render it.
 ///
-/// Ongoing roles first, then the rest by descending start date, with the most recent end date
-/// breaking equal starts. All of that comes from the dates, so an ongoing role outranks an ended
-/// one that started later.
+/// Ongoing roles come first, then the rest by descending start date, with the most recent end
+/// date breaking equal starts. An ongoing role therefore outranks an ended one that started
+/// later.
 #[must_use]
 pub fn experiences_sorted() -> Vec<&'static Experience> {
     let mut out: Vec<&'static Experience> = EXPERIENCE.iter().collect();
@@ -126,10 +127,11 @@ pub fn experiences_sorted() -> Vec<&'static Experience> {
     out
 }
 
-/// One entry of the education history. Degree and institution are localized.
+/// One entry of the education history.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Education {
-    /// Stable id used as translation key segment (`resume.education.<id>`).
+    /// The stable id under which the degree and institution are translated, as in
+    /// `resume.education.<id>`.
     pub id: &'static str,
     /// First month of the programme.
     pub start: YearMonth,
@@ -137,7 +139,7 @@ pub struct Education {
     pub end: Option<YearMonth>,
 }
 
-/// Education history, newest first. Degrees/institutions are localized.
+/// The education history, newest first.
 pub const EDUCATION: &[Education] = &[
     Education {
         id: "uni-konstanz",
@@ -151,7 +153,7 @@ pub const EDUCATION: &[Education] = &[
     },
 ];
 
-/// A date range in the caller's language, e.g. `Nov 2018 – Jan 2023`.
+/// Formats a date range in the caller's language, such as `Nov 2018 – Jan 2023`.
 ///
 /// `months` are the twelve month abbreviations in order, and `present` is the label an
 /// open-ended range gets in place of an end date. A month above twelve, or a `months` shorter
@@ -192,11 +194,10 @@ pub fn format_period(
     }
 }
 
-/// A year-only range, e.g. `2018–2023`, `2026–now`, or a single year when both ends share it.
+/// Formats a year-only range, such as `2018–2023` or `2026–now`.
 ///
-/// Used by the web experience accordion and the resume's education lines; the resume's
-/// experience dates use the month-precise [`format_period`]. The en dash is unspaced, as it is
-/// between two numbers.
+/// A range whose ends share a year renders as that year alone. The en dash is unspaced, as it is
+/// between two numbers; [`format_period`] is the month-precise form.
 ///
 /// ```
 /// # use portfolio_data::{YearMonth, format_period_years};

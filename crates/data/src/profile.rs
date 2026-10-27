@@ -1,23 +1,23 @@
 //! The document `/api/v1/profile` serves, and the schema that describes it.
 //!
-//! Assembled from [`crate::CONFIG`] and [`crate::SKILLS`], language-neutral, and the same bytes
-//! on every request, which is why the server builds it once and caches it.
+//! The document is assembled from [`crate::CONFIG`] and [`crate::SKILLS`], is language-neutral,
+//! and is the same bytes on every request.
 //!
 //! The field names and the JSON shape are older than this crate. They were fixed by the Next.js
-//! site this one replaced, and the endpoint kept its contract across that rewrite, so a change
-//! to any `#[serde(rename)]`, to a field name, or to the `Build` omission in [`ProfileSkills`]
-//! is a breaking API change rather than a refactor. The published schema is what a consumer
-//! would notice it with.
+//! site this one replaced, and the endpoint kept its contract across that rewrite, so a change to
+//! any `#[serde(rename)]`, to a field name, or to the `Build` omission in [`ProfileSkills`] is a
+//! breaking API change. The published schema is what a consumer would notice it with.
 //!
 //! That schema, served at [`SCHEMA_PATH`], is derived from these types by `schemars` under the
-//! `schema` feature. The feature is off for the WebAssembly frontend, which only reads the data
-//! and would otherwise carry a schema generator into the bundle.
+//! `schema` feature, so the `///` comments in this module are its field descriptions. The feature
+//! is off for the WebAssembly frontend, which only reads the data and would otherwise carry a
+//! schema generator into the bundle.
 
 use serde::Serialize;
 
 use crate::{CONFIG, Quadrant, SKILLS, Skill};
 
-/// Path of the profile JSON Schema, relative to [`CONFIG`]`.url`.
+/// The path of the profile JSON Schema, relative to [`CONFIG`]`.url`.
 pub const SCHEMA_PATH: &str = "/api/v1/profile/schema";
 
 /// One of the places a skill is shown.
@@ -34,8 +34,7 @@ pub enum RenderArea {
 }
 
 impl RenderArea {
-    /// Every area, in render order — the default for a skill that is not
-    /// radar-only.
+    /// Every area in render order, which is where a skill that is not radar-only appears.
     pub const ALL: [RenderArea; 3] = [
         RenderArea::Resume,
         RenderArea::Section,
@@ -44,8 +43,9 @@ impl RenderArea {
 }
 
 impl Skill {
-    /// The areas a skill is rendered in. Radar-only skills appear solely on
-    /// the tech radar; every other skill appears everywhere.
+    /// Returns the areas the skill is rendered in.
+    ///
+    /// A radar-only skill appears on the tech radar alone; every other skill appears everywhere.
     #[must_use]
     pub fn render_areas(&self) -> Vec<RenderArea> {
         if self.radar_only {
@@ -58,14 +58,16 @@ impl Skill {
 
 /// A skill as the API publishes it.
 ///
-/// [`crate::Skill`] minus the quadrant, which the grouping in [`ProfileSkills`] already carries,
-/// and minus `radar_only`, which [`Self::render_area`] states positively instead.
+/// It is [`crate::Skill`] without the quadrant, which the grouping in [`ProfileSkills`] carries,
+/// and with `radar_only` stated positively as [`Self::render_area`].
 #[derive(Serialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileSkill {
-    /// `0.0..=1.0`. Published unrounded and unfiltered, so a consumer can set its own floor
-    /// rather than inheriting [`crate::MIN_CONFIDENCE`].
+    /// The confidence from `0.0` to `1.0`, unrounded.
+    ///
+    /// Every skill is published, so a consumer can apply its own floor in place of
+    /// [`crate::MIN_CONFIDENCE`].
     pub confidence: f32,
     /// The tool's name, untranslated.
     pub name: &'static str,
@@ -92,14 +94,13 @@ pub struct ProfileSkills {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileSocials {
-    /// GitHub profile URL.
+    /// The GitHub profile URL.
     #[cfg_attr(feature = "schema", schemars(extend("format" = "uri")))]
     pub github: &'static str,
     /// The account name on its own, so a consumer can build an API call without parsing
     /// [`Self::github`].
     pub github_username: &'static str,
-    /// LinkedIn profile URL. Omitted from the JSON entirely when absent, rather than serialized
-    /// as `null`.
+    /// The LinkedIn profile URL, omitted from the JSON when absent.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schema", schemars(extend("format" = "uri")))]
     pub linkedin: Option<&'static str>,
@@ -107,24 +108,24 @@ pub struct ProfileSocials {
 
 /// The profile document itself, without the `$schema` pointer.
 ///
-/// Declared alphabetically, which is the order `serde` emits them in, so reordering the fields
+/// `serde` emits the fields in declaration order, which is alphabetical, so reordering them
 /// reorders the response.
 #[derive(Serialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Profile {
-    /// Public contact address.
+    /// The public contact address.
     #[cfg_attr(feature = "schema", schemars(extend("format" = "email")))]
     pub email: &'static str,
-    /// Name in full.
+    /// The name in full.
     pub full_name: &'static str,
-    /// Country, not a city or an address.
+    /// The country, never a city or an address.
     pub location: &'static str,
-    /// Given name alone.
+    /// The given name alone.
     pub name: &'static str,
     /// The published skill set.
     pub skills: ProfileSkills,
-    /// Profile links.
+    /// The profile links.
     pub socials: ProfileSocials,
     /// The role on its own: [`crate::Config::job_title`], not [`crate::Config::title`].
     pub title: &'static str,
@@ -133,17 +134,15 @@ pub struct Profile {
     pub website: &'static str,
 }
 
-/// What the route actually sends: a [`Profile`] with its `$schema` pointer.
-///
-/// The pointer is appended rather than declared first, so it is the last key in the object. That
-/// is cosmetic for a parser and deliberate for a human reading the raw response, who wants the
-/// profile before the metadata about it.
+/// The document the route sends: a [`Profile`] with its `$schema` pointer as the last key.
+// The pointer comes last for a human reading the raw response, who wants the profile before the
+// metadata about it. A parser does not care.
 #[derive(Serialize)]
 pub struct ProfileWithSchema {
-    /// Flattened into the top-level object, so the wire format has no nesting here.
+    /// The profile, flattened into the top-level object.
     #[serde(flatten)]
     pub profile: Profile,
-    /// Absolute URL of the schema this document validates against, built from
+    /// The absolute URL of the schema this document validates against, built from
     /// [`crate::Config::url`] and [`SCHEMA_PATH`].
     #[serde(rename = "$schema")]
     pub schema: String,

@@ -9,11 +9,10 @@ const PRELOAD_MIN_MAX_AGE_SECS: u64 = 31_536_000;
 
 /// How the SSR server builds `Strict-Transport-Security`.
 ///
-/// The defaults reproduce the header this site has always sent — one year, subdomains included,
-/// preload requested — so an empty block changes nothing. They are configuration rather than
-/// constants because both flags reach beyond this service: `includeSubDomains` binds every host
-/// under the domain to HTTPS, and `preload` asks browsers to ship that rule in their binaries,
-/// which a deployment on someone else's domain must not inherit from an image default.
+/// The defaults are the header this site sends: one year, subdomains included, preload requested.
+/// Both flags reach beyond this service: `includeSubDomains` binds every host under the domain to
+/// HTTPS, and `preload` asks browsers to ship that rule in their binaries. A deployment on another
+/// domain should decide both for itself.
 // No `deny_unknown_fields`, for the reasons given on `AssetsConfig`.
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(
@@ -23,38 +22,40 @@ const PRELOAD_MIN_MAX_AGE_SECS: u64 = 31_536_000;
 pub struct HstsConfig {
     /// How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.
     ///
-    /// Zero is the documented way to *withdraw* HSTS: browsers drop the host from their list on
-    /// the next response. It is refused together with `preload`, which that would contradict.
+    /// Zero is the documented way to withdraw HSTS: browsers drop the host from their list on the
+    /// next response. It is refused together with `preload`, which it would contradict.
     #[serde(default = "HstsConfig::default_max_age_secs")]
     pub max_age_secs: u64,
-    /// Apply the policy to every subdomain as well (`includeSubDomains`).
+    /// Whether the policy covers every subdomain as well, as `includeSubDomains`.
     #[serde(default = "HstsConfig::default_flag")]
     pub include_subdomains: bool,
-    /// Ask to be included in the browsers' built-in HSTS preload list (`preload`).
+    /// Whether the header asks for the host to be included in the browsers' built-in HSTS preload
+    /// list, as `preload`.
     ///
-    /// The list's own requirements are enforced at boot: `include_subdomains` on and a
+    /// The boot enforces the list's own requirements: `include_subdomains` on and a
     /// `max_age_secs` of at least one year.
     #[serde(default = "HstsConfig::default_flag")]
     pub preload: bool,
 }
 
 impl HstsConfig {
-    /// One year; see the field.
+    /// Returns the default of [`Self::max_age_secs`], one year.
     const fn default_max_age_secs() -> u64 {
         PRELOAD_MIN_MAX_AGE_SECS
     }
 
-    /// Both flags are on by default; see the type.
+    /// Returns the default of both flags, on.
     const fn default_flag() -> bool {
         true
     }
 
-    /// Reject a combination the preload list would refuse, so it fails the boot rather than a
-    /// submission months later.
+    /// Checks the block against the preload list's requirements, so a mismatch fails the boot
+    /// instead of a submission months later.
     ///
     /// # Errors
     ///
-    /// [`HstsConfigError`] naming the unmet requirement.
+    /// Returns the [`HstsConfigError`] naming the unmet requirement when `preload` is on and
+    /// `include_subdomains` is off or `max_age_secs` is below one year.
     pub const fn validate(&self) -> Result<(), HstsConfigError> {
         if !self.preload {
             return Ok(());
@@ -68,7 +69,13 @@ impl HstsConfig {
         Ok(())
     }
 
-    /// The header value, e.g. `max-age=31536000; includeSubDomains; preload`.
+    /// Returns the header value, such as `max-age=31536000; includeSubDomains; preload`.
+    ///
+    /// ```
+    /// # use portfolio_config::HstsConfig;
+    /// let hsts = HstsConfig { preload: false, ..HstsConfig::default() };
+    /// assert_eq!(hsts.header_value(), "max-age=31536000; includeSubDomains");
+    /// ```
     #[must_use]
     pub fn header_value(&self) -> String {
         let mut value = format!("max-age={}", self.max_age_secs);
@@ -92,7 +99,7 @@ impl Default for HstsConfig {
     }
 }
 
-/// Why an [`HstsConfig`] cannot be served.
+/// The reason an [`HstsConfig`] cannot be served.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HstsConfigError {
     /// `hsts.preload` without `hsts.include_subdomains`.

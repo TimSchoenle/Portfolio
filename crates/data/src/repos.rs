@@ -6,47 +6,48 @@ use crate::CONFIG;
 
 /// One repository, as `portfolio-update-repos` read it out of the GitHub REST API.
 ///
-/// This deserializes GitHub's own response, which is why the field names are GitHub's and why
-/// all but three default rather than failing the listing. The same type is then written to
-/// `repos.json` and read back by the web binary, so the projects section and the API response
-/// cannot describe different documents.
+/// It deserializes GitHub's own response, so the field names are GitHub's, and every field but
+/// three takes its default when GitHub omits it. The same type is written to `repos.json` and read
+/// back by the web binary, so the writer and the reader cannot disagree on the document.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Repo {
-    /// Repository name without the owner, e.g. `Portfolio`.
+    /// The repository name without the owner, such as `Portfolio`.
     pub name: String,
-    /// `owner/name`.
+    /// The repository name with the owner, as `owner/name`.
     #[serde(default)]
     pub full_name: String,
-    /// GitHub's own description. `None` for a repository that declares none, and the card then
-    /// renders without a summary line.
+    /// GitHub's description, or `None` when the repository declares none.
     pub description: Option<String>,
     /// The repository page the card links to.
     pub html_url: String,
-    /// GitHub's primary-language guess, colored by [`lang_color`]. `None` for an empty
-    /// repository.
+    /// GitHub's primary-language guess, or `None` for an empty repository.
+    ///
+    /// [`lang_color`] colors it.
     #[serde(default)]
     pub language: Option<String>,
-    /// Stars when the listing was taken, not live.
+    /// The star count when the listing was taken.
     #[serde(default)]
     pub stargazers_count: u32,
-    /// Forks at that same moment.
+    /// The fork count when the listing was taken.
     #[serde(default)]
     pub forks_count: u32,
-    /// RFC 3339 timestamp of GitHub's `updated_at`: the last change to the repository object,
-    /// which a push, a description edit or a topic change each move. `portfolio-update-repos` drops
-    /// anything older than a year.
+    /// GitHub's `updated_at`, an RFC 3339 timestamp of the last change to the repository object.
+    ///
+    /// A push, a description edit and a topic change each move it.
     #[serde(default)]
     pub updated_at: String,
-    /// GitHub topics, rendered as chips.
+    /// The GitHub topics, rendered as chips.
     #[serde(default)]
     pub topics: Vec<String>,
-    /// Whether the repository is a fork. Carried but never filtered on, so a fork in a generated
-    /// listing is one that was meant to be there.
+    /// Whether the repository is a fork.
+    ///
+    /// Nothing filters on it, so a fork in a generated listing was meant to be there.
     #[serde(default)]
     pub fork: bool,
-    /// Whether GitHub has archived it. `false` for every repository an account listing produced,
-    /// since that is what the filtering removes; a repository named in `github.repos` is written
-    /// through unfiltered.
+    /// Whether GitHub has archived the repository.
+    ///
+    /// Always `false` in an account listing, which drops archived repositories. A repository
+    /// named in `github.repos` is written through unfiltered.
     #[serde(default)]
     pub archived: bool,
     /// The site the repository declares, linked beside the source link.
@@ -55,8 +56,9 @@ pub struct Repo {
 }
 
 impl Repo {
-    /// Whether [`CONFIG`] pins this repository to the front of the projects section. Matched
-    /// case-insensitively by name.
+    /// Reports whether [`CONFIG`] pins the repository to the front of the projects section.
+    ///
+    /// The name is matched case-insensitively.
     #[must_use]
     pub fn is_featured(&self) -> bool {
         CONFIG
@@ -69,20 +71,29 @@ impl Repo {
 /// The generated `repos.json`.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ReposFile {
-    /// RFC 3339 timestamp the listing was taken at. `portfolio-update-repos` reads it back on the
-    /// next build to decide whether the file is fresh enough to skip the API call.
+    /// The RFC 3339 timestamp the listing was taken at.
+    ///
+    /// `portfolio-update-repos` reads it back on the next build to decide whether the file is
+    /// fresh enough to skip the API call.
     pub generated_at: String,
     /// The account the repositories were listed for.
     pub user: String,
-    /// The repositories. Most recently updated first when the account was listed, and in the
-    /// configured order when `github.repos` named them.
+    /// The repositories, most recently updated first.
+    ///
+    /// When `github.repos` named them, they are in the configured order instead.
     pub repos: Vec<Repo>,
 }
 
-/// The color GitHub paints a language in, for the dot on a repository card.
+/// Returns the color GitHub paints `lang` in, for the dot on a repository card.
 ///
-/// The values are linguist's, copied rather than fetched, so a card matches what a visitor sees
-/// on github.com. An unrecognised language gets a neutral grey rather than no dot.
+/// The values are linguist's, so a card matches what a visitor sees on github.com. A language not
+/// in the table gets a neutral grey.
+///
+/// ```
+/// # use portfolio_data::lang_color;
+/// assert_eq!(lang_color("Rust"), "#dea584");
+/// assert_eq!(lang_color("Brainfuck"), "#9aa4b2");
+/// ```
 #[must_use]
 pub fn lang_color(lang: &str) -> &'static str {
     match lang {

@@ -7,43 +7,39 @@ use serde::Deserialize;
 
 /// The SSR server's incremental render cache.
 ///
-/// Off unless [`cache_dir`](Self::cache_dir) names a directory, and off again at runtime if
-/// that directory turns out not to be writable — the server then renders every request fresh
-/// rather than failing to start.
+/// The cache is off unless [`cache_dir`](Self::cache_dir) names a directory. When that directory
+/// turns out not to be writable, the server starts anyway and renders every request fresh.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",
     derive(serde::Serialize, terrace_config::schema::Describe)
 )]
 pub struct IsrConfig {
-    /// Writable directory rendered HTML is cached into. Unset or empty disables ISR.
+    /// The writable directory rendered HTML is cached into. Unset or empty disables ISR.
     ///
-    /// Keep it *outside* the bundled `public/` asset tree so those content-hashed assets stay
-    /// immutable. The image points it at a sub-directory of `/tmp`, which the deployment already
-    /// provides as a writable mount even under a read-only root filesystem.
+    /// Keep it outside the bundled `public/` asset tree so those content-hashed assets stay
+    /// immutable. The image points it at a sub-directory of `/tmp`, which the deployment provides
+    /// as a writable mount even under a read-only root filesystem.
     #[cfg_attr(
         feature = "config-schema",
         config(note = "ISR off; the image sets `/tmp/isr`")
     )]
     #[serde(default)]
     pub cache_dir: Option<PathBuf>,
-    /// Revalidation interval in seconds. Zero means a permanent cache.
+    /// The revalidation interval in seconds. Zero means a permanent cache.
     ///
-    /// Every page renders from compile-time data, so the only thing that changes the output is a
-    /// new build, which starts from an empty cache anyway. A positive value opts into a finite,
-    /// time-based TTL, which is useful only when a *persistent* cache volume is shared across
-    /// deploys.
+    /// Every page renders from compile-time data, so only a new build changes the output, and a
+    /// new build starts from an empty cache. A positive value is useful only when a persistent
+    /// cache volume is shared across deploys.
     #[cfg_attr(feature = "config-schema", config(note = "permanent"))]
     #[serde(default)]
     pub ttl_secs: u64,
 }
 
 impl IsrConfig {
-    /// The cache directory, or `None` when ISR is off.
+    /// Returns the cache directory, or `None` when ISR is off.
     ///
-    /// An empty value counts as unset: container platforms routinely inject `KEY=` for a
-    /// declared-but-unset variable, and that has to mean "ISR off", not "cache into the current
-    /// working directory".
+    /// An empty value counts as unset, never as the current working directory.
     #[must_use]
     pub fn cache_dir(&self) -> Option<&Path> {
         self.cache_dir
@@ -51,12 +47,15 @@ impl IsrConfig {
             .filter(|dir| !dir.as_os_str().is_empty())
     }
 
-    /// The revalidation interval, or `None` for a permanent cache.
+    /// Returns the revalidation interval, or `None` for a permanent cache.
     ///
-    /// An *unparseable* value does not fall back to "permanent": it fails the boot, because the
-    /// loader rejects it before this is called. A silent fallback would disable revalidation on
-    /// the one deployment shape that needs it; a container that refuses to start is the louder
-    /// failure.
+    /// ```
+    /// # use portfolio_config::IsrConfig;
+    /// # use std::time::Duration;
+    /// let isr = IsrConfig { ttl_secs: 60, ..IsrConfig::default() };
+    /// assert_eq!(isr.invalidate_after(), Some(Duration::from_secs(60)));
+    /// assert_eq!(IsrConfig::default().invalidate_after(), None);
+    /// ```
     #[must_use]
     pub fn invalidate_after(&self) -> Option<Duration> {
         (self.ttl_secs > 0).then(|| Duration::from_secs(self.ttl_secs))

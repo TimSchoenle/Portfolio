@@ -2,16 +2,15 @@
 //! is rendered from.
 //!
 //! `examples/config-schema.rs` renders the README tables, `config.example.toml`, the contract and
-//! the Dockerfile's label block from here; `examples/verify-labels.rs` checks a built image's
-//! labels against the contract built here. Before this module each example assembled its own
-//! schema and contract, so a change landing in one and not the other would have had the label
-//! check compare an image against a document the image does not publish.
+//! the Dockerfile's label block from here, and `examples/verify-labels.rs` checks a built image's
+//! labels against the contract built here. One module for both keeps the label check comparing an
+//! image against the document the image publishes.
 //!
 //! # What the types cannot state
 //!
 //! The server refuses to start unless `legal.documents` holds every slug in
 //! [`REQUIRED_DOCUMENTS`](crate::REQUIRED_DOCUMENTS). `LegalConfig` types that key as an open map
-//! with an empty default, so a schema built from the types alone publishes `{}` as valid — and a
+//! with an empty default, so a schema built from the types alone publishes `{}` as valid, and a
 //! deployment generated from it passes every gate and fails at boot. [`schema`] therefore refines
 //! every scope that contains `legal` with [`legal_catalog_builder`], the value the server boots
 //! with, so the published requirement and the enforced one have a single source.
@@ -20,10 +19,10 @@
 //!
 //! [`legal_catalog_builder`] takes the site's languages, and they live in `portfolio-data`, which
 //! this crate does not depend on at runtime. Every function here that needs them takes them, and
-//! the callers — the two examples and the tests — pass `portfolio_data::LANGUAGES`, reached as a
+//! the callers, the two examples and the tests, pass `portfolio_data::LANGUAGES`, reached as a
 //! development dependency. None of the refinements depends on the locales today; taking them
-//! anyway is what makes this the builder the server runs rather than a second one assembled for
-//! documentation, which is the one thing that could drift.
+//! anyway keeps this the builder the server runs, not a second one assembled for documentation
+//! that could drift.
 
 use terrace_config::schema::cli::Cli;
 use terrace_config::schema::{
@@ -32,43 +31,43 @@ use terrace_config::schema::{
 
 use crate::{BuilderConfig, ConfigError, ServerConfig, legal_catalog_builder};
 
-/// Where [`ServerConfig`] mounts `terrace_legal::LegalConfig`, which is where the legal
+/// The field under which [`ServerConfig`] mounts `terrace_legal::LegalConfig`, where the legal
 /// refinements are anchored.
 ///
-/// The field name, not a key path: the paths of the requirement itself (`documents`) come from
-/// `terrace-legal`, relative to this mount.
+/// The paths of the requirement itself, such as `documents`, come from `terrace-legal`, relative
+/// to this mount.
 const LEGAL: &str = "legal";
 
-/// Whose configuration to describe.
+/// The binary whose configuration to describe.
 ///
-/// One flat table of every key says that a deployment needs a GitHub token. It does not:
-/// `github.*` belongs to `portfolio-update-repos`, a build-time tool that exits during the image
-/// build, and the SSR server never loads it. The scopes are split the way the binaries are.
+/// The scopes are split the way the binaries are: `github.*` belongs to `portfolio-update-repos`,
+/// a build-time tool, and a deployment of the server never supplies it.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Scope {
     /// Every key in the workspace.
     All,
-    /// The keys the SSR server loads. The only scope a contract describes: the runtime image
-    /// holds the server and nothing else.
+    /// The keys the SSR server loads.
+    ///
+    /// This is the only scope a contract describes, because the runtime image holds the server
+    /// and nothing else.
     Server,
     /// The keys the `portfolio-update-repos` builder loads.
     Builder,
 }
 
-/// The schema one scope describes, with the defaults its binary starts from and every refinement
+/// Builds the schema of one scope, with the defaults its binary starts from and every refinement
 /// its binary enforces at boot.
 ///
-/// Built through [`crate::terrace`] rather than a bare dialect, so `PORTFOLIO_CONFIG` and
-/// `PORTFOLIO_SECRETS_DIR` are reported with the names this workspace configures. The defaults
-/// come from values built here, not from the process environment, so the output is the same on a
-/// developer's machine and on a runner where none of the variables are set.
-///
-/// `locales` are the site's languages, `portfolio_data::LANGUAGES`; see the module documentation.
+/// `PORTFOLIO_CONFIG` and `PORTFOLIO_SECRETS_DIR` are reported with the names [`crate::terrace`]
+/// configures. The defaults come from values built here, never from the process environment, so
+/// the output is the same on every machine. `locales` are the site's languages,
+/// `portfolio_data::LANGUAGES`.
 ///
 /// # Errors
-/// [`ConfigError`] if a default cannot be serialized, if the two scopes of [`Scope::All`]
-/// describe one key differently, or if a refinement names a key the schema does not have or
-/// cannot spell — the last is a mount point renamed without this module following it.
+///
+/// Returns [`ConfigError`] when a default cannot be serialized, when the two scopes of
+/// [`Scope::All`] describe one key differently, or when a refinement names a key the schema does
+/// not have, as after renaming the `legal` mount without updating this module.
 pub fn schema(scope: Scope, locales: &[&'static str]) -> Result<Schema, ConfigError> {
     match scope {
         // Refined after the merge, as terrace-config requires: a refined key and its unrefined
@@ -80,22 +79,22 @@ pub fn schema(scope: Scope, locales: &[&'static str]) -> Result<Schema, ConfigEr
     }
 }
 
-/// The contract the runtime image publishes: the server scope, [`app`] and [`external`].
+/// Builds the contract the runtime image publishes: the server scope, [`app`] and [`external`].
 ///
-/// This is what `--format contract` renders (without a build stamp) and what
-/// `examples/verify-labels.rs` checks an image's labels against, so both read one document.
+/// This is what `--format contract` renders, without a build stamp, and what
+/// `examples/verify-labels.rs` checks an image's labels against.
 ///
 /// # Errors
-/// As [`schema`], and [`ConfigError`] when [`ContractBuilder::build`] refuses the external
-/// surface.
+///
+/// Returns [`ConfigError`] in the cases [`schema`] does, and when [`ContractBuilder::build`]
+/// refuses the external surface.
 pub fn contract(locales: &[&'static str]) -> Result<Contract, ConfigError> {
     with_external(schema(Scope::Server, locales)?.into_contract(app())).build()
 }
 
-/// The generator every rendering but `--format variables` goes through.
-///
-/// Here rather than in `examples/config-schema.rs` so the contract it renders can be compared, in
-/// a test, with [`contract`] — the one `examples/verify-labels.rs` checks an image against.
+/// Returns the generator every rendering but `--format variables` goes through.
+// Here, not in `examples/config-schema.rs`, so a test can compare the contract it renders with
+// `contract`, the one `examples/verify-labels.rs` checks an image against.
 #[must_use]
 pub fn cli() -> Cli<'static> {
     Cli::new(app())
@@ -106,14 +105,11 @@ pub fn cli() -> Cli<'static> {
         .contract_with(&with_external)
 }
 
-/// How `config.example.toml` renders, for [`cli`] and for the example file inside the README
-/// payload alike.
+/// Returns how `config.example.toml` renders, for [`cli`] and for the README payload alike.
 ///
-/// [`Docs::Full`] rather than the default summary: this is the file an operator edits with no
-/// rustdoc open beside it, and every paragraph the fields carry is a paragraph the hand-written
-/// version of this file used to carry too. No header, because the template supplies one — what
-/// this file is and how to point the loader at it are facts about the repository rather than
-/// about the schema, and the layering itself is documented once, in `README.md`.
+/// Every field carries its whole documentation, because an operator edits that file with no
+/// rustdoc open beside it. There is no header: the template supplies one, and the layering is
+/// documented once, in `README.md`.
 #[must_use]
 pub fn toml_example() -> TomlExample {
     TomlExample::new().header(false).docs(Docs::Full)
@@ -121,17 +117,17 @@ pub fn toml_example() -> TomlExample {
 
 /// Adds this image's [`external`] surface to a contract under construction.
 ///
-/// The form [`Cli::contract_with`] takes, so the generator's contract and [`contract`] are
+/// It has the form [`Cli::contract_with`] takes, so the generator's contract and [`contract`] are
 /// finished by the same function.
 #[must_use]
 pub fn with_external(builder: ContractBuilder) -> ContractBuilder {
     builder.external(external())
 }
 
-/// The image this workspace builds, as the contract names it.
+/// Returns the image this workspace builds, as the contract names it.
 ///
-/// The version is `v`-prefixed because that is how this repository tags its images, and the field
-/// exists to be compared against a tag. `CARGO_PKG_VERSION` yields the bare form.
+/// The version is `v`-prefixed, as this repository tags its images, so it compares against a
+/// tag.
 #[must_use]
 pub fn app() -> App {
     App::new("portfolio")
@@ -139,15 +135,12 @@ pub fn app() -> App {
         .source("https://github.com/TimSchoenle/Portfolio")
 }
 
-/// The part of the contract no derive can see.
+/// Returns the part of the contract no derive can see: `PORT`, `IP` and `RUST_LOG`.
 ///
-/// `PORT`, `IP` and `RUST_LOG` are read by the Dioxus toolchain and by `tracing`, before any
-/// layer of this loader exists, and they carry no `PORTFOLIO_` prefix — so nothing in the types
-/// can report them. Declared here they are checked like any key: a chart passing `PORT: "http"`
-/// fails the same gate that a chart passing `PORTFOLIO_ISR__TTL_SECS: "soon"` fails.
-///
-/// The defaults are the ones the Dockerfile's `ENV` block bakes in, which is where the image's
-/// real behavior is decided.
+/// The Dioxus toolchain and `tracing` read them before any layer of this loader exists, and they
+/// carry no `PORTFOLIO_` prefix. Declared here they are checked like any key: a chart passing
+/// `PORT: "http"` fails the same gate as one passing `PORTFOLIO_ISR__TTL_SECS: "soon"`. The
+/// defaults are the ones the Dockerfile's `ENV` block bakes in.
 #[must_use]
 pub fn external() -> External {
     External::new()

@@ -1,12 +1,26 @@
-//! Language-neutral portfolio data shared by the frontend and the resume generator.
+//! The facts the site and the resume are written from, shared by every binary in the workspace.
 //!
-//! All user-visible prose lives in the embedded translation files ([`I18N_EN`],
-//! [`I18N_DE`], listed per language in [`SITE_LANGUAGES`]); this crate only holds facts (names, dates, URLs, confidence
-//! values) and the schemas for the build-time generated documents — `repos.json`
-//! and the third-party license inventory in [`licenses`].
+//! # What belongs here
 //!
-//! Nothing here is read at run time. Every item is a compile-time constant or a schema for a
-//! document produced during the image build, so changing any of it is a redeploy.
+//! - Facts that do not change with the language: names, dates, URLs, the skill matrix and its
+//!   confidence values ([`CONFIG`], [`EXPERIENCE`], [`SKILLS`]).
+//! - The site languages, and the translation files that hold every user-visible string
+//!   ([`SITE_LANGUAGES`], [`I18N_EN`], [`I18N_DE`]).
+//! - The schemas of the documents the image build generates and the web app embeds: `repos.json`
+//!   ([`ReposFile`]), the third-party license inventory ([`licenses`]) and the resume digests
+//!   ([`ResumeFingerprints`]).
+//! - The profile document the JSON API serves ([`profile`]).
+//!
+//! # What does not
+//!
+//! Prose. A sentence a visitor reads goes into both translation files; the tests in this crate
+//! fail when their key sets differ. Configuration does not belong here either: nothing in this
+//! crate is read at run time, so changing any of it is a redeploy, while `portfolio-config`
+//! holds what a deployment sets.
+//!
+//! The crate depends on nothing in the workspace and compiles for `wasm32`, which is what lets
+//! the client, the server and the build-time tools share it. The `schema` feature derives JSON
+//! Schemas for the profile document.
 
 mod career;
 mod language;

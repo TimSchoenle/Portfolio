@@ -2,42 +2,40 @@
 //!
 //! Two policies, because a stylesheet and a document do not need the same one:
 //!
-//! * every response that is **not** a document carries [`SitePolicy::subresource`], which admits
-//!   no inline script at all — a `.css`, a `.woff2`, a PDF or a JSON body has none to admit, and
-//!   an allowance nothing uses is an allowance an HTML-sniffing browser bug could use;
-//! * a document carries [`SitePolicy::apply_to_document`], derived from the HTML about to be sent.
+//! * every response that is not a document carries [`SitePolicy::subresource`], which admits no
+//!   inline script at all. A `.css`, a `.woff2`, a PDF or a JSON body has none to admit, and an
+//!   allowance nothing uses is one an HTML-sniffing browser bug could use;
+//! * a document gets its policy from [`SitePolicy::apply_to_document`], derived from the HTML
+//!   about to be sent.
 //!
 //! # Why the document policy is per response
 //!
 //! Dioxus renders inline script into every page: the streaming bootstrap, and
 //! `window.initial_dioxus_hydration_data="…"`, whose text is the serialized state of *that*
-//! render. There is no shell on disk carrying it, so nothing about it is knowable at start-up —
-//! `csp-shell`'s file scanner is the wrong half of the crate here, and [`csp_shell::scan_shell`],
-//! which takes the document's text, is the right one. The body is already buffered for the
-//! `<html lang>` rewrite, so scanning it costs a SHA-256 per inline script and no extra read.
+//! render. There is no shell on disk carrying it, so nothing about it is knowable at start-up, and
+//! [`csp_shell::scan_shell`], which takes the document's text, is the half of `csp-shell` that
+//! applies. The body is already buffered for the `<html lang>` rewrite, so scanning it costs a
+//! SHA-256 per inline script and no extra read.
 //!
-//! The alternative, `'unsafe-inline'`, admits an injected `<script>` exactly as readily as
-//! the hydration bootstrap. It remains reachable
-//! through `csp.hash_inline_scripts = false`, because the failure mode of getting hashing wrong
-//! is a blank page rather than a loud one.
+//! The alternative, `'unsafe-inline'`, admits an injected `<script>` as readily as the hydration
+//! bootstrap. It remains reachable through `csp.hash_inline_scripts = false`, because getting
+//! hashing wrong fails quietly, as a blank page.
 //!
 //! # What Cloudflare adds
 //!
-//! Cloudflare's bot products inject their own inline `<script>` at the edge, *after* this process
+//! Cloudflare's bot products inject their own inline `<script>` at the edge, after this process
 //! has hashed what it renders, so no hash here can cover it. A nonce can: Cloudflare parses the
-//! `Content-Security-Policy` response header and copies the nonce onto what it injects, which is
-//! why nothing is stamped into the document. The other two presets are plain origin allowances,
-//! off unless the deployment turns them on. See `portfolio_config::CloudflareConfig`.
+//! `Content-Security-Policy` response header and copies the nonce onto what it injects, so
+//! nothing is stamped into the document. The other two presets are plain origin allowances, off
+//! unless the deployment turns them on. See `portfolio_config::CloudflareConfig`.
 //!
 //! # Where it differs from the `spa_wasm` preset
 //!
-//! Two directives are tightened and one is added:
-//!
-//! * `base-uri` is `'none'` rather than `'self'` — this site renders no `<base>` element (Dioxus
-//!   applies a base path by nesting the router, not by emitting a tag), so nothing may set one;
-//! * `img-src` and `font-src` drop the `https:` and `data:` sources the preset adds, since every
-//!   image and every font on this site is served from its own origin;
-//! * `upgrade-insecure-requests` is restored, which the preset does not carry.
+//! * `img-src` drops the preset's `https:` and `font-src` its `data:`, since every image and
+//!   every font on this site is served from its own origin;
+//! * `script-src` adds `'unsafe-eval'`, because `dioxus-web` applies `document::Title`,
+//!   `document::Meta` and the like through `new Function(…)` during hydration;
+//! * `upgrade-insecure-requests` is added, which the preset does not carry.
 
 use std::collections::HashSet;
 use std::sync::Mutex;
@@ -51,25 +49,22 @@ use portfolio_config::CspConfig;
 /// The policies this server serves, rendered as far ahead of the response as each one can be.
 #[derive(Debug)]
 pub struct SitePolicy {
-    /// For responses that are not documents. Constant, so it is rendered once.
+    /// The policy for responses that are not documents, rendered once.
     subresource: HeaderValue,
-    /// For documents.
+    /// The policy for documents.
     document: DocumentPolicy,
-    /// Scanner limits already reported, so a steady-state one is logged once rather than on
-    /// every response.
+    /// The scanner limits already reported, so each is logged once.
     ///
-    /// A warning is a property of what the renderer emits, not of a single request, so the
-    /// second occurrence carries no information the first did not — and at any real request rate
-    /// an unconditional `error!` would bury the line it was meant to make visible. Taken only
-    /// when a scan actually warns, which is never in the normal case.
+    /// A warning is a property of what the renderer emits, not of a single request, so the second
+    /// occurrence carries no information the first did not, and at any real request rate logging
+    /// every one would bury the line. The lock is taken only when a scan warns.
     reported: Mutex<HashSet<ScanWarning>>,
 }
 
-/// What a document's own bytes contribute to its policy: the `'sha256-…'` sources for the inline
-/// scripts found in them.
+/// The `'sha256-…'` sources a document's inline scripts contribute to its policy.
 ///
-/// Carried as a distinct type so a caller can hold one alongside the bytes it was taken from and
-/// apply it repeatedly. It is inert for a policy that does not hash — see [`SitePolicy::scan`].
+/// Obtain one from [`SitePolicy::scan`], hold it beside the bytes it was taken from, and apply it
+/// to every response carrying those bytes. It is empty for a policy that does not hash.
 #[derive(Debug, Clone, Default)]
 pub struct DocumentScan(csp_shell::ScanResult);
 
@@ -78,18 +73,16 @@ pub struct DocumentScan(csp_shell::ScanResult);
 enum DocumentPolicy {
     /// `'unsafe-inline'`: nothing depends on the response, so the header is rendered once.
     Constant(HeaderValue),
-    /// The builder the served document's hashes — and, when Cloudflare's nonce is reserved, a
-    /// freshly minted nonce — are folded into per response.
+    /// The builder each response folds the document's hashes into, with a freshly minted nonce
+    /// when Cloudflare's is reserved.
     PerResponse(Csp),
 }
 
 impl SitePolicy {
-    /// Build both policies from the configuration.
+    /// Builds the subresource and document policies from the configuration.
     ///
-    /// The configuration is validated before this is reached
-    /// (`portfolio_config::CspConfig::validate`), so the one combination that cannot be served —
-    /// a nonce beside `'unsafe-inline'`, which a browser resolves by ignoring the latter — has
-    /// already failed the boot.
+    /// Validate `config` with `CspConfig::validate` first: a nonce beside `'unsafe-inline'`
+    /// makes the browser ignore the latter, so the site's own inline scripts would be refused.
     #[must_use]
     pub fn new(config: &CspConfig) -> Self {
         let base = base_policy(config);
@@ -117,25 +110,23 @@ impl SitePolicy {
         }
     }
 
-    /// The policy for every response that is not a document.
+    /// Returns the policy for every response that is not a document.
     ///
-    /// Applied as a layer *outside* the document rewrite and only when the header is absent, so a
-    /// document that has already been given its own policy keeps it.
+    /// Apply it outside [`crate::page::localize_page`] and only where the header is absent, so a
+    /// document keeps the policy it was given.
     pub fn subresource(&self) -> HeaderValue {
         self.subresource.clone()
     }
 
-    /// Scan a document's bytes for the inline scripts its policy has to admit.
+    /// Scans a document's bytes for the inline scripts its policy has to admit.
     ///
-    /// Split from [`apply_to_document`](Self::apply_to_document) so a server that sends the same
-    /// document more than once can scan it once: the hashes are a function of the bytes and never
-    /// change while those bytes do not, whereas the nonce beside them has to be minted per
-    /// response. `html` must be the body as it will be sent — a scan of anything else describes a
-    /// document this server is not sending.
+    /// `html` must be the body exactly as it will be sent. The result can be applied to every
+    /// response carrying the same bytes, because the hashes depend on the bytes alone; the nonce
+    /// is minted per response by [`apply_to_document`](Self::apply_to_document). For a policy
+    /// that does not hash, nothing is scanned and the result is empty.
     ///
-    /// Scanning is skipped entirely for a policy that does not hash; the empty result it returns
-    /// is never read, because [`apply_to_document`](Self::apply_to_document) answers that case
-    /// from the constant it rendered at start-up.
+    /// A scanner limit, which means a script the browser will refuse, is logged at `error` the
+    /// first time it occurs.
     pub fn scan(&self, html: &str) -> DocumentScan {
         match &self.document {
             DocumentPolicy::Constant(_) => DocumentScan(csp_shell::ScanResult::default()),
@@ -147,11 +138,12 @@ impl SitePolicy {
         }
     }
 
-    /// Give a document response the policy for a [`DocumentScan`] of the very bytes it carries.
+    /// Sets the `Content-Security-Policy` of a document response from a scan of its body.
     ///
-    /// The scan must come from [`scan`](Self::scan) on the same document: the hashes are what
-    /// permit that document's inline scripts, and a policy derived from anything else refuses the
-    /// scripts it was meant to permit.
+    /// `scan` must come from [`scan`](Self::scan) on the bytes this response carries; a policy
+    /// derived from anything else refuses the scripts it was meant to permit. When the policy
+    /// carries a nonce, this also sets `Cache-Control: no-cache`, overriding any value present,
+    /// so a nonce is never served from a cache.
     pub fn apply_to_document(&self, headers: &mut HeaderMap, scan: &DocumentScan) {
         let (policy, cache_control) = match &self.document {
             DocumentPolicy::Constant(value) => (value.clone(), None),
@@ -178,14 +170,12 @@ impl SitePolicy {
         }
     }
 
-    /// Report each scanner limit the first time a response hits it.
+    /// Logs each scanner limit at `error` the first time a response hits it.
     ///
     /// A warning means the hash this server computed is one the browser will not, so a script is
-    /// about to be refused — and the only other evidence is a blank page and a console message
-    /// nobody is watching. Logged at `error` for that reason.
-    ///
-    /// A poisoned lock is ignored rather than propagated: nothing here can panic while it is
-    /// held, and a request must not fail over the bookkeeping for a log line.
+    /// about to be refused, and the only other evidence is a blank page and a console message.
+    // A poisoned lock is ignored: nothing here can panic while it is held, and a request must not
+    // fail over the bookkeeping for a log line.
     fn report(&self, warnings: &[ScanWarning]) {
         if warnings.is_empty() {
             return;
@@ -204,7 +194,7 @@ impl SitePolicy {
     }
 }
 
-/// The policy both halves start from: everything that does not depend on the response.
+/// Builds the policy both halves start from: everything that does not depend on the response.
 fn base_policy(config: &CspConfig) -> Csp {
     let base = Csp::spa_wasm()
         // Every image and every font is served from this origin; the preset's `https:` and
@@ -233,11 +223,10 @@ fn base_policy(config: &CspConfig) -> Csp {
     }
 }
 
-/// A rendered policy as a header value.
-///
-/// Infallible in practice and asserted as such: `csp-shell` assembles the value from types that
-/// were checked when they were built, so it is ASCII and carries no `;` the builder did not emit
-/// itself. Serving a document with no policy at all would be the worse outcome of the two.
+/// Converts a rendered policy into a header value.
+// Infallible in practice and asserted as such: `csp-shell` assembles the value from types that
+// were checked when they were built, so it is ASCII. Serving a document with no policy at all
+// would be the worse outcome.
 fn header_value(policy: String) -> HeaderValue {
     HeaderValue::try_from(policy)
         .expect("a rendered policy is a valid header value by construction")

@@ -9,25 +9,23 @@ use portfolio_data::LANGUAGES;
 
 /// The query-string key [`crate::page::localize_page`] appends to page requests.
 ///
-/// It makes the otherwise language-blind, path-keyed incremental cache store one entry per
-/// negotiated language. It is server-internal: the router matches on the path and ignores it, and every
-/// link is built from the router or the site config, so it never reaches the rendered HTML or
-/// the address bar.
+/// It is server-internal: the router matches on the path and ignores it, and every link is built
+/// from the router or the site config, so it never reaches the rendered HTML or the address bar.
 ///
-/// Because the marker travels in a *client-supplied* URI, it is never trusted on the way in:
-/// [`with_locale_query`] strips any copy the request already carried before appending ours, and
-/// [`locale_from_query`] only ever returns a [`LANGUAGES`] entry. Without both, a request could
-/// choose which cache entry its render lands in (serving one visitor's language to another)
+/// Because the marker travels in a client-supplied URI, it is never trusted on the way in:
+/// [`with_locale_query`] strips any copy the request already carried before appending its own,
+/// and [`locale_from_query`] only ever returns a [`LANGUAGES`] entry. Without both, a request
+/// could choose which cache entry its render lands in, serving one visitor's language to another,
 /// and, since the value becomes a path component, where on disk it is written.
 pub const ISR_LOCALE_PARAM: &str = "__isr_locale";
 
-/// [`ISR_LOCALE_PARAM`] with the `=` that separates a query pair's key from its value, so
-/// [`locale_from_query`] — called by the renderer's path mapper on every cacheable page
-/// request — does not build the needle with a `format!` each time.
+/// [`ISR_LOCALE_PARAM`] followed by `=`, the prefix of a marker pair.
+// A constant so `locale_from_query`, which the renderer's path mapper calls on every cacheable
+// page request, does not `format!` it each time.
 const ISR_LOCALE_QUERY_PREFIX: &str = "__isr_locale=";
 
-/// Compile-time proof that the two constants above have not drifted apart: a mapper that stops
-/// recognizing the marker silently collapses every language back onto one cache entry.
+// Compile-time proof that the two constants above have not drifted apart: a mapper that stops
+// recognizing the marker silently collapses every language back onto one cache entry.
 const _: () = {
     let key = ISR_LOCALE_PARAM.as_bytes();
     let prefix = ISR_LOCALE_QUERY_PREFIX.as_bytes();
@@ -40,14 +38,19 @@ const _: () = {
     }
 };
 
-/// Returns `uri` with `ISR_LOCALE_PARAM=<locale>` appended to its query string, preserving any
-/// query already present *except* a copy of the marker itself.
+/// Returns `uri` with `__isr_locale=<locale>` appended to its query string.
 ///
-/// Stripping the incoming marker is what keeps the cache key ours. The value becomes both the
-/// cache bucket and an on-disk path component, so a request allowed to supply its own could
-/// file a render under a language it is not written in and escape the cache directory with
-/// `../` or a leading `/`. If the rewrite does not parse, the original URI is returned so the
-/// page still renders.
+/// Any query already present is kept, except a copy of the marker itself, which a client could
+/// otherwise use to file a render under a language it is not written in or escape the cache
+/// directory with `../`. If the rewrite does not parse, the original URI is returned so the page
+/// still renders.
+///
+/// ```
+/// # use portfolio_server::isr_marker::with_locale_query;
+/// let uri = with_locale_query(&"/?__isr_locale=../etc&ref=x".parse()?, "de");
+/// assert_eq!(uri, "/?ref=x&__isr_locale=de");
+/// # Ok::<(), axum::http::uri::InvalidUri>(())
+/// ```
 #[must_use]
 pub fn with_locale_query(uri: &axum::http::Uri, locale: &str) -> axum::http::Uri {
     let path = uri.path();
@@ -75,18 +78,16 @@ pub fn with_locale_query(uri: &axum::http::Uri, locale: &str) -> axum::http::Uri
     axum::http::Uri::from_parts(parts).unwrap_or_else(|_| uri.clone())
 }
 
-/// Whether a raw `key=value` query pair carries the server-internal locale marker, whatever
-/// its value (including none).
+/// Reports whether a raw `key=value` query pair carries the marker, whatever its value, including
+/// none.
 fn is_locale_marker(pair: &str) -> bool {
     pair.split('=').next() == Some(ISR_LOCALE_PARAM)
 }
 
-/// Extracts the [`ISR_LOCALE_PARAM`] value from a raw query string, if it names a language the
-/// site supports.
+/// Returns the [`ISR_LOCALE_PARAM`] value in a raw query string, if it names a site language.
 ///
-/// The validation is the load-bearing part: the marker rides in on a client-supplied URI, so
-/// anything that is not a [`LANGUAGES`] entry is forged — and this value becomes a directory
-/// name.
+/// Anything that is not a [`LANGUAGES`] entry is treated as forged and ignored, which is what
+/// makes the value safe to use as a directory name.
 #[must_use]
 pub fn locale_from_query(query: &str) -> Option<&str> {
     query
