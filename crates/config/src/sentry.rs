@@ -170,8 +170,9 @@ pub struct SentryConfig {
     /// Whether the server records one Sentry transaction per request, named by the matched route.
     ///
     /// Naming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.
-    /// Whether a started transaction is kept is `sentry.traces_sample_rate`'s decision; this
-    /// setting removes the middleware entirely.
+    /// Whether a started transaction is kept is `sentry.traces_sample_rate`'s decision. Off starts
+    /// no transaction, but the HTTP middleware stays installed and still attaches the request to
+    /// events.
     #[serde(default = "SentryConfig::default_http_transactions")]
     pub http_transactions: bool,
 

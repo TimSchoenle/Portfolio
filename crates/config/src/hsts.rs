@@ -22,8 +22,10 @@ const PRELOAD_MIN_MAX_AGE_SECS: u64 = 31_536_000;
 pub struct HstsConfig {
     /// How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.
     ///
-    /// Zero is the documented way to withdraw HSTS: browsers drop the host from their list on the
-    /// next response. It is refused together with `preload`, which it would contradict.
+    /// Zero is the documented way to withdraw HSTS: a browser drops a host it learned from this
+    /// header on the next response. A host already on the preload list stays there until its
+    /// removal reaches browsers in a release. Zero is refused together with `preload`, which it
+    /// would contradict.
     #[serde(default = "HstsConfig::default_max_age_secs")]
     pub max_age_secs: u64,
     /// Whether the policy covers every subdomain as well, as `includeSubDomains`.

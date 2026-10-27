@@ -3,10 +3,11 @@
 //! Content-hashed JS, WASM and CSS can be cached forever; the SSR HTML must always be
 //! revalidated to pick up a fresh deploy. Web fonts get a moderate TTL, and the resume PDFs and
 //! generated metadata (`robots.txt`, `sitemap.xml`, the web manifest) a short one. An error
-//! response is never stored.
+//! response gets `no-store`.
 //!
-//! [`set_cache_control`] sets the header only when a handler has not, so the API's own headers
-//! win.
+//! [`set_cache_control`] sets the header only when a handler or inner middleware has not, so the
+//! API's own headers win, and an error document whose policy carries a nonce keeps the
+//! `no-cache` that nonce requires.
 //!
 //! What counts as content-hashed is the `dx`/`manganis` naming: a filename stem ending in a
 //! `dxh`-prefixed hex segment, as in `tailwind-dxh31cffa1cc71c7bb.css`. `dx bundle` puts the

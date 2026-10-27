@@ -8,7 +8,8 @@ use serde::Deserialize;
 /// The SSR server's incremental render cache.
 ///
 /// The cache is off unless [`cache_dir`](Self::cache_dir) names a directory. When that directory
-/// turns out not to be writable, the server starts anyway and renders every request fresh.
+/// turns out not to be writable, the server starts anyway without the on-disk cache, and only the
+/// in-memory page memo holds rendered pages.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",
@@ -28,9 +29,10 @@ pub struct IsrConfig {
     pub cache_dir: Option<PathBuf>,
     /// The revalidation interval in seconds. Zero means a permanent cache.
     ///
-    /// Every page renders from compile-time data, so only a new build changes the output, and a
-    /// new build starts from an empty cache. A positive value is useful only when a persistent
-    /// cache volume is shared across deploys.
+    /// A page changes only with a new build or a new `legal.*` configuration, and the server keeps
+    /// whatever the directory holds at boot. Permanent suits the image's default, a directory that
+    /// starts empty with every container. A cache volume that outlives a deploy needs a positive
+    /// value, or it keeps serving pages rendered by the earlier build or configuration.
     #[cfg_attr(feature = "config-schema", config(note = "permanent"))]
     #[serde(default)]
     pub ttl_secs: u64,
