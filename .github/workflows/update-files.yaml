@@ -413,10 +413,11 @@ jobs:
           name: config-contract
           path: ${{ runner.temp }}/config-contract
 
+      # A single uploaded file lands at the artifact's root, not under `docs/`.
       - name: Put the regenerated files in place
         run: |
           set -euo pipefail
-          cp "$RUNNER_TEMP/config-contract/docs/config.contract.json" docs/config.contract.json
+          cp "$RUNNER_TEMP/config-contract/config.contract.json" docs/config.contract.json
 
       # `file_pattern` keeps the commit to the contract, whatever else the checkout holds.
       - name: Commit the regenerated contract
