@@ -33,11 +33,16 @@ pub(crate) struct Photo<'a> {
 }
 
 /// Escapes `s` so it renders literally inside a Typst content block (`[...]`).
+///
+/// The typographic shorthands are left alone: `--`, `...` and `'` still become a dash, an
+/// ellipsis and a curly apostrophe, which is what the translations are written for.
+// `/` is escaped because `//` and `/*` open a comment, which would swallow the closing `]` and
+// fail the compile.
 pub(crate) fn esc(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for c in s.chars() {
         match c {
-            '\\' | '#' | '$' | '*' | '_' | '`' | '<' | '>' | '@' | '[' | ']' | '"' => {
+            '\\' | '#' | '$' | '*' | '_' | '`' | '<' | '>' | '@' | '[' | ']' | '"' | '/' | '~' => {
                 out.push('\\');
                 out.push(c);
             }
@@ -763,4 +768,52 @@ fn keep_compounds(escaped: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use typst::syntax::{SyntaxKind, SyntaxNode, parse};
+
+    use super::esc;
+
+    /// Collects the kinds of every leaf of `node`.
+    fn leaf_kinds(node: &SyntaxNode, out: &mut Vec<SyntaxKind>) {
+        if node.children().len() == 0 {
+            out.push(node.kind());
+        }
+        for child in node.children() {
+            leaf_kinds(child, out);
+        }
+    }
+
+    #[test]
+    fn escaped_text_parses_as_plain_text_inside_a_content_block() {
+        let hostile = "C // Java /* x */ ] [ #let $a$ *b* _c_ `d` <e> @f \"g\" ~ \\";
+        let root = parse(&format!("#box[{}]", esc(hostile)));
+        let mut kinds = Vec::new();
+        leaf_kinds(&root, &mut kinds);
+
+        let (errors, _) = root.errors_and_warnings();
+        assert!(errors.is_empty(), "{errors:?}");
+        let block = kinds
+            .iter()
+            .skip_while(|kind| **kind != SyntaxKind::LeftBracket)
+            .skip(1)
+            .take_while(|kind| **kind != SyntaxKind::RightBracket)
+            .copied()
+            .collect::<Vec<_>>();
+        assert!(
+            block.iter().all(|kind| matches!(
+                kind,
+                SyntaxKind::Text | SyntaxKind::Escape | SyntaxKind::Space
+            )),
+            "{block:?}"
+        );
+        assert_eq!(kinds.last(), Some(&SyntaxKind::RightBracket));
+    }
+
+    #[test]
+    fn typographic_shorthands_are_kept() {
+        assert_eq!(esc("2019--2024 ... it's"), "2019--2024 ... it's");
+    }
 }

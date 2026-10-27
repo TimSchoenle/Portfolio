@@ -15,7 +15,8 @@ pub enum UpdateReposError {
     Config(portfolio_config::ConfigError),
     /// The GitHub username to query was empty.
     MissingUser,
-    /// The account has no active repository to write.
+    /// No repository remained to write after filtering: none is unarchived, recently updated and
+    /// off the blacklist.
     ///
     /// Only a listing can produce it: a named repository that does not exist fails as
     /// [`Self::Http`] instead.
@@ -38,7 +39,7 @@ impl fmt::Display for UpdateReposError {
                 "no GitHub username configured (set PORTFOLIO_GITHUB__USERNAME, or `github.username`)",
             ),
             UpdateReposError::NoRepos => f.write_str(
-                "no repositories found to write (the account has no active repository)",
+                "no repositories remained to write after filtering out archived, stale and blacklisted ones",
             ),
             UpdateReposError::Http(e) => write!(f, "GitHub API request failed: {e}"),
             UpdateReposError::Io(e) => write!(f, "file I/O failed: {e}"),
