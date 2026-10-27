@@ -54,7 +54,7 @@ reviews:
         strings or other personal data to Sentry without need.
     - path: "crates/server/src/**"
       instructions: |
-        Framework-free HTTP surface shared with `apps/web/src/server`: embedded assets, cache
+        Dioxus-free Axum HTTP surface shared with `apps/web/src/server`: embedded assets, cache
         headers, CSP, locale negotiation and the page memo. Check that every response type gets
         the right content type, status and `Cache-Control`, that ETag comparison follows RFC 9110,
         that locale negotiation never trusts unvalidated request text as a cache key, and that
