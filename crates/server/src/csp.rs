@@ -144,7 +144,7 @@ impl SitePolicy {
     /// derived from anything else refuses the scripts it was meant to permit. When the policy
     /// carries a nonce, this also sets `Cache-Control: no-cache`, overriding any value present,
     /// so a cache has to revalidate before reusing a stored copy. A document carries no
-    /// validator, so that revalidation is a fresh render with a fresh nonce.
+    /// validator, so every reuse reaches this server, which mints a fresh nonce per response.
     pub fn apply_to_document(&self, headers: &mut HeaderMap, scan: &DocumentScan) {
         let (policy, cache_control) = match &self.document {
             DocumentPolicy::Constant(value) => (value.clone(), None),
