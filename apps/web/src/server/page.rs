@@ -292,7 +292,7 @@ fn with_html_lang(html: &str, locale: &str) -> String {
 mod tests {
     use super::*;
     use crate::server::isr::tests::paths;
-    use crate::server::{api_router, legal};
+    use crate::server::{legal, router::api_router};
     use axum::{
         Router,
         body::to_bytes,
