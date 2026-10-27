@@ -49,7 +49,9 @@ depends on the architecture. The runtime stage is the exception: it takes the de
 `--platform=$TARGETPLATFORM` out explicitly trips BuildKit's `RedundantTargetPlatform` check.
 
 `musl-tools` provides `musl-gcc` for x86_64, and `gcc-aarch64-linux-gnu` is the arm64 cross
-compiler. Both only compile ring's C sources and drive the link. rustc links its own bundled musl
+compiler. `musl-gcc` is not a cross compiler: it wraps the builder's own gcc, so an amd64 image
+needs an amd64 builder, which then produces both architectures. Both compilers only compile ring's
+C sources and drive the link. rustc links its own bundled musl
 `libc.a` and crt objects (`self-contained` linking), so the glibc-flavoured cross gcc never
 contributes a libc and the result stays static. `libc6-dev-arm64-cross` is easy to miss: the cross
 gcc only recommends it, so under `--no-install-recommends` it has no target headers and ring's
@@ -113,8 +115,9 @@ describe the graph that build linked. `--locked` asserts the committed `Cargo.lo
 unchanged, so the inventory describes what `dx bundle` is about to compile.
 
 The resume generator's optional `resume_photo` secret is the German sheet's application photo. A
-portrait is personal data, so it is neither a build-context file nor in any layer, and the secret
-mount exists only for that `RUN`. The generator reads the format from the file header, so the
+portrait is personal data, so it is never a build-context file, and the secret mount exists only
+for that `RUN`. The German PDF the generator renders from it is embedded in the server binary and
+served under `/resume/`, so an image built with the photo publishes it. The generator reads the format from the file header, so the
 extensionless mount works.
 
 The contract has its own stage on `deps`, because it reads nothing `generate` produces, and

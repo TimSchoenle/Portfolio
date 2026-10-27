@@ -36,7 +36,8 @@ RUN case "${TARGETARCH}" in \
     esac > /etc/rust-target
 
 # The C toolchains compile ring and drive the link, while rustc supplies the musl libc, so the
-# binary stays fully static. `libc6-dev-arm64-cross` is only recommended by the arm64 cross gcc,
+# binary stays fully static. `musl-gcc` wraps the builder's own gcc, so an amd64 image needs an
+# amd64 builder. `libc6-dev-arm64-cross` is only recommended by the arm64 cross gcc,
 # and without it ring's first C file fails on <stdlib.h>.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl nodejs npm ca-certificates musl-tools \
@@ -109,7 +110,7 @@ RUN mkdir -p apps/web/generated \
          apps/web/about.hbs
 # The resume PDFs, fingerprint, Open Graph card and app icons, which build.rs embeds. The
 # optional `resume_photo` secret is the German sheet's application photo, kept out of the
-# repository and every layer:
+# repository and the build context. The German PDF carries it into the image all the same:
 #
 #     docker build --secret id=resume_photo,src=./photo.jpg .
 RUN --mount=type=secret,id=resume_photo \

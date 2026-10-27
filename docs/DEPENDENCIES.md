@@ -205,8 +205,9 @@ faster at runtime, because Typst's layout pass is compute-bound and `z` trades s
 
 `portfolio-config`'s `config-schema` feature is off by default and has to stay off.
 `terrace-config/schema-cli` links `serde_json` and compiles a proc macro, and a running binary
-needs neither. Only `cargo run --example config-schema` and the `--all-features` CI gates turn it
-on, and the Dockerfile builds no feature flags. It takes `schema-cli` and not `schema`, because
+needs neither. Only `cargo run -p portfolio-config --features config-schema --example
+config-schema`, the `--all-features` CI gates and the Dockerfile's `contract-builder` stage turn it
+on, and that stage's output is a JSON file, not a binary in the runtime image. It takes `schema-cli` and not `schema`, because
 `schema-cli` is the `--format` vocabulary, argument parsing and dispatch every consumer of `schema`
 was writing by hand, and it pulls no new dependency. The `#[config(...)]` helper attributes are
 gated with it, because they belong to the derive: a build without the derive fails with
