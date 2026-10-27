@@ -60,7 +60,7 @@
         "env": "PORTFOLIO_CSP__HASH_INLINE_SCRIPTS",
         "env_file": "PORTFOLIO_CSP__HASH_INLINE_SCRIPTS_FILE",
         "secrets_file": "csp__hash_inline_scripts",
-        "docs": "Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`.\n\nOn, the default, the server hashes the response body it is about to send, so the only\ninline scripts that run are the ones it rendered. `'unsafe-inline'` admits an injected\n`<script>` as readily as the Dioxus hydration bootstrap.\n\nOff restores `'unsafe-inline'` with a restart. Use it when the browser refuses an inline\nscript the scanner does not see, which shows as a blank page and a console message. Known\ncases are a development server that injects a live-reload script downstream of this\nprocess, and a renderer change that emits script this server never sees.\n\nA policy carrying any hash or nonce makes `'unsafe-inline'` inert, so one setting covers\nboth choices.",
+        "docs": "Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`.\n\nOn, the default, the server hashes the response body it is about to send, so the only\ninline scripts that run are the ones it rendered. `'unsafe-inline'` admits an injected\n`<script>` as readily as the Dioxus hydration bootstrap.\n\nOff restores `'unsafe-inline'` with a restart. Use it when the browser refuses an inline\nscript the scanner does not see, which shows as a blank page and a console message. Known\ncases are a development server that injects a live-reload script downstream of this\nprocess, and a renderer change that emits script this server never sees.\n\nA policy carrying any hash or nonce makes `'unsafe-inline'` inert, so turning this off also\nrequires `csp.cloudflare.script_nonce = false`. [`validate`](Self::validate) refuses the\nboot otherwise.",
         "ty": "bool",
         "values": [],
         "constraint": {
@@ -87,7 +87,7 @@
         "env": "PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE",
         "env_file": "PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE_FILE",
         "secrets_file": "csp__cloudflare__script_nonce",
-        "docs": "Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the\nedge.\n\nOn by default, because this site is delivered through a Cloudflare Tunnel with the bot\nproducts active; the `__cf_bm` and `cf_clearance` cookies are theirs. Those products inject\nan inline `<script>` after the HTML leaves this process, so no hash the server computes can\ncover it, and without the nonce the detection silently never runs. Cloudflare reads the\nnonce from the `Content-Security-Policy` response header and copies it onto what it\ninjects.\n\nThe server sends `Cache-Control: no-cache` on every document, so a nonce is never shared\nbetween readers. **No Cloudflare Cache Rule may cache the documents**: a \"Cache\nEverything\" rule overrides that header at the edge, and nothing inside this process can\nsee it.",
+        "docs": "Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the\nedge.\n\nOn by default, because this site is delivered through a Cloudflare Tunnel with the bot\nproducts active; the `__cf_bm` and `cf_clearance` cookies are theirs. Those products inject\nan inline `<script>` after the HTML leaves this process, so no hash the server computes can\ncover it, and without the nonce the detection silently never runs. Cloudflare reads the\nnonce from the `Content-Security-Policy` response header and copies it onto what it\ninjects.\n\nThe server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a\nstored copy with this origin before each reuse. A document carries no validator, so that\nrevalidation is a full render with a fresh nonce. **No Cloudflare Cache Rule may cache the\ndocuments**: a \"Cache Everything\" rule overrides that header at the edge, and nothing\ninside this process can see it.",
         "ty": "bool",
         "values": [],
         "constraint": {
@@ -168,7 +168,7 @@
         "env": "PORTFOLIO_HSTS__MAX_AGE_SECS",
         "env_file": "PORTFOLIO_HSTS__MAX_AGE_SECS_FILE",
         "secrets_file": "hsts__max_age_secs",
-        "docs": "How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.\n\nZero is the documented way to withdraw HSTS: browsers drop the host from their list on the\nnext response. It is refused together with `preload`, which it would contradict.",
+        "docs": "How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.\n\nZero is the documented way to withdraw HSTS: a browser drops a host it learned from this\nheader on the next response. A host already on the preload list stays there until its\nremoval reaches browsers in a release. Zero is refused together with `preload`, which it\nwould contradict.",
         "ty": "u64",
         "values": [],
         "constraint": {
@@ -273,7 +273,7 @@
         "env": "PORTFOLIO_ISR__TTL_SECS",
         "env_file": "PORTFOLIO_ISR__TTL_SECS_FILE",
         "secrets_file": "isr__ttl_secs",
-        "docs": "The revalidation interval in seconds. Zero means a permanent cache.\n\nEvery page renders from compile-time data, so only a new build changes the output, and a\nnew build starts from an empty cache. A positive value is useful only when a persistent\ncache volume is shared across deploys.",
+        "docs": "The revalidation interval in seconds. Zero means a permanent cache.\n\nA page changes only with a new build or a new `legal.*` configuration, and the server keeps\nwhatever the directory holds at boot. Permanent suits the image's default, a directory that\nstarts empty with every container. A cache volume that outlives a deploy needs a positive\nvalue, or it keeps serving pages rendered by the earlier build or configuration.",
         "ty": "u64",
         "values": [],
         "constraint": {
@@ -636,7 +636,7 @@
         "env": "PORTFOLIO_SENTRY__HTTP_TRANSACTIONS",
         "env_file": "PORTFOLIO_SENTRY__HTTP_TRANSACTIONS_FILE",
         "secrets_file": "sentry__http_transactions",
-        "docs": "Whether the server records one Sentry transaction per request, named by the matched route.\n\nNaming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.\nWhether a started transaction is kept is `sentry.traces_sample_rate`'s decision; this\nsetting removes the middleware entirely.",
+        "docs": "Whether the server records one Sentry transaction per request, named by the matched route.\n\nNaming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.\nWhether a started transaction is kept is `sentry.traces_sample_rate`'s decision. Off starts\nno transaction, but the HTTP middleware stays installed and still attaches the request to\nevents.",
         "ty": "bool",
         "values": [],
         "constraint": {
@@ -825,7 +825,7 @@
             "properties": {
               "script_nonce": {
                 "default": true,
-                "description": "Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the\nedge.\n\nOn by default, because this site is delivered through a Cloudflare Tunnel with the bot\nproducts active; the `__cf_bm` and `cf_clearance` cookies are theirs. Those products inject\nan inline `<script>` after the HTML leaves this process, so no hash the server computes can\ncover it, and without the nonce the detection silently never runs. Cloudflare reads the\nnonce from the `Content-Security-Policy` response header and copies it onto what it\ninjects.\n\nThe server sends `Cache-Control: no-cache` on every document, so a nonce is never shared\nbetween readers. **No Cloudflare Cache Rule may cache the documents**: a \"Cache\nEverything\" rule overrides that header at the edge, and nothing inside this process can\nsee it.",
+                "description": "Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the\nedge.\n\nOn by default, because this site is delivered through a Cloudflare Tunnel with the bot\nproducts active; the `__cf_bm` and `cf_clearance` cookies are theirs. Those products inject\nan inline `<script>` after the HTML leaves this process, so no hash the server computes can\ncover it, and without the nonce the detection silently never runs. Cloudflare reads the\nnonce from the `Content-Security-Policy` response header and copies it onto what it\ninjects.\n\nThe server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a\nstored copy with this origin before each reuse. A document carries no validator, so that\nrevalidation is a full render with a fresh nonce. **No Cloudflare Cache Rule may cache the\ndocuments**: a \"Cache Everything\" rule overrides that header at the edge, and nothing\ninside this process can see it.",
                 "type": "boolean"
               },
               "turnstile": {
@@ -843,7 +843,7 @@
           },
           "hash_inline_scripts": {
             "default": true,
-            "description": "Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`.\n\nOn, the default, the server hashes the response body it is about to send, so the only\ninline scripts that run are the ones it rendered. `'unsafe-inline'` admits an injected\n`<script>` as readily as the Dioxus hydration bootstrap.\n\nOff restores `'unsafe-inline'` with a restart. Use it when the browser refuses an inline\nscript the scanner does not see, which shows as a blank page and a console message. Known\ncases are a development server that injects a live-reload script downstream of this\nprocess, and a renderer change that emits script this server never sees.\n\nA policy carrying any hash or nonce makes `'unsafe-inline'` inert, so one setting covers\nboth choices.",
+            "description": "Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`.\n\nOn, the default, the server hashes the response body it is about to send, so the only\ninline scripts that run are the ones it rendered. `'unsafe-inline'` admits an injected\n`<script>` as readily as the Dioxus hydration bootstrap.\n\nOff restores `'unsafe-inline'` with a restart. Use it when the browser refuses an inline\nscript the scanner does not see, which shows as a blank page and a console message. Known\ncases are a development server that injects a live-reload script downstream of this\nprocess, and a renderer change that emits script this server never sees.\n\nA policy carrying any hash or nonce makes `'unsafe-inline'` inert, so turning this off also\nrequires `csp.cloudflare.script_nonce = false`. [`validate`](Self::validate) refuses the\nboot otherwise.",
             "type": "boolean"
           }
         },
@@ -859,7 +859,7 @@
           },
           "max_age_secs": {
             "default": 31536000,
-            "description": "How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.\n\nZero is the documented way to withdraw HSTS: browsers drop the host from their list on the\nnext response. It is refused together with `preload`, which it would contradict.",
+            "description": "How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.\n\nZero is the documented way to withdraw HSTS: a browser drops a host it learned from this\nheader on the next response. A host already on the preload list stays there until its\nremoval reaches browsers in a release. Zero is refused together with `preload`, which it\nwould contradict.",
             "minimum": 0,
             "type": "integer"
           },
@@ -880,7 +880,7 @@
           },
           "ttl_secs": {
             "default": 0,
-            "description": "The revalidation interval in seconds. Zero means a permanent cache.\n\nEvery page renders from compile-time data, so only a new build changes the output, and a\nnew build starts from an empty cache. A positive value is useful only when a persistent\ncache volume is shared across deploys.\n\nDefault: permanent.",
+            "description": "The revalidation interval in seconds. Zero means a permanent cache.\n\nA page changes only with a new build or a new `legal.*` configuration, and the server keeps\nwhatever the directory holds at boot. Permanent suits the image's default, a directory that\nstarts empty with every container. A cache volume that outlives a deploy needs a positive\nvalue, or it keeps serving pages rendered by the earlier build or configuration.\n\nDefault: permanent.",
             "minimum": 0,
             "type": "integer"
           }
@@ -994,7 +994,7 @@
           },
           "http_transactions": {
             "default": true,
-            "description": "Whether the server records one Sentry transaction per request, named by the matched route.\n\nNaming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.\nWhether a started transaction is kept is `sentry.traces_sample_rate`'s decision; this\nsetting removes the middleware entirely.",
+            "description": "Whether the server records one Sentry transaction per request, named by the matched route.\n\nNaming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.\nWhether a started transaction is kept is `sentry.traces_sample_rate`'s decision. Off starts\nno transaction, but the HTTP middleware stays installed and still attaches the request to\nevents.",
             "type": "boolean"
           },
           "max_breadcrumbs": {
