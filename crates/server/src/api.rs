@@ -103,7 +103,8 @@ pub async fn health() -> impl IntoResponse {
     )
 }
 
-/// Answers the liveness probe, succeeding while the async runtime can service a request.
+/// Answers the liveness probe, mounted at `GET /api/health/live` and `GET /livez`, succeeding
+/// while the async runtime can service a request.
 ///
 /// The server holds no state that can degrade, so this only tells whether the process is
 /// wedged.
@@ -122,8 +123,8 @@ fn assets_ready(dist: &Path) -> bool {
     dist.join("index.html").is_file()
 }
 
-/// Answers the readiness probe: `200` when the client bundle is present in the configured
-/// directory, `503` otherwise.
+/// Answers the readiness probe, mounted at `GET /api/health/ready` and `GET /readyz`: `200` when
+/// the client bundle is present in the configured directory, `503` otherwise.
 pub async fn ready(State(assets): State<AssetsConfig>) -> impl IntoResponse {
     let (status, payload) = if assets_ready(assets.dist_dir()) {
         (StatusCode::OK, "ready")

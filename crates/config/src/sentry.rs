@@ -126,10 +126,11 @@ pub struct SentryConfig {
 
     /// The fraction of request traces recorded, from `0.0` to `1.0`.
     ///
-    /// The default, `0.0`, records none, so switching Sentry on for crash reporting does not
-    /// also switch performance data on. `0.05` to `0.2` is an ordinary production figure. This
-    /// server is the edge and starts every trace it records, so this rate alone decides whether
-    /// a trace exists.
+    /// The rate decides for a request that arrives without a sampling decision. A request whose
+    /// `sentry-trace` header carries one keeps it, so a caller can have its request recorded even
+    /// at the default, `0.0`. `sentry.http_transactions = false` starts no request transaction at
+    /// all. The default keeps ordinary traffic from sending performance data when Sentry is on for
+    /// crash reporting. `0.05` to `0.2` is an ordinary production figure.
     // Same bound and same source as `sample_rate`: both go through [`check_rate`].
     #[cfg_attr(feature = "config-schema", config(range(min = 0.0, max = 1.0)))]
     #[serde(default)]

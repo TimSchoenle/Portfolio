@@ -4,7 +4,7 @@
 //! woff2 fonts by absolute URL (`/favicon.svg`, `/fonts/…`), so those files live at fixed paths,
 //! not at the content-hashed paths `dx`/manganis produces. Embedding them keeps the server one
 //! self-contained binary. [`crate::cache::set_cache_control`] fills in their `Cache-Control`, and
-//! each response carries an `ETag` so a lapsed TTL revalidates to `304`.
+//! each successful response carries an `ETag` so a lapsed TTL revalidates to `304`.
 //!
 //! The application embeds the bytes at compile time and hands them to [`router`] as
 //! [`EmbeddedAssets`]. An empty entry is a file whose generator has not run, as in a development

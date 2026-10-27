@@ -1,9 +1,9 @@
 //! The `Cache-Control` policy for every response the server sends.
 //!
-//! Content-hashed JS, WASM and CSS can be cached forever; the SSR HTML must always be
-//! revalidated to pick up a fresh deploy. Web fonts get a moderate TTL, and the resume PDFs and
-//! generated metadata (`robots.txt`, `sitemap.xml`, the web manifest) a short one. An error
-//! response gets `no-store`.
+//! Content-hashed JS, WASM and CSS are cached for a year without revalidation, and the SSR HTML
+//! is always revalidated so a fresh deploy is picked up. Web fonts get a moderate TTL, and the
+//! resume PDFs and generated metadata (`robots.txt`, `sitemap.xml`, the web manifest) a short one.
+//! An error response gets `no-store`.
 //!
 //! [`set_cache_control`] sets the header only when a handler or inner middleware has not, so the
 //! API's own headers win, and an error document whose policy carries a nonce keeps the

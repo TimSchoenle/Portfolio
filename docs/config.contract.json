@@ -445,7 +445,7 @@
         "env": "PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE",
         "env_file": "PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE_FILE",
         "secrets_file": "sentry__traces_sample_rate",
-        "docs": "The fraction of request traces recorded, from `0.0` to `1.0`.\n\nThe default, `0.0`, records none, so switching Sentry on for crash reporting does not\nalso switch performance data on. `0.05` to `0.2` is an ordinary production figure. This\nserver is the edge and starts every trace it records, so this rate alone decides whether\na trace exists.",
+        "docs": "The fraction of request traces recorded, from `0.0` to `1.0`.\n\nThe rate decides for a request that arrives without a sampling decision. A request whose\n`sentry-trace` header carries one keeps it, so a caller can have its request recorded even\nat the default, `0.0`. `sentry.http_transactions = false` starts no request transaction at\nall. The default keeps ordinary traffic from sending performance data when Sentry is on for\ncrash reporting. `0.05` to `0.2` is an ordinary production figure.",
         "ty": "f32",
         "values": [],
         "constraint": {
@@ -1030,7 +1030,7 @@
           },
           "traces_sample_rate": {
             "default": 0.0,
-            "description": "The fraction of request traces recorded, from `0.0` to `1.0`.\n\nThe default, `0.0`, records none, so switching Sentry on for crash reporting does not\nalso switch performance data on. `0.05` to `0.2` is an ordinary production figure. This\nserver is the edge and starts every trace it records, so this rate alone decides whether\na trace exists.",
+            "description": "The fraction of request traces recorded, from `0.0` to `1.0`.\n\nThe rate decides for a request that arrives without a sampling decision. A request whose\n`sentry-trace` header carries one keeps it, so a caller can have its request recorded even\nat the default, `0.0`. `sentry.http_transactions = false` starts no request transaction at\nall. The default keeps ordinary traffic from sending performance data when Sentry is on for\ncrash reporting. `0.05` to `0.2` is an ordinary production figure.",
             "maximum": 1.0,
             "minimum": 0.0,
             "type": "number"
