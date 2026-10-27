@@ -7,8 +7,9 @@ use crate::CONFIG;
 /// One repository, as `portfolio-update-repos` read it out of the GitHub REST API.
 ///
 /// It deserializes GitHub's own response, so the field names are GitHub's, and every field but
-/// three takes its default when GitHub omits it. The same type is written to `repos.json` and read
-/// back by the web binary, so the writer and the reader cannot disagree on the document.
+/// `name` and `html_url` takes its default when GitHub omits it. The same type is written to
+/// `repos.json` and read back by the web binary, so the writer and the reader cannot disagree on
+/// the document.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Repo {
     /// The repository name without the owner, such as `Portfolio`.
@@ -33,7 +34,8 @@ pub struct Repo {
     pub forks_count: u32,
     /// GitHub's `updated_at`, an RFC 3339 timestamp of the last change to the repository object.
     ///
-    /// A push, a description edit and a topic change each move it.
+    /// A description edit or a topic change moves it. A push moves `pushed_at`, and GitHub does
+    /// not guarantee that it also moves this field.
     #[serde(default)]
     pub updated_at: String,
     /// The GitHub topics, rendered as chips.
