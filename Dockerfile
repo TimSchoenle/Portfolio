@@ -100,7 +100,7 @@ RUN --mount=type=secret,id=gh_token \
     cp /repos-cache/repos.json apps/web/repos.json 2>/dev/null || true; \
     CI=1 cargo run --profile tools --locked -p portfolio-update-repos -- apps/web/repos.json \
     && cp apps/web/repos.json /repos-cache/repos.json
-# The license inventory for `/licenses`, generated from the graph this build links. It is also
+# The license inventory for `/licenses`, covering every target in apps/web/about.toml. It is also
 # the license gate: a dependency under terms missing from `accepted` in apps/web/about.toml fails
 # the image.
 RUN mkdir -p apps/web/generated \

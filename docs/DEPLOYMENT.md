@@ -108,7 +108,8 @@ as on a fork's pull request, so the variable is exported only when the file exis
 CI freshness check could never hit. The `/repos-cache` mount carries the file between builds, which
 brings the API calls down to one per ten hours per builder. An empty cache is a fresh builder's
 normal state, hence `|| true` on the restore. The mount is `sharing=locked` because a release builds
-both platforms at once and `tools` differs per `$TARGETARCH`.
+both platforms at once, and both builds would otherwise read and write the one shared `repos.json`
+concurrently.
 
 BuildKit reuses the `generate` layers while their inputs are unchanged, and a secret is not one of
 them. A rebuild of the same commit therefore keeps the earlier `repos.json` without running the
@@ -120,15 +121,18 @@ docker build --no-cache-filter generate --secret id=resume_photo,src="$HOME/phot
 ```
 
 The license inventory is generated, not committed, because the attribution a build publishes has to
-describe the graph that build linked. `--locked` asserts the committed `Cargo.lock` resolves
-unchanged, so the inventory describes what `dx bundle` is about to compile.
+describe the dependencies of the commit it was built from. `cargo about` runs with `--all-features`
+over every target in `apps/web/about.toml`: the WASM client and both musl server targets. The
+inventory therefore covers the union of shipped targets, a superset of what one platform's image
+links. `--locked` asserts the committed `Cargo.lock` resolves unchanged, so the inventory matches
+the dependency versions `dx bundle` is about to compile.
 
 The resume generator's optional `resume_photo` secret is the German sheet's application photo. A
 portrait is personal data, so the file stays outside the build context, as in the Dockerfile's
 example, and the secret mount exists only for that `RUN`. A copy inside the context would land in
-the `COPY . .` layers, which the build cache exports. The German PDF the generator renders from it is embedded in the server binary and
-served under `/resume/`, so an image built with the photo publishes it. The generator reads the
-format from the file header, so the extensionless mount works.
+the `COPY . .` layers, which the build cache exports. The German PDF the generator renders from it
+is embedded in the server binary and served under `/resume/`, so an image built with the photo
+publishes it. The generator reads the format from the file header, so the extensionless mount works.
 
 The contract has its own stage on `deps`, because it reads nothing `generate` produces, and the
 derive and contract emitter that `config-schema` adds never reach the runtime image. `serde_json`
