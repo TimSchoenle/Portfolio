@@ -124,7 +124,9 @@ responses it serves.
 Switched on, the egress is one destination: the DSN's host, over TLS, from the SDK's own
 background thread. What travels is `tracing` records at or above `sentry.capture_level` (errors
 only, by default), panics, and request transactions named by the matched route rather than by the
-URI. Transactions are sampled at `sentry.traces_sample_rate`, `0.0` by default.
+URI. Transactions are sampled at `sentry.traces_sample_rate`, `0.0` by default, except that a
+request whose `sentry-trace` header already carries a sampling decision keeps it.
+`sentry.http_transactions = false` starts no request transaction at all.
 
 `sentry.send_default_pii` is off and is the key to leave alone. On, it attaches the client IP, the
 full request header set including `Cookie`, and the resolved user to every event, and it also

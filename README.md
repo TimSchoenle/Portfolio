@@ -292,9 +292,11 @@ Optional, off, and the only thing that would give the process an outbound connec
 without a usable DSN it refuses to boot, rather than reporting into a dashboard whose emptiness
 looks like a healthy site.
 
-Two keys decide how much goes with it. `sentry.traces_sample_rate` is `0`, so switching reporting on
-does not also switch performance data on. `sentry.send_default_pii` is `false` and should stay
-there: on, every event carries the client IP and the full request header set, `Cookie` included.
+Three keys decide how much goes with it. `sentry.traces_sample_rate` is `0`, so ordinary traffic
+sends no performance data when reporting is on. A request whose `sentry-trace` header already
+carries a sampling decision keeps it, and `sentry.http_transactions = false` starts no transaction
+at all. `sentry.send_default_pii` is `false` and should stay there: on, every event carries the
+client IP and the full request header set, `Cookie` included.
 
 While Sentry is off, `RUST_LOG` and the log format are the Dioxus toolchain's as before; while it is
 on, the server installs the subscriber itself, with the same variable, the same default verbosity
