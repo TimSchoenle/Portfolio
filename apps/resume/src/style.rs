@@ -1,6 +1,7 @@
-//! Design tokens (colors, typography, spacing, two-column geometry) for the
-//! Typst resume. The template references these tokens; no size or color is
-//! hard-coded outside this module.
+//! Design tokens (colors, typography, spacing, two-column geometry) for the Typst resume.
+//!
+//! The template references these tokens, and no size or color is hard-coded outside this
+//! module.
 //!
 //! # Design space
 //!
@@ -24,47 +25,51 @@
 /// 96 dpi.
 pub(crate) type Px = f64;
 
-/// One design pixel in typographic points — 96 dpi against Typst's 72 dpi.
+/// One design pixel in typographic points: 96 dpi against Typst's 72 dpi.
 const PT_PER_PX: f64 = 0.75;
 
 /// Inter's ascender as a multiple of the font size.
 const FONT_ASCENDER_EM: f64 = 0.968_750;
 /// Inter's descender as a multiple of the font size, unsigned.
 const FONT_DESCENDER_EM: f64 = 0.241_211;
-/// Inter's line box as a multiple of the font size: ascender + descender, the
-/// height a browser gives a line at `line-height: normal`.
+/// Inter's line box as a multiple of the font size: ascender + descender, the height a browser
+/// gives a line at `line-height: normal`.
 ///
-/// The design is written in CSS line heights, and [`Layout::edges`] is what
-/// turns one into the pair of Typst text edges that reproduces it — see there
-/// for why the document runs at zero leading.
+/// [`Layout::edges`] turns a CSS line height into the pair of Typst text edges that reproduces
+/// it.
 const FONT_LINE_EM: f64 = FONT_ASCENDER_EM + FONT_DESCENDER_EM;
 
-// ---- color tokens (light theme — the only theme used for PDF) ----
+// ---- color tokens (light theme, the only theme used for PDF) ----
 
-/// Sheet color. The design's near-white paper, a shade off pure white so the
-/// tinted sidebar and the white skill chips both register against it.
+/// The sheet color, a near-white paper.
+///
+/// It sits a shade off pure white so the tinted sidebar and the white skill chips both register
+/// against it.
 pub(crate) const PAPER: &str = "#FDFDFE";
-/// Accent: job title, section headers, links, the start of the header rule.
-/// The print-side reading of the site's `#9184d9` — same OKLCH hue family,
-/// darkened until it holds contrast on paper.
+/// The accent for the job title, section headers, links and the start of the header rule.
+///
+/// It is the print-side reading of the site's `#9184d9`: the same OKLCH hue family, darkened until
+/// it holds contrast on paper.
 pub(crate) const ACCENT: &str = "#4A3E96";
 /// Softer accent: bullet markers and the midpoint of the header rule's fade.
 pub(crate) const ACCENT_SOFT: &str = "#8B7FD4";
 /// Primary text: the name, role titles, section labels.
 pub(crate) const INK: &str = "#191A21";
-/// Body prose: the summary and the bullet text. A step down from [`INK`] so a
-/// paragraph reads quieter than the headings around it.
+/// Body prose: the summary and the bullet text.
+///
+/// It is a step down from [`INK`], so a paragraph reads quieter than the headings around it.
 pub(crate) const INK_BODY: &str = "#2A2C34";
 /// Secondary text: the organization line, the `Stack` run, sidebar values and
 /// chip text.
 pub(crate) const INK_SOFT: &str = "#3C3F4A";
-/// Meta text: dates, locations, sidebar micro-labels. Dark enough to stay
-/// readable on both the paper and the sidebar tint, yet quieter than [`INK`].
+/// Meta text: dates, locations and sidebar micro-labels.
+///
+/// It stays readable on both the paper and the sidebar tint, yet reads quieter than [`INK`].
 pub(crate) const INK_MUTED: &str = "#5A5E6B";
 /// Hairline beneath main section headers.
 pub(crate) const RULE: &str = "#E2E0EC";
-/// Hairline between experience entries — lighter than [`RULE`], so an entry
-/// break never competes with a section break.
+/// The hairline between experience entries, lighter than [`RULE`] so an entry break never
+/// competes with a section break.
 pub(crate) const RULE_ENTRY: &str = "#ECEAF3";
 /// The subtle sidebar tint, also the availability pill's fill.
 pub(crate) const SIDEBAR_BG: &str = "#F4F3FA";
@@ -77,8 +82,8 @@ pub(crate) const TAG_INK: &str = INK_SOFT;
 /// Skill-chip, QR-frame and photo-frame border: slightly darker than [`RULE`]
 /// so white boxes register against the sidebar tint without looking heavy.
 pub(crate) const TAG_BORDER: &str = "#DBD7EA";
-/// Availability-pill border — a touch more present than [`TAG_BORDER`], since
-/// the pill sits on the paper rather than on the tint.
+/// The availability-pill border, a touch more present than [`TAG_BORDER`] because the pill sits
+/// on the paper instead of the tint.
 pub(crate) const PILL_BORDER: &str = "#D5D0E8";
 
 // ---- font weights ----
@@ -98,12 +103,11 @@ pub(crate) const W_TITLE: u16 = 650;
 /// Bold (700): section headers, micro-labels, the `Stack` label.
 pub(crate) const W_BOLD: u16 = 700;
 
-/// The `opsz` (optical size) axis is pinned rather than tracked to the type
-/// size, at the value the reference rendering was set in: the web Inter the
-/// design was drawn with exposes only `wght`, leaving `opsz` at its 14 default
-/// for every size on the sheet. Left to itself Typst would derive the axis from
-/// each run's point size, which sets the display sizes on a different drawing
-/// of the face than the design has.
+/// The pinned value of Inter's `opsz` (optical size) axis, for every size on the sheet.
+///
+/// The web Inter the design was drawn with exposes only `wght`, which leaves `opsz` at its 14
+/// default. Left to itself Typst would derive the axis from each run's point size, which sets the
+/// display sizes on a different drawing of the face than the design has.
 pub(crate) const OPTICAL_SIZE: f64 = 14.0;
 
 // ---- typography sizes, in design pixels ----
@@ -153,7 +157,7 @@ pub(crate) const TRACK_LABEL: f64 = 0.07;
 
 /// The name, set tighter than its own font box the way a display size wants.
 pub(crate) const LH_NAME: f64 = 1.1;
-/// The summary paragraph — the airiest text on the sheet.
+/// The summary paragraph, the airiest text on the sheet.
 pub(crate) const LH_BODY: f64 = 1.45;
 /// Everything the design leaves at `line-height: normal`.
 pub(crate) const LH_NORMAL: f64 = FONT_LINE_EM;
@@ -164,8 +168,9 @@ pub(crate) const LH_NORMAL: f64 = FONT_LINE_EM;
 pub(crate) const PAGE_W: Px = 794.0;
 /// Page trim: A4.
 pub(crate) const PAGE_H: Px = 1123.0;
-/// Page margins. Fixed rather than density-driven: the design sets the same
-/// trim on both sheets, and the ladder buys its room from the rhythm inside.
+/// The left and right page margin, the same on both sheets.
+///
+/// The fitting ladder buys its room from the rhythm inside the page, never from the margins.
 pub(crate) const PAGE_PAD_X: Px = 44.0;
 /// Top page margin.
 pub(crate) const PAGE_PAD_TOP: Px = 34.0;
@@ -199,8 +204,7 @@ pub(crate) const QR_QUIET_MODULES: u32 = 1;
 
 /// Application-photo frame width (German sheet only).
 pub(crate) const PHOTO_W: Px = 120.0;
-/// Application-photo frame height — the 3:4 portrait a German application
-/// expects.
+/// Application-photo frame height, giving the 3:4 portrait a German application expects.
 pub(crate) const PHOTO_H: Px = 156.0;
 
 /// Gap between the header's QR frame and the name stack.
@@ -218,8 +222,9 @@ pub(crate) const TITLE_TO_ORG: Px = 1.0;
 pub(crate) const COL_GAP: Px = 22.0;
 /// Gap between a skill-group label and its chips.
 pub(crate) const SKILL_LABEL_GAP: Px = 4.0;
-/// Gap between a bullet's `–` marker and its text. Bullets hang, so this is
-/// also the indent every wrapped line of that bullet keeps.
+/// Gap between a bullet's `–` marker and its text.
+///
+/// Bullets hang, so this is also the indent every wrapped line of that bullet keeps.
 pub(crate) const BULLET_INDENT: Px = 7.0;
 /// Gutter between a role title and the date range opposite it.
 pub(crate) const ENTRY_DATE_GAP: Px = 12.0;
@@ -230,8 +235,8 @@ pub(crate) const LANG_GAP: Px = 3.0;
 /// Gap above a main-column section header (the first one has none).
 pub(crate) const MAIN_SECTION_TOP: Px = 13.0;
 
-/// The gaps the two sheets of the design set differently — the Comfortable
-/// rhythm of the English sheet against the Compact rhythm of the German one.
+/// The gaps the two sheets of the design set differently: the Comfortable rhythm of the English
+/// sheet against the Compact rhythm of the German one.
 ///
 /// Every field is a design pixel; [`Layout::sp`] picks the table and
 /// [`Layout::pt`] converts.
@@ -347,32 +352,32 @@ pub(crate) struct Layout {
 }
 
 impl Layout {
-    /// A scaled length literal in points, e.g. `"7.500pt"`.
+    /// Formats `px` as a scaled length literal in points, such as `"7.500pt"`.
     pub(crate) fn pt(&self, px: Px) -> String {
         format!("{:.3}pt", px * PT_PER_PX * self.scale)
     }
 
-    /// An *unscaled* length literal in points, for the page trim: the sheet is
-    /// A4 whatever the type does.
+    /// Formats `px` as an *unscaled* length literal in points, for the page trim, which stays A4
+    /// whatever the type does.
     pub(crate) fn page_pt(px: Px) -> String {
         format!("{:.3}pt", px * PT_PER_PX)
     }
 
-    /// The spacing table this density selects.
+    /// Returns the spacing table this density selects.
     pub(crate) fn sp(&self) -> &'static Spacing {
         if self.dense { &COMPACT } else { &COMFORTABLE }
     }
 
-    /// The `(top-edge, bottom-edge)` pair that gives a run of text the CSS line
-    /// box `line_height` would give it, as em literals.
+    /// Returns the `(top-edge, bottom-edge)` pair, as em literals, that gives a run of text the
+    /// CSS line box `line_height` would give it.
     ///
-    /// A browser centers the font box inside the line box and splits the
-    /// difference into half-leading above and below; Typst instead stacks lines
-    /// between a top edge and a bottom edge with `leading` in between. Folding
-    /// the half-leading into the two edges and running the document at zero
-    /// leading makes the two models agree exactly — a line box is then
-    /// `line_height` tall, consecutive baselines sit `line_height` apart, and
-    /// every `#v()` in the template means the CSS margin it was copied from.
+    /// The pair is exact only in a document set at zero leading.
+    // A browser centers the font box inside the line box and splits the difference into
+    // half-leading above and below, while Typst stacks lines between a top edge and a bottom edge
+    // with `leading` in between. Folding the half-leading into the two edges and running at zero
+    // leading makes the two models agree: a line box is `line_height` tall, consecutive baselines
+    // sit `line_height` apart, and every `#v()` in the template means the CSS margin it was copied
+    // from.
     pub(crate) fn edges(line_height: f64) -> (String, String) {
         let half_leading = (line_height - FONT_LINE_EM) / 2.0;
         (
@@ -383,19 +388,14 @@ impl Layout {
         )
     }
 
-    /// The gutter between two skill chips, across and down.
-    ///
-    /// Typst centers a border on the box edge, so a chip paints
-    /// [`HAIRLINE`]`/2` past its layout box on every side and two neighbours
-    /// eat one whole hairline of whatever sits between them. Adding it back is
-    /// what makes the *painted* gap the one the design asks for — and, since
-    /// the same correction goes into the horizontal gutter, what makes a chip's
-    /// advance match the CSS border box it was drawn from, so the rows wrap
-    /// where the design wraps them.
-    ///
-    /// A chip box rests on the baseline and contributes no descender of its
-    /// own, which is why the vertical case is the plain gutter rather than a
-    /// gutter minus a descender.
+    /// Returns the layout gutter between two skill chips, across and down, that paints as a gap of
+    /// `gap`.
+    // Typst centers a border on the box edge, so a chip paints `HAIRLINE / 2` past its layout box
+    // on every side and two neighbours eat one whole hairline of whatever sits between them.
+    // Adding it back makes the painted gap the one the design asks for, and makes a chip's advance
+    // match the CSS border box it was drawn from, so the rows wrap where the design wraps them.
+    // A chip box rests on the baseline and contributes no descender of its own, which is why the
+    // vertical case is the plain gutter instead of a gutter minus a descender.
     pub(crate) fn chip_gutter(&self, gap: Px) -> String {
         self.pt(gap + HAIRLINE)
     }

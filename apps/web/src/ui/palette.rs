@@ -35,11 +35,11 @@ struct Entry {
     action: Action,
 }
 
-/// The ⌘K overlay: one search field over sections, repositories, pages and languages.
+/// Renders the ⌘K overlay: one search field over sections, repositories, pages and languages.
 ///
-/// Mounted only while open, so it holds no visibility state of its own and starts each time
-/// with an empty query. `on_close` fires on Escape, on a click outside, and after any action
-/// that navigates.
+/// Mount it only while open: it holds no visibility state of its own and starts each time with an
+/// empty query. `on_close` fires on Escape, on a click outside, and after any action that
+/// navigates.
 #[component]
 pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element {
     let ctx = use_i18n();
@@ -136,9 +136,10 @@ pub fn CommandPalette(repos: ReposState, on_close: EventHandler<()>) -> Element 
     }
 }
 
-/// The modal frame around the palette: the overlay that closes it on an outside click, the
-/// dialog role and label, Tab kept inside, and focus handed back on close to whatever held it
-/// before the palette opened.
+/// Renders the modal frame around the palette.
+///
+/// The frame closes the palette on an outside click, carries the dialog role and label, keeps Tab
+/// inside, and hands focus back on close to whatever held it before the palette opened.
 #[component]
 fn PaletteDialog(label: String, on_close: EventHandler<()>, children: Element) -> Element {
     // The modal element, so Tab can be kept inside it (client only).
@@ -204,7 +205,8 @@ fn PaletteDialog(label: String, on_close: EventHandler<()>, children: Element) -
     }
 }
 
-/// The listbox under the search field: the matching entries in their groups, or the empty state.
+/// Renders the listbox under the search field: the matching entries in their groups, or the empty
+/// state.
 ///
 /// `groups` carries each entry's index in the flat filtered list, which is the index the arrow
 /// keys move `selected` through.
@@ -258,8 +260,10 @@ fn PaletteResults(
     }
 }
 
-/// Moves the selection with the arrow keys, runs the selected entry on Enter, and closes on
-/// Escape. Arrow keys wrap at both ends of `filtered`.
+/// Handles a key in the search field: the arrow keys move the selection, Enter runs the selected
+/// entry, and Escape closes.
+///
+/// The arrow keys wrap at both ends of `filtered`.
 fn on_search_key(
     e: &KeyboardEvent,
     mut selected: Signal<usize>,
@@ -302,8 +306,8 @@ fn group_in_first_seen_order(filtered: &[Entry]) -> Vec<(String, Vec<(usize, Ent
     grouped
 }
 
-/// Every entry the palette offers in the current language, each paired with the lowercased text
-/// a query is matched against.
+/// Lists every entry the palette offers in the current language, each paired with the lowercased
+/// text a query is matched against.
 fn searchable_entries(
     i18n: Signal<I18n>,
     legal_indexes: Option<&LegalIndexes>,
@@ -356,8 +360,9 @@ fn searchable_entries(
         .collect()
 }
 
-/// Every published legal document, under the operator's title and in their order. A document
-/// hosted elsewhere opens in a new tab; one this site hosts is a route.
+/// Lists every published legal document, under its configured title and in the configured order.
+///
+/// A document hosted elsewhere opens in a new tab, and one this site hosts is a route.
 fn legal_entries(
     i18n: Signal<I18n>,
     legal_indexes: Option<&LegalIndexes>,
@@ -388,7 +393,8 @@ fn legal_entries(
         .collect()
 }
 
-/// The fixed actions: copy the email, switch the language, open the profiles, get the resume.
+/// Lists the fixed actions: copy the email, switch the language, open the profiles, get the
+/// resume.
 fn action_entries(t: &impl Fn(&str) -> String, lang: &str, group: &str) -> [Entry; 5] {
     let entry = |label: &str, hint: String, action: Action| Entry {
         group: group.to_owned(),
@@ -422,11 +428,10 @@ fn action_entries(t: &impl Fn(&str) -> String, lang: &str, group: &str) -> [Entr
     ]
 }
 
-/// Opens `url` in a new tab with `noopener,noreferrer`. A no-op outside the wasm client.
-///
-/// `window.open` — unlike `<a target="_blank">` — does not imply `noopener`, so without the
-/// feature string the opened page could reach back through `window.opener` and navigate this
-/// tab (reverse tabnabbing). Every anchor elsewhere in the app sets the same pair.
+/// Opens `url` in a new tab with `noopener,noreferrer`, and does nothing outside the wasm client.
+// Unlike `<a target="_blank">`, `window.open` does not imply `noopener`, so without the feature
+// string the opened page could reach back through `window.opener` and navigate this tab (reverse
+// tabnabbing). Every anchor elsewhere in the app sets the same pair.
 fn open_in_new_tab(url: &str) {
     #[cfg(feature = "web")]
     if let Some(win) = web_sys::window() {
@@ -436,7 +441,7 @@ fn open_in_new_tab(url: &str) {
     let _ = url;
 }
 
-/// Copies the contact address to the clipboard. A no-op outside the wasm client.
+/// Copies the contact address to the clipboard, and does nothing outside the wasm client.
 fn copy_email() {
     #[cfg(feature = "web")]
     if let Some(win) = web_sys::window() {

@@ -109,7 +109,7 @@ fn cache_control_for_response(for_path: &'static str, status: StatusCode) -> &'s
 /// This is a response middleware. Error responses get `no-store` instead of the path's TTL.
 pub async fn set_cache_control(request: Request, next: Next) -> Response {
     // Classified before the request is consumed. `cache_control_for` answers with
-    // a `&'static str`, so carrying its verdict across the await costs nothing —
+    // a `&'static str`, so carrying its verdict across the await costs nothing,
     // whereas carrying the path to classify it afterwards meant copying the path
     // onto the heap for every request the server answers, asset requests
     // included.
@@ -156,7 +156,7 @@ mod tests {
     }
 
     /// The client bundle is the largest thing the page loads, and its hash is the
-    /// one most likely to come out short — `{:x}` drops leading zero nibbles. A
+    /// one most likely to come out short, because `{:x}` drops leading zero nibbles. A
     /// length check that missed that served it `no-cache` on every visit.
     #[test]
     fn a_short_hash_is_still_a_hash() {

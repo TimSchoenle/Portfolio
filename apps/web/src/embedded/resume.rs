@@ -2,18 +2,17 @@
 
 use portfolio_data::ResumeFingerprints;
 
-/// `resume-fingerprint.json`, embedded at compile time (empty default when no
-/// resumes were produced).
+/// The `resume-fingerprint.json` the build embeds, or an empty default when no resume was produced.
 const RESUME_FINGERPRINT_JSON: &str =
     include_str!(concat!(env!("OUT_DIR"), "/resume-fingerprint.json"));
 
-/// Parses the embedded `resume-fingerprint.json`; `None` when no resumes were
-/// generated (the embedded manifest is empty) or the manifest is malformed.
+/// Returns the embedded fingerprints, or `None` when no resume was generated or the manifest does
+/// not parse.
 pub fn load_resume_fingerprints() -> Option<ResumeFingerprints> {
     parse(RESUME_FINGERPRINT_JSON)
 }
 
-/// Parses a fingerprint manifest; `None` when it lists no file or does not parse.
+/// Parses a fingerprint manifest, or returns `None` when it lists no file or does not parse.
 fn parse(json: &str) -> Option<ResumeFingerprints> {
     serde_json::from_str::<ResumeFingerprints>(json)
         .ok()

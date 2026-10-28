@@ -8,8 +8,9 @@ use crate::routes::Route;
 use crate::sections::{section_id, section_num};
 use portfolio_data::{SITE_LANGUAGES, next_language};
 
-/// Home-page sections, in nav order: (section slug, i18n key). Anchors resolve
-/// via [`section_id`], which tracks the dynamic numbering.
+/// The home-page sections in nav order, as `(section slug, i18n key)`.
+///
+/// Anchors resolve through [`section_id`], which tracks the numbering.
 pub const SECTIONS: [(&str, &str); 5] = [
     ("about", "nav.about"),
     ("stack", "nav.skills"),
@@ -18,9 +19,10 @@ pub const SECTIONS: [(&str, &str); 5] = [
     ("contact", "nav.contact"),
 ];
 
-/// Navigates to a home-page section from anywhere in the app: a smooth-scroll
-/// when already on the home page, otherwise a route home first, then a scroll
-/// once the target section has mounted. Shared with the command palette.
+/// Navigates to a home-page section from anywhere in the app.
+///
+/// On the home page it scrolls there. Elsewhere it routes home first and scrolls once the target
+/// section has mounted.
 #[cfg(feature = "web")]
 pub fn goto_section(on_home: bool, id: String) {
     if on_home {

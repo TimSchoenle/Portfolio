@@ -115,7 +115,7 @@ pub fn Contact() -> Element {
     }
 }
 
-/// The terminal window showing the `ssh` command as typed so far.
+/// Renders the terminal window showing the `ssh` command as typed so far.
 #[component]
 fn Terminal(typed: Signal<String>) -> Element {
     rsx! {
@@ -146,7 +146,8 @@ fn Terminal(typed: Signal<String>) -> Element {
     }
 }
 
-/// The button that copies the email address and shows `copied_label` for a moment afterwards.
+/// Renders the button that copies the email address and shows `copied_label` for a moment
+/// afterwards.
 #[component]
 fn CopyEmailButton(copy_label: String, copied_label: String) -> Element {
     let mut copied = use_signal(|| false);
@@ -174,7 +175,7 @@ fn CopyEmailButton(copy_label: String, copied_label: String) -> Element {
     }
 }
 
-/// The resume download link, with a button that shows the PDF's fingerprint when one was
+/// Renders the resume download link, with a button that shows the PDF's fingerprint when one was
 /// published.
 ///
 /// `digest` is the fingerprint's label and its hex digest; `None` hides the button.

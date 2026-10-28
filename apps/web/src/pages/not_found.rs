@@ -5,11 +5,11 @@ use dioxus::prelude::*;
 use crate::i18n::use_i18n;
 use crate::routes::Route;
 
-/// Answers any path no other route claimed.
+/// Renders the 404 page for any path no other route claimed.
 ///
-/// `segments` is what the catch-all captured, and nothing reads it. The page is deliberately
-/// identical for every unknown URL, which is also what makes it safe to render one that a
-/// visitor did not type.
+/// The page is identical for every unknown URL, so `segments`, which the catch-all captured, is
+/// never read.
+// Being identical is also what makes it safe to render for a URL a visitor did not type.
 #[component]
 pub fn NotFound(segments: Vec<String>) -> Element {
     let _ = segments;
@@ -27,7 +27,7 @@ pub fn NotFound(segments: Vec<String>) -> Element {
         // The catch-all route answers every unknown URL with this page, so it
         // must not be indexed: without it each mistyped or stale link becomes a
         // separate thin page competing with the real ones. Deliberately carries
-        // no `rel="canonical"` — there is no canonical URL for "not found".
+        // no `rel="canonical"`, because there is no canonical URL for "not found".
         Meta { name: "robots", content: "noindex, follow" }
         section { class: "notfound",
             div {

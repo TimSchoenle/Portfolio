@@ -22,8 +22,7 @@ time = { workspace = true, features = ["macros"] }
 tracing.workspace = true
 
 [dev-dependencies]
-# `ServiceExt::oneshot` drives the routers and middleware in the tests; `#[tokio::test]`
-# provides their runtime.
+# The tests' router driver and runtime.
 tokio.workspace = true
 tower.workspace = true
 # `SetResponseHeaderLayer`, to pin how the subresource policy layer composes with the page one.

@@ -1,10 +1,10 @@
-//! `robots.txt`, `sitemap.xml` and `site.webmanifest`, built from [`CONFIG`] — and, for the
+//! `robots.txt`, `sitemap.xml` and `site.webmanifest`, built from [`CONFIG`] and, for the
 //! sitemap, from the legal documents the configuration hosts.
 //!
-//! Three whole documents a crawler fetches by a fixed path, which is what separates them from
-//! the rest of the site's metadata. Anything a crawler reads *inside* a page — the title, the
-//! canonical link, the Open Graph tags — is a `document::` element in the component that owns
-//! the route, so it is rendered with the page rather than assembled beside it.
+//! These are three whole documents a crawler fetches by a fixed path, which is what separates them
+//! from the rest of the site's metadata. Anything a crawler reads *inside* a page (the title, the
+//! canonical link, the Open Graph tags) is a `document::` element in the component that owns the
+//! route, so it is rendered with the page instead of assembled beside it.
 
 use std::sync::LazyLock;
 
@@ -16,17 +16,16 @@ use serde_json::json;
 
 use crate::i18n::localized_url;
 
-/// These two documents are built from [`CONFIG`] alone, so each is rendered once
-/// on first request rather than rebuilt on every one. The sitemap also lists
-/// configured pages, so the server renders it once at startup instead and hands
-/// it to [`sitemap`].
-///
-/// The builders below stay separate functions so the tests exercise the
-/// construction itself rather than whatever a `LazyLock` happens to be holding.
+// These two documents are built from `CONFIG` alone, so each is rendered once on first request
+// instead of on every one. The sitemap also lists configured pages, so the server renders it once
+// at startup and hands it to `sitemap`. The builders stay separate functions so the tests exercise
+// the construction itself instead of whatever a `LazyLock` happens to be holding.
+/// The rendered `robots.txt`.
 static ROBOTS_TXT: LazyLock<String> = LazyLock::new(robots_txt);
+/// The rendered `site.webmanifest`.
 static WEBMANIFEST_JSON: LazyLock<String> = LazyLock::new(webmanifest_json);
 
-/// `GET /robots.txt`.
+/// Answers `GET /robots.txt`.
 pub async fn robots() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
@@ -34,9 +33,9 @@ pub async fn robots() -> impl IntoResponse {
     )
 }
 
-/// `GET /sitemap.xml`, answering with `xml` as [`sitemap_xml`] rendered it at startup.
+/// Answers `GET /sitemap.xml` with `xml`, as [`sitemap_xml`] rendered it at startup.
 ///
-/// [`Bytes`] so each response shares the rendered document instead of copying it.
+/// Each response shares the [`Bytes`] instead of copying the document.
 pub fn sitemap(xml: Bytes) -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
@@ -44,7 +43,7 @@ pub fn sitemap(xml: Bytes) -> impl IntoResponse {
     )
 }
 
-/// `GET /site.webmanifest`.
+/// Answers `GET /site.webmanifest`.
 pub async fn webmanifest() -> impl IntoResponse {
     (
         [(
@@ -62,12 +61,12 @@ fn robots_txt() -> String {
     )
 }
 
-/// The sitemap: the fixed routes of `crate::routes::Route`, with `legal_paths` — each a hosted
-/// legal document's route, in the operator's order — between the home page and the licenses.
+/// Renders the sitemap: the fixed routes of `crate::routes::Route`, with `legal_paths` between the
+/// home page and the licenses in the order given.
 ///
 /// Every page is listed once per site language, at the address [`localized_url`] gives it, and
-/// each entry names all its language variants (and `x-default`) as `hreflang` alternates — the
-/// sitemap form of the `<link rel="alternate">` tags the page itself carries.
+/// each entry names all its language variants and `x-default` as `hreflang` alternates, matching
+/// the `<link rel="alternate">` tags the page itself carries.
 pub fn sitemap_xml(legal_paths: &[String]) -> String {
     let mut xml = String::from(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
@@ -102,7 +101,7 @@ pub fn sitemap_xml(legal_paths: &[String]) -> String {
     xml
 }
 
-/// One `<xhtml:link rel="alternate">` line.
+/// Renders one `<xhtml:link rel="alternate">` line.
 fn alternate(hreflang: &str, href: &str) -> String {
     format!(
         "    <xhtml:link rel=\"alternate\" hreflang=\"{hreflang}\" href=\"{}\"/>\n",
@@ -118,7 +117,7 @@ fn xml_escape(text: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// The favicon, then the raster icons an install prompt requires.
+/// Lists the favicon, then the raster icons an install prompt requires.
 fn manifest_icons() -> serde_json::Value {
     let mut icons = vec![json!({
         "src": "/favicon.svg",

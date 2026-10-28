@@ -13,7 +13,7 @@ const CX: f32 = SIZE / 2.0;
 const CY: f32 = SIZE / 2.0;
 const MAX_R: f32 = 200.0;
 
-/// Start/end angle (degrees) of each quadrant arc.
+/// Returns the start and end angle of the quadrant's arc, in degrees.
 fn quadrant_arc(q: Quadrant) -> (f32, f32) {
     match q {
         Quadrant::Languages => (180.0, 270.0),
@@ -23,7 +23,7 @@ fn quadrant_arc(q: Quadrant) -> (f32, f32) {
     }
 }
 
-/// The design seeds its PRNG from the category's key.
+/// Returns the PRNG seed for `q`, derived from the category's key as the design does.
 fn quadrant_seed(q: Quadrant) -> f64 {
     let key = match q {
         Quadrant::Languages => "languages",
@@ -36,7 +36,7 @@ fn quadrant_seed(q: Quadrant) -> f64 {
     f64::from(key.as_bytes()[0]) * 131.0 + f64::from(len) * 17.0
 }
 
-/// Deterministic PRNG from the design: s = (s * 9301 + 49297) % 233280.
+/// The design's deterministic PRNG: `s = (s * 9301 + 49297) % 233280`.
 struct Seeded(f64);
 
 impl Seeded {
@@ -76,9 +76,8 @@ fn radius_for(confidence: f32, jitter: f32) -> f32 {
 }
 
 /// The dot layout, a pure function of compile-time data, computed once per process.
-///
-/// Recomputing it per render would re-run `matrix_skills()`, the layout of ~170 dots and an
-/// O(named x filler) proximity pass on every pointer move, since those write the hover signals.
+// Recomputing it per render would re-run `matrix_skills()`, the layout of ~170 dots and an
+// O(named x filler) proximity pass on every pointer move, since those write the hover signals.
 static DOTS: LazyLock<(Vec<NamedDot>, Vec<FillerDot>)> = LazyLock::new(build_dots);
 
 fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
@@ -143,11 +142,11 @@ fn build_dots() -> (Vec<NamedDot>, Vec<FillerDot>) {
     (named, filler)
 }
 
-/// The radar itself: named dots for real skills, seeded filler dots for texture.
+/// Renders the radar: named dots for real skills and seeded filler dots for texture.
 ///
-/// `active` dims every quadrant but one; `None` shows all four at full strength. `on_hover`
+/// `active` dims every quadrant but one, and `None` shows all four at full strength. `on_hover`
 /// fires with the skill under the cursor and with `None` when it leaves, so the caller owns the
-/// tooltip and this component owns only the geometry.
+/// tooltip.
 #[component]
 pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
     let i18n = use_i18n().i18n;
@@ -174,7 +173,8 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
     }
 }
 
-/// The parts of the radar that carry no data: the glow, the rings, the axes and the sweep.
+/// Renders the parts of the radar that carry no data: the glow, the rings, the axes and the
+/// sweep.
 #[component]
 fn RadarBackdrop() -> Element {
     let wedge_end = polar(-30.0, MAX_R);
@@ -234,7 +234,8 @@ fn RadarBackdrop() -> Element {
     }
 }
 
-/// The four quadrant names, one per corner, dimmed unless their quadrant is `active` or none is.
+/// Renders the four quadrant names, one per corner, dimmed unless their quadrant is `active` or
+/// none is.
 #[component]
 fn QuadrantLabels(active: Option<Quadrant>) -> Element {
     let i18n = use_i18n().i18n;
@@ -270,7 +271,7 @@ fn QuadrantLabels(active: Option<Quadrant>) -> Element {
     }
 }
 
-/// The seeded scatter of radar-only skills: hoverable for sighted users, hidden from assistive
+/// Renders the seeded scatter of radar-only skills, hoverable but hidden from assistive
 /// technology.
 #[component]
 fn FillerDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
@@ -302,8 +303,7 @@ fn FillerDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -
     }
 }
 
-/// The matrix skills, one labeled dot each: the radar's interactive layer, reachable by mouse
-/// and by keyboard.
+/// Renders the matrix skills as one labeled dot each, reachable by mouse and by keyboard.
 #[component]
 fn NamedDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -> Element {
     let mut hovered = use_signal(|| None::<usize>);

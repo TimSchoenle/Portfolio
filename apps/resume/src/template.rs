@@ -3,13 +3,14 @@
 //!
 //! The main column is written *first* even though the sidebar prints to the
 //! left of it, so the reading order a parser sees is identity → summary →
-//! experience → contact → skills. [`two_column`] is where that is arranged, and
-//! its doc comment explains why the two columns are `#place`d rather than put
-//! in a `#grid`.
+//! experience → contact → skills. A `#grid` cannot express that: cells are painted in grid
+//! position order however they are written, so the sidebar would go down first. [`two_column`]
+//! instead places both columns inside one sized block, because `#place` paints in source order.
+//! Measuring both columns first gives that block the height of the taller one, so an overflowing
+//! sheet still spills onto a second page for [`fit`](crate::fit) to catch.
 //!
-//! Every length here comes from [`style`] in the design's own unit — see that
-//! module for how a CSS pixel, a CSS margin and a CSS `line-height` each map
-//! onto Typst.
+//! Every length here comes from [`style`] in the design's own unit. That module describes how a
+//! CSS pixel, a CSS margin and a CSS `line-height` each map onto Typst.
 
 use std::fmt::Write as _;
 
@@ -26,33 +27,59 @@ use crate::translations::Translations;
 /// virtual file the [`world`](crate::world) serves it under.
 #[derive(Clone, Copy)]
 pub(crate) struct Photo<'a> {
-    /// File name the document references, extension included so Typst can pick
-    /// the decoder.
+    /// The file name the document references, extension included so Typst can pick the
+    /// decoder.
     pub(crate) file_name: &'a str,
 }
 
-/// Escapes a value so it is rendered literally inside a Typst content block
-/// (`[...]`), neutralizing markup-significant characters.
+/// Escapes `s` so it renders literally inside a Typst content block (`[...]`).
+///
+/// The typographic shorthands are left alone: `--`, `...` and `'` still become a dash, an
+/// ellipsis and a curly apostrophe, which is what the translations are written for.
+// `/` is escaped because `//` and `/*` open a comment, which would swallow the closing `]` and
+// fail the compile. At the start of a line, `=`, `+`, `- ` and `1. ` open a heading or a list,
+// so those are escaped there too.
 pub(crate) fn esc(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
-    for c in s.chars() {
-        match c {
-            '\\' | '#' | '$' | '*' | '_' | '`' | '<' | '>' | '@' | '[' | ']' | '"' => {
-                out.push('\\');
-                out.push(c);
-            }
-            _ => out.push(c),
+    let mut line_start = true;
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        let next = chars.peek().copied();
+        let opens_block = line_start
+            && match c {
+                '=' | '+' => true,
+                '-' => next.is_none_or(char::is_whitespace),
+                _ => false,
+            };
+        if opens_block
+            || matches!(
+                c,
+                '\\' | '#' | '$' | '*' | '_' | '`' | '<' | '>' | '@' | '[' | ']' | '"' | '/' | '~'
+            )
+        {
+            out.push('\\');
         }
+        out.push(c);
+        if line_start && c.is_ascii_digit() {
+            // A run of digits then `.` at the start of a line is a numbered-list marker.
+            while let Some(d) = chars.next_if(char::is_ascii_digit) {
+                out.push(d);
+            }
+            if chars.next_if_eq(&'.').is_some() {
+                out.push_str("\\.");
+            }
+        }
+        line_start = c == '\n' || (line_start && (c == ' ' || c == '\t'));
     }
     out
 }
 
-/// Vertical space, in design pixels.
+/// Builds a vertical space of `px` design pixels.
 fn v(l: &Layout, px: Px) -> String {
     format!("#v({})", l.pt(px))
 }
 
-/// A run of text. `body` is already escaped.
+/// Builds a run of text from `body`, which the caller has already escaped.
 fn run(l: &Layout, size: Px, weight: u16, fill: &str, body: &str) -> String {
     format!(
         "#text(size: {size}, weight: {weight}, fill: rgb(\"{fill}\"))[{body}]",
@@ -60,7 +87,7 @@ fn run(l: &Layout, size: Px, weight: u16, fill: &str, body: &str) -> String {
     )
 }
 
-/// A run of text with letter spacing — the uppercase labels.
+/// Builds a run of letter-spaced text, as the uppercase labels use, from already-escaped `body`.
 fn tracked(l: &Layout, size: Px, weight: u16, fill: &str, tracking: f64, body: &str) -> String {
     format!(
         "#text(size: {size}, weight: {weight}, fill: rgb(\"{fill}\"), tracking: {tracking}em)[{body}]",
@@ -68,12 +95,10 @@ fn tracked(l: &Layout, size: Px, weight: u16, fill: &str, tracking: f64, body: &
     )
 }
 
-/// A hairline that runs solid to `solid_until` percent of its width and fades
-/// to nothing by its right edge.
-///
-/// Typst cannot gradient-stroke a `#line`, so the rules are zero-content blocks
-/// filled with the gradient instead. sRGB interpolation, because that is what
-/// the CSS the design is written in does.
+/// Builds a hairline that runs solid to `solid_until` percent of its width and fades to nothing by
+/// its right edge.
+// Typst cannot gradient-stroke a `#line`, so the rules are zero-content blocks filled with the
+// gradient. The gradient interpolates in sRGB, because that is what the design's CSS does.
 fn fading_rule(l: &Layout, height: Px, color: &str, solid_until: u32) -> String {
     format!(
         "#block(width: 100%, height: {h}, fill: gradient.linear(space: rgb, \
@@ -85,8 +110,8 @@ fn fading_rule(l: &Layout, height: Px, color: &str, solid_until: u32) -> String 
 
 /// Builds the complete `.typ` source for one localized, single-page resume.
 ///
-/// `photo` is honored only on the German sheet; the English one never renders
-/// it, and neither sheet renders anything in its place when it is absent.
+/// `photo` is honored only on the German sheet, and neither sheet renders anything in its place
+/// when it is absent.
 pub(crate) fn build_typ(
     t: &Translations,
     l: Layout,
@@ -133,13 +158,12 @@ pub(crate) fn build_typ(
     )
 }
 
-/// Full-width header band: the QR frame, the name over its accent job title,
-/// and the availability pill pushed to the right margin — one row, centered on
-/// each other — over the accent rule that fades out to the right.
+/// Builds the full-width header band over the accent rule that fades out to the right.
 ///
-/// A plain `#grid` is enough here even though the QR sits leftmost: it is a
-/// pure vector graphic carrying no text, so the identity is still the first
-/// thing the text layer holds.
+/// The band is one row, vertically centered: the QR frame, the name over its accent job title, and
+/// the availability pill pushed to the right margin.
+// A plain `#grid` is enough here even though the QR sits leftmost: it is a pure vector graphic
+// carrying no text, so the identity is still the first thing the text layer holds.
 fn header_band(t: &Translations, l: &Layout) -> String {
     let (name_top, name_bottom) = Layout::edges(style::LH_NAME);
     let name_stack = format!(
@@ -217,18 +241,10 @@ fn header_band(t: &Translations, l: &Layout) -> String {
     )
 }
 
-/// The two columns: the wide main column on the right, the tinted sidebar on
-/// the left — with the main column *written first*.
+/// Builds the two columns, the wide main column on the right and the tinted sidebar on the left,
+/// with the main column painted first.
 ///
-/// That ordering is the point of this function. A resume parser reads the text
-/// layer in the order the page paints it, and the order this document wants is
-/// identity → summary → experience → contact → skills, which is not the order
-/// the columns sit in. A `#grid` cannot express it: cells are painted in grid
-/// position order however they are written, so the sidebar would go down first.
-/// Two `#place`d columns inside one sized block can, because `#place` paints in
-/// source order — and measuring both columns first is what gives that block the
-/// height of the taller one, so an overflowing sheet still spills onto a second
-/// page for [`fit`](crate::fit) to catch.
+/// The module documentation explains the paint order and why it needs `#place`.
 fn two_column(t: &Translations, l: &Layout, detail: Detail, photo: Option<Photo<'_>>) -> String {
     let side_w = style::SIDEBAR_W * l.scale;
     let gap = style::COL_GAP * l.scale;
@@ -266,7 +282,7 @@ fn two_column(t: &Translations, l: &Layout, detail: Detail, photo: Option<Photo<
     )
 }
 
-/// Main-column section header: uppercase accent title over the fading hairline.
+/// Builds a main-column section header: the uppercase accent title over the fading hairline.
 fn main_section(l: &Layout, title: &str) -> String {
     format!(
         "{head}\n\n{above}\n\n{rule}\n\n{below}",
@@ -284,7 +300,7 @@ fn main_section(l: &Layout, title: &str) -> String {
     )
 }
 
-/// Sidebar section header: uppercase accent title, no rule (the tint separates).
+/// Builds a sidebar section header: the uppercase accent title with no rule under it.
 fn side_section(l: &Layout, title: &str, gap: Px) -> String {
     format!(
         "{head}\n\n{gap}",
@@ -300,7 +316,7 @@ fn side_section(l: &Layout, title: &str, gap: Px) -> String {
     )
 }
 
-/// Wide main column: Summary then reverse-chronological Experience.
+/// Builds the main column: the summary, then the experience in reverse chronological order.
 fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     let (top_edge, bottom_edge) = Layout::edges(style::LH_BODY);
     let mut blocks: Vec<String> = Vec::new();
@@ -328,8 +344,8 @@ fn main_column(t: &Translations, l: &Layout, detail: Detail) -> String {
     blocks.join("\n\n")
 }
 
-/// The faint hairline in the gap between experience entries (never after the
-/// last one), with an equal band of air above and below it.
+/// Builds the faint hairline between two experience entries, with an equal band of air above and
+/// below it.
 fn entry_divider(l: &Layout) -> String {
     let band = v(l, l.sp().divider_band);
     format!(
@@ -338,10 +354,8 @@ fn entry_divider(l: &Layout) -> String {
     )
 }
 
-/// One Experience entry: the role owns line 1 with the date range right-aligned
-/// beside it; the company and location share line 2 (company in soft ink,
-/// non-breaking; location muted); then the accent `–` bullets and a `·` tech
-/// run.
+/// Builds one experience entry: the title line, the organization line, the bullets and the
+/// technology run.
 fn experience_entry(
     t: &Translations,
     l: &Layout,
@@ -359,12 +373,12 @@ fn experience_entry(
     s
 }
 
-/// The translation key of `field` on entry `e`, such as `experience.entries.<id>.role`.
+/// Returns the translation key of `field` on entry `e`, such as `experience.entries.<id>.role`.
 fn entry_key(e: &portfolio_data::Experience, field: &str) -> String {
     format!("experience.entries.{}.{field}", e.id)
 }
 
-/// Line 1: the role on the left and the date range on the right.
+/// Builds an entry's first line: the role on the left and the date range on the right.
 fn entry_title_line(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> String {
     // The date follows the title in source order so extraction reads role-then-date.
     format!(
@@ -388,7 +402,8 @@ fn entry_title_line(t: &Translations, l: &Layout, e: &portfolio_data::Experience
     )
 }
 
-/// Line 2: the company, kept whole with `#box`, then ` · ` and the location in muted ink.
+/// Builds an entry's second line: the company, kept whole with `#box`, then ` · ` and the location
+/// in muted ink.
 fn entry_org_line(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> String {
     format!(
         "\n\n{gap}\n\n#box[{org}]{loc}",
@@ -410,7 +425,8 @@ fn entry_org_line(t: &Translations, l: &Layout, e: &portfolio_data::Experience) 
     )
 }
 
-/// The first `count` bullets of `e` as a native Typst list, so the marker precedes the text.
+/// Builds the first `count` bullets of `e` as a native Typst list, so the marker precedes the
+/// text.
 fn entry_bullets(
     t: &Translations,
     l: &Layout,
@@ -442,7 +458,7 @@ fn entry_bullets(
     )
 }
 
-/// The bold `Stack:` label and the entry's technologies joined by ` · `.
+/// Builds the bold `Stack:` label followed by the entry's technologies joined by ` · `.
 fn entry_stack(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> String {
     // Explicit technology keywords (`·` run) so resume parsers pick them up.
     // The bold `Stack:` label stays in ink; the tech run is soft ink, not
@@ -467,8 +483,8 @@ fn entry_stack(t: &Translations, l: &Layout, e: &portfolio_data::Experience) -> 
     )
 }
 
-/// Tinted reference sidebar: Contact, Skills, Education, Languages — with the
-/// German sheet's optional application photo above all of them.
+/// Builds the tinted sidebar: Contact, Skills, Education and Languages, under the German sheet's
+/// optional application photo.
 fn sidebar(t: &Translations, l: &Layout, photo: Option<Photo<'_>>) -> String {
     let mut blocks: Vec<String> = Vec::new();
 
@@ -511,9 +527,10 @@ fn sidebar(t: &Translations, l: &Layout, photo: Option<Photo<'_>>) -> String {
     blocks.join("\n\n")
 }
 
-/// The German application photo, framed like a skill chip and centered over the
-/// sidebar. The frame clips the image, so a source of any aspect ratio fills the
-/// 3:4 portrait a German application expects instead of distorting into it.
+/// Builds the German application photo, framed like a skill chip and centered over the sidebar.
+///
+/// The frame clips the image, so a source of any aspect ratio fills the 3:4 portrait instead of
+/// distorting into it.
 fn photo_block(l: &Layout, photo: Photo<'_>) -> String {
     format!(
         "#align(center)[#box(stroke: {w} + rgb(\"{border}\"), radius: {radius}, \
@@ -530,7 +547,7 @@ fn photo_block(l: &Layout, photo: Photo<'_>) -> String {
     )
 }
 
-/// Strips the scheme (and `www.`) for a human-readable link label.
+/// Strips the scheme and any `www.` from `url`, for a human-readable link label.
 fn strip_scheme(url: &str) -> String {
     url.trim_start_matches("https://")
         .trim_start_matches("http://")
@@ -538,10 +555,10 @@ fn strip_scheme(url: &str) -> String {
         .to_string()
 }
 
-/// Contact block: region-level location and label-prefixed live accent links
-/// (no icons; inline SVG is unavailable in the offline Typst build). Every row
-/// is label-above-value, since the narrow sidebar can't fit a label and a long
-/// URL on one line.
+/// Builds the contact block: the region-level location and the live accent links, each under its
+/// label.
+// No icons: inline SVG is unavailable in the offline Typst build. The label sits above the value
+// because the narrow sidebar cannot fit a label and a long URL on one line.
 fn contact_block(t: &Translations, l: &Layout) -> String {
     let label = |text: &str| {
         tracked(
@@ -625,10 +642,11 @@ fn contact_block(t: &Translations, l: &Layout) -> String {
     )
 }
 
-/// Skills: per-group label on its own line, items as wrapped white chips. Each
-/// chip is an atomic `#box` separated by a real space, so the text layer stays
-/// parseable; the space is widened to the design's chip gutter and reset inside
-/// each chip, which is why a two-word skill still reads with a normal space.
+/// Builds the skills block: each group's label on its own line over its items as wrapped white
+/// chips.
+// Each chip is an atomic `#box` separated by a real space, so the text layer stays parseable. The
+// space is widened to the design's chip gutter and reset inside each chip, which is why a two-word
+// skill still reads with a normal space.
 fn skills_block(t: &Translations, l: &Layout) -> String {
     let skills = matrix_skills();
     let mut blocks: Vec<String> = Vec::new();
@@ -679,10 +697,10 @@ fn skills_block(t: &Translations, l: &Layout) -> String {
     blocks.join("\n\n")
 }
 
-/// Education: `Degree` (semibold) over `Institution` over `Years` (both muted).
-///
-/// The years get a line of their own: appended to the institution, they wrap alone onto a
-/// second line whenever the institution nearly fills the narrow sidebar.
+/// Builds the education block: each degree in semibold over its institution and years in muted
+/// ink.
+// The years get a line of their own: appended to the institution, they wrap alone onto a second
+// line whenever the institution nearly fills the narrow sidebar.
 fn education_block(t: &Translations, l: &Layout) -> String {
     let mut blocks: Vec<String> = Vec::new();
     for (i, e) in EDUCATION.iter().enumerate() {
@@ -720,7 +738,7 @@ fn education_block(t: &Translations, l: &Layout) -> String {
     blocks.join("\n\n")
 }
 
-/// Languages: `Language — Level`.
+/// Builds the languages block, one `Language — Level` row per language.
 fn languages_block(t: &Translations, l: &Layout) -> String {
     let rows: Vec<String> = [("german", "germanLevel"), ("english", "englishLevel")]
         .into_iter()
@@ -756,11 +774,10 @@ fn languages_block(t: &Translations, l: &Layout) -> String {
 
 /// Wraps every hyphenated word of already-escaped text in a `#box`, so a line never breaks at
 /// its hyphen.
-///
-/// Typst breaks after an explicit hyphen even with hyphenation off, and a PDF text extractor then
-/// joins the two halves without it: `Web-` / `Frontends` reads back as `WebFrontends`, a word an
-/// applicant tracking system does not recognize. Boxing only moves the break to the preceding
-/// space.
+// Typst breaks after an explicit hyphen even with hyphenation off, and a PDF text extractor then
+// joins the two halves without it: `Web-` / `Frontends` reads back as `WebFrontends`, a word an
+// applicant tracking system does not recognize. Boxing only moves the break to the preceding
+// space.
 fn keep_compounds(escaped: &str) -> String {
     escaped
         .split(' ')
@@ -779,6 +796,7 @@ fn keep_compounds(escaped: &str) -> String {
 mod tests {
     use portfolio_data::SITE_LANGUAGES;
     use typst::foundations::Bytes;
+    use typst::syntax::{SyntaxKind, SyntaxNode, parse};
 
     use super::*;
     use crate::world::{Asset, render};
@@ -915,5 +933,71 @@ mod tests {
         let (_, first) = render(source.clone(), &[]).unwrap_or_else(|err| panic!("{err}"));
         let (_, second) = render(source, &[]).unwrap_or_else(|err| panic!("{err}"));
         assert!(first == second, "two renders of one source differ");
+    }
+
+    /// Collects the kinds of every leaf of `node`.
+    fn leaf_kinds(node: &SyntaxNode, out: &mut Vec<SyntaxKind>) {
+        if node.children().len() == 0 {
+            out.push(node.kind());
+        }
+        for child in node.children() {
+            leaf_kinds(child, out);
+        }
+    }
+
+    #[test]
+    fn escaped_text_parses_as_plain_text_inside_a_content_block() {
+        let hostile = "C // Java /* x */ ] [ #let $a$ *b* _c_ `d` <e> @f \"g\" ~ \\";
+        let escaped = esc(hostile);
+        assert!(
+            escaped.contains(r"\/\/") && escaped.contains(r"\/\*"),
+            "{escaped}"
+        );
+        let root = parse(&format!("#box[{escaped}]"));
+        let mut kinds = Vec::new();
+        leaf_kinds(&root, &mut kinds);
+
+        let (errors, _) = root.errors_and_warnings();
+        assert!(errors.is_empty(), "{errors:?}");
+        let block = kinds
+            .iter()
+            .skip_while(|kind| **kind != SyntaxKind::LeftBracket)
+            .skip(1)
+            .take_while(|kind| **kind != SyntaxKind::RightBracket)
+            .copied()
+            .collect::<Vec<_>>();
+        assert!(
+            block.iter().all(|kind| matches!(
+                kind,
+                SyntaxKind::Text | SyntaxKind::Escape | SyntaxKind::Space
+            )),
+            "{block:?}"
+        );
+        assert_eq!(kinds.last(), Some(&SyntaxKind::RightBracket));
+    }
+
+    #[test]
+    fn line_initial_block_markers_parse_as_plain_text() {
+        let lines = "intro\n= Heading\n+ item\n- item\n  12. item\n-- dash\nC++ = fine";
+        let escaped = esc(lines);
+        let root = parse(&format!("#box[{escaped}]"));
+        let (errors, _) = root.errors_and_warnings();
+        assert!(errors.is_empty(), "{errors:?}");
+        let mut kinds = Vec::new();
+        leaf_kinds(&root, &mut kinds);
+        for marker in [
+            SyntaxKind::HeadingMarker,
+            SyntaxKind::ListMarker,
+            SyntaxKind::EnumMarker,
+        ] {
+            assert!(!kinds.contains(&marker), "{marker:?} in {escaped}");
+        }
+        assert!(escaped.contains("\n-- dash"), "{escaped}");
+        assert!(escaped.contains("C++ = fine"), "{escaped}");
+    }
+
+    #[test]
+    fn typographic_shorthands_are_kept() {
+        assert_eq!(esc("2019--2024 ... it's"), "2019--2024 ... it's");
     }
 }

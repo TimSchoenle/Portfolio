@@ -11,7 +11,7 @@
 //!
 //! To avoid hitting the GitHub API on every rebuild (and its rate limits), the
 //! existing output is reused while it is still fresh: the network fetch is
-//! skipped when `repos.json`'s `generated_at` is within the cache TTL — 10 hours
+//! skipped when `repos.json`'s `generated_at` is within the cache TTL: 10 hours
 //! on CI, 60 minutes otherwise (see [`cache`]). When the cache is stale or
 //! missing the fetch runs and the build fails if it cannot be produced.
 //!
@@ -35,8 +35,8 @@
 //! ```
 //!
 //! `CI` is read separately and deliberately stays outside that namespace: it is
-//! the CI provider's variable, not ours, and it selects the cache TTL rather
-//! than configuring the fetch.
+//! the CI provider's variable, and it selects the cache TTL instead of
+//! configuring the fetch.
 
 mod builder;
 mod cache;
@@ -53,7 +53,7 @@ use time::OffsetDateTime;
 use crate::builder::ReposBuilder;
 use crate::error::UpdateReposError;
 
-/// Where `repos.json` is committed, relative to the workspace root.
+/// The path `repos.json` is committed at, relative to the workspace root.
 const DEFAULT_OUTPUT: &str = "apps/web/repos.json";
 
 fn main() -> ExitCode {
@@ -63,7 +63,7 @@ fn main() -> ExitCode {
             eprintln!("portfolio-update-repos: {err}");
             // Only for the failure the report is about. The token this tool carries is the one
             // secret in the workspace and arrives as a mounted file, so "which layer supplied
-            // `github.token`" is the question a failed build asks — and the report answers it
+            // `github.token`" is the question a failed build asks. The report answers it
             // without printing the value, which is why it can be in CI output at all.
             if matches!(err, UpdateReposError::Config(_)) {
                 eprintln!("{}", portfolio_config::provenance());
@@ -91,7 +91,7 @@ fn run() -> Result<(), UpdateReposError> {
 
     let github = config()?.github;
     // The site's own identity is the only sensible default, and it lives in the
-    // compile-time data rather than in the config schema — a deployment that has
+    // compile-time data rather than in the config schema. A deployment that has
     // to name the user it is a portfolio *for* has bigger problems.
     let user = github
         .username()
@@ -132,11 +132,9 @@ fn run() -> Result<(), UpdateReposError> {
 }
 
 /// Reads the layered configuration.
-///
-/// A configuration error aborts the build rather than falling back to an
-/// unauthenticated fetch: silently dropping the token would turn a typo in a
-/// secret's path into an intermittent rate-limit failure much later, in a job
-/// that has nothing to do with the mistake.
+// A configuration error aborts the build instead of falling back to an unauthenticated fetch:
+// silently dropping the token would turn a typo in a secret's path into an intermittent
+// rate-limit failure much later, in a job that has nothing to do with the mistake.
 fn config() -> Result<BuilderConfig, UpdateReposError> {
     portfolio_config::load().map_err(UpdateReposError::from)
 }

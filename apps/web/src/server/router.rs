@@ -21,12 +21,12 @@ use portfolio_server::{api, cache, csp};
 use super::compression::compression_predicate;
 use super::{assets, isr, legal, seo, telemetry};
 
-/// The full application router: the Dioxus SSR/asset router with our routes and
-/// layers mounted on top. Custom routes take precedence over the SSR fallback;
-/// layers apply to every response (SSR HTML, static assets, API, SEO).
+/// Builds the full application router: the Dioxus SSR and asset router with the site's own routes
+/// and layers mounted on top.
 ///
-/// `legal` serves the JSON routes and the sitemap; `paths` is the render cache's allowlist, built
-/// once in [`super::serve::serve`] from the same catalog.
+/// The site's routes take precedence over the SSR fallback, and the layers apply to every response.
+/// `legal` serves the JSON routes and the sitemap, and `paths` is the render cache's allowlist
+/// built from the same catalog.
 pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> Router {
     let static_header = |name: HeaderName, value: &'static str| {
         SetResponseHeaderLayer::overriding(name, HeaderValue::from_static(value))
@@ -50,7 +50,7 @@ pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> R
     ));
 
     // The policy for everything that is not a document, and only where the layer
-    // above has not already set a stricter, document-specific one — hence
+    // above has not already set a stricter, document-specific one, hence
     // `if_not_present` rather than the `overriding` every other header uses.
     let app = app
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -94,7 +94,7 @@ pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> R
     // reported with its request attached. Absent entirely when Sentry is off, rather than
     // present as a no-op: a request must not pay for a feature nobody switched on.
     //
-    // Two layers, and the order between them matters — the last `.layer` call is the outermost,
+    // Two layers, and the order between them matters: the last `.layer` call is the outermost,
     // so the hub is bound first and the metadata layer below writes onto the hub it bound.
     // Mounted through `Router::layer`, which runs after routing, which is what puts the
     // `MatchedPath` extension in place for the route-named transaction.
@@ -109,14 +109,14 @@ pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> R
 /// The browser features this site never uses, switched off for it and for anything it embeds.
 const PERMISSIONS_POLICY: &str = "camera=(), microphone=(), geolocation=(), browsing-topics=()";
 
-/// The public HTTP API + SEO documents, as a standalone sub-router so it can be
-/// exercised in isolation by the integration tests below (without the SSR
-/// render machinery).
+/// Builds the public HTTP API and the SEO documents as a standalone sub-router, without the SSR
+/// render machinery.
 ///
-/// `assets` is the router's state for the readiness probe, and `legal` serves the
-/// legal JSON routes and decides which documents the sitemap lists. Both are
-/// configuration handed in rather than re-read per request, so neither can start
-/// disagreeing with the rest of the process.
+/// `assets` is the state of the readiness probe, and `legal` serves the legal JSON routes and
+/// decides which documents the sitemap lists.
+// A standalone router lets the tests below exercise it in isolation. Both arguments are
+// configuration handed in instead of re-read per request, so neither can disagree with the rest of
+// the process.
 pub(super) fn api_router(assets: AssetsConfig, legal: Legal) -> Router {
     let sitemap = axum::body::Bytes::from(seo::sitemap_xml(&legal::hosted_paths(&legal)));
     Router::new()
@@ -238,14 +238,14 @@ mod tests {
     }
 
     /// The two Sentry middlewares are mounted on the live stack in [`router`], where nothing else
-    /// in this suite reaches — that function builds the Dioxus app router, which wants a bundle on
+    /// in this suite reaches. That function builds the Dioxus app router, which wants a bundle on
     /// disk. What is worth pinning without one is that the pair is transparent: the hub layer and
     /// the request-metadata layer sit outside every handler, and a response that goes through them
     /// has to be the response the handler produced, header for header and byte for byte.
     ///
     /// That comparison only means something over a route whose answer depends on nothing but the
     /// request, hence `/api/v1/profile`: a `&'static str` rendered once at startup. The probes
-    /// cannot stand in — each stamps the current time to the millisecond, so two of their
+    /// cannot stand in: each stamps the current time to the millisecond, so two of their
     /// responses differ whenever the clock ticks between the calls, which says nothing about the
     /// layers.
     ///

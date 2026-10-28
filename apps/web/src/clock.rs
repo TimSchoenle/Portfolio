@@ -1,15 +1,15 @@
 //! Reading the wall clock, which the two build targets do differently.
 //!
 //! The "current date" is read from the JS `Date` on the wasm client and from the
-//! system clock (`time`) on the server. The two use different zones — the client
-//! reports local time, the server UTC — so around midnight, and for a few hours
+//! system clock (`time`) on the server. The two use different zones (the client
+//! reports local time, the server UTC), so around midnight, and for a few hours
 //! either side of New Year, they can disagree by a day or a year. Only the
 //! footer's copyright year, the hero's "years of experience" and the duration
-//! badges of ongoing roles are derived from them; all are cosmetic, and the worst case is that a freshly hydrated page
-//! corrects itself by one. Anything where the exact date matters must not be
-//! built on these.
+//! badges of ongoing roles are derived from them. All are cosmetic, and the worst
+//! case is that a freshly hydrated page corrects itself by one. Anything where the
+//! exact date matters must not be built on these.
 
-/// The current calendar year (e.g. `2026`).
+/// Returns the current calendar year, such as `2026`.
 pub fn current_year() -> i32 {
     #[cfg(feature = "web")]
     {
@@ -25,7 +25,7 @@ pub fn current_year() -> i32 {
     }
 }
 
-/// The current calendar month, `1..=12`.
+/// Returns the current calendar month, `1..=12`.
 pub fn current_month() -> u8 {
     #[cfg(feature = "web")]
     {

@@ -60,7 +60,9 @@ pub fn Skills() -> Element {
     }
 }
 
-/// "All" and one chip per quadrant. Choosing the active quadrant again clears the selection.
+/// Renders the "All" chip and one chip per quadrant.
+///
+/// Choosing the active quadrant again clears the selection.
 #[component]
 fn QuadrantChips(active: Signal<Option<Quadrant>>) -> Element {
     let i18n = use_i18n().i18n;
@@ -90,7 +92,8 @@ fn QuadrantChips(active: Signal<Option<Quadrant>>) -> Element {
     }
 }
 
-/// The live region naming the skill under the cursor or focus, or a hint when there is none.
+/// Renders the live region naming the skill under the cursor or focus, or a hint when there is
+/// none.
 #[component]
 fn RadarReadout(hovered: Signal<Option<Skill>>) -> Element {
     let i18n = use_i18n().i18n;
@@ -106,8 +109,9 @@ fn RadarReadout(hovered: Signal<Option<Skill>>) -> Element {
     }
 }
 
-/// One quadrant's skills as chips under a numbered heading. Hovering it makes `quadrant` the
-/// active one; it dims while another quadrant is active.
+/// Renders one quadrant's skills as chips under a numbered heading.
+///
+/// Hovering it makes `quadrant` the active one, and it dims while another quadrant is active.
 #[component]
 fn StackCategory(index: usize, quadrant: Quadrant, active: Signal<Option<Quadrant>>) -> Element {
     let i18n = use_i18n().i18n;
@@ -153,7 +157,7 @@ fn StackCategory(index: usize, quadrant: Quadrant, active: Signal<Option<Quadran
     }
 }
 
-/// The localized confidence readout for `skill`, such as `Depth 85%`.
+/// Formats the localized confidence readout for `skill`, such as `Depth 85%`.
 fn confidence_label(i18n: Signal<I18n>, skill: &Skill) -> String {
     format!(
         "{} {}%",

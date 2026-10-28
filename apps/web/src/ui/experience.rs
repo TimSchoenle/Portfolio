@@ -12,9 +12,10 @@ use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
 
-/// How many months a role lasted, counting its first and last month both, the way a resume or
-/// LinkedIn states a tenure: Oct 2021 – Jan 2023 is 16 months. An ongoing role runs to the
-/// current month.
+/// Returns how many months a role lasted, counting both its first and last month.
+///
+/// That is how a resume or LinkedIn states a tenure: Oct 2021 – Jan 2023 is 16 months. An ongoing
+/// role runs to the current month.
 fn tenure_months(start: YearMonth, end: Option<YearMonth>) -> u32 {
     let (end_year, end_month) = match end {
         Some(end) => (i32::from(end.year), end.month),
@@ -25,7 +26,7 @@ fn tenure_months(start: YearMonth, end: Option<YearMonth>) -> u32 {
     months.max(1).unsigned_abs()
 }
 
-/// The duration badge, e.g. "4y 3m", "2y" or "5m" ("4 J. 3 M." in German).
+/// Formats the duration badge, such as `4y 3m`, `2y` or `5m`, or `4 J. 3 M.` in German.
 ///
 /// `years_unit` and `months_unit` each carry an `{n}` placeholder for the count, and a zero part
 /// is left out, so a whole number of years reads as years alone.
@@ -40,8 +41,9 @@ fn duration_badge(months: u32, years_unit: &str, months_unit: &str) -> String {
         .join(" ")
 }
 
-/// Renders the accordion with the most recent role open. One row is open at a time, and clicking
-/// the open one collapses it.
+/// Renders the accordion with the most recent role open.
+///
+/// One row is open at a time, and clicking the open one collapses it.
 #[component]
 pub fn Experience() -> Element {
     let i18n = use_i18n().i18n;

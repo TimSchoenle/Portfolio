@@ -147,7 +147,7 @@ fn variables() -> Result<String, Box<dyn Error>> {
     }
 
     // Trimmed, all three of them. Each rendering ends with a newline of its own, and every
-    // template that interpolates one follows the mustache with a newline too — so an untrimmed
+    // template that interpolates one follows the mustache with a newline too, so an untrimmed
     // value is a blank line under every table and a blank line at the end of the example file.
     // Trailing whitespace is not content in any of the three, and this is the one place it can
     // be dropped for all of them.
@@ -254,7 +254,7 @@ impl Options {
 
         // A contract names the image it belongs to, and this workspace ships one: the `scratch`
         // runtime stage holding the SSR server. Its scope is decided here, not by a caller who
-        // could otherwise publish a document claiming the server reads a build-time credential —
+        // could otherwise publish a document claiming the server reads a build-time credential.
         // `github.*` belongs to `portfolio-update-repos`, which runs during the build and then
         // exits.
         let scope = if request.format().whole_image() {

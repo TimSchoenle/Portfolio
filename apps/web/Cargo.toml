@@ -12,73 +12,54 @@ portfolio-data.workspace = true
 i18nrs.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-# The legal documents' wire types, and the provider and Markdown page component that show them.
-# Both halves: they build for `wasm32` and carry no configuration loader into the bundle.
+# The legal documents' wire types and page component, which build for `wasm32` without a loader.
 terrace-legal-model.workspace = true
 terrace-legal-dioxus.workspace = true
 
-# Client-only (wasm). Gated behind the `web` feature so the native SSR binary
-# never links wasm-bindgen. Feature lists come from the workspace.
+# Client-only, behind the `web` feature, so the server never links wasm-bindgen.
 js-sys = { workspace = true, optional = true }
 web-sys = { workspace = true, optional = true }
 wasm-bindgen-futures = { workspace = true, optional = true }
-# Async delays for the reveal stagger and the contact type-in animation, run on
-# the wasm client only.
+# Delays for the reveal stagger and the contact type-in animation.
 gloo-timers = { workspace = true, optional = true }
 
-# Server-only (native SSR). Gated behind the `server` feature via `dep:` so they
-# never enter the wasm client build. Axum unifies with the version dioxus-server
+# Server-only, behind the `server` feature. Axum unifies with the version dioxus-server
 # re-exports, so layers apply to the router `dioxus::server::router` returns.
 axum = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
-# The two halves of the optional error reporting in `src/server/telemetry.rs`: the SDK, and the
-# subscriber it needs a layer on. Native SSR only — the client that would report a wasm panic is
-# a *browser* SDK loaded by the page, which is a different product, a `connect-src` in the
-# Content-Security-Policy and a line in the privacy page, so none of it is this.
+# The optional error reporting in `src/server/telemetry.rs`, server-only.
 sentry = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }
 time = { workspace = true, features = ["macros"], optional = true }
-# The release serve loop (`server::serve_until_signalled`): the runtime, the listener and the
-# `SIGTERM` handler `dioxus::serve` does not install. Already in the graph through Dioxus.
+# The release serve loop's runtime and `SIGTERM` handler, already in the graph through Dioxus.
 tokio = { workspace = true, optional = true }
-# Synchronous access to the current request during SSR (for locale negotiation).
-# Pinned to the version dioxus-fullstack re-exports.
+# The current request during SSR, for locale negotiation, pinned to dioxus-fullstack's version.
 dioxus-fullstack-core = { version = "=0.7.10", optional = true }
 http = { version = "1", optional = true }
-# The API, assets, headers and page middleware the router mounts. Server-only: it hashes response
-# bodies for the Content-Security-Policy, and its nonces need an OS CSPRNG.
+# The API, assets, headers and page middleware the router mounts.
 portfolio-server = { workspace = true, optional = true }
-# The layered configuration the SSR server boots through. Server-only: the wasm
-# client has no filesystem to read a config file or a mounted secret from.
+# The layered configuration, which the client has no filesystem to read.
 portfolio-config = { workspace = true, optional = true }
-# Serving the legal documents the configuration carries: the validated catalog and its handle,
-# and the conditional JSON routes over it. Server-only — the client receives documents, never the
-# configuration they came from.
+# The validated legal catalog and its JSON routes; the client receives documents, never their
+# configuration.
 terrace-legal = { workspace = true, optional = true }
 terrace-legal-axum = { workspace = true, optional = true }
 
 [build-dependencies]
-# Read at build time so `build.rs` embeds the resume PDFs under their canonical
-# `RESUME_FILES` names, keeping the served files in sync with the data crate.
+# `build.rs` names the embedded resume PDFs and app icons from the data crate's tables.
 portfolio-data.workspace = true
 
 [dev-dependencies]
-# `ServiceExt::oneshot` drives the API router in the server-side integration
-# tests; `#[tokio::test]` provides their runtime. Both are only referenced by
-# tests compiled under `--features server`.
+# The server tests' router driver and runtime, used under `--features server` only.
 tower.workspace = true
 tokio.workspace = true
-# `src/server/telemetry.rs` builds a `SentryConfig` with a deliberately malformed DSN, and the
-# field is a `SecretString` that only this crate can construct. A development dependency: the
-# server itself never wraps a secret, it only reads one `portfolio-config` already wrapped.
+# The telemetry tests build a `SentryConfig` with a malformed DSN, which is a `SecretString`.
 secrecy.workspace = true
 
 [features]
-# No platform by default so a bare `cargo check`/`clippy`/`test` over the
-# workspace compiles only the shared, renderer-agnostic code — it never builds
-# the wasm-only `dioxus/web` renderer on the host. `dx` selects the feature per
-# platform; manual checks pass it explicitly:
+# No platform by default, so a bare workspace `cargo check`, `clippy` or `test` compiles only the
+# renderer-agnostic code. `dx` selects the feature per platform, and manual checks pass it:
 #
 #   cargo check -p portfolio-web --no-default-features --features server
 #   cargo check -p portfolio-web --no-default-features --features web --target wasm32-unknown-unknown
@@ -92,19 +73,11 @@ web = [
 ]
 server = [
     "dioxus/server",
-    # NB: i18nrs's `dio-ssr` feature (its `#[server]` `get_cookie`/`set_cookie`
-    # round-trip) is intentionally not enabled anywhere — locale negotiation is
-    # done in `crate::i18n::detect_locale` (server) and `document.cookie`
-    # (client), so no i18nrs server endpoint exists to register here.
     "dep:axum",
     "dep:tower-http",
     "dep:portfolio-server",
     "dep:tracing",
-    # Compiled into every server build and switched on by `sentry.enabled`, rather than gated
-    # behind a Cargo feature of its own. A feature would mean an image where
-    # `PORTFOLIO_SENTRY__ENABLED=true` is accepted by the loader and does nothing — a knob that
-    # silently no-ops, which is the failure this workspace already refuses elsewhere. Off, the
-    # cost is one `if` at boot: no client, no hook, no layer, no middleware.
+    # Always compiled and switched on by `sentry.enabled`, so the key never silently no-ops.
     "dep:sentry",
     "dep:tracing-subscriber",
     "dep:time",

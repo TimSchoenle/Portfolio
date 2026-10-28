@@ -11,10 +11,10 @@ use crate::i18n::use_i18n;
 use crate::legal::{SiteText, is_hosted, use_legal_entries};
 use crate::routes::Route;
 
-/// Renders the footer. The copyright year is read from the clock at render time.
+/// Renders the footer, with the copyright year read from the clock at render time.
 ///
-/// The legal column lists every document the operator published, in their order and under their
-/// titles, followed by the site's own license inventory and colophon.
+/// The legal column lists every document the operator published, in the configured order and
+/// under the configured titles, followed by the site's license inventory and colophon.
 #[component]
 pub fn Footer() -> Element {
     let i18n = use_i18n().i18n;
@@ -67,8 +67,8 @@ pub fn Footer() -> Element {
     }
 }
 
-/// One legal document's footer link: through the router for a document this site hosts, and as
-/// a plain anchor that leaves the site for one hosted elsewhere.
+/// Renders one legal document's footer link: through the router for a document this site hosts,
+/// and as a plain anchor for one hosted elsewhere.
 fn legal_link(entry: &LegalIndexEntry, title: &str) -> Element {
     match entry.url.as_deref().filter(|_| !is_hosted(entry)) {
         Some(url) => rsx! {

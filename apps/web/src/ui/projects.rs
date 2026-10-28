@@ -13,16 +13,12 @@ use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
 
-/// Cards shown per slide window: 2 rows of the 3-column grid.
+/// The cards shown per page: two rows of the three-column grid.
 const PAGE_SIZE: usize = 6;
 
 /// The active filter chip.
-///
-/// Modelled as a type rather than a bare string so the two pseudo-filters cannot
-/// collide with a real language: the previous `String` state compared the
-/// selection against the sentinels `"Favorites"` and `"All"` *and* against
-/// `Repo::language`, so a repository whose language was literally named "All"
-/// would have silently taken over that chip.
+// A type instead of a bare string, so the two pseudo-filters cannot collide with a real language
+// named "All".
 #[derive(Clone, PartialEq)]
 enum Filter {
     /// The hand-picked `CONFIG.featured_repos`.
@@ -33,12 +29,11 @@ enum Filter {
     Language(String),
 }
 
-/// The repositories worth showing, most-starred first, and the languages found
-/// among them — derived once rather than on every render of the section.
+/// Returns the repositories worth showing, most-starred first, and the languages found among
+/// them.
 ///
-/// Forks and archived repositories are dropped here rather than at each use
-/// site, so the chip counts, the pager and the grid all agree on what "a project"
-/// is.
+/// Forks and archived repositories are dropped here, so the chip counts, the pager and the grid
+/// all agree on what "a project" is.
 fn base_lists(state: &ReposState) -> (Vec<Repo>, Vec<String>) {
     let mut repos: Vec<Repo> = state
         .repos()
@@ -57,10 +52,9 @@ fn base_lists(state: &ReposState) -> (Vec<Repo>, Vec<String>) {
 
 /// Renders the section from `state` and keeps the chosen chip and page in its own signals.
 ///
-/// Opens on [`Filter::Favorites`], and falls back to the full list when nothing featured
-/// survived the build's fetch, so the section is never empty on its own first view. A
-/// [`ReposState::Failed`] `state` says so in the status line and renders no cards: the embedded
-/// listing did not parse, so there is nothing to fall back to.
+/// It opens on [`Filter::Favorites`], which falls back to the full list when nothing featured
+/// survived the build's fetch. A [`ReposState::Failed`] `state` says so in the status line and
+/// renders no cards.
 #[component]
 pub fn Projects(state: ReposState) -> Element {
     let i18n = use_i18n().i18n;
@@ -157,7 +151,7 @@ pub fn Projects(state: ReposState) -> Element {
     }
 }
 
-/// The repositories `filter` selects, borrowed from `repos` in their order.
+/// Returns the repositories `filter` selects, borrowed from `repos` in their order.
 ///
 /// [`Filter::Favorites`] falls back to every repository when none of the featured ones survived
 /// the fetch, so the section never opens empty.
@@ -179,8 +173,9 @@ fn shown<'a>(repos: &'a [Repo], filter: &Filter) -> Vec<&'a Repo> {
     }
 }
 
-/// One chip of the single-choice filter group. Choosing it sets `filter` to `value` and returns
-/// to the first page.
+/// Renders one chip of the single-choice filter group.
+///
+/// Choosing it sets `filter` to `value` and returns to the first page.
 #[component]
 fn FilterChip(
     value: Filter,
@@ -210,7 +205,8 @@ fn FilterChip(
     }
 }
 
-/// The previous and next buttons and one dot per page. `cur` is the page shown, out of `pages`.
+/// Renders the previous and next buttons and one dot per page, with `cur` the page shown out of
+/// `pages`.
 #[component]
 fn Pager(pages: usize, cur: usize, page: Signal<usize>) -> Element {
     let i18n = use_i18n().i18n;
@@ -252,7 +248,7 @@ fn Pager(pages: usize, cur: usize, page: Signal<usize>) -> Element {
     }
 }
 
-/// One repository as a card linking to it on GitHub.
+/// Renders one repository as a card linking to it on GitHub.
 #[component]
 fn ProjectCard(repo: Repo) -> Element {
     let lang_label = repo.language.clone().unwrap_or_else(|| "—".to_string());

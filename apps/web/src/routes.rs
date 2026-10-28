@@ -11,15 +11,16 @@ use crate::ui::footer::Footer;
 use crate::ui::masthead::Masthead;
 use crate::ui::palette::CommandPalette;
 
-/// The site's routes. `#[layout(Shell)]` wraps every page in the masthead +
-/// footer chrome; the trailing catch-all renders the 404 page.
+/// The site's routes, each wrapped in the `Shell` layout, with a trailing catch-all for the 404 page.
 #[derive(Routable, Clone, PartialEq)]
 pub enum Route {
     #[layout(Shell)]
     #[route("/")]
     Home {},
-    /// A hosted legal document. Which slugs exist is configuration, so an unknown one renders
-    /// the 404 page from inside the route rather than being refused by the router.
+    /// A hosted legal document.
+    ///
+    /// Which slugs exist is configuration, so an unknown one renders the 404 page from inside the
+    /// route instead of being refused by the router.
     #[route("/legal/:slug")]
     LegalDocument { slug: String },
     #[route("/licenses")]
@@ -28,15 +29,14 @@ pub enum Route {
     NotFound { segments: Vec<String> },
 }
 
-/// Shared chrome around every page: the masthead, the routed page content
-/// (`Outlet`), the footer and (client-side) the command palette.
+/// Renders the chrome around every page: the masthead, the routed page content, the footer and,
+/// on the client, the command palette.
 ///
-/// It also resolves the legal index, because the footer on every page links each published
-/// document and those links have to be in the server render: an imprint a reader without
-/// JavaScript cannot reach is not "easily recognizable, directly accessible" (§ 5 DDG). The
-/// fetch has no reactive input, so it suspends once, on the server, and hydrates from the
-/// payload. The index is shared as context and handed to [`LegalProvider`], which the document
-/// page's component reads its adapters from.
+/// It also resolves the legal index and shares it as context and through [`LegalProvider`],
+/// because the footer on every page links each published document.
+// Those links have to be in the server render: an imprint a reader without JavaScript cannot
+// reach is not "easily recognizable, directly accessible" (§ 5 DDG). The fetch has no reactive
+// input, so it suspends once, on the server, and hydrates from the payload.
 #[component]
 fn Shell() -> Element {
     let mut palette_open = use_signal(|| false);

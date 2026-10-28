@@ -17,8 +17,9 @@ use portfolio_config::IsrConfig;
 use portfolio_server::isr_marker::locale_from_query;
 use portfolio_server::page::PagePaths;
 
-/// The routes of `crate::routes::Route` whose paths do not depend on configuration. The
-/// catch-all `NotFound` route is deliberately absent: it matches every URL there is.
+/// The routes of `crate::routes::Route` whose paths do not depend on configuration.
+///
+/// The catch-all `NotFound` route is deliberately absent, because it matches every URL there is.
 const STATIC_PAGE_PATHS: [&str; 2] = ["/", "/licenses"];
 
 /// Builds the render cache's allowlist: the fixed routes, then each hosted legal document's path.
@@ -26,20 +27,21 @@ pub(super) fn page_paths(legal: &[String]) -> PagePaths {
     PagePaths::new(&STATIC_PAGE_PATHS, legal)
 }
 
-/// Name of the sentinel that [`isr_map_path`] maps every non-cacheable route to.
+/// The name of the sentinel that [`isr_map_path`] maps every non-cacheable route to.
 ///
-/// [`ensure_uncacheable_sentinel`] creates it as a regular **file** inside the cache directory,
-/// which is what makes the opt-out work: the renderer persists a page by `create_dir_all`-ing
-/// the mapped folder and writing `index.html` into it, and neither can succeed underneath a
-/// plain file. Lookups miss for the same reason. Collapsing every such route onto one path
-/// rather than giving each its own is deliberate: a shared *cache entry* would serve one unknown
-/// URL's render (including its serialized hydration route) for a different unknown URL.
+/// [`ensure_uncacheable_sentinel`] creates it as a regular **file** inside the cache directory.
+/// The renderer persists a page by `create_dir_all`-ing the mapped folder and writing
+/// `index.html` into it, and neither can succeed underneath a plain file, so writes fail and
+/// lookups miss.
+// Every such route collapses onto one path, and it has to be a file: a shared *cache entry* would
+// serve one unknown URL's render, serialized hydration route included, for a different unknown
+// URL.
 pub(super) const ISR_UNCACHEABLE_SENTINEL: &str = ".uncacheable";
 
-/// The Dioxus SSR and asset router, and whether it came back with the incremental cache on.
+/// Builds the Dioxus SSR and asset router, and reports whether the incremental cache is on.
 ///
-/// The cache is on only when the configured directory turns out to be writable; the caller
-/// tags page requests with the negotiated language only when the flag is `true`.
+/// The cache is on only when the configured directory turns out to be writable. Tag page requests
+/// with the negotiated language only when the flag is `true`.
 pub(super) fn dioxus_app_router(isr: &IsrConfig, paths: &PagePaths) -> (Router, bool) {
     match incremental_config(isr, paths) {
         Some(cfg) => (
@@ -52,9 +54,8 @@ pub(super) fn dioxus_app_router(isr: &IsrConfig, paths: &PagePaths) -> (Router, 
     }
 }
 
-/// Builds the incremental-render configuration, or `None` when ISR is disabled (no cache
-/// directory configured) or the directory is not usable (cannot be created, or exists but is
-/// not writable).
+/// Builds the incremental-render configuration, or returns `None` when no cache directory is
+/// configured or the directory cannot be created or written.
 pub(super) fn incremental_config(
     isr: &IsrConfig,
     paths: &PagePaths,
@@ -120,8 +121,13 @@ pub(super) fn incremental_config(
     Some(config)
 }
 
-/// Ensures `dir` exists and is writable by this process: creates it (and any missing
-/// parents), then probes it with a throwaway file, which is best-effort removed afterwards.
+/// Creates `dir` and any missing parents, then probes that this process can write to it.
+///
+/// The probe file is removed afterwards on a best-effort basis.
+///
+/// # Errors
+///
+/// Returns the I/O error from creating the directory or writing the probe file.
 pub(super) fn ensure_writable_dir(dir: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(dir)?;
     let probe = dir.join(".isr-write-test");
@@ -133,9 +139,14 @@ pub(super) fn ensure_writable_dir(dir: &Path) -> std::io::Result<()> {
 /// Creates the [`ISR_UNCACHEABLE_SENTINEL`] as a regular file inside `dir`, so the renderer
 /// cannot create directories or write pages beneath it.
 ///
-/// A directory left at that path by an older build (only possible when a persistent cache
-/// volume is shared across deploys) is removed first: left in place it would turn the opt-out
-/// into a single shared cache entry, which is what the sentinel exists to prevent.
+/// A directory already at that path is removed first.
+///
+/// # Errors
+///
+/// Returns the I/O error from removing that directory or writing the file.
+// Only a persistent cache volume shared across deploys can hold such a directory, left by an
+// older build. Left in place it would turn the opt-out into a single shared cache entry, which is
+// what the sentinel exists to prevent.
 pub(super) fn ensure_uncacheable_sentinel(dir: &Path) -> std::io::Result<()> {
     let sentinel = dir.join(ISR_UNCACHEABLE_SENTINEL);
     if sentinel.is_dir() {
@@ -147,10 +158,10 @@ pub(super) fn ensure_uncacheable_sentinel(dir: &Path) -> std::io::Result<()> {
     )
 }
 
-/// Maps an incremental-cache route to its on-disk folder, mirroring Dioxus's default layout but
-/// nesting each render under its locale sub-directory. A route without the marker maps straight
-/// under `static_dir`, matching the default.
+/// Maps an incremental-cache route to its on-disk folder, nesting each render under its locale
+/// sub-directory.
 ///
+/// A route without the locale marker maps straight under `static_dir`, as Dioxus's default does.
 /// Routes outside [`PagePaths`] map to the [`ISR_UNCACHEABLE_SENTINEL`] instead, which the
 /// renderer can neither read a page from nor write one to.
 pub(super) fn isr_map_path(static_dir: &Path, route: &str, paths: &PagePaths) -> PathBuf {
@@ -171,23 +182,21 @@ pub(super) fn isr_map_path(static_dir: &Path, route: &str, paths: &PagePaths) ->
     mapped
 }
 
-/// Whether a full incremental-cache route (path plus query) addresses a page whose render may
-/// be persisted.
+/// Reports whether a full incremental-cache route, path plus query, addresses a page whose render
+/// may be persisted.
 fn is_cacheable_route(route: &str, paths: &PagePaths) -> bool {
     let (path, _) = route.split_once('?').unwrap_or((route, ""));
     paths.contains(path)
 }
 
-/// Decides whether `mapped` is about to receive a *freshly created* cache entry, and records
-/// that so the caller logs it exactly once.
+/// Reports whether `mapped` is about to receive a *freshly created* cache entry, recording the
+/// answer so the caller logs each creation exactly once.
 ///
-/// The renderer calls `map_path` twice around a creation — the cache-miss lookup, then the
-/// write — and again for every later cache hit, so the decision keys off whether a rendered
-/// `.html` already exists:
-/// * none yet, and not already announced → a new entry (`true`, remembered so the paired
-///   write call stays quiet);
-/// * one exists → the entry is live; forget any announcement so a post-TTL regeneration is
-///   reported again (`false`).
+/// It answers `true` when no rendered `.html` exists yet and the path is not already announced,
+/// and remembers the path so the paired write call stays quiet. Once a render exists it answers
+/// `false` and forgets the path, so a regeneration after the TTL is reported again.
+// The renderer calls `map_path` twice around a creation, the cache-miss lookup and then the
+// write, and again for every later cache hit, so the decision has to key off the file system.
 pub(super) fn is_new_cache_entry(announced: &Mutex<HashSet<PathBuf>>, mapped: &Path) -> bool {
     // Probed before the lock is taken, so no request waits on another's file-system call.
     let cached = has_cached_render(mapped);
@@ -202,12 +211,11 @@ pub(super) fn is_new_cache_entry(announced: &Mutex<HashSet<PathBuf>>, mapped: &P
     }
 }
 
-/// Whether `mapped` already holds a rendered page.
+/// Reports whether `mapped` already holds a rendered page, in either layout Dioxus's
+/// `FileSystemCache` writes.
 ///
-/// Dioxus's `FileSystemCache` uses two layouts depending on whether a TTL is configured, and
-/// both have to be recognized:
-/// * permanent cache (no TTL): `<mapped>/index.html`;
-/// * finite TTL: `<mapped>/index/<timestamp>.html`, so any `.html` in that directory counts.
+/// A permanent cache writes `<mapped>/index.html`. A finite TTL writes
+/// `<mapped>/index/<timestamp>.html`, so any `.html` in that directory counts.
 pub(super) fn has_cached_render(mapped: &Path) -> bool {
     if mapped.join("index.html").is_file() {
         return true;
@@ -219,8 +227,8 @@ pub(super) fn has_cached_render(mapped: &Path) -> bool {
         .any(|entry| entry.path().extension().is_some_and(|ext| ext == "html"))
 }
 
-/// Logs, at INFO, that the renderer just created a new on-disk cache entry, naming the
-/// language taken from the server-internal marker.
+/// Logs at INFO that the renderer created a new on-disk cache entry, naming the language from the
+/// locale marker.
 fn log_cache_entry_created(route: &str, mapped: &Path) {
     let (path, query) = route.split_once('?').unwrap_or((route, ""));
     let locale = locale_from_query(query).unwrap_or("default");
@@ -392,7 +400,7 @@ pub(super) mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// A path under a regular file can never be created — the one "unwritable" shape that
+    /// A path under a regular file can never be created, which is the one "unwritable" shape that
     /// reproduces on every platform (root ignores a mode-0555 directory).
     #[test]
     fn an_unusable_cache_directory_disables_isr_instead_of_failing() {

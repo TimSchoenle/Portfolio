@@ -1,9 +1,8 @@
 //! Error model for the `portfolio-update-repos` builder.
 //!
-//! A single [`UpdateReposError`] enum covers every failure mode of fetching the
-//! GitHub repositories and writing `repos.json`, so the binary's `main` can
-//! report a precise, human-readable cause and exit non-zero without leaking
-//! panics or `Box<dyn Error>` opaqueness through the public builder API.
+//! A single [`UpdateReposError`] covers every failure of fetching the GitHub repositories and
+//! writing `repos.json`, so `main` can report a precise cause and exit non-zero without a panic
+//! or an opaque `Box<dyn Error>`.
 
 use std::error::Error;
 use std::fmt;
@@ -11,16 +10,19 @@ use std::fmt;
 /// Everything that can go wrong while building `repos.json`.
 #[derive(Debug)]
 pub enum UpdateReposError {
-    /// The layered configuration could not be loaded: a value failed to parse,
-    /// a mounted file could not be read, or one key was supplied twice.
+    /// The layered configuration could not be loaded: a value failed to parse, a mounted file
+    /// could not be read, or one key was supplied twice.
     Config(portfolio_config::ConfigError),
     /// The GitHub username to query was empty.
     MissingUser,
-    /// No repositories were found to write (the user has no non-archived
-    /// repositories, or the explicitly configured set was empty).
+    /// No repository remained to write after filtering: none is unarchived, recently updated and
+    /// off the blacklist.
+    ///
+    /// Only a listing can produce it: a named repository that does not exist fails as
+    /// [`Self::Http`] instead.
     NoRepos,
-    /// An HTTP transport failure or a non-2xx response from the GitHub API
-    /// (`ureq` surfaces HTTP status codes as errors by default).
+    /// A GitHub API request failed in transport, answered with a non-2xx status, or returned a
+    /// body that could not be read or decoded.
     Http(Box<ureq::Error>),
     /// Reading or writing a file on disk failed.
     Io(std::io::Error),
@@ -38,7 +40,7 @@ impl fmt::Display for UpdateReposError {
                 "no GitHub username configured (set PORTFOLIO_GITHUB__USERNAME, or `github.username`)",
             ),
             UpdateReposError::NoRepos => f.write_str(
-                "no repositories found to write (none active, or `github.repos` named none)",
+                "no repositories remained to write after filtering out archived, stale and blacklisted ones",
             ),
             UpdateReposError::Http(e) => write!(f, "GitHub API request failed: {e}"),
             UpdateReposError::Io(e) => write!(f, "file I/O failed: {e}"),
@@ -97,7 +99,7 @@ mod tests {
     use std::io::{self, ErrorKind};
 
     /// The message has to name the key an operator would actually set, in the
-    /// dialect the loader speaks — the whole point of the migration is that
+    /// dialect the loader speaks. The whole point of the migration is that
     /// there is one spelling, so an error naming a retired variable would send
     /// them to a variable nothing reads.
     #[test]
@@ -105,6 +107,15 @@ mod tests {
         let msg = UpdateReposError::MissingUser.to_string();
         assert!(msg.contains("PORTFOLIO_GITHUB__USERNAME"), "{msg}");
         assert!(UpdateReposError::MissingUser.source().is_none());
+    }
+
+    #[test]
+    fn no_repos_names_the_filters_that_emptied_the_list() {
+        let msg = UpdateReposError::NoRepos.to_string();
+        for filter in ["archived", "stale", "blacklisted"] {
+            assert!(msg.contains(filter), "{msg}");
+        }
+        assert!(UpdateReposError::NoRepos.source().is_none());
     }
 
     #[test]
