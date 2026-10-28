@@ -2,9 +2,9 @@
 //!
 //! The Dioxus CLI pin and the Dioxus library version have to be the same release. `dx` writes
 //! the asset manifest and the hydration bootstrap that the `dioxus` crates read, so a CLI one
-//! release behind the library builds an image that compiles and fails in the browser. The two
-//! live in different files — the CLI in the `Dockerfile`, the library in `Cargo.lock` — and the
-//! install instructions repeat the CLI version twice more.
+//! release behind the library builds an image that compiles and fails in the browser. The CLI is
+//! pinned in the `Dockerfile` and the library in `Cargo.lock`. The install instructions read the
+//! `Dockerfile` pin instead of repeating it, so a Renovate bump cannot leave them stale.
 //!
 //! The Rust toolchain is named three times: `channel` in `rust-toolchain.toml`, the
 //! `rust:<version>-slim` base image in the `Dockerfile`, and `rust-version` in `Cargo.toml`.
@@ -52,15 +52,15 @@ fn the_dioxus_cli_pin_matches_the_locked_library() {
         "DIOXUS_CLI_VERSION in the Dockerfile must equal the dioxus version in Cargo.lock"
     );
 
-    let install = format!("cargo install --locked dioxus-cli --version {cli}");
+    let install = r#"cargo install --locked dioxus-cli --version "$(sed -n 's/^ARG DIOXUS_CLI_VERSION=//p' Dockerfile)""#;
     for doc in [
         "README.md",
         "CONTRIBUTING.md",
         ".github/templates/README.md.hbs",
     ] {
         assert!(
-            workspace_file(doc).contains(&install),
-            "{doc} must tell contributors to run `{install}`"
+            workspace_file(doc).contains(install),
+            "{doc} must install the Dioxus CLI with `{install}`"
         );
     }
 }
