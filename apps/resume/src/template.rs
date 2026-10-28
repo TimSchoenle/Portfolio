@@ -778,8 +778,10 @@ fn keep_compounds(escaped: &str) -> String {
 #[cfg(test)]
 mod tests {
     use portfolio_data::SITE_LANGUAGES;
+    use typst::foundations::Bytes;
 
     use super::*;
+    use crate::world::{Asset, render};
 
     const DESIGN_SIZE: Layout = Layout {
         scale: 1.0,
@@ -876,12 +878,42 @@ mod tests {
                         language.code,
                         None,
                     );
-                    let (pages, bytes) = crate::world::render(source, &[])
+                    let (pages, bytes) = render(source, &[])
                         .unwrap_or_else(|err| panic!("{}: {err}", language.code));
                     assert!(pages >= 1);
                     assert!(bytes.starts_with(b"%PDF-"));
                 }
             }
         }
+    }
+
+    /// A 1x1 PNG, the smallest image the photo frame can be compiled around.
+    const PIXEL_PNG: &[u8] = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52\
+        \x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1F\x15\xC4\x89\x00\x00\x00\x0D\
+        \x49\x44\x41\x54\x78\xDA\x63\x64\x60\xF8\x5F\x0F\x00\x02\x87\x01\x80\xEB\x47\xBA\x92\
+        \x00\x00\x00\x00\x49\x45\x4E\x44\xAE\x42\x60\x82";
+
+    #[test]
+    fn compiles_the_german_sheet_around_a_photo() {
+        let assets = [Asset {
+            name: "photo.png".to_owned(),
+            bytes: Bytes::new(PIXEL_PNG),
+        }];
+        let photo = Some(Photo {
+            file_name: &assets[0].name,
+        });
+        let source = build_typ(&translations("de"), DESIGN_SIZE, Detail::Full, "de", photo);
+        let (pages, bytes) = render(source, &assets).unwrap_or_else(|err| panic!("{err}"));
+        assert!(pages >= 1);
+        assert!(bytes.starts_with(b"%PDF-"));
+    }
+
+    /// The published fingerprints are only stable if one source always renders to the same bytes.
+    #[test]
+    fn renders_one_source_to_the_same_bytes_every_time() {
+        let source = build_typ(&translations("en"), DESIGN_SIZE, Detail::Full, "en", None);
+        let (_, first) = render(source.clone(), &[]).unwrap_or_else(|err| panic!("{err}"));
+        let (_, second) = render(source, &[]).unwrap_or_else(|err| panic!("{err}"));
+        assert!(first == second, "two renders of one source differ");
     }
 }

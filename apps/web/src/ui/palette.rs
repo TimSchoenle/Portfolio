@@ -572,17 +572,26 @@ mod tests {
         }
 
         #[test]
-        fn offers_every_section_then_the_licenses_page() {
+        fn offers_every_section_in_order_then_the_licenses_page() {
             let html = entries_html();
             let nav = text("en", "palette.groupNav");
-            for (slug, key) in SECTIONS {
-                let line = format!("{nav}|{}|§ {}|", text("en", key), section_num(slug));
-                assert!(html.contains(&line), "{line} missing");
-            }
-            assert!(html.contains(&format!(
+            let position = |line: &str| html.find(line).unwrap_or_else(|| panic!("{line} missing"));
+            let sections: Vec<usize> = SECTIONS
+                .iter()
+                .map(|(slug, key)| {
+                    position(&format!(
+                        "{nav}|{}|§ {}|",
+                        text("en", key),
+                        section_num(slug)
+                    ))
+                })
+                .collect();
+            let licenses = position(&format!(
                 "{nav}|{}|/licenses|",
                 text("en", "palette.licenses")
-            )));
+            ));
+            assert!(sections.is_sorted(), "sections out of order: {sections:?}");
+            assert!(sections.iter().all(|&section| section < licenses));
         }
 
         #[test]
