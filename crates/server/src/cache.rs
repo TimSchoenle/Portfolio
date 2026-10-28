@@ -75,7 +75,7 @@ fn has_extension(path: &str, ext: &str) -> bool {
 }
 
 /// Reports whether the path's file name carries a `dx`/manganis content hash: a `dxh`-prefixed
-/// hex segment of any length at the end of the stem, as in `tailwind-dxh31cffa1cc71c7bb.css`.
+/// segment of 1 to 16 hex digits at the end of the stem, as in `tailwind-dxh31cffa1cc71c7bb.css`.
 // manganis renders the 64-bit asset hash as plain hex, so a hash with leading zero nibbles is
 // written short: one real `dx bundle` produced a 16-digit `.js` and a 15-digit `.wasm` side by
 // side. Requiring exactly 16 left the wasm binary and the stylesheet revalidated on every visit.

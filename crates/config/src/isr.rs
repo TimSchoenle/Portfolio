@@ -30,9 +30,10 @@ pub struct IsrConfig {
     /// The revalidation interval in seconds. Zero means a permanent cache.
     ///
     /// A page changes only with a new build or a new `legal.*` configuration, and the server keeps
-    /// whatever the directory holds at boot. Permanent suits the image's default, a directory that
-    /// starts empty with every container. A cache volume that outlives a deploy needs a positive
-    /// value, or it keeps serving pages rendered by the earlier build or configuration.
+    /// whatever the directory holds at boot. Permanent suits a directory that starts empty with
+    /// every pod. A container restart inside the same pod keeps the mount and its pages, so a
+    /// `legal.*` change applied by a restart needs a positive value, a cleared directory or a new
+    /// pod. A cache volume that outlives a deploy needs a positive value for the same reason.
     #[cfg_attr(feature = "config-schema", config(note = "permanent"))]
     #[serde(default)]
     pub ttl_secs: u64,
