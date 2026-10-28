@@ -64,7 +64,7 @@ if (
   !existsSync(join(webRoot, "generated", "resume-fingerprint.json")) ||
   !existsSync(join(webRoot, "generated", "icon-512.png"))
 ) {
-  run("cargo", ["run", "--profile", "tools", "-p", "resume-generator", "--", "apps/web/generated"], {
+  run("cargo", ["run", "--profile", "tools", "-p", "portfolio-resume", "--", "apps/web/generated"], {
     cwd: repoRoot,
   });
 }

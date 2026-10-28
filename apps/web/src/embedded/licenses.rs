@@ -1,10 +1,8 @@
-//! The third-party license inventory, embedded into the binary at build time.
+//! The third-party license inventory behind the `/licenses` page.
 //!
 //! `cargo about generate` writes `generated/licenses.json` from `about.toml` and
-//! `about.hbs`; `build.rs` copies it into `OUT_DIR` (or writes an empty default
-//! when absent), so the include below always resolves. The `/licenses` route
-//! renders it — server-side like every other page, from the same artifact that
-//! carries the dependencies it names.
+//! `about.hbs`. The `/licenses` route renders it server-side like every other page,
+//! from the same artifact that carries the dependencies it names.
 
 use std::sync::LazyLock;
 
@@ -19,29 +17,46 @@ const LICENSES_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/licenses.jso
 /// megabyte of license text, and on the server `App` mounts once per render, so
 /// every incremental-cache miss would otherwise re-parse the whole document.
 ///
-/// Borrowed, not shared through an `Arc` the way `github::REPOS` is: the repo
-/// list lives in a Dioxus context that several components clone out of, whereas
+/// Borrowed, not shared through an `Arc` the way [`super::repos`] shares the repository
+/// list: the repo list lives in a Dioxus context that several components clone out of, whereas
 /// this has exactly one reader and a `LazyLock` hands it a `&'static` for free.
 ///
 /// The two ways to have nothing — an absent generator run (`build.rs` embedded
 /// the empty default) and a document that failed to parse — collapse into one
 /// `None` on purpose: the page says the same thing either way, and only the
 /// second is worth a console warning.
-static LICENSES: LazyLock<Option<LicensesFile>> =
-    LazyLock::new(
-        || match serde_json::from_str::<LicensesFile>(LICENSES_JSON) {
-            Ok(file) if !file.is_empty() => Some(file),
-            Ok(_) => None,
-            Err(err) => {
-                crate::util::console_warn(format_args!("licenses.json parse failed: {err}"));
-                None
-            }
-        },
-    );
+static LICENSES: LazyLock<Option<LicensesFile>> = LazyLock::new(|| parse(LICENSES_JSON));
+
+/// Parses an inventory; `None` when it lists no third-party crate or does not parse.
+fn parse(json: &str) -> Option<LicensesFile> {
+    match serde_json::from_str::<LicensesFile>(json) {
+        Ok(file) if !file.is_empty() => Some(file),
+        Ok(_) => None,
+        Err(err) => {
+            crate::console::warn(format_args!("licenses.json parse failed: {err}"));
+            None
+        }
+    }
+}
 
 /// The embedded inventory, or `None` when this build carries none. Resolves
 /// identically on the server (SSR) and the wasm client, so the rendered page
 /// matches across hydration.
 pub fn load_licenses() -> Option<&'static LicensesFile> {
     LICENSES.as_ref()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse;
+
+    #[test]
+    fn the_empty_default_is_none() {
+        assert!(parse(r#"{"summary":[],"texts":[],"crates":[]}"#).is_none());
+    }
+
+    #[test]
+    fn a_malformed_inventory_is_none() {
+        assert!(parse("{").is_none());
+    }
 }

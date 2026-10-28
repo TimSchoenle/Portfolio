@@ -54,7 +54,7 @@ impl LicensesFile {
     /// attributes.
     ///
     /// A crate resolved from a registry or a git remote carries a `source`; one
-    /// resolved from a path — this repository's own `web`, `portfolio-data` and
+    /// resolved from a path — this repository's own `portfolio-web`, `portfolio-data` and
     /// `portfolio-config` — does not. That is the whole test, and it is done here
     /// rather than by naming those three in `about.toml`: a fourth crate in this
     /// workspace then needs no configuration change to stay off a page about
@@ -232,7 +232,7 @@ mod tests {
     fn path_dependencies_are_not_third_party() {
         let parsed: LicensesFile = serde_json::from_str(
             r#"{"summary":[],"texts":[],"crates":[
-                {"name":"web","version":"2.6.0","license":"Unknown","source":null},
+                {"name":"portfolio-web","version":"2.6.0","license":"Unknown","source":null},
                 {"name":"anyhow","version":"1.0.0","license":"MIT",
                  "source":"registry+https://github.com/rust-lang/crates.io-index"},
                 {"name":"terrace-config","version":"0.9.0","license":"MIT",
@@ -261,7 +261,7 @@ mod tests {
                   {"name":"a","version":"1.0.0","license":"MIT","source":"registry+x"},
                   {"name":"b","version":"2.0.0","license":"MIT AND ISC","source":"registry+x"},
                   {"name":"c","version":"3.0.0","license":"MIT","source":"registry+x"},
-                  {"name":"web","version":"2.6.0","license":"Unknown"}]}"#,
+                  {"name":"portfolio-web","version":"2.6.0","license":"Unknown"}]}"#,
         )
         .expect("valid");
 
@@ -296,7 +296,7 @@ mod tests {
     fn an_inventory_of_only_path_dependencies_is_empty() {
         let parsed: LicensesFile = serde_json::from_str(
             r#"{"summary":[],"texts":[],
-                "crates":[{"name":"web","version":"2.6.0","license":"Unknown"}]}"#,
+                "crates":[{"name":"portfolio-web","version":"2.6.0","license":"Unknown"}]}"#,
         )
         .expect("valid");
 

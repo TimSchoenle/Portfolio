@@ -42,8 +42,8 @@ const LEGAL: &str = "legal";
 /// Whose configuration to describe.
 ///
 /// One flat table of every key says that a deployment needs a GitHub token. It does not:
-/// `github.*` belongs to `update-repos`, a build-time tool that exits during the image build, and
-/// the SSR server never loads it. The scopes are split the way the binaries are.
+/// `github.*` belongs to `portfolio-update-repos`, a build-time tool that exits during the image
+/// build, and the SSR server never loads it. The scopes are split the way the binaries are.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Scope {
     /// Every key in the workspace.
@@ -51,7 +51,7 @@ pub enum Scope {
     /// The keys the SSR server loads. The only scope a contract describes: the runtime image
     /// holds the server and nothing else.
     Server,
-    /// The keys the `update-repos` builder loads.
+    /// The keys the `portfolio-update-repos` builder loads.
     Builder,
 }
 
@@ -170,7 +170,7 @@ pub fn external() -> External {
                 .owner("tracing")
                 .ty("String")
                 .default("info")
-                .docs("Verbosity, as `tracing` directives — `info`, `web=debug,info`."),
+                .docs("Verbosity, as `tracing` directives — `info`, `portfolio_web=debug,info`."),
         )
         // What a pod carries that no image asked for, which `Unknown::Reject` names: the API
         // server's five, and the container runtime's one. An image on `scratch` contributes none
@@ -188,7 +188,7 @@ fn server() -> Result<Schema, ConfigError> {
         .with_defaults_from(&ServerConfig::default())
 }
 
-/// The keys the `update-repos` builder loads, with the defaults it starts from.
+/// The keys the `portfolio-update-repos` builder loads, with the defaults it starts from.
 fn builder() -> Result<Schema, ConfigError> {
     crate::terrace()
         .schema::<BuilderConfig>()

@@ -1,4 +1,4 @@
-//! Error model for the `update-repos` builder.
+//! Error model for the `portfolio-update-repos` builder.
 //!
 //! A single [`UpdateReposError`] enum covers every failure mode of fetching the
 //! GitHub repositories and writing `repos.json`, so the binary's `main` can

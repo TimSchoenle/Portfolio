@@ -191,7 +191,7 @@ jobs:
       # renders both, so a link that only resolves when the server feature is on never fails the
       # run above. This is the shape the wasm client is actually built in.
       - name: Build the documentation without the server feature
-        run: cargo doc -p web --no-default-features --features web --no-deps
+        run: cargo doc -p portfolio-web --no-default-features --features web --no-deps
 
       - name: Run the doctests
         run: cargo test --workspace --doc --all-features
@@ -359,10 +359,10 @@ jobs:
           components: clippy
 
       - name: Clippy, server only
-        run: cargo clippy -p web --no-default-features --features server --all-targets -- -D warnings
+        run: cargo clippy -p portfolio-web --no-default-features --features server --all-targets -- -D warnings
 
       - name: Clippy, wasm client only
-        run: cargo clippy -p web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
+        run: cargo clippy -p portfolio-web --no-default-features --features web --target wasm32-unknown-unknown -- -D warnings
 
   docker-build-test:
     name: Docker Build and Test (${{ matrix.platform }})
@@ -455,7 +455,7 @@ jobs:
           push: false
           load: true
           tags: image:test
-          # The update-repos step regenerates repos.json from the GitHub API
+          # The portfolio-update-repos step regenerates repos.json from the GitHub API
           # during the Docker build; the token lifts the API rate limit.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}

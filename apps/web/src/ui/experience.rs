@@ -6,11 +6,11 @@ use std::rc::Rc;
 use dioxus::prelude::*;
 use portfolio_data::{YearMonth, experiences_sorted, format_period_years};
 
+use crate::clock::{current_month, current_year};
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_label};
 use crate::ui::reveal::Reveal;
 use crate::ui::section_header::SectionHeader;
-use crate::util::{current_month, current_year};
 
 /// How many months a role lasted, counting its first and last month both, the way a resume or
 /// LinkedIn states a tenure: Oct 2021 – Jan 2023 is 16 months. An ongoing role runs to the

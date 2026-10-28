@@ -1,7 +1,7 @@
 //! `/licenses` — the third-party attribution page.
 //!
 //! Rendered from the inventory `cargo about` produced for *this* build (see
-//! [`crate::licenses`]), so what the page claims and what the binary links are
+//! [`crate::embedded::licenses`]), so what the page claims and what the binary links are
 //! the same fact. Nothing here is fetched at runtime and nothing is
 //! hand-maintained: adding a dependency changes this page on the next build.
 //!
@@ -13,8 +13,8 @@
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, licenses::LicensesFile};
 
+use crate::embedded::licenses::load_licenses;
 use crate::i18n::use_i18n;
-use crate::licenses::load_licenses;
 use crate::routes::Route;
 use crate::ui::canonical::Canonical;
 

@@ -7,7 +7,7 @@
   "packages": {
     ".": {
       "exclude-paths": [".github"],
-      "package-name": "portfolio-workspace",
+      "package-name": "portfolio-platform",
       "draft": false,
       "prerelease": false,
       "changelog-path": "CHANGELOG.md"

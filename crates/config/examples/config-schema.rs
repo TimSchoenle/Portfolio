@@ -255,7 +255,8 @@ impl Options {
         // A contract names the image it belongs to, and this workspace ships one: the `scratch`
         // runtime stage holding the SSR server. Its scope is decided here, not by a caller who
         // could otherwise publish a document claiming the server reads a build-time credential —
-        // `github.*` belongs to `update-repos`, which runs during the build and then exits.
+        // `github.*` belongs to `portfolio-update-repos`, which runs during the build and then
+        // exits.
         let scope = if request.format().whole_image() {
             if scope.is_some() {
                 return Err(usage(&format!(

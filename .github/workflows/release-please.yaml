@@ -120,7 +120,7 @@ jobs:
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # gh_token lifts the GitHub API rate limit for the update-repos step
+          # gh_token lifts the GitHub API rate limit for the portfolio-update-repos step
           # that runs during the Docker build.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}

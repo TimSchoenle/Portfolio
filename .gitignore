@@ -5,7 +5,7 @@
 /target/
 
 # Cargo.lock IS committed on purpose: this workspace ships applications
-# (the `web` wasm client + native SSR server, `resume-generator`), so a locked
+# (`portfolio-web`, the wasm client and native SSR server, and `portfolio-resume`), so a locked
 # dependency graph is required for reproducible builds and `cargo audit`.
 # Do NOT add Cargo.lock here.
 
@@ -17,13 +17,13 @@
 # dx / Dioxus web build
 # ---------------------------------------------------------------------------
 # dx bundle output (apps/web/dist and the shared target/dx/) — also holds the
-# generated resume PDFs and resume-fingerprint.json from the resume-generator.
+# generated resume PDFs and resume-fingerprint.json from portfolio-resume.
 dist/
 
 # Note: apps/web/repos.json is generated during the image build by
-# `update-repos` and embedded by apps/web/build.rs. It is deliberately NOT
+# `portfolio-update-repos` and embedded by apps/web/build.rs. It is deliberately NOT
 # tracked — the build fetches it fresh — so nothing here ignores it either; a
-# local copy from `cargo run -p update-repos` is meant to be committed only if
+# local copy from `cargo run -p portfolio-update-repos` is meant to be committed only if
 # you intend to pin the list.
 
 # ---------------------------------------------------------------------------

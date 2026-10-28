@@ -85,7 +85,7 @@ cargo run -p portfolio-config --features config-schema --example config-schema \
 cargo run -p portfolio-config --features config-schema --example config-schema
 ```
 
-The split is deliberate: `github.*` is read only by the build-time `update-repos` tool, and one
+The split is deliberate: `github.*` is read only by the build-time `portfolio-update-repos` tool, and one
 flat table would tell an operator their deployment needs a GitHub token. It does not.
 
 Document fields the way rustdoc asks: a summary sentence, a blank line, then as much reasoning as

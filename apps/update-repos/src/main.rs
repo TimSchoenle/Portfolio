@@ -17,7 +17,7 @@
 //!
 //! Usage:
 //! ```text
-//! update-repos [OUTPUT_PATH]      # default: apps/web/repos.json
+//! portfolio-update-repos [OUTPUT_PATH]      # default: apps/web/repos.json
 //! ```
 //!
 //! Configuration is layered (see `portfolio_config`); the keys this binary reads
@@ -60,7 +60,7 @@ fn main() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
-            eprintln!("update-repos: {err}");
+            eprintln!("portfolio-update-repos: {err}");
             // Only for the failure the report is about. The token this tool carries is the one
             // secret in the workspace and arrives as a mounted file, so "which layer supplied
             // `github.token`" is the question a failed build asks — and the report answers it
@@ -82,7 +82,7 @@ fn run() -> Result<(), UpdateReposError> {
     let ttl = cache::ttl_for_env();
     if cache::is_cached_fresh(&output, OffsetDateTime::now_utc(), ttl) {
         println!(
-            "update-repos: {} is still fresh (within {} min); skipping fetch",
+            "portfolio-update-repos: {} is still fresh (within {} min); skipping fetch",
             output.display(),
             ttl.whole_minutes()
         );
@@ -123,7 +123,7 @@ fn run() -> Result<(), UpdateReposError> {
     fs::write(&output, format!("{json}\n"))?;
 
     println!(
-        "update-repos: wrote {} repos for {} to {}",
+        "portfolio-update-repos: wrote {} repos for {} to {}",
         repos.repos.len(),
         repos.user,
         output.display()

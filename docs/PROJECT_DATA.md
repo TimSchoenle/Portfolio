@@ -11,7 +11,7 @@ projects section renders its empty state.
 
 ```bash
 PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
-  cargo run --release -p update-repos -- apps/web/repos.json
+  cargo run --release -p portfolio-update-repos -- apps/web/repos.json
 ```
 
 Without a token it still runs, against the anonymous rate limit. The token exists only to lift that
@@ -35,7 +35,7 @@ An explicit set bypasses the listing and its filtering, and each named repositor
 directly:
 
 ```bash
-PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p update-repos
+PORTFOLIO_GITHUB__REPOS='[Portfolio,actions]' cargo run --release -p portfolio-update-repos
 ```
 
 The bracketed array is figment's syntax, so the environment spelling and the TOML spelling stay the

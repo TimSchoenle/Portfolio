@@ -9,15 +9,6 @@
 //! corrects itself by one. Anything where the exact date matters must not be
 //! built on these.
 
-/// Reports a recoverable problem on the browser console. A no-op outside the wasm client,
-/// where the server's own logging covers the same data at start-up.
-pub fn console_warn(message: std::fmt::Arguments<'_>) {
-    #[cfg(feature = "web")]
-    web_sys::console::warn_1(&message.to_string().into());
-    #[cfg(not(feature = "web"))]
-    let _ = message;
-}
-
 /// The current calendar year (e.g. `2026`).
 pub fn current_year() -> i32 {
     #[cfg(feature = "web")]

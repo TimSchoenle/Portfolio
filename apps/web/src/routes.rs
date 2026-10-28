@@ -3,7 +3,7 @@
 use dioxus::prelude::*;
 use terrace_legal_dioxus::{LegalProvider, Shared, SharedTransport};
 
-use crate::github::ReposState;
+use crate::embedded::repos::ReposState;
 use crate::i18n::use_i18n;
 use crate::legal::{LegalIndexes, SiteRouting, SiteSkin, SiteText, SiteTransport, legal_indexes};
 use crate::pages::{Home, LegalDocument, Licenses, NotFound};

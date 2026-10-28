@@ -1,8 +1,10 @@
 [package]
-name = "web"
+name = "portfolio-web"
 version = "3.2.0"
 edition.workspace = true
 publish.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
 
 [dependencies]
 dioxus.workspace = true
@@ -79,8 +81,8 @@ secrecy.workspace = true
 # the wasm-only `dioxus/web` renderer on the host. `dx` selects the feature per
 # platform; manual checks pass it explicitly:
 #
-#   cargo check -p web --no-default-features --features server
-#   cargo check -p web --no-default-features --features web --target wasm32-unknown-unknown
+#   cargo check -p portfolio-web --no-default-features --features server
+#   cargo check -p portfolio-web --no-default-features --features web --target wasm32-unknown-unknown
 default = []
 web = [
     "dioxus/web",

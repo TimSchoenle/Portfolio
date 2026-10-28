@@ -10,7 +10,7 @@
 # `*.toml` fragments — merged in sorted order, which is what lets a Kubernetes ConfigMap
 # and a Secret land side by side:
 #
-#   PORTFOLIO_CONFIG=./config.toml cargo run -p web --features server
+#   PORTFOLIO_CONFIG=./config.toml cargo run -p portfolio-web --features server
 #
 # Every optional key is commented out at the value it already has; uncomment one only to
 # change it. A key marked "Required" has no default and is left uncommented as a placeholder

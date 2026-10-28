@@ -37,7 +37,7 @@ fileExistenceTests:
     shouldExist: true
 
   # The client bundle (wasm loader JS + the wasm binary) is emitted by dx under
-  # public/assets/ with content-hashed names (e.g. assets/web-dx<hash>.js), so
+  # public/assets/ with content-hashed names (e.g. assets/portfolio-web-dx<hash>.js), so
   # the individual file names are not predictable; assert the directory instead.
   - name: public assets directory present
     path: /app/public/assets
@@ -46,8 +46,8 @@ fileExistenceTests:
 fileContentTests:
   # The content-hashed manganis asset names are not predictable, but the served
   # index.html always references the dx-injected wasm bundle loader under
-  # assets/ (e.g. /./assets/web-dx<hash>.js).
+  # assets/ (e.g. /./assets/portfolio-web-dx<hash>.js).
   - name: index.html references the wasm bundle
     path: /app/public/index.html
     expectedContents:
-      - 'assets/web-dx[0-9a-z]+\.js'
+      - 'assets/portfolio-web-dx[0-9a-z]+\.js'

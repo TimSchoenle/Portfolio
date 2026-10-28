@@ -7,9 +7,9 @@
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, EXPERIENCE};
 
+use crate::clock::{current_month, current_year};
 use crate::i18n::use_i18n;
 use crate::sections::{section_id, section_label, section_num};
-use crate::util::{current_month, current_year};
 
 /// Full years since the earliest experience entry, e.g. 7 -> "7+".
 fn years_of_experience() -> u32 {

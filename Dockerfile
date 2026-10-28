@@ -127,8 +127,8 @@ RUN cargo chef prepare --recipe-path recipe.json
 # downloaded the rest itself into a 540 MB layer that changed with every commit.
 FROM tools AS deps
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --locked --profile tools -p update-repos --recipe-path recipe.json \
-    && cargo chef cook --locked --profile tools -p resume-generator --recipe-path recipe.json \
+RUN cargo chef cook --locked --profile tools -p portfolio-update-repos --recipe-path recipe.json \
+    && cargo chef cook --locked --profile tools -p portfolio-resume --recipe-path recipe.json \
     && cargo chef cook --locked -p portfolio-config --features config-schema --examples \
          --recipe-path recipe.json \
     && cargo fetch --locked
@@ -148,7 +148,7 @@ COPY . .
 # exported when it actually exists — pointing the indirection at a missing file
 # is an error, and correctly so.
 #
-# The cache mount is what makes `CI=1` mean anything. `update-repos` skips the
+# The cache mount is what makes `CI=1` mean anything. `portfolio-update-repos` skips the
 # fetch entirely when its output file is still fresh (ten hours on CI, see
 # apps/update-repos/src/cache.rs) — but repos.json is not committed, so every
 # build started from nothing and the freshness check could never hit. Carrying
@@ -163,7 +163,7 @@ RUN --mount=type=secret,id=gh_token \
       export PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token; \
     fi; \
     cp /repos-cache/repos.json apps/web/repos.json 2>/dev/null || true; \
-    CI=1 cargo run --profile tools --locked -p update-repos -- apps/web/repos.json \
+    CI=1 cargo run --profile tools --locked -p portfolio-update-repos -- apps/web/repos.json \
     && cp apps/web/repos.json /repos-cache/repos.json
 # The third-party license inventory, embedded by build.rs and rendered by the
 # `/licenses` route. Runs here rather than being committed for the same reason
@@ -202,7 +202,7 @@ RUN mkdir -p apps/web/generated \
 # The generator reads the format from the file's own header, so the mount having
 # no extension is fine.
 RUN --mount=type=secret,id=resume_photo \
-    cargo run --profile tools --locked -p resume-generator -- /app/resume-out \
+    cargo run --profile tools --locked -p portfolio-resume -- /app/resume-out \
       $(test -s /run/secrets/resume_photo && echo "--photo /run/secrets/resume_photo") \
     && mkdir -p apps/web/generated/resume \
     && cp /app/resume-out/resume/*.pdf apps/web/generated/resume/ \
@@ -255,11 +255,11 @@ ENV CC_x86_64_unknown_linux_musl=musl-gcc \
 # dependencies under `dx bundle`.
 RUN RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \
     cargo chef cook --locked --profile wasm-release --target wasm32-unknown-unknown \
-      --no-default-features --features web -p web --recipe-path recipe.json \
+      --no-default-features --features web -p portfolio-web --recipe-path recipe.json \
     && CARGO_PROFILE_SERVER_RELEASE_INHERITS=release \
     CARGO_PROFILE_SERVER_RELEASE_STRIP=false \
     cargo chef cook --locked --profile server-release --target "$(cat /etc/rust-target)" \
-      --no-default-features --features server -p web --recipe-path recipe.json
+      --no-default-features --features server -p portfolio-web --recipe-path recipe.json
 
 # The Tailwind toolchain, installed from the committed lockfile alone so the layer survives every
 # commit that does not touch it. Installed after `COPY . .` in `web-builder` it was re-downloaded
@@ -281,7 +281,7 @@ WORKDIR /app/apps/web
 # `build:css` compiles Tailwind (scanning the .rs files) into assets/tailwind.css,
 # which the app links via manganis `asset!`. Its toolchain was installed in `web-deps`.
 RUN npm run build:css
-# Produces <target>/dx/web/release/web/{server, public/} — the server binary plus
+# Produces <target>/dx/portfolio-web/release/web/{server, public/} — the server binary plus
 # the hashed client assets (the /resume PDFs are embedded, not bundled). The client stays wasm
 # while `@server --target …-musl` cross-links the SSR server fully static
 # (ring/rustls, no glibc), so it can run on `scratch`. Passing `--target`
@@ -310,7 +310,7 @@ RUN RUSTUP_AUTO_INSTALL=0 dx bundle --release \
     @client --platform web --debug-symbols=false \
     @server --platform server --target "$(cat /etc/rust-target)" \
     && mkdir -p /out \
-    && cp -r /cargo-target/dx/web/release/web /out/web \
+    && cp -r /cargo-target/dx/portfolio-web/release/web /out/web \
     && rm -rf /cargo-target /root/.local/share/.dx
 # An empty, staged ISR cache directory. The `scratch` runtime has no shell to
 # `mkdir` with and its non-root user cannot create directories under `/`, so the

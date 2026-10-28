@@ -162,7 +162,7 @@ expect_header /og-image.png content-type image/png
 expect_body_contains / '<meta content="image/png" property="og:image:type"/>'
 
 # The hashed client bundle is immutable for a year.
-bundle=$(grep -oE '/\./assets/web-dxh[0-9a-f]+\.js' <<<"$(curl -fsS "$base/" || true)" \
+bundle=$(grep -oE '/\./assets/portfolio-web-dxh[0-9a-f]+\.js' <<<"$(curl -fsS "$base/" || true)" \
   | head -1 | sed 's|^/\.||')
 if [ -n "$bundle" ]; then
   expect_header "$bundle" cache-control 'public, max-age=31536000, immutable'

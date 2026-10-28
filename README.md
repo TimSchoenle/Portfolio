@@ -168,7 +168,7 @@ Refresh the project list from the GitHub API:
 
 ```bash
 PORTFOLIO_GITHUB__TOKEN_FILE=/run/secrets/gh_token \
-  cargo run --release -p update-repos -- apps/web/repos.json
+  cargo run --release -p portfolio-update-repos -- apps/web/repos.json
 ```
 
 Without a token the run still works, against the anonymous rate limit.
@@ -233,7 +233,7 @@ environment spelling also accepts a `_FILE` suffix naming a file that holds the 
 
 ### Builder
 
-What `update-repos` loads. It runs during the image build and exits. The server never reads these
+What `portfolio-update-repos` loads. It runs during the image build and exits. The server never reads these
 keys, so a deployment needs no GitHub token. That is why there are two tables and not one.
 
 | TOML | Type | Environment | Default | Flags | Purpose |
@@ -247,7 +247,7 @@ environment variable: `/proc/<pid>/environ`, a crash dump and `docker inspect` a
 environment, and child processes inherit it.
 
 `github.token` is the builder's, and the Docker build already mounts it as a
-BuildKit secret and hands `update-repos` the path. `sentry.dsn` is the server's, read
+BuildKit secret and hands `portfolio-update-repos` the path. `sentry.dsn` is the server's, read
 only when error reporting is switched on — supply it as `PORTFOLIO_SENTRY__DSN_FILE=/path`, or as
 `sentry__dsn` in a mounted `Secret` volume.
 
@@ -334,4 +334,4 @@ and the supported versions.
 `LicenseRef-Proprietary`. Viewing the source and running it locally for personal, non-commercial
 evaluation is granted. Copying, modifying, redistributing, deploying and training on it are not.
 [LICENSE](LICENSE) has the terms. The bundled fonts keep their own: Inter and Liberation Sans are
-both under the SIL Open Font License, in `apps/resume-generator/fonts/`.
+both under the SIL Open Font License, in `apps/resume/fonts/`.

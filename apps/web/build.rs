@@ -1,9 +1,9 @@
 //! Embeds the build-time generated data into the binary: `repos.json`, `licenses.json`,
 //! `resume-fingerprint.json`, the resume PDFs, the Open Graph card and the app icons.
 //!
-//! `repos.json` comes from the `update-repos` crate, `licenses.json` from `cargo about` (see
-//! `about.toml`) and everything else from the resume generator. Each is copied into `OUT_DIR`,
-//! where `src/github.rs`, `src/licenses.rs` and `src/server/assets.rs` include it; the resume
+//! `repos.json` comes from the `portfolio-update-repos` crate, `licenses.json` from `cargo about`
+//! (see `about.toml`) and everything else from the resume generator. Each is copied into `OUT_DIR`,
+//! where `src/embedded/` and `src/server/assets.rs` include it; the resume
 //! PDFs and the icons are additionally listed in generated Rust tables (`resumes.rs`,
 //! `app_icons.rs`) so the server serves exactly what the data crate publishes.
 //!
@@ -118,13 +118,13 @@ fn main() {
         "generated/resume-fingerprint.json",
         "resume-fingerprint.json",
         EMPTY_MANIFEST.as_bytes(),
-        "resume-generator",
+        "portfolio-resume",
     );
     embedder.embed(
         "repos.json",
         "repos.json",
         EMPTY_REPOS.as_bytes(),
-        "update-repos",
+        "portfolio-update-repos",
     );
     // The attribution a build publishes has to be the attribution for the dependency set that
     // build linked, so it is embedded rather than fetched.
@@ -138,7 +138,7 @@ fn main() {
         &format!("generated/{OG_IMAGE_FILE}"),
         OG_IMAGE_FILE,
         b"",
-        "resume-generator",
+        "portfolio-resume",
     );
 
     // One resume per site language, under a stable ASCII name so the non-ASCII published name
@@ -153,7 +153,7 @@ fn main() {
             &format!("generated/resume/{}", language.resume_file),
             &format!("resume-{}.pdf", language.code),
             b"",
-            "resume-generator",
+            "portfolio-resume",
         );
         let _ = writeln!(
             resumes,
@@ -177,7 +177,7 @@ fn main() {
         APP_ICONS.len()
     );
     for (_, name) in APP_ICONS {
-        let dest = embedder.embed(&format!("generated/{name}"), name, b"", "resume-generator");
+        let dest = embedder.embed(&format!("generated/{name}"), name, b"", "portfolio-resume");
         let _ = writeln!(
             icons,
             "    ({name:?}, include_bytes!({:?})),",

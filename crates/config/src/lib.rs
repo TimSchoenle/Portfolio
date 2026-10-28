@@ -19,7 +19,7 @@
 //! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`HstsConfig`],
 //!   [`IsrConfig`], [`SentryConfig`], and `terrace-legal`'s [`LegalConfig`](terrace_legal::LegalConfig), which
 //!   this crate validates further through [`legal_catalog_builder`]),
-//! - the `update-repos` builder, [`BuilderConfig`] ([`GithubConfig`]).
+//! - the `portfolio-update-repos` builder, [`BuilderConfig`] ([`GithubConfig`]).
 //!
 //! The aggregates live here rather than in the binaries so the generated configuration reference
 //! can describe the types those binaries actually load.

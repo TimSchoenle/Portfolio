@@ -30,8 +30,8 @@ const PRELOADED_FONTS: [&str; 2] = [
 
 /// Provides the i18n context and the parsed repository listing, then renders the router.
 ///
-/// Every component that calls [`crate::i18n::use_i18n`] or reads [`crate::github::ReposState`]
-/// out of context has to sit under this one.
+/// Every component that calls [`crate::i18n::use_i18n`] or reads
+/// [`crate::embedded::repos::ReposState`] out of context has to sit under this one.
 #[component]
 pub fn App() -> Element {
     let translations = SITE_LANGUAGES
@@ -42,7 +42,7 @@ pub fn App() -> Element {
     // The embedded repo list, parsed once and shared with the projects section
     // and the command palette. Identical on the server and client, so it
     // hydrates without a mismatch.
-    use_context_provider(crate::github::load_repos);
+    use_context_provider(crate::embedded::repos::load_repos);
 
     // Initial language. On the server it is negotiated from the request (cookie
     // / Accept-Language) and written back as a cookie; on the client it is read

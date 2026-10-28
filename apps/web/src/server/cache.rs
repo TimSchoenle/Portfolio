@@ -78,7 +78,7 @@ fn has_extension(path: &str, ext: &str) -> bool {
 ///
 /// The digit count is **not** fixed. manganis renders the 64-bit asset hash as
 /// plain hex, so a hash with leading zero nibbles is written short — one real
-/// `dx bundle` of this crate produced `web-dxh9c6f94a783aca5d3.js` (16 digits)
+/// `dx bundle` produced `web-dxh9c6f94a783aca5d3.js` (16 digits)
 /// and `web_bg-dxhfc275e0429871eb.wasm` (15) side by side. Requiring exactly 16
 /// therefore failed to recognize roughly one asset in sixteen as hashed, and
 /// those fell through to `no-cache`: the wasm binary and the stylesheet, the two
@@ -138,8 +138,8 @@ mod tests {
     /// one, which is the whole reason this is asserted against observed output
     /// rather than against a hand-written example.
     const BUNDLED_ASSETS: [&str; 4] = [
-        "/assets/web-dxh9c6f94a783aca5d3.js",
-        "/assets/web_bg-dxhfc275e0429871eb.wasm",
+        "/assets/portfolio-web-dxh9c6f94a783aca5d3.js",
+        "/assets/portfolio-web_bg-dxhfc275e0429871eb.wasm",
         "/assets/tailwind-dxh31cffa1cc71c7bb.css",
         "/assets/fonts-dxh492b30d149ad9286.css",
     ];
@@ -164,7 +164,9 @@ mod tests {
     /// length check that missed that served it `no-cache` on every visit.
     #[test]
     fn a_short_hash_is_still_a_hash() {
-        assert!(is_content_hashed("/assets/web_bg-dxhfc275e0429871eb.wasm"));
+        assert!(is_content_hashed(
+            "/assets/portfolio-web_bg-dxhfc275e0429871eb.wasm"
+        ));
         assert!(is_content_hashed("/assets/tailwind-dxh31cffa1cc71c7bb.css"));
         // Down to a single digit, which is what a hash of 0x…0f would render as.
         assert!(is_content_hashed("/assets/thing-dxhf.css"));
@@ -205,7 +207,7 @@ mod tests {
             StatusCode::SERVICE_UNAVAILABLE,
         ] {
             for path in [
-                "/assets/web_bg-dxhfc275e0429871eb.wasm",
+                "/assets/portfolio-web_bg-dxhfc275e0429871eb.wasm",
                 "/fonts/jetbrains-mono-latin-400-normal.woff2",
                 "/resume/cv.pdf",
                 "/",

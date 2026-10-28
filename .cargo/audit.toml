@@ -12,7 +12,7 @@ ignore = [
     # namespace-declaration allocation. Fixed in quick-xml >= 0.41.0.
     #
     # Not upgradable and not reachable:
-    #   * The dependency path is resume-generator -> typst 0.15.1 ->
+    #   * The dependency path is portfolio-resume -> typst 0.15.1 ->
     #     typst-library -> hayagriva 0.10.1 -> citationberg 0.7.0, and
     #     citationberg pins `quick-xml = "^0.38.1"`. typst, hayagriva and
     #     citationberg are all already at their latest published versions, so
@@ -22,7 +22,7 @@ ignore = [
     #     and `world.rs` answers every `file()`/`source()` other than the single
     #     in-memory main source with `FileError::NotFound`, so no XML from any
     #     source reaches the parser.
-    #   * resume-generator is a build-time tool run over our own compile-time
+    #   * portfolio-resume is a build-time tool run over our own compile-time
     #     data. It is not part of the runtime image, and typst does not appear
     #     in the SSR server's dependency tree at all.
     #

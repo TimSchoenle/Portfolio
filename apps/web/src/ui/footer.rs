@@ -6,10 +6,10 @@ use portfolio_data::CONFIG;
 use terrace_legal_dioxus::legal_title;
 use terrace_legal_model::LegalIndexEntry;
 
+use crate::clock::current_year;
 use crate::i18n::use_i18n;
 use crate::legal::{SiteText, is_hosted, use_legal_entries};
 use crate::routes::Route;
-use crate::util::current_year;
 
 /// Renders the footer. The copyright year is read from the clock at render time.
 ///
