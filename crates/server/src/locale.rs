@@ -1,4 +1,4 @@
-//! Negotiating the language of a page request.
+//! The negotiation that decides the language of a page request.
 //!
 //! The order is a `?lang=` query parameter, a valid `lang` cookie, the `Accept-Language` header,
 //! then the default language. The query parameter gives every language a URL of its own, which a
@@ -7,24 +7,34 @@
 
 use portfolio_data::{DEFAULT_LANGUAGE, LANG_PAIR_PREFIX, Language, SITE_LANGUAGES, language};
 
-/// What [`negotiate_locale`] decided, and whether the response has to write it back.
+/// The language [`negotiate_locale`] decided on, and whether the response has to write it back.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Negotiated {
     /// The language the page is rendered in.
     pub language: &'static Language,
     /// Whether the request's `lang` cookie is absent or names something else, so the response
-    /// must set it — otherwise the client could read a cookie that disagrees with the HTML.
+    /// must set it; otherwise the client could read a cookie that disagrees with the HTML.
     pub persist: bool,
 }
 
-/// Negotiates the request's language from its raw query string and headers, *without side
-/// effects*: `?lang=` wins, then a valid `lang` cookie, then `Accept-Language`, then the
-/// default.
+/// Negotiates the request's language from its raw query string and headers, without side
+/// effects.
 ///
-/// This is the one decision every server-side reader shares: the render, and the page
-/// middleware ([`crate::page::localize_page`]) that stamps `<html lang>`, keys the incremental
-/// cache and writes the cookie back. Sharing it is what keeps the language of the HTML, its
-/// cache entry and the cookie in agreement.
+/// A site language named by `?lang=` wins, then one named by the `lang` cookie, then the one
+/// `Accept-Language` weights highest, then the default. Quality values are honored per RFC 9110
+/// §12.5.4, earlier ranges win ties, `q=0` excludes a range, and `*` and malformed entries are
+/// ignored. An unknown language anywhere is skipped.
+///
+/// The render and [`crate::page::localize_page`] both call this, which keeps the language of
+/// the HTML, its cache entry and the cookie in agreement.
+///
+/// ```
+/// # use portfolio_server::locale::negotiate_locale;
+/// let negotiated = negotiate_locale(Some("lang=de"), Some("lang=en"), Some("en-US"));
+/// assert_eq!(negotiated.language.code, "de");
+/// assert!(negotiated.persist);
+/// assert_eq!(negotiate_locale(None, None, Some("fr, de;q=0.5")).language.code, "de");
+/// ```
 #[must_use]
 pub fn negotiate_locale(
     query: Option<&str>,
@@ -41,7 +51,7 @@ pub fn negotiate_locale(
     }
 }
 
-/// The language a `lang=` pair in `query` names, if it names a site language.
+/// Returns the language a `lang=` pair in `query` names, if it names a site language.
 fn query_locale(query: Option<&str>) -> Option<&'static Language> {
     query?
         .split('&')
@@ -49,8 +59,7 @@ fn query_locale(query: Option<&str>) -> Option<&'static Language> {
         .find_map(language)
 }
 
-/// The language named by a valid `lang` cookie in `cookie_header`, if present.
-/// Unknown languages are ignored so the caller falls back to negotiation.
+/// Returns the language a `lang` cookie in `cookie_header` names, if it names a site language.
 fn cookie_locale(cookie_header: Option<&str>) -> Option<&'static Language> {
     let value = cookie_header?
         .split(';')
@@ -59,11 +68,10 @@ fn cookie_locale(cookie_header: Option<&str>) -> Option<&'static Language> {
     language(value)
 }
 
-/// The site language `Accept-Language` prefers most, or the default.
+/// Returns the site language `Accept-Language` prefers most, or the default.
 ///
-/// Honors quality values (RFC 9110 §12.5.4): the highest-weighted range whose primary subtag
-/// is a site language wins, earlier ranges win ties, and `q=0` excludes a range. `*` and
-/// malformed entries are ignored rather than guessed at.
+/// The highest-weighted range whose primary subtag is a site language wins, earlier ranges win
+/// ties, and `q=0` excludes a range. `*` and malformed entries are ignored.
 fn accept_language_locale(accept_language: Option<&str>) -> &'static Language {
     let mut best: Option<(&'static Language, u16)> = None;
     for range in accept_language.unwrap_or_default().split(',') {
@@ -89,7 +97,7 @@ fn accept_language_locale(accept_language: Option<&str>) -> &'static Language {
     best.map_or(DEFAULT_LANGUAGE, |(lang, _)| lang)
 }
 
-/// A `qvalue` in thousandths (`"0.8"` is 800), or `None` when it is not one.
+/// Parses a `qvalue` into thousandths, so `"0.8"` is 800, or returns `None` when it is not one.
 fn parse_qvalue(raw: &str) -> Option<u16> {
     let (whole, fraction) = raw.split_once('.').unwrap_or((raw, ""));
     if fraction.len() > 3 || !fraction.bytes().all(|b| b.is_ascii_digit()) {

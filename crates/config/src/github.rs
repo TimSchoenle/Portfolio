@@ -5,28 +5,26 @@ use serde::Deserialize;
 
 /// Credentials and scope for the build-time repository listing.
 ///
-/// Every field is optional because every field has a defensible zero: an unset user means "the
-/// one in the compile-time site config", an unset token means an unauthenticated request
-/// against the lower rate limit, and an empty repository list means "every active repository
-/// this user owns".
+/// Every field is optional. An unset user means the one in the compile-time site config, an unset
+/// token means an unauthenticated request against the lower rate limit, and an empty repository
+/// list means every active repository the user owns.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",
     derive(serde::Serialize, terrace_config::schema::Describe)
 )]
 pub struct GithubConfig {
-    /// User whose repositories to list.
+    /// The user whose repositories to list.
     ///
-    /// Unset falls back to `portfolio_data::CONFIG`, which is the site's own identity and
-    /// therefore the only sensible default — resolved by the builder rather than here, so this
-    /// crate stays a schema and does not depend on the site data.
+    /// Unset falls back to the site's own identity in `portfolio_data::CONFIG`, which the builder
+    /// resolves.
     #[cfg_attr(
         feature = "config-schema",
         config(note = "the site's own `CONFIG.github_username`")
     )]
     #[serde(default)]
     pub username: Option<String>,
-    /// Bearer token lifting the GitHub API rate limit.
+    /// The bearer token that lifts the GitHub API rate limit.
     ///
     /// Optional: the listing is public, so an unauthenticated build still works, just against the
     /// anonymous quota.
@@ -47,12 +45,11 @@ pub struct GithubConfig {
     #[cfg_attr(feature = "config-schema", config(secret))]
     #[serde(default, skip_serializing)]
     pub token: Option<SecretString>,
-    /// Explicit repository set, bypassing the "every active repository" listing and its filtering.
+    /// The repositories to list, in place of every active repository and its filtering.
     ///
-    /// Spelled as an array: `repos = ["Portfolio", "actions"]` in TOML, and
-    /// `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment — figment parses the
-    /// bracketed form, and a bare comma-separated string is *not* accepted, so the two spellings
-    /// cannot drift apart.
+    /// It is an array in both spellings: `repos = ["Portfolio", "actions"]` in TOML, and
+    /// `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment. A bare comma-separated
+    /// string is not accepted.
     #[cfg_attr(
         feature = "config-schema",
         config(note = "every active repository the user owns")
@@ -62,24 +59,18 @@ pub struct GithubConfig {
 }
 
 impl GithubConfig {
-    /// The configured user, or `None` when unset or blank.
-    ///
-    /// Blank counts as unset throughout this crate: container platforms routinely inject `KEY=`
-    /// for a declared-but-unset variable, and here that would request the repositories of a
-    /// user with no name.
+    /// Returns the configured user, or `None` when unset or blank.
     #[must_use]
     pub fn username(&self) -> Option<&str> {
         self.username.as_deref().map(str::trim).filter(is_present)
     }
 
-    /// The bearer token, or `None` when unset or blank.
+    /// Returns the bearer token, or `None` when unset or blank.
     ///
-    /// Blank has to mean unset rather than "authenticate as nobody": CI passes the token
-    /// through unconditionally, and on a fork's pull request there is no secret to pass, so an
-    /// empty value is the *normal* case rather than a misconfiguration.
-    ///
-    /// Consuming rather than borrowing because [`SecretString`] is deliberately not [`Clone`]
-    /// — handing the secret on is a move, which is what makes "who holds this" answerable.
+    /// CI passes the token through unconditionally, and a fork's pull request has no secret to
+    /// pass, so a blank value is the normal case there.
+    // Consuming because `SecretString` is deliberately not `Clone`: handing the secret on is a
+    // move, which keeps "who holds this" answerable.
     #[must_use]
     pub fn into_token(self) -> Option<SecretString> {
         use secrecy::ExposeSecret as _;
@@ -87,7 +78,7 @@ impl GithubConfig {
             .filter(|token| is_present(&token.expose_secret().trim()))
     }
 
-    /// The explicit repository set, with blank entries dropped.
+    /// Returns the configured repository names, with blank entries dropped.
     pub fn repos(&self) -> impl Iterator<Item = &str> {
         self.repos.iter().map(|name| name.trim()).filter(is_present)
     }

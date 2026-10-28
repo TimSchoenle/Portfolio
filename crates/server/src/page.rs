@@ -1,10 +1,25 @@
-//! Finishing document responses: the negotiated language, the per-document
-//! Content-Security-Policy, and the memo that serves a finished page without rendering it again.
+//! The middleware that finishes every document response, and the memo behind it.
 //!
-//! [`localize_page`] is layered *outside* the Dioxus router, so it sees every page request —
-//! incremental-cache hits included, whose render never ran. That makes it the one place that can
-//! guarantee the three things a document needs whichever way it was produced: `<html lang>`, the
-//! `lang` cookie agreeing with it, and a policy derived from the bytes being sent.
+//! [`localize_page`] is layered outside the page router, so it sees every page request, including
+//! incremental-cache hits whose render never ran. That makes it the one place that can guarantee
+//! the three things a document needs whichever way it was produced: `<html lang>`, the `lang`
+//! cookie agreeing with it, and a policy derived from the bytes being sent.
+//!
+//! # Why the memo is sound
+//!
+//! A [`PagePaths`] page is rendered from compile-time data and configuration read once at boot,
+//! so its bytes are a function of the path and the negotiated language for the life of the
+//! process, or for the configured TTL. That is the reason the incremental cache is sound, and it
+//! holds for the memo too. Both halves of the memo's key are `&'static str` drawn from fixed
+//! lists, which bounds it at `paths × languages` entries without eviction.
+//!
+//! # Why the allowlist exists
+//!
+//! The incremental cache is keyed by path, and a catch-all route matches every URL there is, so
+//! without [`PagePaths`] an unauthenticated client could mint an unbounded number of cache
+//! entries, one directory and one HTML file each, by requesting `/1`, `/2`, and so on until the
+//! volume filled up. The same holds for a route whose segment is request text, such as
+//! `/legal/:slug`.
 
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -23,10 +38,9 @@ use crate::csp::{DocumentScan, SitePolicy};
 use crate::isr_marker::with_locale_query;
 use crate::locale::{Negotiated, negotiate_locale};
 
-/// What [`localize_page`] carries per request.
+/// The state [`localize_page`] carries, cheap to clone per request.
 ///
-/// Cloned for every request the middleware sees, so the policy and the memo are behind an
-/// [`Arc`] rather than copied.
+/// Create it with [`PageState::new`]; the memo inside starts empty.
 #[derive(Clone)]
 pub struct PageState {
     /// Whether the incremental cache is active, and therefore whether the request URI has to
@@ -34,7 +48,7 @@ pub struct PageState {
     isr_enabled: bool,
     /// The Content-Security-Policy this server serves. See [`crate::csp`].
     policy: Arc<SitePolicy>,
-    /// Finished pages, memoized per `(path, language)`. See [`PageMemo`].
+    /// Finished pages, memoized per `(path, language)`.
     pages: Arc<PageMemo>,
     /// The pages worth remembering. See [`PagePaths`].
     paths: PagePaths,
@@ -45,10 +59,10 @@ pub struct PageState {
 impl PageState {
     /// Creates the state for one router, with an empty page memo.
     ///
-    /// `isr_enabled` says whether the incremental cache is active, so the request URI has to
-    /// carry the negotiated language. `ttl` should be the incremental cache's own, so that
-    /// configuring time-based revalidation revalidates the memo too; `None` keeps a page for the
-    /// process's lifetime, like the cache.
+    /// `isr_enabled` says whether the incremental cache is active, in which case the request URI
+    /// carries the negotiated language for the cache to key on. `ttl` is how long a memoized page
+    /// may be served: pass the incremental cache's own, so time-based revalidation reaches the
+    /// memo too. `None` keeps a page for the process's lifetime.
     #[must_use]
     pub fn new(
         policy: Arc<SitePolicy>,
@@ -69,16 +83,8 @@ impl PageState {
 /// The page paths whose rendered HTML is worth persisting.
 ///
 /// The list holds the application's fixed routes, plus one path per document the configuration
-/// hosts. A catch-all route is deliberately absent, and so is every slug nothing is published
-/// under.
-///
-/// The incremental cache is keyed by path, and the catch-all matches every URL that exists — so
-/// without this allowlist an unauthenticated client could mint an unbounded number of cache
-/// entries (one directory and one HTML file each) by requesting `/1`, `/2`, … until the volume
-/// filled up. The same holds for `/legal/:slug`, whose segment is request text. Routes outside
-/// the list still render normally; their output is just never stored.
-///
-/// Cheap to clone: the list is shared.
+/// hosts; leave out any catch-all route. A page outside the list still renders, but neither the
+/// incremental cache nor the page memo stores it. Cloning shares the list.
 #[derive(Clone)]
 pub struct PagePaths(Arc<[&'static str]>);
 
@@ -96,11 +102,9 @@ impl PagePaths {
         Self(fixed.iter().copied().chain(configured).collect())
     }
 
-    /// Returns the stored entry equal to `path`.
-    ///
-    /// Returning the stored entry rather than a `bool` is what lets the page memo key on a
-    /// `&'static str`: the request's own path is borrowed from a URI that does not outlive the
-    /// request, whereas this one lives as long as the process.
+    /// Returns the stored entry equal to `path`, which lives as long as the process.
+    // The stored entry, not a `bool`, is what lets the page memo key on a `&'static str`: the
+    // request's own path is borrowed from a URI that does not outlive the request.
     #[must_use]
     pub fn get(&self, path: &str) -> Option<&'static str> {
         self.0.iter().copied().find(|known| *known == path)
@@ -132,22 +136,15 @@ struct RenderedPage {
 
 /// Finished pages, keyed by `(path, language)`.
 ///
-/// Consulted *before* the router: a hit is answered without rendering, reading the incremental
-/// cache from disk, validating UTF-8, stamping `lang` or hashing a script — only the nonce and
-/// the cookie are per response.
-///
-/// Sound for exactly the reason the incremental cache is: a [`PagePaths`] page is rendered from
-/// compile-time data and configuration read once at boot, so its bytes are a function of the
-/// path and the negotiated language for the life of the process (or for [`PageState::ttl`],
-/// when one is configured). Both halves of the key are `&'static str` drawn from fixed lists,
-/// which bounds the map at `paths.len() * LANGUAGES.len()` entries — it needs no eviction.
+/// Consulted before the router: a hit is answered without rendering, reading the incremental
+/// cache from disk, validating UTF-8, stamping `lang` or hashing a script. Only the nonce and the
+/// cookie are per response. The module documentation says why that is sound.
 #[derive(Default)]
 struct PageMemo(RwLock<HashMap<(&'static str, &'static str), Arc<RenderedPage>>>);
 
-/// The memoized page for `key`, if one has been rendered and is still within `ttl`.
-///
-/// A poisoned lock is recovered from rather than propagated: nothing can panic while it is
-/// held, and a request must not fail over a structure it could just as well have missed in.
+/// Returns the memoized page for `key`, if one has been rendered and is still within `ttl`.
+// A poisoned lock is recovered from: nothing can panic while it is held, and a request must not
+// fail over a structure it could just as well have missed in.
 impl PageMemo {
     fn get(
         &self,
@@ -173,7 +170,7 @@ impl PageMemo {
     }
 }
 
-/// Middleware finishing every `GET` the server answers with a document:
+/// Finishes every `GET` response that carries a document, as an axum middleware:
 ///
 /// 1. A [`PagePaths`] page already rendered in this language is answered from the page memo
 ///    without reaching the router at all.
@@ -183,15 +180,19 @@ impl PageMemo {
 ///    depends on, so a shared cache in front of the origin does not hand one language to
 ///    another's reader.
 /// 4. The opening `<html>` tag is stamped with `lang`, so the language is declared in the first
-///    bytes a crawler receives — and the wasm client, which reads it back, hydrates in it.
+///    bytes a crawler receives, and the wasm client, which reads it back, hydrates in it.
 /// 5. The `lang` cookie is written when the request's does not match, including on pages the
 ///    incremental cache answered, whose render never ran.
 /// 6. The document gets its own Content-Security-Policy, derived from the inline scripts in the
 ///    bytes about to be sent (see [`crate::csp`]).
 ///
-/// The language is decided by `negotiate_locale`, as it is for the render, so the cache key,
-/// the `<html lang>`, the cookie and the HTML always agree. Requests that are not `GET` —
-/// server-function calls are `POST`s — pass straight through.
+/// The language is decided by [`negotiate_locale`], as it is for the render, so the cache key,
+/// the `<html lang>`, the cookie and the HTML always agree. A response is a document when its
+/// `Content-Type` is `text/html`, so the 404 page is finished too. Requests that are not `GET`,
+/// such as server-function calls, pass straight through.
+///
+/// A document body that cannot be read or exceeds 4 MiB is answered with `500`; one that is not
+/// UTF-8 is served unmodified, without a document policy.
 pub async fn localize_page(
     axum::extract::State(state): axum::extract::State<PageState>,
     mut request: axum::extract::Request,
@@ -232,12 +233,13 @@ pub async fn localize_page(
     rewrite_html_response(next.run(request).await, negotiated, &state, memo_key).await
 }
 
-/// Largest HTML page body this server will buffer in order to stamp `<html lang>` on it.
-/// Rendered pages are tens of kilobytes; the limit only bounds memory if something upstream
-/// ever produces an unexpectedly large `text/html` response.
+/// The largest document body the middleware buffers, in bytes.
+///
+/// Rendered pages are tens of kilobytes; the limit only bounds memory if something upstream ever
+/// produces an unexpectedly large `text/html` response.
 const MAX_HTML_REWRITE_BYTES: usize = 4 * 1024 * 1024;
 
-/// Finishes a rendered response: `Vary`, `<html lang>`, the cookie and the document policy —
+/// Finishes a rendered response with `Vary`, `<html lang>`, the cookie and the document policy,
 /// and memoizes it under `memo_key` when it is a successful render of a [`PagePaths`] page.
 ///
 /// Only `text/html` responses are touched: a request that merely *accepts* HTML may still be

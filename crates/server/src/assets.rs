@@ -1,15 +1,14 @@
-//! Stable-path static assets embedded in the server binary.
+//! The static files served at fixed paths from bytes embedded in the server binary.
 //!
-//! The favicon and the vendored woff2 fonts are referenced by absolute URLs
-//! (`/favicon.svg`, `/fonts/…`) from `fonts.css`, the masthead logo and the web
-//! manifest, so they must live at fixed paths rather than the content-hashed
-//! paths `dx`/manganis produces. Embedding them keeps the runtime a single
-//! self-contained binary (no asset directory to ship alongside it). Their
-//! `Cache-Control` is filled in by [`crate::cache::set_cache_control`].
+//! `fonts.css`, the masthead logo and the web manifest reference the favicon and the vendored
+//! woff2 fonts by absolute URL (`/favicon.svg`, `/fonts/…`), so those files live at fixed paths,
+//! not at the content-hashed paths `dx`/manganis produces. Embedding them keeps the server one
+//! self-contained binary. [`crate::cache::set_cache_control`] fills in their `Cache-Control`, and
+//! each successful response carries an `ETag` so a lapsed TTL revalidates to `304`.
 //!
-//! The bytes come from the application, which embeds them at compile time and hands them to
-//! [`router`] as [`EmbeddedAssets`]. An empty entry is a file whose generator has not run, as in
-//! a development build, and is answered with `404` rather than an empty body.
+//! The application embeds the bytes at compile time and hands them to [`router`] as
+//! [`EmbeddedAssets`]. An empty entry is a file whose generator has not run, as in a development
+//! build, and is answered with `404`.
 
 use std::future::ready;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -32,16 +31,19 @@ pub type NamedFile = (&'static str, &'static [u8]);
 pub struct EmbeddedAssets {
     /// The SVG favicon, served at `/favicon.svg`.
     pub favicon: &'static [u8],
-    /// The generated Open Graph card, served at `/` + [`OG_IMAGE_FILE`]. Empty when the resume
-    /// generator has not run.
+    /// The generated Open Graph card, served at `/` + [`OG_IMAGE_FILE`].
+    ///
+    /// Empty when the resume generator has not run.
     pub og_image: &'static [u8],
-    /// The vendored woff2 fonts, served under `/fonts/`. The names must match `fonts.css`.
+    /// The vendored woff2 fonts, served under `/fonts/` by names that must match `fonts.css`.
     pub fonts: &'static [NamedFile],
-    /// One resume PDF per site language, served under `/resume/` by its published name. An
-    /// entry is empty when the resume generator has not run.
+    /// One resume PDF per site language, served under `/resume/` by its published name.
+    ///
+    /// An entry is empty when the resume generator has not run.
     pub resumes: &'static [NamedFile],
-    /// The web manifest's raster icons, each served at `/<name>`. An entry is empty when the
-    /// resume generator has not run.
+    /// The web manifest's raster icons, each served at `/` plus its name.
+    ///
+    /// An entry is empty when the resume generator has not run.
     pub app_icons: &'static [NamedFile],
 }
 
@@ -87,9 +89,8 @@ impl Asset {
 
 /// Files served under a directory by name, looked up from a path capture.
 ///
-/// A lookup rather than one route per file, so a name nothing is published under is this
-/// router's `404` and not a page render. It also rules out path traversal: only a listed name
-/// is ever served.
+/// A lookup, not one route per file, so a name nothing is published under is this router's `404`
+/// and not a page render. Only a listed name is ever served, which rules out path traversal.
 type Directory = Arc<[(&'static str, Asset)]>;
 
 /// Wraps every file in `files` as an [`Asset`] of `content_type`.
@@ -154,15 +155,11 @@ pub fn router(assets: &EmbeddedAssets) -> Router {
         )
 }
 
-/// Derives the entity tag for one embedded file.
-///
-/// A non-cryptographic hash is the right tool here: an `ETag` only has to differ
-/// when the bytes differ, and nothing downstream treats it as a security
-/// boundary — so this needs no digest crate linked into the server for it.
-/// `DefaultHasher::new` is seeded with fixed keys rather than a per-process
-/// random state, which is what makes every replica of a deployment derive the
-/// same tag for the same bytes; a shared cache in front of the origin would
-/// otherwise see a different validator from each pod.
+/// Derives the entity tag for one embedded file, the same on every replica.
+// A non-cryptographic hash is enough: an `ETag` only has to differ when the bytes differ, and
+// nothing treats it as a security boundary. `DefaultHasher::new` is seeded with fixed keys, not a
+// per-process random state, so every replica derives the same tag for the same bytes and a shared
+// cache in front of the origin sees one validator.
 fn etag_for(bytes: &[u8]) -> HeaderValue {
     let mut hasher = DefaultHasher::new();
     bytes.hash(&mut hasher);
@@ -170,12 +167,10 @@ fn etag_for(bytes: &[u8]) -> HeaderValue {
         .expect("a quoted hex digest is a valid header value")
 }
 
-/// Whether the request's `If-None-Match` names the entity we are about to send.
+/// Reports whether the request's `If-None-Match` names `etag`, the entity about to be sent.
 ///
-/// `*` matches whatever the origin holds, per RFC 9110, and a `W/` prefix is
-/// accepted because `If-None-Match` is defined to use the weak comparison — a
-/// cache that revalidates a strong tag weakly is still asking about these exact
-/// bytes.
+/// `*` matches whatever the origin holds, per RFC 9110, and a `W/` prefix is accepted because
+/// `If-None-Match` uses the weak comparison.
 fn is_current(headers: &HeaderMap, etag: &HeaderValue) -> bool {
     let Some(value) = headers
         .get(header::IF_NONE_MATCH)

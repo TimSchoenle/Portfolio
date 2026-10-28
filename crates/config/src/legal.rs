@@ -1,32 +1,43 @@
 //! What this deployment requires of the legal documents an operator configures.
 //!
-//! The documents themselves — their text, titles, dates and order — are
+//! The documents themselves, with their text, titles, dates and order, are
 //! [`terrace_legal::LegalConfig`], nested under `legal` in [`ServerConfig`](crate::ServerConfig).
-//! `terrace-legal` decides whether a configuration can be *served* at all. This module adds what
-//! this site cannot run without, as two [`Rule`]s evaluated in the same pass, so an operator sees
-//! every problem in one refused boot rather than one per restart:
+//! `terrace-legal` decides whether a configuration can be served at all. This module adds what this
+//! site cannot run without, as two [`Rule`]s evaluated in the same pass, so an operator sees every
+//! problem in one refused boot:
 //!
 //! - [`REQUIRED_DOCUMENTS`] are published. A German site owes its readers an imprint (§ 5 DDG)
 //!   and a privacy notice (Art. 13 GDPR), and a deployment that forgets either must not start.
 //! - Every document served from here has a text in every language the site renders. The GDPR
 //!   wants the notice in the reader's language, and the site offers exactly the languages its
-//!   interface is translated into; a missing German privacy text would otherwise fall back to
+//!   interface is translated into. A missing German privacy text would otherwise fall back to
 //!   English silently, on a page whose chrome is German.
+//!
+//! # Why the language rule publishes nothing into the schema
+//!
+//! Unlike [`RequiredDocuments`], the language rule is runtime-only, so a configuration the
+//! published contract accepts can still be refused at boot. `terrace-legal` forbids a refinement
+//! stricter than its check, and the only one its vocabulary offers, required map entries, would
+//! demand a literal `body.de` key. That rejects `de-AT`, which the rule accepts, and it would also
+//! have to be conditional on the document being hosted, which the vocabulary cannot state.
+//! `schema::tests` pins that such a configuration is schema-valid and still refused.
 
 use terrace_legal::model::LocaleTag;
 use terrace_legal::{CatalogBuilder, ConfigIssue, LegalDocument, RequiredDocuments, Rule};
 
 /// The slugs a deployment has to publish.
 ///
-/// They are also the paths the documents are served under (`/legal/imprint`), which is why the
-/// old top-level `/imprint` and `/privacy` routes can redirect to them unconditionally.
+/// They are also the paths the documents are served under, as in `/legal/imprint`, so the old
+/// top-level `/imprint` and `/privacy` routes can redirect to them unconditionally.
 pub const REQUIRED_DOCUMENTS: [&str; 2] = ["imprint", "privacy"];
 
-/// The validation this deployment applies to `legal.*`, for the catalog and every later rebuild.
+/// Returns the catalog builder carrying the validation this deployment applies to `legal.*`.
 ///
-/// `locales` are the languages the site renders, from `portfolio_data::LANGUAGES`. They are a
-/// parameter rather than a copy here because this crate does not depend on the data crate, and a
-/// second list would be a list that can disagree with the one the interface is built from.
+/// `locales` are the languages the site renders; pass `portfolio_data::LANGUAGES`. A hosted
+/// document must have a text in each of them, and a regional variant such as `de-AT` counts for
+/// its language.
+// A parameter because this crate does not depend on the data crate at run time, and a second list
+// here could disagree with the one the interface is built from.
 #[must_use]
 pub fn legal_catalog_builder(locales: &[&'static str]) -> CatalogBuilder {
     CatalogBuilder::new()
@@ -40,18 +51,8 @@ pub fn legal_catalog_builder(locales: &[&'static str]) -> CatalogBuilder {
 ///
 /// A body keyed by a regional variant counts for its language: `de-AT` satisfies `de`, because
 /// that is also what the negotiation serves a reader who asked for `de`. External documents are
-/// exempt — they are a link, and what language the page behind it is in is not this site's to
-/// check.
-///
-/// # Runtime-only
-///
-/// Unlike [`RequiredDocuments`], this rule publishes nothing into the configuration schema, so a
-/// configuration the published contract accepts can still be refused here at boot. That is
-/// deliberate: `terrace-legal` forbids a refinement stricter than its check, and the only one the
-/// vocabulary offers, required map entries, would demand a literal `body.de` key. That rejects
-/// `de-AT`, which this rule accepts, and it would also have to be conditional on the document
-/// being hosted rather than external, which the vocabulary cannot state. Publishing nothing is the
-/// sound choice; `schema::tests` pins that such a configuration is schema-valid and still refused.
+/// exempt: they are a link, and the language of the page behind it is not this site's to check.
+/// The rule publishes nothing into the schema; see the module documentation.
 struct EveryLocale {
     locales: Vec<&'static str>,
 }

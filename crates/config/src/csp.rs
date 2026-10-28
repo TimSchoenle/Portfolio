@@ -1,10 +1,10 @@
 //! What the served `Content-Security-Policy` has to make room for.
 //!
-//! The policy itself is not configurable — it is built in the SSR server from `csp-shell`, and a
-//! site that could be handed arbitrary directives through a `ConfigMap` would have no policy at
-//! all. What *is* configurable is the small set of facts this crate cannot know: whether the
-//! inline scripts in the served document are covered by their hashes, and which Cloudflare
-//! products are switched on in front of the origin.
+//! The policy itself is not configurable. The SSR server builds it with `csp-shell`, and a site
+//! that could be handed arbitrary directives through a `ConfigMap` would have no policy at all.
+//! What is configurable is the small set of facts this crate cannot know: whether the inline
+//! scripts in the served document are covered by their hashes, and which Cloudflare products are
+//! switched on in front of the origin.
 
 use core::fmt;
 
@@ -12,10 +12,10 @@ use serde::Deserialize;
 
 /// How the SSR server builds the `Content-Security-Policy` it sends.
 ///
-/// Every field defaults to what this deployment actually runs, so an empty `[csp]` block — or no
-/// block at all — produces the policy the site is meant to serve. The knobs exist for the two
-/// situations a redeploy is too slow for: an inline script the scanner does not see, and a
-/// Cloudflare product switched on or off in the dashboard.
+/// Every field defaults to what this deployment runs, so an empty or absent `[csp]` block produces
+/// the policy the site is meant to serve. The settings cover the two situations a redeploy is too
+/// slow for: an inline script the scanner does not see, and a Cloudflare product switched on or
+/// off in the dashboard.
 // No `deny_unknown_fields`, for the reasons given on `AssetsConfig`: closing a `#[config(nested)]`
 // block narrows what the loader accepts and publishes nothing to the contract.
 #[derive(Debug, Clone, Deserialize)]
@@ -24,24 +24,20 @@ use serde::Deserialize;
     derive(serde::Serialize, terrace_config::schema::Describe)
 )]
 pub struct CspConfig {
-    /// Hash every inline `<script>` in the document being served instead of admitting all inline
-    /// script with `'unsafe-inline'`.
+    /// Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`.
     ///
-    /// On — the default — the server hashes the response body it is about to send, so the only
-    /// inline scripts that run are the ones it rendered itself. That is the whole point of the
-    /// exercise: `'unsafe-inline'` admits an injected `<script>` just as readily as the Dioxus
-    /// hydration bootstrap.
+    /// On, the default, the server hashes the response body it is about to send, so the only
+    /// inline scripts that run are the ones it rendered. `'unsafe-inline'` admits an injected
+    /// `<script>` as readily as the Dioxus hydration bootstrap.
     ///
-    /// Off is the escape hatch, and it exists because the failure mode is silent: an inline
-    /// script the scanner does not see is refused by the browser, and the evidence is a blank
-    /// page and a console message nobody is watching. Turning it off restores `'unsafe-inline'`
-    /// through an environment variable and a restart rather than a redeploy. Known cases: a
-    /// development server that injects its own live-reload script downstream of this process,
-    /// and any future renderer change that emits script this server never sees.
+    /// Off restores `'unsafe-inline'` with a restart. Use it when the browser refuses an inline
+    /// script the scanner does not see, which shows as a blank page and a console message. Known
+    /// cases are a development server that injects a live-reload script downstream of this
+    /// process, and a renderer change that emits script this server never sees.
     ///
-    /// The two settings are mutually exclusive in the browser, not merely different: a policy
-    /// carrying any hash or nonce makes `'unsafe-inline'` inert, which is why there is one switch
-    /// here rather than two independent ones.
+    /// A policy carrying any hash or nonce makes `'unsafe-inline'` inert, so turning this off also
+    /// requires `csp.cloudflare.script_nonce = false`. [`validate`](Self::validate) refuses the
+    /// boot otherwise.
     #[serde(default = "CspConfig::default_hash_inline_scripts")]
     pub hash_inline_scripts: bool,
 
@@ -52,15 +48,15 @@ pub struct CspConfig {
 }
 
 impl CspConfig {
-    /// Hashing is the default; see the field.
+    /// Returns the default of [`Self::hash_inline_scripts`], on.
     const fn default_hash_inline_scripts() -> bool {
         true
     }
 
-    /// Reject a combination of values that would serve a policy refusing this site's own scripts.
+    /// Checks that the block does not describe a policy refusing this site's own scripts.
     ///
-    /// Called at boot, before the listener exists, so the container fails to start rather than
-    /// serving every visitor a blank page.
+    /// The server calls it at boot, before the listener exists, so the container fails to start
+    /// instead of serving every visitor a blank page.
     ///
     /// # Errors
     ///
@@ -85,52 +81,53 @@ impl Default for CspConfig {
 
 /// The Cloudflare products this origin sits behind, as the policy has to see them.
 ///
-/// Each field is one `csp-shell` preset. A preset carries the part that is easy to get wrong and
-/// silent when it is: not only which origins a product loads from, but which directives they have
-/// to appear in — admitting Turnstile's script without its frame renders an empty box.
+/// Each field is one `csp-shell` preset. A preset knows which origins a product loads from and
+/// which directives they have to appear in: admitting Turnstile's script without its frame
+/// renders an empty box.
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(
     feature = "config-schema",
     derive(serde::Serialize, terrace_config::schema::Describe)
 )]
 pub struct CloudflareConfig {
-    /// Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge.
+    /// Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the
+    /// edge.
     ///
     /// On by default, because this site is delivered through a Cloudflare Tunnel with the bot
-    /// products active; the `__cf_bm` and `cf_clearance` cookies they set are the observable
-    /// half of the same feature. Those products inject an inline `<script>` into the HTML
-    /// *after* it leaves this process, so no hash this server computes can cover it;
-    /// `script-src` refuses it and the detection silently never runs.
-    /// Cloudflare's documented answer is to parse the `Content-Security-Policy` response header
-    /// and copy the nonce onto what it injects, so nothing has to be stamped into the document.
+    /// products active; the `__cf_bm` and `cf_clearance` cookies are theirs. Those products inject
+    /// an inline `<script>` after the HTML leaves this process, so no hash the server computes can
+    /// cover it, and without the nonce the detection silently never runs. Cloudflare reads the
+    /// nonce from the `Content-Security-Policy` response header and copies it onto what it
+    /// injects.
     ///
-    /// It carries one obligation the server discharges (`Cache-Control: no-cache` on every
-    /// document, so a nonce is never shared between readers) and one it cannot: **no Cloudflare
-    /// Cache Rule may cache the shell**. A "Cache Everything" rule overrides the origin's
-    /// `Cache-Control`, satisfying the obligation here and violating it at the edge, and nothing
-    /// inside this process can see that.
+    /// The server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a
+    /// stored copy with this origin before each reuse. A document carries no validator, so every
+    /// reuse reaches the server, which mints a fresh nonce per response. **No Cloudflare Cache
+    /// Rule may cache the documents**: a "Cache Everything" rule overrides that header at the
+    /// edge, and nothing inside this process can see it.
     #[serde(default = "CloudflareConfig::default_script_nonce")]
     pub script_nonce: bool,
 
-    /// Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile
-    /// widget.
+    /// Whether `script-src` and `frame-src` admit `https://challenges.cloudflare.com`, for a
+    /// Turnstile widget.
     ///
-    /// Off: this site has no form behind a challenge. A managed-challenge interstitial needs
-    /// nothing here either — that is a Cloudflare-served document carrying its own policy.
+    /// Off, because this site has no form behind a challenge. A managed-challenge interstitial
+    /// needs nothing here: it is a Cloudflare-served document carrying its own policy.
     #[serde(default)]
     pub turnstile: bool,
 
-    /// Admit the Cloudflare Web Analytics beacon and the endpoint it reports to.
+    /// Whether the policy admits the Cloudflare Web Analytics beacon and the endpoint it reports
+    /// to.
     ///
-    /// Off: this site measures nothing, which the privacy page states. Only for the *manual*
-    /// snippet — the automatic edge injection is an inline script and needs `script_nonce`
-    /// instead.
+    /// Off, because this site measures nothing, which the privacy page states. It covers the
+    /// manual snippet only; the automatic edge injection is an inline script and needs
+    /// `script_nonce`.
     #[serde(default)]
     pub web_analytics: bool,
 }
 
 impl CloudflareConfig {
-    /// The nonce is the default; see the field.
+    /// Returns the default of [`Self::script_nonce`], on.
     const fn default_script_nonce() -> bool {
         true
     }
@@ -146,7 +143,7 @@ impl Default for CloudflareConfig {
     }
 }
 
-/// A `[csp]` block that cannot be served.
+/// The reason a `[csp]` block cannot be served.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum CspConfigError {

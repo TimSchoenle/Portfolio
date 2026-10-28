@@ -204,30 +204,30 @@ environment spelling also accepts a `_FILE` suffix naming a file that holds the 
 | TOML | Type | Environment | Default | Flags | Purpose |
 |---|---|---|---|---|---|
 | `assets.dist_dir` | `PathBuf` | `PORTFOLIO_ASSETS__DIST_DIR` | `public` | — | Directory holding the `dx bundle` output, relative to the working directory. |
-| `csp.hash_inline_scripts` | `bool` | `PORTFOLIO_CSP__HASH_INLINE_SCRIPTS` | `true` | — | Hash every inline `<script>` in the document being served instead of admitting all inline script with `'unsafe-inline'`. |
-| `csp.cloudflare.script_nonce` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE` | `true` | — | Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge. |
-| `csp.cloudflare.turnstile` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE` | `false` | — | Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile widget. |
-| `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `false` | — | Admit the Cloudflare Web Analytics beacon and the endpoint it reports to. |
+| `csp.hash_inline_scripts` | `bool` | `PORTFOLIO_CSP__HASH_INLINE_SCRIPTS` | `true` | — | Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`. |
+| `csp.cloudflare.script_nonce` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE` | `true` | — | Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the edge. |
+| `csp.cloudflare.turnstile` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE` | `false` | — | Whether `script-src` and `frame-src` admit `https://challenges.cloudflare.com`, for a Turnstile widget. |
+| `csp.cloudflare.web_analytics` | `bool` | `PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS` | `false` | — | Whether the policy admits the Cloudflare Web Analytics beacon and the endpoint it reports to. |
 | `hsts.max_age_secs` | `u64` | `PORTFOLIO_HSTS__MAX_AGE_SECS` | `31536000` | — | How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it. |
-| `hsts.include_subdomains` | `bool` | `PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS` | `true` | — | Apply the policy to every subdomain as well (`includeSubDomains`). |
-| `hsts.preload` | `bool` | `PORTFOLIO_HSTS__PRELOAD` | `true` | — | Ask to be included in the browsers' built-in HSTS preload list (`preload`). |
-| `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | — | Writable directory rendered HTML is cached into. Unset or empty disables ISR. |
-| `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | — | Revalidation interval in seconds. Zero means a permanent cache. |
-| `sentry.enabled` | `bool` | `PORTFOLIO_SENTRY__ENABLED` | `false` | — | Initialize the Sentry client. `false` installs no client, no panic hook, no `tracing` layer and no HTTP middleware, so every other key here is inert and nothing leaves the process. |
-| `sentry.dsn` | `SecretString` | `PORTFOLIO_SENTRY__DSN` | unset | secret | Ingest URL, `https://<key>@<host>/<project>`. |
-| `sentry.environment` | `String` | `PORTFOLIO_SENTRY__ENVIRONMENT` | unset (`production` in a release build, `development` otherwise) | — | Environment tag on every event. |
-| `sentry.release` | `String` | `PORTFOLIO_SENTRY__RELEASE` | unset (`portfolio@` and the built version) | — | Release tag on every event. |
-| `sentry.server_name` | `String` | `PORTFOLIO_SENTRY__SERVER_NAME` | unset | — | Host tag on every event. |
-| `sentry.sample_rate` | `f32` | `PORTFOLIO_SENTRY__SAMPLE_RATE` | `1` | — | Fraction of captured events actually sent, `0.0`–`1.0`. |
-| `sentry.traces_sample_rate` | `f32` | `PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE` | `0` | — | Fraction of request traces recorded, `0.0`–`1.0`. |
-| `sentry.capture_level` | `SentryLevel`: `off` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `PORTFOLIO_SENTRY__CAPTURE_LEVEL` | `error` | — | Least severe `tracing` level reported as a Sentry **issue**. |
-| `sentry.breadcrumb_level` | `SentryLevel`: `off` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `PORTFOLIO_SENTRY__BREADCRUMB_LEVEL` | `info` | — | Least severe `tracing` level kept as a **breadcrumb**, the trail attached to the next issue. |
-| `sentry.max_breadcrumbs` | `usize` | `PORTFOLIO_SENTRY__MAX_BREADCRUMBS` | `100` | — | How many breadcrumbs one event carries. |
-| `sentry.attach_stacktraces` | `bool` | `PORTFOLIO_SENTRY__ATTACH_STACKTRACES` | `true` | — | Attach a stack trace to events that carry none of their own. |
-| `sentry.send_default_pii` | `bool` | `PORTFOLIO_SENTRY__SEND_DEFAULT_PII` | `false` | — | Send personally identifying data with every event: the client IP, the full request header set (`Cookie` included) and the resolved user. |
-| `sentry.http_transactions` | `bool` | `PORTFOLIO_SENTRY__HTTP_TRANSACTIONS` | `true` | — | Record one Sentry transaction per request, named by the *matched route* rather than by the URI — so `/api/v1/legal/{slug}` does not become one transaction name per document. |
-| `sentry.span_attributes` | `bool` | `PORTFOLIO_SENTRY__SPAN_ATTRIBUTES` | `false` | — | Copy `tracing` span fields onto the Sentry span as attributes. |
-| `sentry.debug` | `bool` | `PORTFOLIO_SENTRY__DEBUG` | `false` | — | Print the SDK's own diagnostics to stderr. For proving a DSN works, not for running. |
+| `hsts.include_subdomains` | `bool` | `PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS` | `true` | — | Whether the policy covers every subdomain as well, as `includeSubDomains`. |
+| `hsts.preload` | `bool` | `PORTFOLIO_HSTS__PRELOAD` | `true` | — | Whether the header asks for the host to be included in the browsers' built-in HSTS preload list, as `preload`. |
+| `isr.cache_dir` | `PathBuf` | `PORTFOLIO_ISR__CACHE_DIR` | unset (ISR off; the image sets `/tmp/isr`) | — | The writable directory rendered HTML is cached into. Unset or empty disables ISR. |
+| `isr.ttl_secs` | `u64` | `PORTFOLIO_ISR__TTL_SECS` | `0` (permanent) | — | The revalidation interval in seconds. Zero means a permanent cache. |
+| `sentry.enabled` | `bool` | `PORTFOLIO_SENTRY__ENABLED` | `false` | — | Whether the server initializes the Sentry client. Off installs no client, panic hook, `tracing` layer or HTTP middleware, and nothing leaves the process. |
+| `sentry.dsn` | `SecretString` | `PORTFOLIO_SENTRY__DSN` | unset | secret | The ingest URL, `https://<key>@<host>/<project>`. |
+| `sentry.environment` | `String` | `PORTFOLIO_SENTRY__ENVIRONMENT` | unset (`production` in a release build, `development` otherwise) | — | The environment tag on every event. |
+| `sentry.release` | `String` | `PORTFOLIO_SENTRY__RELEASE` | unset (`portfolio@` and the built version) | — | The release tag on every event. |
+| `sentry.server_name` | `String` | `PORTFOLIO_SENTRY__SERVER_NAME` | unset | — | The host tag on every event. Unset reports none. |
+| `sentry.sample_rate` | `f32` | `PORTFOLIO_SENTRY__SAMPLE_RATE` | `1` | — | The fraction of captured events sent, from `0.0` to `1.0`. |
+| `sentry.traces_sample_rate` | `f32` | `PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE` | `0` | — | The fraction of request traces recorded, from `0.0` to `1.0`. |
+| `sentry.capture_level` | `SentryLevel`: `off` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `PORTFOLIO_SENTRY__CAPTURE_LEVEL` | `error` | — | The least severe `tracing` level reported as a Sentry issue. |
+| `sentry.breadcrumb_level` | `SentryLevel`: `off` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `PORTFOLIO_SENTRY__BREADCRUMB_LEVEL` | `info` | — | The least severe `tracing` level kept as a breadcrumb, the trail attached to the next issue. |
+| `sentry.max_breadcrumbs` | `usize` | `PORTFOLIO_SENTRY__MAX_BREADCRUMBS` | `100` | — | The most breadcrumbs one event carries. |
+| `sentry.attach_stacktraces` | `bool` | `PORTFOLIO_SENTRY__ATTACH_STACKTRACES` | `true` | — | Whether events that carry no stack trace of their own get one attached. |
+| `sentry.send_default_pii` | `bool` | `PORTFOLIO_SENTRY__SEND_DEFAULT_PII` | `false` | — | Whether every event carries personally identifying data: the client IP, the full request header set including `Cookie`, and the resolved user. |
+| `sentry.http_transactions` | `bool` | `PORTFOLIO_SENTRY__HTTP_TRANSACTIONS` | `true` | — | Whether the server records one Sentry transaction per request, named by the matched route. |
+| `sentry.span_attributes` | `bool` | `PORTFOLIO_SENTRY__SPAN_ATTRIBUTES` | `false` | — | Whether `tracing` span fields are copied onto the Sentry span as attributes. |
+| `sentry.debug` | `bool` | `PORTFOLIO_SENTRY__DEBUG` | `false` | — | Whether the SDK prints its own diagnostics to stderr, for proving a DSN works. |
 | `legal.default_locale` | `String` | `PORTFOLIO_LEGAL__DEFAULT_LOCALE` | unset | — | Locale served when neither the request nor its `Accept-Language` header matches a published one, for example `en`. Without it, the first published locale in alphabetical order is served. |
 | `legal.documents` | `BTreeMap<String, LegalDocument>`, must contain: `imprint`, `privacy` | `PORTFOLIO_LEGAL__DOCUMENTS` | — | required | The published documents, keyed by the slug their URL uses. A slug is lowercase letters, digits, `_` and `-`, at most 64 characters, and starts with a letter or a digit. |
 
@@ -238,9 +238,9 @@ keys, so a deployment needs no GitHub token. That is why there are two tables an
 
 | TOML | Type | Environment | Default | Flags | Purpose |
 |---|---|---|---|---|---|
-| `github.username` | `String` | `PORTFOLIO_GITHUB__USERNAME` | unset (the site's own `CONFIG.github_username`) | — | User whose repositories to list. |
-| `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | unset | secret | Bearer token lifting the GitHub API rate limit. |
-| `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `[]` (every active repository the user owns) | — | Explicit repository set, bypassing the "every active repository" listing and its filtering. |
+| `github.username` | `String` | `PORTFOLIO_GITHUB__USERNAME` | unset (the site's own `CONFIG.github_username`) | — | The user whose repositories to list. |
+| `github.token` | `SecretString` | `PORTFOLIO_GITHUB__TOKEN` | unset | secret | The bearer token that lifts the GitHub API rate limit. |
+| `github.repos` | `Vec<String>` | `PORTFOLIO_GITHUB__REPOS` | `[]` (every active repository the user owns) | — | The repositories to list, in place of every active repository and its filtering. |
 
 There are two secrets in the workspace, and each should arrive as a file rather than as an
 environment variable: `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry the

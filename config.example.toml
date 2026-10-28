@@ -39,24 +39,20 @@
 # dist_dir = "public"
 
 [csp]
-# Hash every inline `<script>` in the document being served instead of admitting all inline
-# script with `'unsafe-inline'`.
+# Whether the server admits inline `<script>` by hash, in place of `'unsafe-inline'`.
 #
-# On — the default — the server hashes the response body it is about to send, so the only
-# inline scripts that run are the ones it rendered itself. That is the whole point of the
-# exercise: `'unsafe-inline'` admits an injected `<script>` just as readily as the Dioxus
-# hydration bootstrap.
+# On, the default, the server hashes the response body it is about to send, so the only
+# inline scripts that run are the ones it rendered. `'unsafe-inline'` admits an injected
+# `<script>` as readily as the Dioxus hydration bootstrap.
 #
-# Off is the escape hatch, and it exists because the failure mode is silent: an inline
-# script the scanner does not see is refused by the browser, and the evidence is a blank
-# page and a console message nobody is watching. Turning it off restores `'unsafe-inline'`
-# through an environment variable and a restart rather than a redeploy. Known cases: a
-# development server that injects its own live-reload script downstream of this process,
-# and any future renderer change that emits script this server never sees.
+# Off restores `'unsafe-inline'` with a restart. Use it when the browser refuses an inline
+# script the scanner does not see, which shows as a blank page and a console message. Known
+# cases are a development server that injects a live-reload script downstream of this
+# process, and a renderer change that emits script this server never sees.
 #
-# The two settings are mutually exclusive in the browser, not merely different: a policy
-# carrying any hash or nonce makes `'unsafe-inline'` inert, which is why there is one switch
-# here rather than two independent ones.
+# A policy carrying any hash or nonce makes `'unsafe-inline'` inert, so turning this off also
+# requires `csp.cloudflare.script_nonce = false`. [`validate`](Self::validate) refuses the
+# boot otherwise.
 # Type: bool
 # Also from: PORTFOLIO_CSP__HASH_INLINE_SCRIPTS,
 #   PORTFOLIO_CSP__HASH_INLINE_SCRIPTS_FILE=/path/to/file, csp__hash_inline_scripts in the secrets
@@ -64,43 +60,44 @@
 # hash_inline_scripts = true
 
 [csp.cloudflare]
-# Reserve a per-response nonce in `script-src` for the script Cloudflare injects at the edge.
+# Whether `script-src` reserves a per-response nonce for the script Cloudflare injects at the
+# edge.
 #
 # On by default, because this site is delivered through a Cloudflare Tunnel with the bot
-# products active; the `__cf_bm` and `cf_clearance` cookies they set are the observable
-# half of the same feature. Those products inject an inline `<script>` into the HTML
-# *after* it leaves this process, so no hash this server computes can cover it;
-# `script-src` refuses it and the detection silently never runs.
-# Cloudflare's documented answer is to parse the `Content-Security-Policy` response header
-# and copy the nonce onto what it injects, so nothing has to be stamped into the document.
+# products active; the `__cf_bm` and `cf_clearance` cookies are theirs. Those products inject
+# an inline `<script>` after the HTML leaves this process, so no hash the server computes can
+# cover it, and without the nonce the detection silently never runs. Cloudflare reads the
+# nonce from the `Content-Security-Policy` response header and copies it onto what it
+# injects.
 #
-# It carries one obligation the server discharges (`Cache-Control: no-cache` on every
-# document, so a nonce is never shared between readers) and one it cannot: **no Cloudflare
-# Cache Rule may cache the shell**. A "Cache Everything" rule overrides the origin's
-# `Cache-Control`, satisfying the obligation here and violating it at the edge, and nothing
-# inside this process can see that.
+# The server sends `Cache-Control: no-cache` on every document, so a cache must revalidate a
+# stored copy with this origin before each reuse. A document carries no validator, so every
+# reuse reaches the server, which mints a fresh nonce per response. **No Cloudflare Cache
+# Rule may cache the documents**: a "Cache Everything" rule overrides that header at the
+# edge, and nothing inside this process can see it.
 # Type: bool
 # Also from: PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE,
 #   PORTFOLIO_CSP__CLOUDFLARE__SCRIPT_NONCE_FILE=/path/to/file, csp__cloudflare__script_nonce in
 #   the secrets directory
 # script_nonce = true
 
-# Admit `https://challenges.cloudflare.com` in `script-src` and `frame-src`, for a Turnstile
-# widget.
+# Whether `script-src` and `frame-src` admit `https://challenges.cloudflare.com`, for a
+# Turnstile widget.
 #
-# Off: this site has no form behind a challenge. A managed-challenge interstitial needs
-# nothing here either — that is a Cloudflare-served document carrying its own policy.
+# Off, because this site has no form behind a challenge. A managed-challenge interstitial
+# needs nothing here: it is a Cloudflare-served document carrying its own policy.
 # Type: bool
 # Also from: PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE,
 #   PORTFOLIO_CSP__CLOUDFLARE__TURNSTILE_FILE=/path/to/file, csp__cloudflare__turnstile in the
 #   secrets directory
 # turnstile = false
 
-# Admit the Cloudflare Web Analytics beacon and the endpoint it reports to.
+# Whether the policy admits the Cloudflare Web Analytics beacon and the endpoint it reports
+# to.
 #
-# Off: this site measures nothing, which the privacy page states. Only for the *manual*
-# snippet — the automatic edge injection is an inline script and needs `script_nonce`
-# instead.
+# Off, because this site measures nothing, which the privacy page states. It covers the
+# manual snippet only; the automatic edge injection is an inline script and needs
+# `script_nonce`.
 # Type: bool
 # Also from: PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS,
 #   PORTFOLIO_CSP__CLOUDFLARE__WEB_ANALYTICS_FILE=/path/to/file, csp__cloudflare__web_analytics in
@@ -110,23 +107,26 @@
 [hsts]
 # How long, in seconds, a browser keeps to HTTPS after seeing the header. Zero clears it.
 #
-# Zero is the documented way to *withdraw* HSTS: browsers drop the host from their list on
-# the next response. It is refused together with `preload`, which that would contradict.
+# Zero is the documented way to withdraw HSTS: a browser drops a host it learned from this
+# header on the next response. A host already on the preload list stays there until its
+# removal reaches browsers in a release. Zero is refused together with `preload`, which it
+# would contradict.
 # Type: u64
 # Also from: PORTFOLIO_HSTS__MAX_AGE_SECS, PORTFOLIO_HSTS__MAX_AGE_SECS_FILE=/path/to/file,
 #   hsts__max_age_secs in the secrets directory
 # max_age_secs = 31536000
 
-# Apply the policy to every subdomain as well (`includeSubDomains`).
+# Whether the policy covers every subdomain as well, as `includeSubDomains`.
 # Type: bool
 # Also from: PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS,
 #   PORTFOLIO_HSTS__INCLUDE_SUBDOMAINS_FILE=/path/to/file, hsts__include_subdomains in the secrets
 #   directory
 # include_subdomains = true
 
-# Ask to be included in the browsers' built-in HSTS preload list (`preload`).
+# Whether the header asks for the host to be included in the browsers' built-in HSTS preload
+# list, as `preload`.
 #
-# The list's own requirements are enforced at boot: `include_subdomains` on and a
+# The boot enforces the list's own requirements: `include_subdomains` on and a
 # `max_age_secs` of at least one year.
 # Type: bool
 # Also from: PORTFOLIO_HSTS__PRELOAD, PORTFOLIO_HSTS__PRELOAD_FILE=/path/to/file, hsts__preload in
@@ -134,176 +134,169 @@
 # preload = true
 
 [isr]
-# Writable directory rendered HTML is cached into. Unset or empty disables ISR.
+# The writable directory rendered HTML is cached into. Unset or empty disables ISR.
 #
-# Keep it *outside* the bundled `public/` asset tree so those content-hashed assets stay
-# immutable. The image points it at a sub-directory of `/tmp`, which the deployment already
-# provides as a writable mount even under a read-only root filesystem.
+# Keep it outside the bundled `public/` asset tree so those content-hashed assets stay
+# immutable. The image points it at a sub-directory of `/tmp`, which the deployment provides
+# as a writable mount even under a read-only root filesystem.
 # Type: PathBuf
 # Also from: PORTFOLIO_ISR__CACHE_DIR, PORTFOLIO_ISR__CACHE_DIR_FILE=/path/to/file, isr__cache_dir
 #   in the secrets directory
 # Unset by default: the value below is only the shape.
 # cache_dir = "<value>"
 
-# Revalidation interval in seconds. Zero means a permanent cache.
+# The revalidation interval in seconds. Zero means a permanent cache.
 #
-# Every page renders from compile-time data, so the only thing that changes the output is a
-# new build, which starts from an empty cache anyway. A positive value opts into a finite,
-# time-based TTL, which is useful only when a *persistent* cache volume is shared across
-# deploys.
+# A page changes only with a new build or a new `legal.*` configuration, and the server keeps
+# whatever the directory holds at boot. Permanent suits a directory that starts empty with
+# every pod. A container restart inside the same pod keeps the mount and its pages, so a
+# `legal.*` change applied by a restart needs a positive value, a cleared directory or a new
+# pod. A cache volume that outlives a deploy needs a positive value for the same reason.
 # Type: u64
 # Also from: PORTFOLIO_ISR__TTL_SECS, PORTFOLIO_ISR__TTL_SECS_FILE=/path/to/file, isr__ttl_secs in
 #   the secrets directory
 # ttl_secs = 0
 
 [sentry]
-# Initialize the Sentry client. `false` installs no client, no panic hook, no `tracing`
-# layer and no HTTP middleware, so every other key here is inert and nothing leaves the
-# process.
+# Whether the server initializes the Sentry client. Off installs no client, panic hook,
+# `tracing` layer or HTTP middleware, and nothing leaves the process.
 #
-# It also decides who owns the log subscriber. Off — the default — the Dioxus toolchain
-# installs its own, which is the behavior this server has always had. On, the server
-# installs one first (still reading `RUST_LOG`, still formatting the same way) because a
-# Sentry layer has to be a layer *of* the subscriber, and the framework's is not
-# extensible after the fact.
+# It also decides who owns the log subscriber. Off, the Dioxus toolchain installs its own.
+# On, the server installs one first, still reading `RUST_LOG` and formatting the same way,
+# because a Sentry layer has to be a layer of the subscriber.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__ENABLED, PORTFOLIO_SENTRY__ENABLED_FILE=/path/to/file,
 #   sentry__enabled in the secrets directory
 # enabled = false
 
-# Ingest URL, `https://<key>@<host>/<project>`.
+# The ingest URL, `https://<key>@<host>/<project>`.
 #
-# The embedded key is a bearer credential for the project's ingest endpoint, so it is held
-# as a `SecretString` — this block is nested in a `ServerConfig` that is printed with `?` on
-# the refusal path. Supply it as `PORTFOLIO_SENTRY__DSN_FILE=/run/secrets/sentry_dsn`, or as
-# `sentry__dsn` inside `$PORTFOLIO_SECRETS_DIR`, so it never enters the process
-# environment — where `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry
-# it, and every child process inherits it.
+# The embedded key is a bearer credential for the project's ingest endpoint. Supply it as
+# `PORTFOLIO_SENTRY__DSN_FILE=/run/secrets/sentry_dsn`, or as `sentry__dsn` inside
+# `$PORTFOLIO_SECRETS_DIR`, so it never enters the process environment, where
+# `/proc/<pid>/environ`, a crash dump and `docker inspect` all carry it and every child
+# process inherits it.
 #
-# Absent while `sentry.enabled` is set is a boot failure, not a silent no-op.
+# Absent while `sentry.enabled` is set, it fails the boot.
 # Type: SecretString
 # Also from: PORTFOLIO_SENTRY__DSN, PORTFOLIO_SENTRY__DSN_FILE=/path/to/file, sentry__dsn in the
 #   secrets directory
 # Secret: the value below is a placeholder.
 # dsn = "<secret>"
 
-# Environment tag on every event.
+# The environment tag on every event.
 #
-# Unset resolves to `production` for a release build and `development` otherwise, which is
-# the only distinction this workspace has: it ships one image, and the thing that separates
-# a developer's `dx serve` from the deployed container is the profile it was built with.
+# Unset resolves to `production` for a release build and `development` otherwise. The
+# workspace ships one image, so the build profile is what separates a developer's
+# `dx serve` from the deployed container.
 # Type: String
 # Also from: PORTFOLIO_SENTRY__ENVIRONMENT, PORTFOLIO_SENTRY__ENVIRONMENT_FILE=/path/to/file,
 #   sentry__environment in the secrets directory
 # Unset by default: the value below is only the shape.
 # environment = "<value>"
 
-# Release tag on every event.
+# The release tag on every event.
 #
-# Unset resolves to `portfolio@<version>`, the workspace version the binary was built from
-# — which is what makes a regression attributable to a deploy, since every deploy of this
-# site is a new image cut from a new version.
+# Unset resolves to `portfolio@<version>`, the workspace version the binary was built from.
+# Every deploy is a new image cut from a new version, so the tag attributes a regression to
+# a deploy.
 # Type: String
 # Also from: PORTFOLIO_SENTRY__RELEASE, PORTFOLIO_SENTRY__RELEASE_FILE=/path/to/file,
 #   sentry__release in the secrets directory
 # Unset by default: the value below is only the shape.
 # release = "<value>"
 
-# Host tag on every event.
+# The host tag on every event. Unset reports none.
 #
-# Left unset, Sentry reports none. The hostname of a replica is infrastructure detail that
-# `sentry.send_default_pii` would otherwise be the gate for, and this site runs one image
-# behind a tunnel, so it identifies nothing an event does not already say.
+# The hostname of a replica is infrastructure detail, and this site runs one image behind a
+# tunnel, so it identifies nothing an event does not already say.
 # Type: String
 # Also from: PORTFOLIO_SENTRY__SERVER_NAME, PORTFOLIO_SENTRY__SERVER_NAME_FILE=/path/to/file,
 #   sentry__server_name in the secrets directory
 # Unset by default: the value below is only the shape.
 # server_name = "<value>"
 
-# Fraction of captured events actually sent, `0.0`–`1.0`.
+# The fraction of captured events sent, from `0.0` to `1.0`.
 #
-# A blunt volume cap: it drops whole issues rather than repetitions of one, so a rare bug
-# is exactly as likely to be dropped as a noisy one. Leave it at `1.0` unless a quota
-# forces otherwise.
+# It is a blunt volume cap: a rare bug is as likely to be dropped as a noisy one. Leave it
+# at `1.0` unless a quota forces otherwise.
 # Type: f32
 # Also from: PORTFOLIO_SENTRY__SAMPLE_RATE, PORTFOLIO_SENTRY__SAMPLE_RATE_FILE=/path/to/file,
 #   sentry__sample_rate in the secrets directory
 # sample_rate = 1.0
 
-# Fraction of request traces recorded, `0.0`–`1.0`.
+# The fraction of request traces recorded, from `0.0` to `1.0`.
 #
-# `0.0` — the default — records none, which is what keeps switching Sentry on for crash
-# reporting from also switching performance data on. `0.05`–`0.2` is an ordinary
-# production figure.
-#
-# This server starts every trace it has: it is the edge, and nothing upstream of it hands
-# it a sampled trace to continue. That is the difference from a service tier, where the
-# rate of whoever *starts* the trace decides whether it exists at all.
+# The rate decides for a request that arrives without a sampling decision. A request whose
+# `sentry-trace` header carries one keeps it, so a caller can have its request recorded even
+# at the default, `0.0`. `sentry.http_transactions = false` starts no request transaction at
+# all. The default keeps ordinary traffic from sending performance data when Sentry is on for
+# crash reporting. `0.05` to `0.2` is an ordinary production figure.
 # Type: f32
 # Also from: PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE,
 #   PORTFOLIO_SENTRY__TRACES_SAMPLE_RATE_FILE=/path/to/file, sentry__traces_sample_rate in the
 #   secrets directory
 # traces_sample_rate = 0.0
 
-# Least severe `tracing` level reported as a Sentry **issue**.
+# The least severe `tracing` level reported as a Sentry issue.
 # Type: SentryLevel — one of: off, error, warn, info, debug, trace
 # Also from: PORTFOLIO_SENTRY__CAPTURE_LEVEL, PORTFOLIO_SENTRY__CAPTURE_LEVEL_FILE=/path/to/file,
 #   sentry__capture_level in the secrets directory
 # capture_level = "error"
 
-# Least severe `tracing` level kept as a **breadcrumb**, the trail attached to the next
+# The least severe `tracing` level kept as a breadcrumb, the trail attached to the next
 # issue.
 #
 # Records at or above `sentry.capture_level` become issues instead, so the two thresholds
-# partition the stream rather than overlapping on it.
+# partition the stream.
 # Type: SentryLevel — one of: off, error, warn, info, debug, trace
 # Also from: PORTFOLIO_SENTRY__BREADCRUMB_LEVEL,
 #   PORTFOLIO_SENTRY__BREADCRUMB_LEVEL_FILE=/path/to/file, sentry__breadcrumb_level in the secrets
 #   directory
 # breadcrumb_level = "info"
 
-# How many breadcrumbs one event carries.
+# The most breadcrumbs one event carries.
 # Type: usize
 # Also from: PORTFOLIO_SENTRY__MAX_BREADCRUMBS,
 #   PORTFOLIO_SENTRY__MAX_BREADCRUMBS_FILE=/path/to/file, sentry__max_breadcrumbs in the secrets
 #   directory
 # max_breadcrumbs = 100
 
-# Attach a stack trace to events that carry none of their own.
+# Whether events that carry no stack trace of their own get one attached.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__ATTACH_STACKTRACES,
 #   PORTFOLIO_SENTRY__ATTACH_STACKTRACES_FILE=/path/to/file, sentry__attach_stacktraces in the
 #   secrets directory
 # attach_stacktraces = true
 
-# Send personally identifying data with every event: the client IP, the full request header
-# set (`Cookie` included) and the resolved user.
+# Whether every event carries personally identifying data: the client IP, the full request
+# header set including `Cookie`, and the resolved user.
 #
-# **Off, and worth leaving off.** A reader's IP address and cookies are exactly what a
-# crash report does not need in order to be actionable, and every event sent is personal
-# data handed to a third party, which the published privacy notice would then have to
-# name. On, it also widens what the HTTP middleware records, because `sentry-tower` reads
-# this same flag to decide whether to redact sensitive request headers.
+# **Off, and worth leaving off.** A crash report is actionable without a reader's IP address
+# and cookies, and every event sent is personal data handed to a third party, which the
+# published privacy notice would then have to name. On, it also stops the HTTP middleware
+# from redacting sensitive request headers.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__SEND_DEFAULT_PII,
 #   PORTFOLIO_SENTRY__SEND_DEFAULT_PII_FILE=/path/to/file, sentry__send_default_pii in the secrets
 #   directory
 # send_default_pii = false
 
-# Record one Sentry transaction per request, named by the *matched route* rather than by
-# the URI — so `/api/v1/legal/{slug}` does not become one transaction name per document.
+# Whether the server records one Sentry transaction per request, named by the matched route.
 #
-# Whether a started transaction is *kept* is `sentry.traces_sample_rate`'s decision; this is
-# the switch for taking the middleware out entirely.
+# Naming by route keeps `/api/v1/legal/{slug}` one transaction name for every document.
+# Whether a started transaction is kept is `sentry.traces_sample_rate`'s decision. Off starts
+# no transaction, but the HTTP middleware stays installed and still attaches the request to
+# events.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__HTTP_TRANSACTIONS,
 #   PORTFOLIO_SENTRY__HTTP_TRANSACTIONS_FILE=/path/to/file, sentry__http_transactions in the
 #   secrets directory
 # http_transactions = true
 
-# Copy `tracing` span fields onto the Sentry span as attributes.
+# Whether `tracing` span fields are copied onto the Sentry span as attributes.
 #
-# Off. Span fields here routinely carry request paths and the negotiated locale, and a
+# Off, because span fields here carry request paths and the negotiated locale, and a
 # transaction is stored under a longer retention than a log line.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__SPAN_ATTRIBUTES,
@@ -311,7 +304,7 @@
 #   directory
 # span_attributes = false
 
-# Print the SDK's own diagnostics to stderr. For proving a DSN works, not for running.
+# Whether the SDK prints its own diagnostics to stderr, for proving a DSN works.
 # Type: bool
 # Also from: PORTFOLIO_SENTRY__DEBUG, PORTFOLIO_SENTRY__DEBUG_FILE=/path/to/file, sentry__debug in
 #   the secrets directory
@@ -337,18 +330,17 @@
 documents = {}
 
 [github]
-# User whose repositories to list.
+# The user whose repositories to list.
 #
-# Unset falls back to `portfolio_data::CONFIG`, which is the site's own identity and
-# therefore the only sensible default — resolved by the builder rather than here, so this
-# crate stays a schema and does not depend on the site data.
+# Unset falls back to the site's own identity in `portfolio_data::CONFIG`, which the builder
+# resolves.
 # Type: String
 # Also from: PORTFOLIO_GITHUB__USERNAME, PORTFOLIO_GITHUB__USERNAME_FILE=/path/to/file,
 #   github__username in the secrets directory
 # Unset by default: the value below is only the shape.
 # username = "<value>"
 
-# Bearer token lifting the GitHub API rate limit.
+# The bearer token that lifts the GitHub API rate limit.
 #
 # Optional: the listing is public, so an unauthenticated build still works, just against the
 # anonymous quota.
@@ -363,12 +355,11 @@ documents = {}
 # Secret: the value below is a placeholder.
 # token = "<secret>"
 
-# Explicit repository set, bypassing the "every active repository" listing and its filtering.
+# The repositories to list, in place of every active repository and its filtering.
 #
-# Spelled as an array: `repos = ["Portfolio", "actions"]` in TOML, and
-# `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment — figment parses the
-# bracketed form, and a bare comma-separated string is *not* accepted, so the two spellings
-# cannot drift apart.
+# It is an array in both spellings: `repos = ["Portfolio", "actions"]` in TOML, and
+# `PORTFOLIO_GITHUB__REPOS=[Portfolio,actions]` in the environment. A bare comma-separated
+# string is not accepted.
 # Type: Vec<String>
 # Also from: PORTFOLIO_GITHUB__REPOS, PORTFOLIO_GITHUB__REPOS_FILE=/path/to/file, github__repos in
 #   the secrets directory

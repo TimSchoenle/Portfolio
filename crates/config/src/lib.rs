@@ -13,8 +13,8 @@
 //!
 //! # What each binary composes
 //!
-//! This crate owns the *blocks*, the dialect, and one aggregate per binary naming the blocks that
-//! binary reads — so a struct field is evidence that something consumes it:
+//! This crate owns the blocks, the dialect, and one aggregate per binary naming the blocks that
+//! binary reads, so a struct field is evidence that something consumes it:
 //!
 //! - the SSR server, [`ServerConfig`] ([`AssetsConfig`], [`CspConfig`], [`HstsConfig`],
 //!   [`IsrConfig`], [`SentryConfig`], and `terrace-legal`'s [`LegalConfig`](terrace_legal::LegalConfig), which
@@ -27,7 +27,7 @@
 //! # Why the loader half only
 //!
 //! Two of `terrace-config`'s five features are taken: `loader`, which is the layering above, and
-//! `explain`, which is [`provenance`] — the report naming which layer supplied each key, printed
+//! `explain`, which is [`provenance`]: the report naming which layer supplied each key, printed
 //! beside the error when a boot is refused. `explain` costs no dependency at all, and it is what
 //! answers the question the error cannot: an operator inside a `scratch` image with no shell
 //! cannot otherwise see that the variable they thought they removed is still shadowing the
@@ -41,7 +41,7 @@
 //! 1. **Neither secret is one a reload could re-point.** Rotation is what the supervisor exists
 //!    to survive. [`GithubConfig::token`] belongs to a one-shot build tool that exits in
 //!    seconds, and [`SentryConfig::dsn`] is read once by `sentry::init`, which binds one client
-//!    to the process for its lifetime — so a rebuilt configuration would carry the new DSN to a
+//!    to the process for its lifetime, so a rebuilt configuration would carry the new DSN to a
 //!    client that cannot be told about it. Every other value the *server* reads changes only on
 //!    a redeploy.
 //! 2. **A rebuild would need two serve loops.** A release build of the server owns its accept
@@ -67,21 +67,22 @@
 //! # The configuration reference in `README.md` is generated from these types
 //!
 //! Every block and aggregate above derives `terrace_config::schema::Describe` under the
-//! off-by-default `config-schema` feature, and the `schema` module — also behind it — is the
+//! off-by-default `config-schema` feature, and the `schema` module, also behind it, is the
 //! single place they are assembled into the schema, refined with what the server enforces at boot
 //! beyond its types. `examples/config-schema.rs` renders that into the tables CI puts in the
-//! README — one per aggregate, so the reference says which binary reads a key rather than
-//! implying every deployment needs all of them. The feature is off in
-//! every build that ships, so `serde_json` and the derive never reach a binary;
-//! `cargo clippy --all-features --all-targets` is what keeps the generator compiling.
+//! README, one per aggregate, so the reference says which binary reads a key instead of implying
+//! every deployment needs all of them. The feature is off in every build that ships, so
+//! `serde_json` and the derive never reach a binary; `cargo clippy --all-features --all-targets`
+//! is what keeps the generator compiling.
 //!
 //! Write field documentation as rustdoc asks for it: a summary sentence, a blank line, then as
-//! much reasoning as it takes. Only the summary reaches the Markdown table — `to_json` carries
-//! the whole comment for anything that wants the rest — so nothing has to be kept short for the
-//! README's sake, and nothing has to be annotated twice.
+//! much reasoning as it takes. Only the summary reaches the Markdown table, while `to_json` and
+//! `config.example.toml` carry the whole comment, so nothing has to be kept short for the README's
+//! sake, and nothing has to be annotated twice. A field's summary may run to two sentences when
+//! the second gives the unit, the default or what an empty value means.
 //!
-//! A new block needs no registration anywhere — adding it to the aggregate that loads it is what
-//! puts it in the README, because that aggregate is what the generator describes.
+//! A new block needs no registration anywhere: adding it to the aggregate that loads it puts it in
+//! the README, because that aggregate is what the generator describes.
 
 mod aggregates;
 mod assets;

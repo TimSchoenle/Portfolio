@@ -1,6 +1,9 @@
 //! The skill matrix: quadrants, confidence values and what the matrix and resume show.
 
-/// Skills below this confidence are hidden from the matrix and the resume.
+/// The confidence below which a skill that is not radar-only is left out of the matrix, the radar
+/// and the resume.
+///
+/// A radar-only skill is drawn on the radar whatever its confidence.
 pub const MIN_CONFIDENCE: f32 = 0.6;
 
 /// A region of the tech radar, which is also a group of the skill matrix.
@@ -9,10 +12,14 @@ pub enum Quadrant {
     /// Programming languages, and the markup and configuration formats filed with them
     /// (`Markdown`, `TOML`, `Dockerfile`).
     Languages,
-    /// Libraries and frameworks. A datastore's client library is filed here and the datastore
-    /// itself under [`Infra`](Self::Infra): `sqlx` and `Prisma` against `PostgreSQL`.
+    /// Libraries and frameworks.
+    ///
+    /// A datastore's client library is filed here and the datastore itself under
+    /// [`Infra`](Self::Infra): `sqlx` and `Prisma` against `PostgreSQL`.
     Frameworks,
-    /// Build, test and repository tooling. The one quadrant the profile API withholds; see
+    /// Build, test and repository tooling.
+    ///
+    /// The profile API withholds this quadrant; see
     /// [`profile::ProfileSkills`](crate::profile::ProfileSkills).
     Build,
     /// Runtimes, datastores and the deployment machinery around them.
@@ -20,7 +27,7 @@ pub enum Quadrant {
 }
 
 impl Quadrant {
-    /// Translation key for the quadrant label.
+    /// Returns the translation key of the quadrant's label.
     #[must_use]
     pub fn i18n_key(&self) -> &'static str {
         match self {
@@ -31,7 +38,7 @@ impl Quadrant {
         }
     }
 
-    /// The color each quadrant is drawn in on the skill radar and its legend.
+    /// Returns the color the quadrant is drawn in on the skill radar and its legend.
     #[must_use]
     pub fn color(&self) -> &'static str {
         match self {
@@ -42,7 +49,7 @@ impl Quadrant {
         }
     }
 
-    /// Every quadrant, in the order the radar draws them.
+    /// Returns every quadrant, in the order the radar draws them.
     #[must_use]
     pub fn all() -> [Quadrant; 4] {
         [
@@ -57,22 +64,23 @@ impl Quadrant {
 /// One entry of the skill inventory.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Skill {
-    /// Shown as written, in both languages. A tool's name is not translated.
+    /// The tool's name, shown as written in every language.
     pub name: &'static str,
-    /// Which radar region it is plotted in, and which matrix group it is listed under.
+    /// The radar region the skill is plotted in, which is also its matrix group.
     pub quadrant: Quadrant,
-    /// Hands-on depth, `0.0..=1.0`. Decides the radar distance, the matrix order and, against
-    /// [`MIN_CONFIDENCE`], whether the skill is listed at all.
+    /// The hands-on depth, from `0.0` to `1.0`.
+    ///
+    /// It decides the radar distance, the matrix order and, against [`MIN_CONFIDENCE`], whether a
+    /// skill that is not radar-only is listed at all.
     pub confidence: f32,
-    /// Radar-only skills appear as radar scatter but not in the matrix/resume.
+    /// Whether the skill appears on the radar alone, never in the matrix or on the resume.
     pub radar_only: bool,
 }
 
 impl Skill {
-    /// Confidence scaled by five and rounded to the nearest integer.
+    /// Returns the confidence on a scale of one to five, rounded to the nearest integer.
     ///
-    /// Clamped at both ends, so a skill nobody would list still comes back as a 1 rather than a
-    /// 0 the star row would render as nothing.
+    /// The result is clamped to `1..=5`, so a skill nobody would list still gets one star.
     ///
     /// ```
     /// # use portfolio_data::{Quadrant, Skill};
@@ -112,8 +120,11 @@ const fn r(name: &'static str, quadrant: Quadrant, confidence: f32) -> Skill {
     }
 }
 
-/// Full skill inventory. Matrix skills (`s`) reach the skill section, the resume and the radar;
-/// radar-only skills (`r`) reach the radar alone.
+/// The full skill inventory.
+///
+/// Matrix skills, written `s(…)`, reach the skill section, the resume and the radar when their
+/// confidence is at least [`MIN_CONFIDENCE`]. Radar-only skills, written `r(…)`, reach the radar
+/// alone, whatever their confidence.
 pub const SKILLS: &[Skill] = &{
     use Quadrant::{Build, Frameworks, Infra, Languages};
     [
@@ -297,7 +308,9 @@ pub const SKILLS: &[Skill] = &{
     ]
 };
 
-/// Skills shown in the skill matrix and on the resume, strongest first.
+/// Returns the skills the matrix and the resume show, strongest first.
+///
+/// These are the skills that are not radar-only and reach [`MIN_CONFIDENCE`].
 #[must_use]
 pub fn matrix_skills() -> Vec<Skill> {
     let mut out: Vec<Skill> = SKILLS

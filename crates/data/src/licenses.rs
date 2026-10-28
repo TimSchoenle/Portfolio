@@ -1,14 +1,35 @@
-//! Schema of the third-party license inventory embedded into the web binary.
+//! The schema of the third-party license inventory embedded into the web binary.
 //!
-//! The document is produced by [`cargo-about`] from `apps/web/about.toml` and
-//! `apps/web/about.hbs`, embedded by `apps/web/build.rs` and rendered by the
-//! `/licenses` route. This module is the contract between those three: the
-//! template writes this shape, the build script copies it in unchanged, and the
-//! page deserializes it here.
+//! [`cargo-about`] produces the document from `apps/web/about.toml` and `apps/web/about.hbs`,
+//! `apps/web/build.rs` embeds it, and the `/licenses` route renders it. This module is the
+//! contract between those three: the template writes this shape, the build script copies it in
+//! unchanged, and the page deserializes it here.
 //!
-//! It holds no prose. License *texts* are reproduced verbatim as their authors
-//! wrote them — that is the point of the page — and every label around them
-//! comes from the translation files.
+//! It holds no prose. License texts are reproduced verbatim as their authors wrote them, and
+//! every label around them comes from the translation files.
+//!
+//! # Why the document is normalized
+//!
+//! A license text appears once in [`LicensesFile::texts`], however many dependencies ship it, and
+//! [`LicensesFile::dependencies`] joins it back to one row per dependency. That holds the
+//! document to about 340 KB in the binary; repeating each shared Apache text under every crate
+//! using it makes it half again as large. The join runs once per call over 175 texts and 335
+//! dependencies, where scanning every text for every dependency during each render would repeat
+//! a join whose answer never changes within a build.
+//!
+//! # Why the workspace's own crates are filtered here
+//!
+//! A crate resolved from a path carries no `source`, and that is the whole test in
+//! [`LicensesFile::third_party`]. Naming the workspace crates in `about.toml` would need an edit
+//! for every new one. cargo-about can drop unpublished crates itself, but it keys that off
+//! `publish = false` on any crate, which also drops third-party dependencies pinned by git tag;
+//! see the note in `about.toml`.
+//!
+//! # Why there is no `authors` field
+//!
+//! It is empty for a tenth of the graph and stale for more, and the attribution that carries
+//! legal weight is the copyright notice inside the license text, which is reproduced in full.
+//! Every field in this document is rendered, so a field the page would not show is not embedded.
 //!
 //! [`cargo-about`]: https://github.com/EmbarkStudios/cargo-about
 
@@ -16,69 +37,42 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-/// The generated license inventory: one entry per license in [`Self::summary`],
-/// one per distinct license *file* in [`Self::texts`], one per dependency in
-/// [`Self::crates`].
+/// The generated license inventory.
 ///
-/// Stored normalized — a license text appears once, however many dependencies
-/// ship it — and joined back into one row per dependency by
-/// [`Self::dependencies`], which is the shape the page renders. Keeping the
-/// document normalized is what holds it to 340 KB in the binary: the same data
-/// denormalised, with each shared Apache text repeated under every crate using
-/// it, is half again as large.
+/// Each license text appears once, however many dependencies ship it. Read the rows the page
+/// renders through [`Self::dependencies`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LicensesFile {
-    /// Every license the dependency set resolves to, with the number of crates
-    /// under it. Ordered by cargo-about, most-used first.
+    /// Every license the dependency set resolves to, most-used first.
     #[serde(default)]
     pub summary: Vec<LicenseSummary>,
     /// Every distinct license file found, each naming the crates it covers.
     ///
-    /// Distinct by text, not by identifier: two crates under MIT ship two files
-    /// that differ in their copyright line, and reproducing that line is what MIT
-    /// asks for. Hence 100-odd entries over a handful of identifiers.
-    ///
-    /// `used_by` is the join, not something the page prints — [`Self::dependencies`]
-    /// inverts it so each dependency carries its own texts.
+    /// Distinct by text, not by identifier: two crates under MIT ship two files that differ in
+    /// their copyright line, and reproducing that line is what MIT asks for.
     #[serde(default)]
     pub texts: Vec<LicenseText>,
-    /// Every crate in the resolved graph, as cargo resolved it for the targets
-    /// in `about.toml` — including this repository's own, which
-    /// [`Self::third_party`] filters out.
+    /// Every crate cargo resolved for the targets in `about.toml`, including the workspace's own.
+    ///
+    /// [`Self::third_party`] leaves the workspace's crates out.
     #[serde(default)]
     pub crates: Vec<CrateLicense>,
 }
 
 impl LicensesFile {
-    /// The dependencies that came from somewhere else, which is what the page
-    /// attributes.
+    /// Returns the crates resolved from a registry or a git remote, which the page attributes.
     ///
-    /// A crate resolved from a registry or a git remote carries a `source`; one
-    /// resolved from a path — this repository's own `portfolio-*` crates — does not. That is
-    /// the whole test, and it is done here rather than by naming them in `about.toml`: another
-    /// crate in this workspace then needs no configuration change to stay off a page about
-    /// third parties.
-    ///
-    /// Filtering here rather than in the generator is deliberate too. cargo-about
-    /// can drop unpublished crates itself, but it keys that off `publish = false`
-    /// on *any* crate rather than on workspace membership, which also drops
-    /// third-party dependencies pinned by git tag — see the note in `about.toml`.
+    /// A crate resolved from a path, which is every crate of this workspace, is left out.
     pub fn third_party(&self) -> impl Iterator<Item = &CrateLicense> {
         self.crates.iter().filter(|c| c.source.is_some())
     }
 
-    /// Every third-party dependency with the license texts that cover it, in the
-    /// document's own order.
+    /// Returns every third-party dependency with the license texts that cover it, in the
+    /// document's order.
     ///
-    /// The inversion of [`LicenseText::used_by`], done once here rather than by
-    /// scanning every text for every dependency while rendering — that is 175
-    /// texts against 335 dependencies on each server render, for a join whose
-    /// answer never changes within a build.
-    ///
-    /// A dependency usually has exactly one text. It has several when it is
-    /// licensed `A AND B`, or when it vendors code under notices of its own:
-    /// `ring` carries eighteen, which are eighteen genuinely different copyright
-    /// notices rather than eighteen copies of one.
+    /// A dependency usually has exactly one text. It has several when it is licensed `A AND B`,
+    /// or when it vendors code under notices of its own: `ring` carries eighteen different
+    /// copyright notices.
     #[must_use]
     pub fn dependencies(&self) -> Vec<DependencyLicenses<'_>> {
         let mut covered: BTreeMap<(&str, &str), Vec<&LicenseText>> = BTreeMap::new();
@@ -101,10 +95,10 @@ impl LicensesFile {
             .collect()
     }
 
-    /// `true` when there is nothing to attribute — a `cargo check` or a `cargo
-    /// test` outside the image build, where `cargo about` has not run and
-    /// `build.rs` embedded the empty default. The page renders its unavailable
-    /// state.
+    /// Reports whether there is no third-party crate to attribute.
+    ///
+    /// That is the case outside the image build, where `cargo about` has not run and `build.rs`
+    /// embedded the empty default.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.third_party().next().is_none()
@@ -116,45 +110,49 @@ impl LicensesFile {
 pub struct DependencyLicenses<'a> {
     /// The crate being attributed.
     pub dependency: &'a CrateLicense,
-    /// Empty only if the generator found no license file for it at all, which is
-    /// worth showing as such rather than hiding the dependency.
+    /// The license texts covering the crate, empty when the generator found none.
+    ///
+    /// The page shows such a dependency with no text instead of hiding it.
     pub texts: Vec<&'a LicenseText>,
 }
 
 /// One license and how many crates resolve to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LicenseSummary {
-    /// SPDX short identifier, e.g. `MIT`.
+    /// The SPDX short identifier, such as `MIT`.
     pub id: String,
-    /// Full name, e.g. `MIT License`.
+    /// The full name, such as `MIT License`.
     pub name: String,
-    /// Crates resolving to this license. Sums to more than the number of
-    /// dependencies: a crate licensed `A AND B` is counted by both.
+    /// The number of crates resolving to this license.
+    ///
+    /// The counts sum to more than the number of dependencies: a crate licensed `A AND B` is
+    /// counted by both.
     pub crates: usize,
 }
 
 /// One distinct license text and the crates it covers.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LicenseText {
-    /// SPDX short identifier this text was identified as.
+    /// The SPDX short identifier this text was identified as.
     pub id: String,
-    /// Full name of that license.
+    /// The full name of that license.
     pub name: String,
-    /// The license file, verbatim — copyright line, wrapping and all. Rendered
-    /// preformatted; never reflowed, translated or summarized.
+    /// The license file verbatim, copyright line and wrapping included.
+    ///
+    /// The page renders it preformatted, never reflowed, translated or summarized.
     pub text: String,
     /// The crates this exact text was found in.
     #[serde(default)]
     pub used_by: Vec<CrateRef>,
 }
 
-/// A crate named from a license text's coverage list.
+/// A crate named in a license text's coverage list.
 ///
-/// Name and version together, because a dependency graph can hold two versions of the same crate
+/// Both fields identify it, because a dependency graph can hold two versions of the same crate
 /// under two different copyright lines.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CrateRef {
-    /// Crate name as published.
+    /// The crate name as published.
     pub name: String,
     /// The exact version cargo resolved.
     pub version: String,
@@ -163,29 +161,24 @@ pub struct CrateRef {
 /// One crate in the resolved dependency graph.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CrateLicense {
-    /// Crate name as published.
+    /// The crate name as published.
     pub name: String,
-    /// The exact version cargo resolved, which is what the page prints beside the name.
+    /// The exact version cargo resolved, which the page prints beside the name.
     pub version: String,
-    /// The SPDX *expression* the crate declares, e.g. `MIT OR Apache-2.0` —
-    /// what it offers, which is not always the single license it was resolved
-    /// under. Both are shown: the offer here, the resolved text in
-    /// [`LicensesFile::texts`].
+    /// The SPDX expression the crate declares, such as `MIT OR Apache-2.0`.
+    ///
+    /// This is what the crate offers, which is not always the license it was resolved under. The
+    /// page shows both: this expression, and the resolved text from [`LicensesFile::texts`].
     pub license: String,
-    /// Where cargo resolved the crate from: a registry index, a git remote, or
-    /// nothing at all for a path dependency. What makes a crate third-party —
-    /// see [`LicensesFile::third_party`].
+    /// The registry index or git remote cargo resolved the crate from, or `None` for a path
+    /// dependency.
+    ///
+    /// A crate with a source is third-party; see [`LicensesFile::third_party`].
     #[serde(default)]
     pub source: Option<String>,
-    /// Upstream repository. Absent for the rare crate that declares none, in
-    /// which case the page renders the name unlinked rather than a dead anchor.
+    /// The upstream repository, or `None` when the crate declares none.
     ///
-    /// The manifest's `authors` field is deliberately not carried alongside it.
-    /// It is empty for a tenth of this graph and stale for more, and the
-    /// attribution that carries legal weight is the copyright notice inside the
-    /// license text, which [`LicensesFile::texts`] reproduces in full. Every
-    /// field in this document is rendered; a field the page would not show has no
-    /// reason to be embedded in the binary.
+    /// The page renders the name of a crate without one unlinked.
     #[serde(default)]
     pub repository: Option<String>,
 }

@@ -1,23 +1,21 @@
 //! Site-wide facts: identity, links, SEO metadata and the generated social assets.
 
-/// File name of the generated Open Graph card, which is also the path it is
-/// served from (`/og-image.png`).
+/// The file name of the generated Open Graph card, which is served at `/` plus this name.
 pub const OG_IMAGE_FILE: &str = "og-image.png";
 
 /// The web manifest's raster icons as `(edge length in pixels, file name)`.
 ///
-/// Each is served from `/<file name>`. Browsers offer to install a site only when its manifest
-/// lists a 192 and a 512 pixel raster icon; `portfolio-resume` renders them from the favicon.
+/// Each is served at `/` plus its file name, and `portfolio-resume` renders them from the favicon.
+/// Browsers offer to install a site only when its manifest lists a 192 and a 512 pixel raster
+/// icon.
 pub const APP_ICONS: [(u32, &str); 2] = [(192, "icon-192.png"), (512, "icon-512.png")];
 
-/// Pixel size of that card: the 1.91:1 box every major link-preview consumer
-/// crops to.
+/// The pixel size of the Open Graph card, the 1.91:1 box every major link-preview consumer crops
+/// to.
 ///
-/// Shared because both ends of the pipeline need it and they have to agree —
-/// `portfolio-resume` renders the image at exactly this size, and the web app
-/// declares it in `og:image:width` / `og:image:height` so a consumer can reserve
-/// the space before the bytes arrive. A card that disagrees with its own
-/// declared size is letterboxed or dropped, and nothing warns about it.
+/// `portfolio-resume` renders the image at this size, and the web app declares it in
+/// `og:image:width` and `og:image:height`. A card that disagrees with its declared size is
+/// letterboxed or dropped, and nothing warns about it.
 pub const OG_IMAGE_SIZE: (u32, u32) = (1200, 630);
 
 /// The name, as a bare literal.
@@ -52,14 +50,18 @@ macro_rules! title_separator {
     };
 }
 
-/// What separates the name from the role in a document title.
+/// The text between the name and the role in a document title.
 pub const TITLE_SEPARATOR: &str = title_separator!();
 
-/// `"{full_name}{TITLE_SEPARATOR}{role}"`, for a title in the caller's language.
+/// Returns the document title for `role` in the caller's language, as
+/// `"{full_name}{TITLE_SEPARATOR}{role}"`.
 ///
-/// [`CONFIG`]`.title` is this function's English result, folded at compile time;
-/// the `document_title_matches_config` test holds the two together. The resume generator calls
-/// this with the *translated* role, so the German PDF carries a German document title.
+/// [`CONFIG`]`.title` is the English result, folded at compile time.
+///
+/// ```
+/// # use portfolio_data::{CONFIG, document_title};
+/// assert_eq!(document_title("Senior Software Developer"), CONFIG.title);
+/// ```
 #[must_use]
 pub fn document_title(role: &str) -> String {
     format!("{}{TITLE_SEPARATOR}{role}", CONFIG.full_name)
@@ -67,60 +69,63 @@ pub fn document_title(role: &str) -> String {
 
 /// Who the site is about, and every address that identifies them.
 ///
-/// One value exists, [`CONFIG`]. Everything that names the person behind the site reads it: the
+/// The only value is [`CONFIG`]. Everything that names the person behind the site reads it: the
 /// document head, the resume PDF, the social card and the profile API.
 pub struct Config {
-    /// Name as it is set in print: the resume header, the social card, `og:site_name`.
+    /// The name as it is set in print: the resume header, the social card, `og:site_name`.
     pub full_name: &'static str,
-    /// Given name alone, which is what the profile API's `name` carries.
+    /// The given name alone, which the profile API's `name` carries.
     pub name: &'static str,
-    /// Full document title, `"{full_name} — {job_title}"`, used verbatim for `og:title`.
+    /// The full document title, `"{full_name} — {job_title}"`, used verbatim for `og:title`.
     ///
-    /// `concat!`-ed from the same two literals the other two fields are, so it cannot state a
+    /// It is concatenated from the same literals as the other two fields, so it cannot state a
     /// name or a seniority that they do not.
     pub title: &'static str,
-    /// Role on its own, e.g. for schema.org `jobTitle` (the full document
-    /// `title` is `"{full_name} — {job_title}"`).
+    /// The role on its own, in English, as schema.org `jobTitle` and the profile API publish it.
     pub job_title: &'static str,
-    /// Contact country exposed by the profile API and structured metadata.
+    /// The contact country the profile API and the structured metadata publish.
     pub location: &'static str,
-    /// Published contact address, on the contact card and in the profile API.
+    /// The published contact address, on the contact card and in the profile API.
     pub email: &'static str,
-    /// Canonical origin, with a scheme and no trailing slash. Every absolute URL the site emits
-    /// is built by appending a path to it.
+    /// The canonical origin, with a scheme and no trailing slash.
+    ///
+    /// Every absolute URL the site emits is this plus a path.
     pub url: &'static str,
-    /// GitHub profile page. Contains [`github_username`](Self::github_username), which a test
-    /// asserts, because the two are rendered as one link.
+    /// The GitHub profile page, which contains [`github_username`](Self::github_username).
+    ///
+    /// The two are rendered as one link, and a test holds them together.
     pub github: &'static str,
     /// The account `portfolio-update-repos` lists repositories for, unless `github.username` names
     /// another.
     pub github_username: &'static str,
-    /// LinkedIn profile page, linked from the footer and from the resume sidebar.
+    /// The LinkedIn profile page, linked from the footer and from the resume sidebar.
     pub linkedin: &'static str,
     /// This repository, which the footer colophon links to.
     pub repository: &'static str,
     /// The sentence that becomes `meta description`, `og:description` and the social card's last
-    /// line. Written to survive being cut at about 155 characters, which is where search results
-    /// truncate it.
-    pub description: &'static str,
-    /// The three technologies the site leads with, in the order the hero prints them.
+    /// line.
     ///
-    /// Rendered as the hero eyebrow, joined with ` · `. Not a translation key, because a tool's
-    /// name is the same in every language. Every entry must also appear in
-    /// [`keywords`](Self::keywords), which the `headline_tech_is_covered_by_keywords` test
-    /// enforces, so the line a visitor reads and the line a crawler reads name the same stack.
+    /// Search results cut it at about 155 characters, and a test holds it between 110 and 160.
+    pub description: &'static str,
+    /// The technologies the site leads with, in the order the hero eyebrow prints them.
+    ///
+    /// The eyebrow joins them with ` · `, untranslated. Every entry must also appear in
+    /// [`keywords`](Self::keywords), which a test enforces, so the line a visitor reads and the
+    /// line a crawler reads name the same stack.
     pub headline_tech: &'static [&'static str],
-    /// `meta keywords`, joined with `, `.
+    /// The `meta keywords` entries, joined with `, `.
     pub keywords: &'static [&'static str],
-    /// Repositories pinned to the front of the projects section, matched case-insensitively.
+    /// The repositories pinned to the front of the projects section, matched case-insensitively.
     pub featured_repos: &'static [&'static str],
-    /// Repositories that must never appear in `repos.json`, regardless of their
-    /// activity. Matched case-insensitively by name when listing all of the
-    /// user's repositories in `portfolio-update-repos`.
+    /// The repositories an account listing leaves out of `repos.json`, matched case-insensitively.
+    ///
+    /// A repository named in `github.repos` is written through regardless.
     pub blacklisted_repos: &'static [&'static str],
 }
 
-/// The site's own identity. No configuration key reaches any of it: changing one is a redeploy.
+/// The site's own identity.
+///
+/// No configuration key reaches any of it, so changing a value is a redeploy.
 pub const CONFIG: Config = Config {
     full_name: full_name!(),
     name: "Tim",
