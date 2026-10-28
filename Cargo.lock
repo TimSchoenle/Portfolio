@@ -4003,7 +4003,7 @@ checksum = "05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85"
 
 [[package]]
 name = "portfolio-config"
-version = "3.2.0"
+version = "3.2.1"
 dependencies = [
  "jsonschema",
  "portfolio-data",
@@ -4016,7 +4016,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-data"
-version = "3.2.0"
+version = "3.2.1"
 dependencies = [
  "schemars",
  "serde",
@@ -4029,7 +4029,7 @@ version = "3.2.1"
 
 [[package]]
 name = "portfolio-resume"
-version = "3.2.0"
+version = "3.2.1"
 dependencies = [
  "portfolio-data",
  "qrcode",
@@ -4044,7 +4044,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-server"
-version = "3.2.0"
+version = "3.2.1"
 dependencies = [
  "axum",
  "csp-shell",
@@ -4062,7 +4062,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-update-repos"
-version = "3.2.0"
+version = "3.2.1"
 dependencies = [
  "portfolio-config",
  "portfolio-data",
@@ -4075,7 +4075,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-web"
-version = "3.2.0"
+version = "3.2.1"
 dependencies = [
  "axum",
  "dioxus",
