@@ -273,7 +273,7 @@
         "env": "PORTFOLIO_ISR__TTL_SECS",
         "env_file": "PORTFOLIO_ISR__TTL_SECS_FILE",
         "secrets_file": "isr__ttl_secs",
-        "docs": "The revalidation interval in seconds. Zero means a permanent cache.\n\nA page changes only with a new build or a new `legal.*` configuration, and the server keeps\nwhatever the directory holds at boot. Permanent suits the image's default, a directory that\nstarts empty with every container. A cache volume that outlives a deploy needs a positive\nvalue, or it keeps serving pages rendered by the earlier build or configuration.",
+        "docs": "The revalidation interval in seconds. Zero means a permanent cache.\n\nA page changes only with a new build or a new `legal.*` configuration, and the server keeps\nwhatever the directory holds at boot. Permanent suits a directory that starts empty with\nevery pod. A container restart inside the same pod keeps the mount and its pages, so a\n`legal.*` change applied by a restart needs a positive value, a cleared directory or a new\npod. A cache volume that outlives a deploy needs a positive value for the same reason.",
         "ty": "u64",
         "values": [],
         "constraint": {
@@ -880,7 +880,7 @@
           },
           "ttl_secs": {
             "default": 0,
-            "description": "The revalidation interval in seconds. Zero means a permanent cache.\n\nA page changes only with a new build or a new `legal.*` configuration, and the server keeps\nwhatever the directory holds at boot. Permanent suits the image's default, a directory that\nstarts empty with every container. A cache volume that outlives a deploy needs a positive\nvalue, or it keeps serving pages rendered by the earlier build or configuration.\n\nDefault: permanent.",
+            "description": "The revalidation interval in seconds. Zero means a permanent cache.\n\nA page changes only with a new build or a new `legal.*` configuration, and the server keeps\nwhatever the directory holds at boot. Permanent suits a directory that starts empty with\nevery pod. A container restart inside the same pod keeps the mount and its pages, so a\n`legal.*` change applied by a restart needs a positive value, a cleared directory or a new\npod. A cache volume that outlives a deploy needs a positive value for the same reason.\n\nDefault: permanent.",
             "minimum": 0,
             "type": "integer"
           }
