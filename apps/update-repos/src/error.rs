@@ -110,6 +110,15 @@ mod tests {
     }
 
     #[test]
+    fn no_repos_names_the_filters_that_emptied_the_list() {
+        let msg = UpdateReposError::NoRepos.to_string();
+        for filter in ["archived", "stale", "blacklisted"] {
+            assert!(msg.contains(filter), "{msg}");
+        }
+        assert!(UpdateReposError::NoRepos.source().is_none());
+    }
+
+    #[test]
     fn io_error_is_wrapped_and_chained() {
         let err: UpdateReposError = io::Error::new(ErrorKind::NotFound, "nope").into();
         assert!(matches!(err, UpdateReposError::Io(_)));
