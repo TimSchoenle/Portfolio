@@ -435,10 +435,23 @@ mod tests {
         fn labels_one_focusable_dot_per_matrix_skill() {
             let html = render("en", || rsx! { Radar { active: None, on_hover: |_| {} } });
             assert_eq!(html.matches(r#"tabindex="0""#).count(), DOTS.0.len());
+            // A named dot's group holds no nested group, so its body runs up to the first `</g>`.
+            let groups = html
+                .split("<g ")
+                .filter_map(|group| group.split_once("</g>").map(|(body, _)| body))
+                .collect::<Vec<_>>();
             for dot in &DOTS.0 {
+                let label = format!(
+                    r#"aria-label="{} — {}%""#,
+                    dot.skill.name,
+                    (dot.skill.confidence * 100.0).round()
+                );
+                let position = format!(r#"cx="{}" cy="{}""#, dot.x, dot.y);
                 assert!(
-                    html.contains(dot.skill.name),
-                    "{} is missing",
+                    groups
+                        .iter()
+                        .any(|group| group.contains(&label) && group.contains(&position)),
+                    "{} is not labeled at its own position",
                     dot.skill.name
                 );
             }
