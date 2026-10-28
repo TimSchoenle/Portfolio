@@ -71,6 +71,52 @@ pub const RESUME_FILES: [(&str, &str); SITE_LANGUAGES.len()] = {
     files
 };
 
+/// The name of the cookie, and of the i18nrs storage entry, that holds the selected language.
+///
+/// The privacy notice documents it (the template in `legal/privacy.toml`, and the
+/// published text a deployment mounts in its place), so a rename has to reach both.
+pub const LANG_STORAGE_KEY: &str = "lang";
+
+/// The query parameter naming a language explicitly, as in `/?lang=de`.
+///
+/// The same name as the cookie on purpose: both carry a [`Language::code`].
+pub const LANG_QUERY_PARAM: &str = LANG_STORAGE_KEY;
+
+/// [`LANG_STORAGE_KEY`] followed by the `=` that separates a cookie or query pair's name from
+/// its value.
+///
+/// The readers scan every pair of a header or query for this needle, so it is a constant
+/// rather than a `format!` per pair.
+pub const LANG_PAIR_PREFIX: &str = "lang=";
+
+// `concat!` takes only literals, so nothing but this check stops a rename of one constant from
+// leaving the other behind, which would read the cookie under a name nothing writes.
+const _: () = {
+    let key = LANG_STORAGE_KEY.as_bytes();
+    let prefix = LANG_PAIR_PREFIX.as_bytes();
+    assert!(prefix.len() == key.len() + 1);
+    assert!(prefix[key.len()] == b'=');
+    let mut i = 0;
+    while i < key.len() {
+        assert!(prefix[i] == key[i]);
+        i += 1;
+    }
+};
+
+/// Returns the `Set-Cookie` value that persists `code` for a year.
+///
+/// `SameSite=Lax` and no `Secure`: the value is a UI preference with no authority, and a
+/// development server on plain HTTP has to be able to set it too.
+///
+/// ```
+/// # use portfolio_data::lang_cookie;
+/// assert!(lang_cookie("de").starts_with("lang=de; Path=/;"));
+/// ```
+#[must_use]
+pub fn lang_cookie(code: &str) -> String {
+    format!("{LANG_PAIR_PREFIX}{code}; Path=/; Max-Age=31536000; SameSite=Lax")
+}
+
 /// The site language whose code equals `code` exactly, if any.
 ///
 /// ```

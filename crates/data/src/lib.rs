@@ -22,8 +22,9 @@ pub use career::{
     format_period_years,
 };
 pub use language::{
-    DEFAULT_LANGUAGE, I18N_DE, I18N_EN, LANGUAGES, Language, RESUME_FILES, SITE_LANGUAGES,
-    language, language_or_default, next_language, resume_file,
+    DEFAULT_LANGUAGE, I18N_DE, I18N_EN, LANG_PAIR_PREFIX, LANG_QUERY_PARAM, LANG_STORAGE_KEY,
+    LANGUAGES, Language, RESUME_FILES, SITE_LANGUAGES, lang_cookie, language, language_or_default,
+    next_language, resume_file,
 };
 pub use repos::{Repo, ReposFile, lang_color};
 pub use resume::ResumeFingerprints;

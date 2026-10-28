@@ -54,10 +54,9 @@ impl LicensesFile {
     /// attributes.
     ///
     /// A crate resolved from a registry or a git remote carries a `source`; one
-    /// resolved from a path — this repository's own `portfolio-web`, `portfolio-data` and
-    /// `portfolio-config` — does not. That is the whole test, and it is done here
-    /// rather than by naming those three in `about.toml`: a fourth crate in this
-    /// workspace then needs no configuration change to stay off a page about
+    /// resolved from a path — this repository's own `portfolio-*` crates — does not. That is
+    /// the whole test, and it is done here rather than by naming them in `about.toml`: another
+    /// crate in this workspace then needs no configuration change to stay off a page about
     /// third parties.
     ///
     /// Filtering here rather than in the generator is deliberate too. cargo-about

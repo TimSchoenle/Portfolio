@@ -4043,6 +4043,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "portfolio-server"
+version = "3.2.0"
+dependencies = [
+ "axum",
+ "csp-shell",
+ "portfolio-config",
+ "portfolio-data",
+ "schemars",
+ "serde",
+ "serde_json",
+ "time",
+ "tokio",
+ "tower",
+ "tower-http 0.7.1",
+ "tracing",
+]
+
+[[package]]
 name = "portfolio-update-repos"
 version = "3.2.0"
 dependencies = [
@@ -4060,7 +4078,6 @@ name = "portfolio-web"
 version = "3.2.0"
 dependencies = [
  "axum",
- "csp-shell",
  "dioxus",
  "dioxus-fullstack-core",
  "gloo-timers 0.4.0",
@@ -4069,7 +4086,7 @@ dependencies = [
  "js-sys",
  "portfolio-config",
  "portfolio-data",
- "schemars",
+ "portfolio-server",
  "secrecy",
  "sentry",
  "serde",

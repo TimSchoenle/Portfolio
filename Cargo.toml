@@ -2,6 +2,7 @@
 members = [
     "crates/config",
     "crates/data",
+    "crates/server",
     "apps/web",
     "apps/resume",
     "apps/update-repos",
@@ -12,6 +13,7 @@ default-members = [
     ".",
     "crates/config",
     "crates/data",
+    "crates/server",
     "apps/web",
     "apps/resume",
     "apps/update-repos",
@@ -59,7 +61,7 @@ license = "LicenseRef-Proprietary"
 # Inherited by every member with `[lints] workspace = true`.
 #
 # `missing_docs` only fires on an effectively-exported item, so it reaches
-# `crates/config` and `crates/data` and nothing in `apps/`: all three binaries
+# the libraries in `crates/` and nothing in `apps/`: all three binaries
 # declare their modules privately, which makes every item in them unexported as
 # far as the lint is concerned. The rustdoc link lints below do fire inside a
 # private module, so the `doc` job still gates the binaries; what is not linted
@@ -96,6 +98,7 @@ unescaped_backticks = "warn"
 [workspace.dependencies]
 portfolio-config = { path = "crates/config" }
 portfolio-data = { path = "crates/data" }
+portfolio-server = { path = "crates/server" }
 
 # The layered configuration loader: struct defaults, then TOML, then
 # `PORTFOLIO_`-prefixed environment variables, then a secrets directory, then

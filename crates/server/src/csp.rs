@@ -50,7 +50,7 @@ use portfolio_config::CspConfig;
 
 /// The policies this server serves, rendered as far ahead of the response as each one can be.
 #[derive(Debug)]
-pub(super) struct SitePolicy {
+pub struct SitePolicy {
     /// For responses that are not documents. Constant, so it is rendered once.
     subresource: HeaderValue,
     /// For documents.
@@ -71,7 +71,7 @@ pub(super) struct SitePolicy {
 /// Carried as a distinct type so a caller can hold one alongside the bytes it was taken from and
 /// apply it repeatedly. It is inert for a policy that does not hash — see [`SitePolicy::scan`].
 #[derive(Debug, Clone, Default)]
-pub(super) struct DocumentScan(csp_shell::ScanResult);
+pub struct DocumentScan(csp_shell::ScanResult);
 
 /// How a document response gets its policy.
 #[derive(Debug, Clone)]
@@ -90,7 +90,8 @@ impl SitePolicy {
     /// (`portfolio_config::CspConfig::validate`), so the one combination that cannot be served —
     /// a nonce beside `'unsafe-inline'`, which a browser resolves by ignoring the latter — has
     /// already failed the boot.
-    pub(super) fn new(config: &CspConfig) -> Self {
+    #[must_use]
+    pub fn new(config: &CspConfig) -> Self {
         let base = base_policy(config);
 
         let subresource = header_value(base.clone().build().headers().content_security_policy);
@@ -120,7 +121,7 @@ impl SitePolicy {
     ///
     /// Applied as a layer *outside* the document rewrite and only when the header is absent, so a
     /// document that has already been given its own policy keeps it.
-    pub(super) fn subresource(&self) -> HeaderValue {
+    pub fn subresource(&self) -> HeaderValue {
         self.subresource.clone()
     }
 
@@ -135,7 +136,7 @@ impl SitePolicy {
     /// Scanning is skipped entirely for a policy that does not hash; the empty result it returns
     /// is never read, because [`apply_to_document`](Self::apply_to_document) answers that case
     /// from the constant it rendered at start-up.
-    pub(super) fn scan(&self, html: &str) -> DocumentScan {
+    pub fn scan(&self, html: &str) -> DocumentScan {
         match &self.document {
             DocumentPolicy::Constant(_) => DocumentScan(csp_shell::ScanResult::default()),
             DocumentPolicy::PerResponse(_) => {
@@ -151,7 +152,7 @@ impl SitePolicy {
     /// The scan must come from [`scan`](Self::scan) on the same document: the hashes are what
     /// permit that document's inline scripts, and a policy derived from anything else refuses the
     /// scripts it was meant to permit.
-    pub(super) fn apply_to_document(&self, headers: &mut HeaderMap, scan: &DocumentScan) {
+    pub fn apply_to_document(&self, headers: &mut HeaderMap, scan: &DocumentScan) {
         let (policy, cache_control) = match &self.document {
             DocumentPolicy::Constant(value) => (value.clone(), None),
             DocumentPolicy::PerResponse(builder) => {

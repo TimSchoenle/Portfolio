@@ -1,0 +1,33 @@
+[package]
+name = "portfolio-server"
+version = "3.2.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+
+# The HTTP half of the site that does not need Dioxus: the JSON API and probes, the embedded
+# assets, the cache and security headers, and the middleware that finishes every document.
+# `apps/web` mounts it under its `server` feature, so nothing here reaches the wasm client.
+[dependencies]
+axum.workspace = true
+csp-shell.workspace = true
+portfolio-config.workspace = true
+# `schema` derives the profile document's JSON Schema served at `/api/v1/profile/schema`.
+portfolio-data = { workspace = true, features = ["schema"] }
+schemars.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+time = { workspace = true, features = ["macros"] }
+tracing.workspace = true
+
+[dev-dependencies]
+# `ServiceExt::oneshot` drives the routers and middleware in the tests; `#[tokio::test]`
+# provides their runtime.
+tokio.workspace = true
+tower.workspace = true
+# `SetResponseHeaderLayer`, to pin how the subresource policy layer composes with the page one.
+tower-http.workspace = true
+
+[lints]
+workspace = true

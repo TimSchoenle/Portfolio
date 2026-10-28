@@ -15,10 +15,11 @@ use tower_http::{
     compression::CompressionLayer, set_header::SetResponseHeaderLayer, trace::TraceLayer,
 };
 
+use portfolio_server::page::{self, PagePaths, PageState};
+use portfolio_server::{api, cache, csp};
+
 use super::compression::compression_predicate;
-use super::isr::{self, PagePaths};
-use super::page::{self, PageMemo, PageState};
-use super::{api, assets, cache, csp, legal, seo, telemetry};
+use super::{assets, isr, legal, seo, telemetry};
 
 /// The full application router: the Dioxus SSR/asset router with our routes and
 /// layers mounted on top. Custom routes take precedence over the SSR fallback;
@@ -35,17 +36,16 @@ pub(super) fn router(config: &ServerConfig, legal: Legal, paths: PagePaths) -> R
     let (dioxus_app, isr_enabled) = isr::dioxus_app_router(&config.isr, &paths);
     let app = dioxus_app
         .merge(api_router(config.assets.clone(), legal))
-        .merge(assets::router());
+        .merge(portfolio_server::assets::router(&assets::EMBEDDED));
     // Page handling, innermost so it sees the request before the router and the response
     // before compression. See `page::localize_page`.
     let app = app.layer(middleware::from_fn_with_state(
-        PageState {
-            isr_enabled,
-            policy: Arc::clone(&policy),
-            pages: Arc::new(PageMemo::default()),
+        PageState::new(
+            Arc::clone(&policy),
             paths,
-            ttl: config.isr.invalidate_after(),
-        },
+            isr_enabled,
+            config.isr.invalidate_after(),
+        ),
         page::localize_page,
     ));
 

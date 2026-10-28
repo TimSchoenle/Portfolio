@@ -71,9 +71,9 @@ ignore-dev-dependencies = true
 # license requires be reproduced, missing from the page whose job is to
 # reproduce it.
 #
-# The cost of leaving it off is three warnings per run — `portfolio-web`, `portfolio-data`
-# and `portfolio-config` have no `license` field, because they are not licensed
-# to anyone — and three entries in the generated document with the license
-# `Unknown` and no source. The page filters those out by source rather than by
-# name (see `LicensesFile::third_party`), so a fourth workspace crate needs no
-# change anywhere.
+# The cost of leaving it off is four warnings per run — `portfolio-web`,
+# `portfolio-server`, `portfolio-data` and `portfolio-config` have no `license`
+# field, because they are not licensed to anyone — and four entries in the
+# generated document with the license `Unknown` and no source. The page filters
+# those out by source rather than by name (see `LicensesFile::third_party`), so
+# another workspace crate needs no change anywhere.

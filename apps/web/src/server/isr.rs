@@ -3,96 +3,27 @@
 //!
 //! Dioxus's incremental renderer keys on the request path and query alone, and this site
 //! negotiates the language per request, so a per-path cache would serve whichever language
-//! rendered a URL first to everyone who asked for it afterwards. [`with_locale_query`] puts the
-//! negotiated language on the URI and [`isr_map_path`] nests each render under it, which is what
-//! makes the key one entry per language per path.
+//! rendered a URL first to everyone who asked for it afterwards. The page middleware puts the
+//! negotiated language on the URI (see `portfolio_server::isr_marker`) and [`isr_map_path`] nests
+//! each render under it, which is what makes the key one entry per language per path.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use axum::Router;
 use dioxus::server::{DioxusRouterExt, IncrementalRendererConfig, ServeConfig};
 use portfolio_config::IsrConfig;
-use portfolio_data::LANGUAGES;
+use portfolio_server::isr_marker::locale_from_query;
+use portfolio_server::page::PagePaths;
 
-/// Query-string marker [`super::page::localize_page`] appends to page requests so the
-/// otherwise language-blind, path-keyed incremental cache stores one entry per negotiated
-/// language. It is server-internal: the router matches on the path and ignores it, and every
-/// link is built from the router or the site config, so it never reaches the rendered HTML or
-/// the address bar.
-///
-/// Because the marker travels in a *client-supplied* URI, it is never trusted on the way in:
-/// [`with_locale_query`] strips any copy the request already carried before appending ours, and
-/// [`locale_from_query`] only ever returns a [`LANGUAGES`] entry. Without both, a request could
-/// choose which cache entry its render lands in (serving one visitor's language to another)
-/// and, since the value becomes a path component, where on disk it is written.
-pub(super) const ISR_LOCALE_PARAM: &str = "__isr_locale";
-
-/// [`ISR_LOCALE_PARAM`] with the `=` that separates a query pair's key from its value, so
-/// [`locale_from_query`] — called by the renderer's path mapper on every cacheable page
-/// request — does not build the needle with a `format!` each time.
-const ISR_LOCALE_QUERY_PREFIX: &str = "__isr_locale=";
-
-/// Compile-time proof that the two constants above have not drifted apart: a mapper that stops
-/// recognizing the marker silently collapses every language back onto one cache entry.
-const _: () = {
-    let key = ISR_LOCALE_PARAM.as_bytes();
-    let prefix = ISR_LOCALE_QUERY_PREFIX.as_bytes();
-    assert!(prefix.len() == key.len() + 1);
-    assert!(prefix[key.len()] == b'=');
-    let mut i = 0;
-    while i < key.len() {
-        assert!(prefix[i] == key[i]);
-        i += 1;
-    }
-};
-
-/// Page paths whose rendered HTML is worth persisting: the fixed routes of
-/// `crate::routes::Route`, plus one `/legal/<slug>` per document the configuration hosts. The
-/// catch-all `NotFound` route is deliberately absent, and so is every slug nothing is published
-/// under.
-///
-/// The incremental cache is keyed by path, and the catch-all matches every URL that exists — so
-/// without this allowlist an unauthenticated client could mint an unbounded number of cache
-/// entries (one directory and one HTML file each) by requesting `/1`, `/2`, … until the volume
-/// filled up. The same holds for `/legal/:slug`, whose segment is request text. Routes outside
-/// the list still render normally; their output is just never stored (see [`isr_map_path`]).
-///
-/// Cheap to clone: the list is shared.
-#[derive(Clone)]
-pub(super) struct PagePaths(Arc<[&'static str]>);
-
-/// The routes whose paths do not depend on configuration.
+/// The routes of `crate::routes::Route` whose paths do not depend on configuration. The
+/// catch-all `NotFound` route is deliberately absent: it matches every URL there is.
 const STATIC_PAGE_PATHS: [&str; 2] = ["/", "/licenses"];
 
-impl PagePaths {
-    /// The fixed routes, then `legal`: each a hosted document's path.
-    ///
-    /// The configured paths are leaked into `&'static str` on purpose, and once per process:
-    /// `serve` builds this before the runtime starts, from a configuration that is never
-    /// reloaded. That lets the page memo key on a program-lifetime string instead of on request
-    /// text or a per-request allocation.
-    pub(super) fn new(legal: &[String]) -> Self {
-        let configured = legal
-            .iter()
-            .map(|path| &*Box::leak(path.clone().into_boxed_str()));
-        Self(STATIC_PAGE_PATHS.into_iter().chain(configured).collect())
-    }
-
-    /// The entry equal to `path`.
-    ///
-    /// Returning the stored entry rather than a `bool` is what lets the page memo key on a
-    /// `&'static str`: the request's own path is borrowed from a URI that does not outlive the
-    /// request, whereas this one lives as long as the process.
-    pub(super) fn get(&self, path: &str) -> Option<&'static str> {
-        self.0.iter().copied().find(|known| *known == path)
-    }
-
-    /// Whether a request path is one of these.
-    pub(super) fn contains(&self, path: &str) -> bool {
-        self.get(path).is_some()
-    }
+/// Builds the render cache's allowlist: the fixed routes, then each hosted legal document's path.
+pub(super) fn page_paths(legal: &[String]) -> PagePaths {
+    PagePaths::new(&STATIC_PAGE_PATHS, legal)
 }
 
 /// Name of the sentinel that [`isr_map_path`] maps every non-cacheable route to.
@@ -216,46 +147,6 @@ pub(super) fn ensure_uncacheable_sentinel(dir: &Path) -> std::io::Result<()> {
     )
 }
 
-/// Returns `uri` with `ISR_LOCALE_PARAM=<locale>` appended to its query string, preserving any
-/// query already present *except* a copy of the marker itself.
-///
-/// Stripping the incoming marker is what keeps the cache key ours. The value becomes both the
-/// cache bucket and an on-disk path component, so a request allowed to supply its own could
-/// file a render under a language it is not written in and escape the cache directory with
-/// `../` or a leading `/`. If the rewrite does not parse, the original URI is returned so the
-/// page still renders.
-pub(super) fn with_locale_query(uri: &axum::http::Uri, locale: &str) -> axum::http::Uri {
-    let path = uri.path();
-    let retained: Vec<&str> = uri
-        .query()
-        .unwrap_or("")
-        .split('&')
-        .filter(|pair| !pair.is_empty() && !is_locale_marker(pair))
-        .collect();
-
-    let mut combined = String::from(path);
-    combined.push('?');
-    for pair in retained {
-        combined.push_str(pair);
-        combined.push('&');
-    }
-    combined.push_str(ISR_LOCALE_QUERY_PREFIX);
-    combined.push_str(locale);
-
-    let Ok(path_and_query) = combined.parse::<axum::http::uri::PathAndQuery>() else {
-        return uri.clone();
-    };
-    let mut parts = uri.clone().into_parts();
-    parts.path_and_query = Some(path_and_query);
-    axum::http::Uri::from_parts(parts).unwrap_or_else(|_| uri.clone())
-}
-
-/// Whether a raw `key=value` query pair carries the server-internal locale marker, whatever
-/// its value (including none).
-fn is_locale_marker(pair: &str) -> bool {
-    pair.split('=').next() == Some(ISR_LOCALE_PARAM)
-}
-
 /// Maps an incremental-cache route to its on-disk folder, mirroring Dioxus's default layout but
 /// nesting each render under its locale sub-directory. A route without the marker maps straight
 /// under `static_dir`, matching the default.
@@ -285,19 +176,6 @@ pub(super) fn isr_map_path(static_dir: &Path, route: &str, paths: &PagePaths) ->
 fn is_cacheable_route(route: &str, paths: &PagePaths) -> bool {
     let (path, _) = route.split_once('?').unwrap_or((route, ""));
     paths.contains(path)
-}
-
-/// Extracts the [`ISR_LOCALE_PARAM`] value from a raw query string, if it names a language the
-/// site supports.
-///
-/// The validation is the load-bearing part: the marker rides in on a client-supplied URI, so
-/// anything that is not a [`LANGUAGES`] entry is forged — and this value becomes a directory
-/// name.
-fn locale_from_query(query: &str) -> Option<&str> {
-    query
-        .split('&')
-        .filter_map(|pair| pair.strip_prefix(ISR_LOCALE_QUERY_PREFIX))
-        .find(|locale| LANGUAGES.contains(locale))
 }
 
 /// Decides whether `mapped` is about to receive a *freshly created* cache entry, and records
@@ -359,7 +237,7 @@ pub(super) mod tests {
 
     /// The allowlist the fixture catalog produces.
     pub(crate) fn paths() -> PagePaths {
-        PagePaths::new(&legal::hosted_paths(&legal::tests::fixture()))
+        page_paths(&legal::hosted_paths(&legal::tests::fixture()))
     }
 
     /// A unique scratch path under the OS temp dir; only its name is reserved.
@@ -385,46 +263,6 @@ pub(super) mod tests {
         std::fs::write(&file, b"not a directory").unwrap();
         assert!(ensure_writable_dir(&file.join("cache")).is_err());
         let _ = std::fs::remove_file(&file);
-    }
-
-    #[test]
-    fn locale_query_is_appended_to_a_bare_path() {
-        let tagged = with_locale_query(&"/".parse().unwrap(), "de");
-        assert_eq!(
-            tagged.path_and_query().unwrap().as_str(),
-            "/?__isr_locale=de"
-        );
-    }
-
-    #[test]
-    fn locale_query_preserves_an_existing_query() {
-        let tagged = with_locale_query(&"/imprint?ref=x".parse().unwrap(), "en");
-        assert_eq!(
-            tagged.path_and_query().unwrap().as_str(),
-            "/imprint?ref=x&__isr_locale=en"
-        );
-    }
-
-    #[test]
-    fn a_client_supplied_locale_marker_is_stripped_before_ours_is_appended() {
-        let tagged = with_locale_query(&"/?__isr_locale=de".parse().unwrap(), "en");
-        assert_eq!(
-            tagged.path_and_query().unwrap().as_str(),
-            "/?__isr_locale=en"
-        );
-
-        // Including when smuggled among real parameters, repeated, or valueless — and
-        // unrelated parameters still survive.
-        let tagged = with_locale_query(
-            &"/imprint?__isr_locale=de&ref=x&__isr_locale&__isr_locale=fr"
-                .parse()
-                .unwrap(),
-            "en",
-        );
-        assert_eq!(
-            tagged.path_and_query().unwrap().as_str(),
-            "/imprint?ref=x&__isr_locale=en"
-        );
     }
 
     #[test]

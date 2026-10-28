@@ -3,9 +3,10 @@
 
 use dioxus::prelude::*;
 use i18nrs::dioxus::I18nProvider;
-use portfolio_data::{CONFIG, OG_IMAGE_FILE, OG_IMAGE_SIZE, SITE_LANGUAGES, language_or_default};
+use portfolio_data::{
+    CONFIG, LANG_STORAGE_KEY, OG_IMAGE_FILE, OG_IMAGE_SIZE, SITE_LANGUAGES, language_or_default,
+};
 
-use crate::i18n::LANG_STORAGE_KEY;
 use crate::routes::Route;
 
 /// The web font faces the first paint actually uses: the hero name — the largest

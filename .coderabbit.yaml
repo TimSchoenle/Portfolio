@@ -52,7 +52,14 @@ reviews:
         never key on unvalidated request text (cache poisoning, unbounded growth). No blocking
         work on the async runtime; probes must stay cheap. Telemetry must not send IPs, query
         strings or other personal data to Sentry without need.
-    - path: "apps/web/src/server/csp.rs"
+    - path: "crates/server/src/**"
+      instructions: |
+        Dioxus-free Axum HTTP surface shared with `apps/web/src/server`: embedded assets, cache
+        headers, CSP, locale negotiation and the page memo. Check that every response type gets
+        the right content type, status and `Cache-Control`, that ETag comparison follows RFC 9110,
+        that locale negotiation never trusts unvalidated request text as a cache key, and that
+        nothing here panics on request input or blocks the async runtime.
+    - path: "crates/server/src/csp.rs"
       instructions: |
         Reject any loosening of the policy (`'unsafe-inline'`, `'unsafe-eval'`, wildcard or
         `data:`/`blob:` sources, new third-party origins) unless the change explains exactly which
