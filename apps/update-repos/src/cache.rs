@@ -1,8 +1,8 @@
-//! When a `repos.json` already on disk is good enough to skip the API call.
+//! Decides when a `repos.json` already on disk is good enough to skip the API call.
 //!
-//! Freshness comes from the file's own `generated_at` stamp and nothing else — not the mtime,
-//! not a marker file — so a listing restored from a CI cache is judged by when it was generated
-//! rather than by when it was unpacked.
+//! Freshness comes from the file's own `generated_at` stamp and nothing else, neither the mtime
+//! nor a marker file, so a listing restored from a CI cache is judged by when it was generated
+//! instead of when it was unpacked.
 
 use std::fs;
 use std::path::Path;
@@ -18,18 +18,18 @@ pub const CI_TTL: Duration = Duration::hours(10);
 /// How long a generated `repos.json` stays fresh on a developer machine.
 pub const LOCAL_TTL: Duration = Duration::minutes(60);
 
-/// [`CI_TTL`] on CI, [`LOCAL_TTL`] anywhere else.
+/// Returns [`CI_TTL`] on CI and [`LOCAL_TTL`] anywhere else.
 pub fn ttl_for_env() -> Duration {
     if is_ci() { CI_TTL } else { LOCAL_TTL }
 }
 
-/// `true` when the `CI` environment variable is set to a non-empty value, the
-/// de-facto standard signal used by GitHub Actions and most other CI systems.
+/// Reports whether the `CI` environment variable is set to a non-empty value, as GitHub Actions
+/// and most other CI systems set it.
 fn is_ci() -> bool {
     std::env::var("CI").is_ok_and(|v| !v.is_empty())
 }
 
-/// Whether the `repos.json` at `path` was generated within `ttl` of `now`.
+/// Reports whether the `repos.json` at `path` was generated within `ttl` of `now`.
 ///
 /// Missing, unreadable and malformed all answer `false`, so every way of having no usable
 /// listing leads to the same fetch.
@@ -43,13 +43,11 @@ pub fn is_cached_fresh(path: &Path, now: OffsetDateTime, ttl: Duration) -> bool 
     is_fresh(&file.generated_at, now, ttl)
 }
 
-/// Whether `generated_at`, an RFC 3339 timestamp, is less than `ttl` before `now`.
+/// Reports whether `generated_at`, an RFC 3339 timestamp, is less than `ttl` before `now`.
 ///
-/// Exactly `ttl` old is stale. A timestamp in the future is fresh, so clock skew between the
-/// machine that wrote the file and the one reading it does not cost an API call.
-///
-/// An unparsable stamp is stale, which is the reading that refetches rather than the one that
-/// trusts a file nothing can date.
+/// Exactly `ttl` old is stale, and an unparsable stamp is stale. A timestamp in the future is
+/// fresh, so clock skew between the machine that wrote the file and the one reading it does not
+/// cost an API call.
 pub fn is_fresh(generated_at: &str, now: OffsetDateTime, ttl: Duration) -> bool {
     match OffsetDateTime::parse(generated_at, &Rfc3339) {
         Ok(generated) => now - generated < ttl,

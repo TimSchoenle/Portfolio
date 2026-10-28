@@ -12,7 +12,7 @@ use portfolio_server::assets::{EmbeddedAssets, NamedFile};
 include!(concat!(env!("OUT_DIR"), "/resumes.rs"));
 include!(concat!(env!("OUT_DIR"), "/app_icons.rs"));
 
-/// The vendored fonts. Kept in sync with `fonts.css` and `scripts/vendor-fonts.mjs`.
+/// The vendored fonts, which must match `assets/fonts.css` and `scripts/vendor-fonts.mjs`.
 const FONTS: &[NamedFile] = &[
     (
         "space-grotesk-latin-400-normal.woff2",

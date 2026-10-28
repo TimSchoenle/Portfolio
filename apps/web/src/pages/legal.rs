@@ -1,9 +1,9 @@
-//! `/legal/:slug` — one legal document, as the operator configured it.
+//! `/legal/:slug`: one legal document, as the operator configured it.
 //!
 //! Which documents exist, their titles, dates and text are all configuration (`legal.*`), so this
 //! page owns only the frame: the back link, the tab title and the canonical link. The document
 //! itself is [`LegalDocumentContent`] from `terrace-legal-dioxus`, which renders the Markdown to
-//! elements — never to an HTML string — and asks [`SiteSkin`](crate::legal::SiteSkin) for every
+//! elements, never to an HTML string, and asks [`SiteSkin`](crate::legal::SiteSkin) for every
 //! class it writes.
 
 use dioxus::prelude::*;
@@ -19,14 +19,12 @@ use crate::ui::canonical::Canonical;
 
 /// Fetches the document published under `slug` and frames it.
 ///
-/// The fetch is a server future, so the first render — the one a crawler and a reader without
-/// JavaScript receive — already carries the full text, and hydration reads it back from the
-/// payload instead of asking again. Both languages arrive together (see [`crate::legal`]), so the
-/// language switch re-renders without a fetch.
-///
-/// A slug nothing hosted is published under renders the 404 page, as any unknown URL does: an
-/// external document has no page here, and a document an operator removed must not leave a
-/// blank one behind.
+/// The first render already carries the full text, and both languages arrive together, so the
+/// language switch re-renders without a fetch. A slug nothing hosted is published under renders
+/// the 404 page, as any unknown URL does.
+// The fetch is a server future, so the render a crawler and a reader without JavaScript receive
+// is complete, and hydration reads it back from the payload. An external document has no page
+// here, and a document an operator removed must not leave a blank one behind.
 #[component]
 pub fn LegalDocument(slug: String) -> Element {
     let i18n = use_i18n().i18n;

@@ -6,9 +6,9 @@
 //! filesystem access. Typst subsets the embedded fonts and writes a tagged,
 //! standard PDF 1.7 (RGB) with live `/URI` link annotations.
 //!
-//! The only thing that can come from outside is an [`Asset`] — the optional
-//! application photo, handed in as bytes by the caller and served to the
-//! document under a virtual file name. Nothing is ever read from disk here.
+//! The only input from outside is an [`Asset`]: the optional application photo or the favicon
+//! the app icons are drawn from, handed in as bytes by the caller and served to the document
+//! under a virtual file name. Nothing is ever read from disk here.
 
 use typst::diag::{FileError, FileResult, SourceDiagnostic, Warned};
 use typst::foundations::{Bytes, Datetime, Duration, Smart};
@@ -20,8 +20,9 @@ use typst_layout::PagedDocument;
 use typst_pdf::{PdfOptions, PdfStandard, PdfStandards};
 use typst_render::RenderOptions;
 
-/// Name the main source is registered under; assets sit beside it, so the
-/// document reaches them with a bare relative path.
+/// The name the main source is registered under.
+///
+/// Assets sit beside it, so the document reaches them with a bare relative path.
 const MAIN: &str = "resume.typ";
 
 // Inter (SIL OFL) — the brand family, as its two variable faces. Typst
@@ -41,9 +42,8 @@ const BOLD_ITALIC: &[u8] = include_bytes!("../fonts/LiberationSans-BoldItalic.tt
 ///
 /// # Panics
 ///
-/// Panics if `name` is not a usable virtual path. Every caller passes either
-/// [`MAIN`] or an asset name the generator built itself, so this cannot happen
-/// at runtime.
+/// Panics when `name` is not a usable virtual path. Every caller passes either [`MAIN`] or an
+/// asset name the generator built itself.
 fn file_id(name: &str) -> FileId {
     RootedPath::new(
         VirtualRoot::Project,
@@ -56,14 +56,14 @@ fn file_id(name: &str) -> FileId {
 ///
 /// The extension matters: Typst picks its image decoder from it.
 pub(crate) struct Asset {
-    /// File name the document references.
+    /// The file name the document references.
     pub(crate) name: String,
     /// The file's contents.
     pub(crate) bytes: Bytes,
 }
 
-/// A minimal [`World`]: the Typst standard library, the embedded faces, a
-/// single in-memory main source and whatever assets the caller supplied.
+/// A minimal [`World`] holding the Typst standard library, the embedded faces, one in-memory main
+/// source and the assets the caller supplied.
 struct ResumeWorld<'a> {
     library: LazyHash<Library>,
     book: LazyHash<FontBook>,
@@ -132,12 +132,15 @@ impl World for ResumeWorld<'_> {
     }
 }
 
-/// Compiles Typst `markup` and exports it as a tagged, standard **PDF 1.7**
-/// (RGB) with subsetted fonts and live link annotations (F1–F4), returning the
-/// rendered **page count** alongside the bytes.
+/// Compiles Typst `markup` to a tagged PDF 1.7 and returns its page count alongside the bytes.
 ///
-/// The compiled document type [`typst_layout::PagedDocument`] is not re-exported
-/// by the `typst` umbrella crate, so it is pulled directly from `typst-layout`.
+/// The PDF is RGB, with subsetted fonts and live link annotations.
+///
+/// # Errors
+///
+/// Returns the Typst diagnostics when compilation or export fails.
+// `typst_layout::PagedDocument` is not re-exported by the `typst` umbrella crate, so it is pulled
+// directly from `typst-layout`.
 pub(crate) fn render(markup: String, assets: &[Asset]) -> Result<(usize, Vec<u8>), String> {
     let world = ResumeWorld::new(markup, assets);
     let Warned { output, .. } = typst::compile(&world);
@@ -160,14 +163,16 @@ pub(crate) fn render(markup: String, assets: &[Asset]) -> Result<(usize, Vec<u8>
     Ok((pages, bytes))
 }
 
-/// Compiles Typst `markup` and rasterizes its first page to a PNG at
-/// `pixel_per_pt` device pixels per typographic point.
+/// Compiles Typst `markup` and rasterizes its first page to a PNG at `pixel_per_pt` device pixels
+/// per typographic point.
 ///
-/// A typographic point is 1/72 inch and the caller states its page size in
-/// points, so the two together fix the output resolution exactly: a
-/// 600pt × 315pt page at 2.0 is a 1200 × 630 image, which is what the social
-/// card needs. Sharing [`ResumeWorld`] means the card is laid out with the same
-/// embedded brand font as the resume and needs no toolchain of its own.
+/// The page size in points and `pixel_per_pt` fix the output resolution exactly: a 600pt × 315pt
+/// page at 2.0 is a 1200 × 630 image.
+///
+/// # Errors
+///
+/// Returns the Typst diagnostics when compilation fails, or a message when the document has no
+/// page or the PNG cannot be encoded.
 pub(crate) fn render_png(
     markup: String,
     pixel_per_pt: f64,

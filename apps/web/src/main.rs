@@ -25,8 +25,9 @@ mod routes;
 mod sections;
 mod ui;
 
-/// Native SSR server (Axum router, public API, SEO routes, security headers).
-/// `cfg`-gated so none of its dependencies enter the wasm client build.
+/// The native SSR server: the Axum router, the public API, the SEO routes and the security
+/// headers.
+// `cfg`-gated so none of its dependencies enter the wasm client build.
 #[cfg(feature = "server")]
 mod server;
 

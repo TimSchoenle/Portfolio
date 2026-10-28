@@ -29,22 +29,22 @@ use terrace_legal::{ConfigIssues, Legal, LegalConfig, Negotiation};
 
 use crate::legal::{LegalDocuments, LegalIndexes, document_path, is_hosted, per_language};
 
-/// Where the JSON routes are mounted: the index at the prefix itself, a document below it.
+/// The path the JSON routes are mounted at: the index at the prefix itself, a document below it.
 pub(super) const API_PREFIX: &str = "/api/v1/legal";
 
-/// The handle the server functions read. Set once, by [`install`].
+/// The handle the server functions read, set once by [`install`].
 static LEGAL: OnceLock<Legal> = OnceLock::new();
 
 /// Validates `config` into the served handle.
 ///
 /// The rules are this deployment's (`portfolio_config::legal_catalog_builder`) on top of
-/// `terrace-legal`'s own, and every problem is reported at once, under the key the operator
-/// wrote (`legal.documents.privacy.body.de`). Warnings — accepted, but worth a look — are
-/// printed to stderr: this runs before any logger exists, for the same reason the refusal does.
+/// `terrace-legal`'s own. Warnings, which are accepted but worth a look, are printed to stderr,
+/// because this runs before any logger exists.
 ///
 /// # Errors
 ///
-/// Every problem that keeps `config` from being served.
+/// Returns every problem that keeps `config` from being served, at once, each under the key the
+/// operator wrote, such as `legal.documents.privacy.body.de`.
 pub(super) fn build(config: &LegalConfig) -> Result<Legal, ConfigIssues> {
     let builder = legal_catalog_builder(&LANGUAGES);
     let catalog = builder
@@ -58,24 +58,26 @@ pub(super) fn build(config: &LegalConfig) -> Result<Legal, ConfigIssues> {
 
 /// Makes `legal` the handle the server functions answer from.
 ///
-/// A second call is ignored rather than replacing the first: `serve` calls this once, before the
-/// runtime starts, and a handle swapped under requests already in flight is the reload this
-/// workspace deliberately does not have.
+/// A second call is ignored instead of replacing the first.
+// `serve` calls this once, before the runtime starts. A handle swapped under requests already in
+// flight is the reload this workspace deliberately does not have.
 pub(super) fn install(legal: Legal) {
     let _ = LEGAL.set(legal);
 }
 
-/// The published documents' index for every site language, or `None` before [`install`].
+/// Returns the published documents' index for every site language, or `None` before
+/// [`install`].
 pub(crate) fn indexes() -> Option<LegalIndexes> {
     let legal = LEGAL.get()?;
     per_language(|lang| Some(legal.index(&negotiation(lang)).value))
 }
 
-/// The hosted document `slug` in every site language, or `None` when nothing hosted is published
-/// under it — or before [`install`].
+/// Returns the hosted document `slug` in every site language, or `None` when nothing hosted is
+/// published under it or before [`install`].
 ///
-/// `portfolio_config`'s rules guarantee a text per site language, so a document is either
-/// present in all of them or absent; the negotiation never has to fall back across languages.
+/// A document is present in every site language or in none, so the negotiation never falls back
+/// across languages.
+// `portfolio_config`'s rules guarantee a text per site language.
 pub(crate) fn documents(slug: &str) -> Option<LegalDocuments> {
     let legal = LEGAL.get()?;
     per_language(|lang| {
@@ -86,7 +88,7 @@ pub(crate) fn documents(slug: &str) -> Option<LegalDocuments> {
     })
 }
 
-/// The route path of every hosted document, in catalog order.
+/// Returns the route path of every hosted document, in catalog order.
 ///
 /// External documents are absent: they have no page on this site to list or to cache.
 pub(super) fn hosted_paths(legal: &Legal) -> Vec<String> {
@@ -99,12 +101,11 @@ pub(super) fn hosted_paths(legal: &Legal) -> Vec<String> {
         .collect()
 }
 
-/// The JSON routes and the redirects from the pre-configuration paths.
-///
-/// Every required document had a top-level route before the documents were configuration
-/// (`/imprint`, `/privacy`), and those URLs are printed on other sites and cached by search
-/// engines. A permanent redirect keeps them working and tells a crawler to move its entry,
-/// rather than turning them into the 404 page.
+/// Builds the JSON routes and the permanent redirects from `/imprint` and `/privacy` to the
+/// configured paths.
+// Every required document had a top-level route before the documents were configuration, and
+// those URLs are printed on other sites and cached by search engines. A permanent redirect keeps
+// them working and tells a crawler to move its entry, instead of turning them into the 404 page.
 pub(super) fn router(legal: Legal) -> Router {
     let redirects = REQUIRED_DOCUMENTS
         .into_iter()
@@ -121,8 +122,9 @@ pub(super) fn router(legal: Legal) -> Router {
     )
 }
 
-/// What a site language asks for: that language, with no `Accept-Language` to consult, because
-/// the site negotiated the language already (`crate::i18n`).
+/// Builds the negotiation for a site language: that language alone, with no `Accept-Language` to
+/// consult.
+// The site negotiated the language already, in `crate::i18n`.
 fn negotiation(lang: &str) -> Negotiation {
     Negotiation::from_request(Some(lang), None)
 }

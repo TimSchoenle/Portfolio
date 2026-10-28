@@ -41,7 +41,7 @@ pub struct AssetsConfig {
 }
 
 impl AssetsConfig {
-    /// The sibling `public/` directory a `dx bundle` produces.
+    /// Returns `public`, the sibling directory a `dx bundle` produces.
     fn default_dist_dir() -> PathBuf {
         PathBuf::from("public")
     }

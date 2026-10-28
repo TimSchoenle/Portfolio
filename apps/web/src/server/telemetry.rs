@@ -1,25 +1,25 @@
 //! Optional Sentry error reporting and performance tracing.
 //!
-//! Off unless `sentry.enabled` is set, and then only with a DSN — the combination without one is
-//! refused by [`SentryConfig::validate`] before this module is reached, because a client that
+//! Off unless `sentry.enabled` is set, and then only with a DSN. [`SentryConfig::validate`]
+//! refuses the combination without one before this module is reached, because a client that
 //! reports nowhere produces an empty dashboard that looks exactly like a site with no errors.
 //!
 //! Three sinks, all fed from the one client [`init`] installs:
 //!
-//! - **`tracing`** — [`tracing_layer`] turns records into issues and breadcrumbs, under the two
+//! - **`tracing`**: [`tracing_layer`] turns records into issues and breadcrumbs, under the two
 //!   thresholds in [`SentryConfig`].
-//! - **panics** — the SDK's own hook, added by `sentry::init`. A panic in a handler unwinds that
+//! - **panics**: the SDK's own hook, added by `sentry::init`. A panic in a handler unwinds that
 //!   request's task and leaves the process serving every other request, so without the hook it is
 //!   invisible: no 500 is logged, and the reader sees a dropped connection.
-//! - **HTTP** — [`http_layers`], mounted by [`super::router`].
+//! - **HTTP**: [`http_layers`], mounted by [`super::router`].
 //!
 //! # This module owns the log subscriber, but only while Sentry is on
 //!
 //! A Sentry layer has to be a layer *of* the subscriber, and the serve loop (`dioxus::serve` in
 //! development, `super::serve_until_signalled` in release) installs one through
 //! `dioxus_logger::initialize_default`, which cannot be extended afterwards. It can, however, be
-//! declined: it returns early when `tracing::dispatcher::has_been_set()`, so installing ours
-//! first — before the serve loop starts — is the whole of the handover. [`init`] therefore builds a
+//! declined: it returns early when `tracing::dispatcher::has_been_set()`, so installing this
+//! module's subscriber before the serve loop starts is the whole of the handover. [`init`] builds a
 //! subscriber that keeps the framework's contract (`RUST_LOG`, the same default verbosity, the
 //! same `hyper_util` mute) and adds the Sentry layer to it.
 //!
@@ -29,8 +29,8 @@
 //!
 //! One visible difference on the opted-in path, and only in development: `dioxus_logger` drops
 //! timestamps and targets when it detects that it is running under `dx`, and this does not,
-//! because the detection lives in `dioxus-cli-config` — a crate the `server` feature does not
-//! pull in, and not one worth pulling in for the width of a log line.
+//! because the detection lives in `dioxus-cli-config`, a crate the `server` feature does not
+//! pull in and not one worth pulling in for the width of a log line.
 
 use core::fmt;
 
@@ -42,17 +42,17 @@ use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt as _;
 use tracing_subscriber::{EnvFilter, Registry};
 
-/// What the default release tag names the project, ahead of the version.
+/// The project name the default release tag puts ahead of the version.
 ///
-/// The image, the contract and the GitHub repository all spell it this way, so an event's release
-/// is a string an operator can match against a tag without translating it.
+/// The image, the contract and the GitHub repository all spell it this way, so an operator can
+/// match an event's release against a tag without translating it.
 const RELEASE_PREFIX: &str = "portfolio";
 
 /// The module paths a stack trace should treat as application code.
 ///
 /// The crate names as the linker spells them, so `apps/web`'s own frames and the workspace
-/// libraries are in-app and everything under `dioxus`, `axum` and `hyper` is not. That is what
-/// makes a trace open on the handler rather than on a framework internal ten frames above it.
+/// libraries are in-app and everything under `dioxus`, `axum` and `hyper` is not. A trace then
+/// opens on the handler instead of a framework internal ten frames above it.
 const IN_APP: &[&str] = &[
     "portfolio_web",
     "portfolio_config",
@@ -85,17 +85,18 @@ impl fmt::Debug for TelemetryGuard {
     }
 }
 
-/// Install the Sentry client and the subscriber that feeds it, or leave both alone.
+/// Installs the Sentry client and the subscriber that feeds it, or leaves both alone when Sentry
+/// is off.
 ///
-/// Called before the serve loop starts, which is the only moment the handover described in the module
-/// documentation is available. Returns a guard the caller has to hold.
+/// Call it before the serve loop starts, which is the only moment the handover described in the
+/// module documentation is available, and hold the returned guard.
 ///
 /// # Errors
 ///
-/// [`TelemetryError::Dsn`] when `sentry.dsn` is not a Sentry DSN — checked here rather than in
-/// `portfolio-config`, which does not link the SDK — and [`TelemetryError::Subscriber`] when a
-/// `tracing` subscriber is already installed, which means the Sentry layer would silently report
-/// nothing. Both are start-up failures the caller refuses the boot on.
+/// Returns [`TelemetryError::Dsn`] when `sentry.dsn` is not a Sentry DSN, and
+/// [`TelemetryError::Subscriber`] when a `tracing` subscriber is already installed, in which case
+/// the Sentry layer would silently report nothing.
+// The DSN is parsed here instead of in `portfolio-config`, which does not link the SDK.
 pub fn init(config: &SentryConfig) -> Result<TelemetryGuard, TelemetryError> {
     // Off, or on with no DSN — the second already refused by `SentryConfig::validate`, and
     // treated here as off rather than re-reported, so this function has exactly one failure mode
@@ -152,16 +153,14 @@ pub fn init(config: &SentryConfig) -> Result<TelemetryGuard, TelemetryError> {
     Ok(TelemetryGuard(Some(guard)))
 }
 
-/// The per-request hub and the request-metadata layer, or `None` when Sentry is off.
+/// Returns the per-request hub layer and the request-metadata layer, or `None` when Sentry is off.
 ///
-/// The hub layer is not optional decoration. Without a hub per request, breadcrumbs from
-/// concurrently served requests all land on the main hub, and every issue arrives with a trail
-/// belonging to whoever else happened to be in flight.
-///
-/// Built after [`init`] rather than beside it, because `SentryHttpLayer::new` reads
-/// `send_default_pii` off the bound client to decide whether to redact sensitive request headers
-/// — with no client bound it would decide against a default rather than against the
-/// configuration.
+/// Call it after [`init`]: the metadata layer reads `send_default_pii` off the bound client to
+/// decide whether to redact sensitive request headers, and with no client bound it decides against
+/// a default instead of the configuration.
+// The hub layer is not optional decoration. Without a hub per request, breadcrumbs from
+// concurrently served requests all land on the main hub, and every issue arrives with a trail
+// belonging to whoever else happened to be in flight.
 pub fn http_layers(
     config: &SentryConfig,
 ) -> Option<(
@@ -184,11 +183,10 @@ pub fn http_layers(
     ))
 }
 
-/// The `tracing` layer feeding the client.
+/// Builds the `tracing` layer feeding the client.
 ///
-/// Sits under the subscriber's [`EnvFilter`], which is the one surprise worth knowing: a record
-/// `RUST_LOG` drops never reaches this layer, so tightening the log filter to `warn` also removes
-/// every `info` breadcrumb.
+/// The layer sits under the subscriber's [`EnvFilter`], so a record `RUST_LOG` drops never reaches
+/// it: tightening the log filter to `warn` also removes every `info` breadcrumb.
 fn tracing_layer<S>(config: &SentryConfig) -> SentryLayer<S>
 where
     S: tracing::Subscriber + for<'a> LookupSpan<'a>,
@@ -219,11 +217,12 @@ where
     }
 }
 
-/// The verbosity filter, matching what `dioxus_logger::initialize_default` would have installed.
+/// Builds the verbosity filter `dioxus_logger::initialize_default` would have installed.
 ///
-/// Same contract, so switching Sentry on does not also change what is logged: `RUST_LOG` wins,
-/// the default is `debug` for a development build and `info` otherwise, and `hyper_util` is muted
-/// because it leaves `debug!` calls on the connection accept path that drown everything else.
+/// `RUST_LOG` wins, the default is `debug` for a development build and `info` otherwise, and
+/// `hyper_util` is muted.
+// Matching the framework means switching Sentry on does not also change what is logged.
+// `hyper_util` leaves `debug!` calls on the connection accept path that drown everything else.
 fn env_filter() -> EnvFilter {
     let default = if cfg!(debug_assertions) {
         Level::DEBUG
@@ -242,10 +241,9 @@ fn env_filter() -> EnvFilter {
     }
 }
 
-/// The environment tag, from the configuration or from the build profile.
-///
-/// The profile is the only distinction this workspace has: it ships one image, and what separates
-/// a developer's `dx serve` from the deployed container is what it was compiled as.
+/// Returns the environment tag, from the configuration or else from the build profile.
+// The profile is the only distinction this workspace has: it ships one image, and what separates
+// a developer's `dx serve` from the deployed container is what it was compiled as.
 fn environment(config: &SentryConfig) -> String {
     config.environment.clone().unwrap_or_else(|| {
         if cfg!(debug_assertions) {
@@ -256,11 +254,11 @@ fn environment(config: &SentryConfig) -> String {
     })
 }
 
-/// The release tag, from the configuration or from the version this binary was built at.
-///
-/// `CARGO_PKG_VERSION` rather than a `v`-prefixed tag: every deploy of this site is a new image
-/// cut from a new workspace version, so the bare version is what makes a regression attributable
-/// to one.
+/// Returns the release tag, from the configuration or else from the version this binary was built
+/// at.
+// `CARGO_PKG_VERSION` instead of a `v`-prefixed tag: every deploy of this site is a new image cut
+// from a new workspace version, so the bare version is what makes a regression attributable to
+// one.
 fn release(config: &SentryConfig) -> String {
     config
         .release
@@ -268,9 +266,8 @@ fn release(config: &SentryConfig) -> String {
         .unwrap_or_else(|| format!("{RELEASE_PREFIX}@{}", env!("CARGO_PKG_VERSION")))
 }
 
-/// Whether a record at `level` is at least as severe as `threshold`.
-///
-/// [`Level`] orders `ERROR` lowest, so "at least as severe" is `<=`.
+/// Reports whether a record at `level` is at least as severe as `threshold`.
+// `Level` orders `ERROR` lowest, so "at least as severe" is `<=`.
 fn accepts(threshold: SentryLevel, level: Level) -> bool {
     let threshold = match threshold {
         SentryLevel::Off => return false,
@@ -285,9 +282,9 @@ fn accepts(threshold: SentryLevel, level: Level) -> bool {
 
 /// A `[sentry]` block that loaded but cannot be installed.
 ///
-/// Separate from [`portfolio_config::SentryConfigError`] on purpose: that one is everything the
-/// schema can decide on its own, and this is the two answers only the SDK and the process can
-/// give. Both end the boot through the same refusal, so an operator sees one behavior.
+/// [`portfolio_config::SentryConfigError`] covers everything the schema can decide on its own;
+/// this covers what only the SDK and the process can answer. The caller refuses the boot on
+/// either.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum TelemetryError {

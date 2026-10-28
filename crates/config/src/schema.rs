@@ -174,14 +174,15 @@ pub fn external() -> External {
         .ignore("HOSTNAME")
 }
 
-/// The keys the SSR server loads, with the defaults it starts from and nothing else.
+/// Describes the keys the SSR server loads, with the defaults it starts from and nothing else.
 fn server() -> Result<Schema, ConfigError> {
     crate::terrace()
         .schema::<ServerConfig>()
         .with_defaults_from(&ServerConfig::default())
 }
 
-/// The keys the `portfolio-update-repos` builder loads, with the defaults it starts from.
+/// Describes the keys the `portfolio-update-repos` builder loads, with the defaults it starts
+/// from.
 fn builder() -> Result<Schema, ConfigError> {
     crate::terrace()
         .schema::<BuilderConfig>()

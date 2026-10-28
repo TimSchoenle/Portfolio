@@ -3,8 +3,8 @@
 //! Renders visible by default so the server-side render and the no-JS view show
 //! the content (good for SEO and progressive enhancement). After hydration,
 //! blocks still below the fold are hidden and then fade/slide in when they
-//! scroll into view; blocks already on screen — and everything under reduced
-//! motion — stay visible with no animation, so nothing above the fold flashes.
+//! scroll into view. Blocks already on screen, and everything under reduced
+//! motion, stay visible with no animation, so nothing above the fold flashes.
 
 use dioxus::prelude::*;
 
