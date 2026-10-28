@@ -5,7 +5,7 @@ What the image contains, how it is built reproducibly, what it publishes about i
 ## The image
 
 The runtime stage is `FROM scratch`. There is no shell, no package manager, no CA bundle, no
-tzdata and no `/etc/passwd` — a numeric `USER` needs no passwd entry. What gets copied in is the
+tzdata and no `/etc/passwd`, which a numeric `USER` does not need. What gets copied in is the
 `server` binary, the `public/` bundle beside it, and `/config/contract.json`. The one outbound
 connection the server can make, to Sentry when error reporting is on, verifies TLS against the
 `webpki-roots` bundle compiled into the binary, so the missing CA bundle costs nothing.
@@ -28,8 +28,8 @@ together.
 The image sets the ISR cache directory to `/tmp/isr` and bakes an empty one owned by the runtime
 user, because a non-root process on a `scratch` root cannot create it. Under
 `readOnlyRootFilesystem: true` the chart mounts a writable volume there; a plain `docker run` uses
-the baked-in copy. Where the path is not writable at all, the server renders every request fresh
-instead of failing.
+the baked-in copy. Where the path is not writable at all, the server runs without the on-disk cache
+instead of failing, and only the in-memory page memo holds rendered pages.
 
 The cache is permanent by default. The only thing that changes a page is a new build, and a new
 build starts from an empty cache. A positive TTL is for a persistent cache volume shared across
@@ -83,7 +83,7 @@ source-only commit.
 Each cook names exactly the package, profile and features of the build it stands in for. Cooking
 two packages in one call resolves features across both, while `cargo run -p` resolves them for one,
 so every crate whose features differ would compile again after `COPY . .`. For the same reason the
-two `web-deps` cooks copy how dioxus-cli 0.7.10 calls cargo (`build/request.rs`): `wasm-release` is
+two `web-deps` cooks copy how the pinned dioxus-cli calls cargo (`build/request.rs`): `wasm-release` is
 declared in `Cargo.toml` and used as written, `server-release` is defined by `dx` through
 `--config` as `release` with `strip = false`, which the `CARGO_PROFILE_*` variables repeat, and the
 client gets `--cfg getrandom_backend="wasm_js"`.
@@ -227,7 +227,7 @@ docker build --secret id=gh_token,src=./gh_token -t portfolio .
 
 A release pushes both architectures as one manifest list, so `docker pull` resolves the right image
 per node. The push carries max-mode provenance and an SBOM, and `cosign sign --recursive` signs the
-index and each per-architecture child manifest — verification then still succeeds for a consumer or
+index and each per-architecture child manifest. Verification then still succeeds for a consumer or
 an admission controller that resolved the index down to one architecture before checking.
 
 The chart lives in

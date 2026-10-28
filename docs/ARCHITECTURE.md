@@ -31,7 +31,8 @@ Sentry is on the server side only, and there is deliberately no browser SDK: rep
 error would mean a third-party script on every page load, a `connect-src` in the
 Content-Security-Policy and a line in the privacy page. It is compiled into every server build and
 switched on by `sentry.enabled` rather than by a Cargo feature, so an image cannot accept the key
-and silently do nothing with it — see [SECURITY_POSTURE.md](SECURITY_POSTURE.md).
+and silently do nothing with it. [SECURITY_POSTURE.md](SECURITY_POSTURE.md#error-reporting) has
+what it sends.
 
 Server-side rendering is not a fallback here. The locale is negotiated from the request in
 `crates/server/src/locale.rs` and applied before the document is serialized, so nothing arrives
@@ -40,8 +41,8 @@ in the wrong language and gets swapped once hydration runs.
 Every document then passes through `crates/server/src/page.rs`, which sits outside the Dioxus
 router and so also sees pages the incremental cache answers without rendering. It stamps
 `<html lang>`, writes the `lang` cookie when the request's disagrees, and gives the document a
-Content-Security-Policy hashed from the bytes it is about to send — see
-[SECURITY_POSTURE.md](SECURITY_POSTURE.md). A finished page is memoized per path and language, so a
+Content-Security-Policy hashed from the bytes it is about to send, as
+[SECURITY_POSTURE.md](SECURITY_POSTURE.md#content-security-policy) describes. A finished page is memoized per path and language, so a
 repeat request is answered without reaching the router at all; only the nonce and the cookie are
 per response. `apps/web/src/server/isr.rs` is the on-disk render cache behind it, keyed per
 language and restricted to an allowlist of real pages.
@@ -99,10 +100,10 @@ compiles and the affected page renders its empty state.
 
 The resume generator is a Typst document builder rather than a PDF library. It embeds Inter, with
 Liberation Sans as a metric-compatible last resort, and emits a tagged PDF 1.7 with live link
-annotations. `fit` is the part worth knowing about: it scales the type down and re-typesets until
-the content lands on one A4 page, because a resume that runs to a second page is a resume an ATS
-truncates. The main column is emitted before the sidebar so a text extractor reads identity,
-summary and experience in that order despite the sidebar sitting on the left.
+annotations. `fit` scales the type down and re-typesets until the content lands on one A4 page,
+because a resume that runs to a second page is a resume an ATS truncates. The main column is emitted
+before the sidebar so a text extractor reads identity, summary and experience in that order despite
+the sidebar sitting on the left.
 
 The German sheet can carry an application photo at the top of its sidebar. The photo is a build
 input, never a committed file: pass `--photo <file>` (or `PORTFOLIO_RESUME__PHOTO_FILE`), which

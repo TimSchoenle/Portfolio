@@ -140,7 +140,7 @@ ENV CC_x86_64_unknown_linux_musl=musl-gcc \
     CC_aarch64_unknown_linux_musl=aarch64-linux-gnu-gcc \
     AR_aarch64_unknown_linux_musl=aarch64-linux-gnu-ar \
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc
-# The two compilations `dx bundle` runs, cooked exactly the way dioxus-cli 0.7.10 calls cargo.
+# The two compilations `dx bundle` runs, cooked exactly the way the pinned dioxus-cli calls cargo.
 # A `dx` bump that changes its invocation shows up as `Compiled` lines for dependencies under
 # `dx bundle`.
 RUN RUSTFLAGS='--cfg getrandom_backend="wasm_js"' \

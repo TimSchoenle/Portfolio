@@ -5,7 +5,7 @@ How `apps/web/repos.json` is fetched, filtered, cached and embedded, and what th
 ## Where the file comes from
 
 `apps/update-repos` writes it and `apps/web/build.rs` embeds it with `include_str!`. The builder
-runs before the web build — inside the image build, and by hand during development. When the file
+runs before the web build: inside the image build, and by hand during development. When the file
 is absent, `build.rs` substitutes an empty default so the `include_str!` always resolves and the
 projects section renders its empty state.
 
@@ -27,8 +27,7 @@ three kinds:
 - Repositories with no update in the last 365 days (`MAX_AGE_DAYS` in `builder.rs`).
 
 What survives is deserialized straight into the shared `portfolio_data::Repo` and `ReposFile`
-models and written as pretty-printed JSON, with failures surfaced through a dedicated
-`UpdateReposError`. Sharing the models with `crates/data` is what stops the writer and the reader
+models and written as pretty-printed JSON. Sharing the models with `crates/data` is what stops the writer and the reader
 from disagreeing about a field name.
 
 An explicit set bypasses the listing and its filtering, and each named repository is fetched
@@ -49,5 +48,7 @@ environment variable is set to a non-empty value, 60 minutes otherwise. Deriving
 file's own timestamp rather than from a marker means it works the same whether the file was written
 locally or restored from a CI cache.
 
-CI additionally persists the file across runs with `actions/cache`, keyed by a roughly ten-hour
-window, so a fresh copy is usually restored before the build even asks.
+The image build keeps the file in a BuildKit cache mount, `/repos-cache`, and CI carries that
+mount between runs with `actions/cache` and `buildkit-cache-dance`. Only pushes to `main` save it.
+A pull request restores `main`'s copy, so its build usually finds a fresh file and makes no API
+call.
