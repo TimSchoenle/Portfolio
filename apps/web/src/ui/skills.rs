@@ -165,3 +165,58 @@ fn confidence_label(i18n: Signal<I18n>, skill: &Skill) -> String {
         (skill.confidence * 100.0).round()
     )
 }
+
+#[cfg(all(test, feature = "server"))]
+mod tests {
+    use super::*;
+    use crate::ui::test_render::{render, text};
+
+    #[test]
+    fn renders_one_category_per_quadrant_holding_every_matrix_skill() {
+        let html = render("en", || rsx! { Skills {} });
+        assert!(html.contains(&format!(r#"id="{}""#, section_id("stack"))));
+        assert_eq!(
+            html.matches(r#"class="stack-cat""#).count(),
+            Quadrant::all().len()
+        );
+        assert_eq!(html.matches(r#"class="stack-chip""#).count(), MATRIX.len());
+        for skill in MATRIX.iter() {
+            assert!(html.contains(skill.name), "{} is missing", skill.name);
+        }
+    }
+
+    #[test]
+    fn opens_with_no_quadrant_selected_and_the_hover_hint_showing() {
+        let html = render("en", || rsx! { Skills {} });
+        // "All" is the only active chip, no category is dimmed, and the readout shows the hint.
+        assert_eq!(html.matches("filter-chip active").count(), 1);
+        assert!(!html.contains("stack-cat dim"));
+        assert!(html.contains(&text("en", "skills.hoverHint")));
+    }
+
+    #[test]
+    fn labels_each_chip_with_its_skill_s_localized_confidence() {
+        for lang in ["en", "de"] {
+            let html = render(lang, || rsx! { Skills {} });
+            let skill = MATRIX[0];
+            let expected = format!(
+                "{} {}%",
+                text(lang, "skills.confidenceLabel"),
+                (skill.confidence * 100.0).round()
+            );
+            assert!(html.contains(&format!(r#"title="{expected}""#)), "{lang}");
+            assert!(html.contains(&text(lang, "skills.title")), "{lang}");
+        }
+    }
+
+    #[test]
+    fn fills_each_level_bar_with_as_many_segments_as_the_skill_s_level() {
+        let html = render("en", || rsx! { Skills {} });
+        let lit: usize = MATRIX.iter().map(|s| usize::from(s.level())).sum();
+        assert_eq!(html.matches(r#"class="chip-bar-seg on""#).count(), lit);
+        assert_eq!(
+            html.matches(r#"class="chip-bar-seg"#).count(),
+            MATRIX.len() * 5
+        );
+    }
+}

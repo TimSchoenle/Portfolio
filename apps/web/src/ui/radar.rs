@@ -158,16 +158,20 @@ pub fn Radar(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
             svg {
                 "viewBox": "{view_box}",
                 class: "radar-svg",
-                // Announced as a single labeled image: the rings, sweep and
-                // scatter carry no information on their own, and every skill
-                // plotted here is also reachable as text in the adjacent list.
-                role: "img",
+                // A labeled group, not an image: `role="img"` would make every
+                // descendant presentational, hiding the focusable named dots.
+                // The rings, sweep, scatter and center mark carry no
+                // information, so each is hidden on its own.
+                role: "group",
                 "aria-label": "{radar_label}",
-                RadarBackdrop {}
+                g { "aria-hidden": "true", RadarBackdrop {} }
                 QuadrantLabels { active }
                 FillerDots { active, on_hover }
                 NamedDots { active, on_hover }
-                circle { cx: "{CX}", cy: "{CY}", r: "2", fill: "var(--accent)" }
+                circle {
+                    cx: "{CX}", cy: "{CY}", r: "2", fill: "var(--accent)",
+                    "aria-hidden": "true",
+                }
             }
         }
     }
@@ -292,8 +296,8 @@ fn FillerDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) -
                     opacity: "{opacity:.2}", style: "{style}",
                     // Decorative scatter: hovering one is a sighted-only
                     // affordance, and turning 80-odd dots into tab stops
-                    // would bury the rest of the page. The labeled
-                    // `role="img"` on the svg covers them.
+                    // would bury the rest of the page. The named dots and
+                    // the labeled group on the svg carry the information.
                     "aria-hidden": "true",
                     onmouseenter: move |_| { hovered.set(Some(i)); on_hover.call(Some(skill)); },
                     onmouseleave: move |_| { hovered.set(None); on_hover.call(None); },
@@ -344,5 +348,184 @@ fn NamedDots(active: Option<Quadrant>, on_hover: EventHandler<Option<Skill>>) ->
                 }
             }
         })}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The angle of `(x, y)` around the center, in degrees in `[0, 360)`, measured the way
+    /// [`polar`] lays dots out.
+    fn angle_of(x: f32, y: f32) -> f32 {
+        (y - CY).atan2(x - CX).to_degrees().rem_euclid(360.0)
+    }
+
+    #[test]
+    fn gives_every_matrix_skill_one_named_dot() {
+        let (named, _) = build_dots();
+        let mut plotted: Vec<&str> = named.iter().map(|d| d.skill.name).collect();
+        let mut expected: Vec<&str> = matrix_skills().iter().map(|s| s.name).collect();
+        plotted.sort_unstable();
+        expected.sort_unstable();
+        assert_eq!(plotted, expected);
+    }
+
+    #[test]
+    fn scatters_exactly_the_radar_only_skills_as_filler() {
+        let (_, filler) = build_dots();
+        let mut plotted: Vec<&str> = filler.iter().map(|d| d.skill.name).collect();
+        let mut expected: Vec<&str> = SKILLS
+            .iter()
+            .filter(|s| s.radar_only)
+            .map(|s| s.name)
+            .collect();
+        plotted.sort_unstable();
+        expected.sort_unstable();
+        assert_eq!(plotted, expected);
+    }
+
+    #[test]
+    fn keeps_every_dot_inside_its_quadrant_and_inside_the_outer_ring() {
+        let (named, filler) = build_dots();
+        let dots = named
+            .iter()
+            .map(|d| (d.x, d.y, d.skill.quadrant))
+            .chain(filler.iter().map(|d| (d.x, d.y, d.skill.quadrant)));
+        for (x, y, quadrant) in dots {
+            let (a0, a1) = quadrant_arc(quadrant);
+            let angle = angle_of(x, y);
+            // `rem_euclid` maps the Frameworks arc's 360° end to 0°, so compare on the open arc.
+            let within = if a1 >= 360.0 {
+                angle >= a0 || angle < a1 - 360.0
+            } else {
+                (a0..a1).contains(&angle)
+            };
+            assert!(within, "{quadrant:?} dot at {angle}° is outside {a0}..{a1}");
+            assert!((x - CX).hypot(y - CY) <= MAX_R * 0.97 + 0.01);
+        }
+    }
+
+    #[test]
+    fn lays_the_dots_out_identically_on_every_build() {
+        let (first_named, first_filler) = build_dots();
+        let (second_named, second_filler) = build_dots();
+        let positions = |named: &[NamedDot], filler: &[FillerDot]| -> Vec<(f32, f32)> {
+            named
+                .iter()
+                .map(|d| (d.x, d.y))
+                .chain(filler.iter().map(|d| (d.x, d.y)))
+                .collect()
+        };
+        assert_eq!(
+            positions(&first_named, &first_filler),
+            positions(&second_named, &second_filler)
+        );
+    }
+
+    #[test]
+    fn clamps_the_radius_to_the_ring_band() {
+        assert!((radius_for(0.0, 0.0) - 0.05).abs() < f32::EPSILON);
+        assert!((radius_for(1.0, 1.0) - 0.97).abs() < f32::EPSILON);
+        assert!((radius_for(0.5, 0.5) - 0.5).abs() < f32::EPSILON);
+    }
+
+    #[cfg(feature = "server")]
+    mod rendered {
+        use super::*;
+        use crate::ui::test_render::{render, text};
+
+        #[test]
+        fn labels_one_focusable_dot_per_matrix_skill() {
+            let html = render("en", || rsx! { Radar { active: None, on_hover: |_| {} } });
+            assert_eq!(html.matches(r#"tabindex="0""#).count(), DOTS.0.len());
+            // A named dot's group holds no nested group, so its body runs up to the first `</g>`.
+            // The opening tag is kept apart so the label is checked on the focusable group itself.
+            let groups = html
+                .split("<g ")
+                .filter_map(|group| group.split_once("</g>").map(|(body, _)| body))
+                .filter_map(|body| body.split_once('>'))
+                .collect::<Vec<_>>();
+            for dot in &DOTS.0 {
+                let label = format!(
+                    r#"aria-label="{} — {}%""#,
+                    dot.skill.name,
+                    (dot.skill.confidence * 100.0).round()
+                );
+                let position = format!(r#"cx="{}" cy="{}""#, dot.x, dot.y);
+                assert!(
+                    groups.iter().any(|(tag, children)| {
+                        tag.contains(&label)
+                            && tag.contains(r#"tabindex="0""#)
+                            && children.contains(&position)
+                    }),
+                    "{} is not labeled at its own position",
+                    dot.skill.name
+                );
+            }
+            // Every filler dot, plus the backdrop group and the center mark.
+            assert_eq!(
+                html.matches(r#"aria-hidden="true""#).count(),
+                DOTS.1.len() + 2
+            );
+        }
+
+        #[test]
+        fn exposes_the_named_dots_inside_a_labeled_group() {
+            let html = render("en", || rsx! { Radar { active: None, on_hover: |_| {} } });
+            let svg = html
+                .split_once("<svg")
+                .and_then(|(_, rest)| rest.split_once('>'))
+                .map(|(tag, _)| tag)
+                .expect("the radar renders an svg");
+            assert!(svg.contains(r#"role="group""#), "{svg}");
+            assert!(
+                svg.contains(&format!(
+                    r#"aria-label="{}""#,
+                    text("en", "skills.radarLabel")
+                )),
+                "{svg}"
+            );
+            assert!(
+                html.contains(r#"<g aria-hidden="true"><defs>"#),
+                "the backdrop is exposed"
+            );
+        }
+
+        #[test]
+        fn dims_every_quadrant_but_the_active_one() {
+            let all = render("en", || rsx! { Radar { active: None, on_hover: |_| {} } });
+            let one = render("en", || {
+                rsx! { Radar { active: Some(Quadrant::Languages), on_hover: |_| {} } }
+            });
+            // The halo ring marks every named dot only while no quadrant is active.
+            assert_eq!(all.matches(r#"opacity="0.35""#).count(), DOTS.0.len());
+            assert_eq!(one.matches(r#"opacity="0.35""#).count(), 0);
+            // Three of the four corner labels fade while one quadrant is active.
+            assert_eq!(
+                all.matches(r#"letter-spacing="0.14em" opacity="0.3""#)
+                    .count(),
+                0
+            );
+            assert_eq!(
+                one.matches(r#"letter-spacing="0.14em" opacity="0.3""#)
+                    .count(),
+                3
+            );
+            let others = DOTS
+                .0
+                .iter()
+                .filter(|d| d.skill.quadrant != Quadrant::Languages)
+                .count();
+            assert_eq!(
+                one.matches(r#"opacity="0.15""#).count(),
+                others
+                    + DOTS
+                        .1
+                        .iter()
+                        .filter(|d| d.skill.quadrant != Quadrant::Languages)
+                        .count()
+            );
+        }
     }
 }
