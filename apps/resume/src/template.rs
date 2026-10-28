@@ -774,3 +774,114 @@ fn keep_compounds(escaped: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+
+#[cfg(test)]
+mod tests {
+    use portfolio_data::SITE_LANGUAGES;
+
+    use super::*;
+
+    const DESIGN_SIZE: Layout = Layout {
+        scale: 1.0,
+        dense: false,
+    };
+
+    fn translations(lang: &str) -> Translations {
+        let language = SITE_LANGUAGES
+            .iter()
+            .find(|language| language.code == lang)
+            .expect("a site language");
+        Translations::parse(language.translations).expect("the embedded translations parse")
+    }
+
+    #[test]
+    fn escapes_every_markup_significant_character() {
+        assert_eq!(esc("a#b"), r"a\#b");
+        assert_eq!(esc(r#"\$*_`<>@[]""#), r#"\\\$\*\_\`\<\>\@\[\]\""#);
+        assert_eq!(esc("plain text, 100% ok"), "plain text, 100% ok");
+    }
+
+    #[test]
+    fn boxes_hyphenated_words_and_leaves_the_rest() {
+        assert_eq!(
+            keep_compounds("Web-Frontends and APIs"),
+            "#box[Web-Frontends] and APIs"
+        );
+        assert_eq!(keep_compounds("no compounds"), "no compounds");
+    }
+
+    #[test]
+    fn strips_the_scheme_and_www_from_a_link_label() {
+        assert_eq!(strip_scheme("https://www.example.com/x"), "example.com/x");
+        assert_eq!(strip_scheme("http://example.com"), "example.com");
+    }
+
+    #[test]
+    fn sets_the_document_language_region_and_localized_title() {
+        for (lang, region) in [("en", "us"), ("de", "de")] {
+            let t = translations(lang);
+            let source = build_typ(&t, DESIGN_SIZE, Detail::Full, lang, None);
+            assert!(source.contains(&format!(r#"lang: "{lang}", region: "{region}""#)));
+            let title = portfolio_data::document_title(&t.get("common.jobTitle"));
+            assert!(source.contains(&format!("title: {title:?}")), "{lang}");
+            assert!(source.contains(&format!("author: {:?}", CONFIG.full_name)));
+        }
+    }
+
+    #[test]
+    fn places_the_photo_on_the_german_sheet_only() {
+        let photo = Some(Photo {
+            file_name: "photo.jpg",
+        });
+        let de = build_typ(&translations("de"), DESIGN_SIZE, Detail::Full, "de", photo);
+        let en = build_typ(&translations("en"), DESIGN_SIZE, Detail::Full, "en", photo);
+        assert!(de.contains(r#"#image("photo.jpg""#));
+        assert!(!en.contains("photo.jpg"));
+    }
+
+    #[test]
+    fn writes_every_experience_entry_and_every_section_title() {
+        for lang in ["en", "de"] {
+            let t = translations(lang);
+            let source = build_typ(&t, DESIGN_SIZE, Detail::Full, lang, None);
+            for key in [
+                "resume.experienceTitle",
+                "resume.contactTitle",
+                "resume.skillsTitle",
+                "resume.educationTitle",
+                "resume.languagesTitle",
+            ] {
+                // Section headings are set in capitals.
+                let title = esc(&t.get(key).to_uppercase());
+                assert!(source.contains(&title), "{lang}: {key}");
+            }
+            for experience in experiences_sorted() {
+                let role = esc(&t.get(&entry_key(experience, "role")));
+                assert!(source.contains(&role), "{lang}: {}", experience.id);
+            }
+        }
+    }
+
+    /// The generated source is valid Typst at every density the fitter tries, in every language.
+    #[test]
+    fn compiles_in_every_language_and_density() {
+        for language in SITE_LANGUAGES {
+            let t = translations(language.code);
+            for dense in [false, true] {
+                for detail in [Detail::Full, Detail::Condensed, Detail::Compact] {
+                    let source = build_typ(
+                        &t,
+                        Layout { scale: 1.0, dense },
+                        detail,
+                        language.code,
+                        None,
+                    );
+                    let (pages, bytes) = crate::world::render(source, &[])
+                        .unwrap_or_else(|err| panic!("{}: {err}", language.code));
+                    assert!(pages >= 1);
+                    assert!(bytes.starts_with(b"%PDF-"));
+                }
+            }
+        }
+    }
+}

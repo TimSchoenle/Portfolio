@@ -268,3 +268,77 @@ fn use_type_in(typed: Signal<String>, section_el: Signal<Option<web_sys::Element
         });
     });
 }
+
+#[cfg(all(test, feature = "server"))]
+mod tests {
+    use super::*;
+    use crate::ui::test_render::{render, text};
+
+    #[test]
+    fn links_the_address_and_types_the_full_command_on_the_server() {
+        let html = render("en", || rsx! { Contact {} });
+        assert!(html.contains(&format!(r#"id="{}""#, section_id("contact"))));
+        assert!(html.contains(&format!(r#"href="mailto:{}""#, CONFIG.email)));
+        // The server sends the finished command; only the client animates it.
+        assert!(html.contains(&format!("ssh {}", CONFIG.email)));
+        assert!(html.contains(&text("en", "contact.copy")));
+    }
+
+    #[test]
+    fn links_the_resume_in_the_language_shown() {
+        for lang in ["en", "de"] {
+            let html = render(lang, || rsx! { Contact {} });
+            let file = language_or_default(lang).resume_file;
+            assert!(
+                html.contains(&format!(r#"href="/resume/{file}""#)),
+                "{lang}"
+            );
+            assert!(html.contains(&text(lang, "contact.title")), "{lang}");
+        }
+    }
+
+    #[test]
+    fn shows_the_bare_host_of_the_site_url() {
+        let html = render("en", || rsx! { Contact {} });
+        let host = CONFIG
+            .url
+            .trim_start_matches("https://")
+            .trim_start_matches("http://");
+        assert!(html.contains(&format!("{host} ↗")));
+    }
+
+    #[test]
+    fn offers_the_fingerprint_closed_when_one_was_published() {
+        let html = render("en", || {
+            rsx! {
+                ResumeDownload {
+                    file: "resume.pdf",
+                    label: "Resume".to_owned(),
+                    digest: Some(("SHA-256 fingerprint".to_owned(), "00ff".to_owned())),
+                    note: "Compare it.".to_owned(),
+                }
+            }
+        });
+        assert!(html.contains(r#"href="/resume/resume.pdf""#));
+        assert!(html.contains(r#"aria-label="SHA-256 fingerprint""#));
+        assert!(html.contains(r#"aria-expanded="false""#));
+        // The digest itself waits behind the button.
+        assert!(!html.contains("fp-popup"));
+    }
+
+    #[test]
+    fn omits_the_fingerprint_button_when_none_was_published() {
+        let html = render("en", || {
+            rsx! {
+                ResumeDownload {
+                    file: "resume.pdf",
+                    label: "Resume".to_owned(),
+                    digest: None,
+                    note: "Compare it.".to_owned(),
+                }
+            }
+        });
+        assert!(html.contains("resume-dl"));
+        assert!(!html.contains("resume-info-btn"));
+    }
+}

@@ -21,3 +21,5 @@ pub mod radar;
 pub mod reveal;
 pub mod section_header;
 pub mod skills;
+#[cfg(all(test, feature = "server"))]
+mod test_render;

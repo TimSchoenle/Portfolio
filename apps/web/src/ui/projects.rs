@@ -298,3 +298,194 @@ fn ProjectCard(repo: Repo) -> Element {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A repository named `name` that the configuration does not feature.
+    fn plain(name: &str, language: Option<&str>, stars: u32) -> Repo {
+        let repo = Repo {
+            name: name.to_owned(),
+            full_name: format!("owner/{name}"),
+            description: None,
+            html_url: format!("https://github.com/owner/{name}"),
+            language: language.map(str::to_owned),
+            stargazers_count: stars,
+            forks_count: 0,
+            updated_at: String::new(),
+            topics: Vec::new(),
+            fork: false,
+            archived: false,
+            homepage: None,
+        };
+        assert!(
+            !repo.is_featured(),
+            "{name} is featured in the configuration"
+        );
+        repo
+    }
+
+    /// The first repository the configuration features.
+    fn featured() -> Repo {
+        let name = CONFIG
+            .featured_repos
+            .first()
+            .expect("the configuration features a repository");
+        Repo {
+            name: (*name).to_owned(),
+            ..plain("unfeatured-placeholder", Some("Rust"), 1)
+        }
+    }
+
+    /// A parsed listing holding `repos`.
+    fn listing(repos: Vec<Repo>) -> ReposState {
+        ReposState::Ready(std::sync::Arc::new(portfolio_data::ReposFile {
+            generated_at: String::new(),
+            user: "owner".to_owned(),
+            repos,
+        }))
+    }
+
+    fn names(repos: &[&Repo]) -> Vec<String> {
+        repos.iter().map(|r| r.name.clone()).collect()
+    }
+
+    #[test]
+    fn drops_forks_and_archived_repositories_and_sorts_by_stars() {
+        let mut fork = plain("fork", Some("Go"), 99);
+        fork.fork = true;
+        let mut archived = plain("archived", Some("Go"), 98);
+        archived.archived = true;
+        let state = listing(vec![
+            plain("low", Some("Rust"), 1),
+            fork,
+            archived,
+            plain("high", Some("Go"), 10),
+            plain("none", None, 5),
+        ]);
+
+        let (repos, langs) = base_lists(&state);
+        assert_eq!(
+            repos.iter().map(|r| r.name.as_str()).collect::<Vec<_>>(),
+            ["high", "none", "low"]
+        );
+        assert_eq!(langs, ["Go", "Rust"]);
+    }
+
+    #[test]
+    fn a_failed_listing_has_no_repositories_and_no_languages() {
+        let (repos, langs) = base_lists(&ReposState::Failed);
+        assert_eq!(repos, Vec::<Repo>::new());
+        assert_eq!(langs, Vec::<String>::new());
+    }
+
+    #[test]
+    fn favorites_shows_the_featured_repositories_only() {
+        let repos = [plain("a", Some("Go"), 3), featured(), plain("b", None, 1)];
+        assert_eq!(names(&shown(&repos, &Filter::Favorites)), [featured().name]);
+    }
+
+    #[test]
+    fn favorites_falls_back_to_every_repository_when_none_is_featured() {
+        let repos = [plain("a", Some("Go"), 3), plain("b", None, 1)];
+        assert_eq!(names(&shown(&repos, &Filter::Favorites)), ["a", "b"]);
+    }
+
+    #[test]
+    fn a_language_filter_keeps_that_language_only() {
+        let repos = [
+            plain("a", Some("Go"), 3),
+            plain("b", Some("Rust"), 2),
+            plain("c", None, 1),
+        ];
+        assert_eq!(names(&shown(&repos, &Filter::All)), ["a", "b", "c"]);
+        assert_eq!(
+            names(&shown(&repos, &Filter::Language("Rust".into()))),
+            ["b"]
+        );
+        assert_eq!(
+            names(&shown(&repos, &Filter::Language("All".into()))),
+            Vec::<String>::new()
+        );
+    }
+
+    #[cfg(feature = "server")]
+    mod rendered {
+        use super::*;
+        use crate::ui::test_render::{render, text};
+
+        fn seven_unfeatured() -> ReposState {
+            listing(
+                (0..7)
+                    .map(|i| plain(&format!("repo-{i}"), Some("Rust"), i))
+                    .collect(),
+            )
+        }
+
+        #[test]
+        fn opens_on_the_featured_repositories() {
+            let html = render("en", || {
+                rsx! {
+                    Projects { state: listing(vec![plain("plain", Some("Go"), 9), featured()]) }
+                }
+            });
+            assert_eq!(html.matches("project-card featured").count(), 1);
+            assert!(!html.contains("owner/plain"));
+            assert!(html.contains(&format!("1 {}", text("en", "projects.repoOne"))));
+            // One chip per pseudo-filter and per language, Favorites pressed.
+            assert_eq!(html.matches(r#"aria-pressed="true""#).count(), 1);
+            assert_eq!(html.matches("aria-pressed=").count(), 2 + 2);
+        }
+
+        #[test]
+        fn pages_more_than_six_repositories() {
+            let html = render("en", || rsx! { Projects { state: seven_unfeatured() } });
+            assert_eq!(html.matches(r#"class="project-card""#).count(), 7);
+            assert_eq!(html.matches(r#"class="project-grid""#).count(), 2);
+            assert!(html.contains(r#"class="slider-nav""#));
+            assert_eq!(html.matches("aria-current=").count(), 2);
+            assert_eq!(html.matches(r#"aria-current="true""#).count(), 1);
+            assert!(html.contains(&format!("7 {}", text("en", "projects.repoMany"))));
+            let first_page = text("en", "projects.pageLabel")
+                .replace("{n}", "1")
+                .replace("{total}", "2");
+            assert!(html.contains(&format!(r#"aria-label="{first_page}""#)));
+        }
+
+        #[test]
+        fn six_repositories_fit_one_page_without_a_pager() {
+            let html = render("en", || {
+                rsx! {
+                    Projects {
+                        state: listing((0..6).map(|i| plain(&format!("r{i}"), None, i)).collect()),
+                    }
+                }
+            });
+            assert_eq!(html.matches(r#"class="project-grid""#).count(), 1);
+            assert!(!html.contains("slider-nav"));
+        }
+
+        #[test]
+        fn a_failed_listing_says_so_and_shows_no_card() {
+            let html = render("de", || rsx! { Projects { state: ReposState::Failed } });
+            assert!(html.contains(&text("de", "projects.offline")));
+            assert!(!html.contains("project-card"));
+        }
+
+        #[test]
+        fn a_card_shows_its_topics_and_counts() {
+            let html = render("en", || {
+                let mut repo = plain("tagged", Some("Rust"), 4);
+                repo.forks_count = 2;
+                repo.topics = ["a", "b", "c", "d", "e"].map(String::from).to_vec();
+                rsx! { ProjectCard { repo } }
+            });
+            assert_eq!(html.matches(r#"class="project-tag""#).count(), 4);
+            assert!(html.contains("★ 4"));
+            assert!(html.contains("⑂ 2"));
+            // No description renders as a dash rather than an empty line.
+            assert!(html.contains(r#"<div class="project-desc">—</div>"#));
+        }
+    }
+}

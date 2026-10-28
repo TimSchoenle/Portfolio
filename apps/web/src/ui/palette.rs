@@ -443,3 +443,210 @@ fn copy_email() {
         let _ = win.navigator().clipboard().write_text(CONFIG.email);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn entry(group: &str, label: &str) -> Entry {
+        Entry {
+            group: group.to_owned(),
+            label: label.to_owned(),
+            hint: String::new(),
+            action: Action::CopyEmail,
+        }
+    }
+
+    #[test]
+    fn groups_in_first_seen_order_and_keeps_each_flat_index() {
+        let filtered = [
+            entry("nav", "a"),
+            entry("work", "b"),
+            entry("nav", "c"),
+            entry("act", "d"),
+        ];
+        let grouped: Vec<(String, Vec<(usize, String)>)> = group_in_first_seen_order(&filtered)
+            .into_iter()
+            .map(|(g, items)| (g, items.into_iter().map(|(i, e)| (i, e.label)).collect()))
+            .collect();
+        assert_eq!(
+            grouped,
+            [
+                (
+                    "nav".to_owned(),
+                    vec![(0, "a".to_owned()), (2, "c".to_owned())]
+                ),
+                ("work".to_owned(), vec![(1, "b".to_owned())]),
+                ("act".to_owned(), vec![(3, "d".to_owned())]),
+            ]
+        );
+    }
+
+    #[test]
+    fn grouping_nothing_yields_no_group() {
+        assert_eq!(group_in_first_seen_order(&[]).len(), 0);
+    }
+
+    #[test]
+    fn the_fixed_actions_hint_at_their_target() {
+        let t = |key: &str| key.to_owned();
+        let [copy, toggle, github, linkedin, resume] = action_entries(&t, "en", "act");
+        let local = CONFIG.email.split('@').next().unwrap_or_default();
+        assert_eq!(copy.hint, format!("{local}@…"));
+        assert!(copy.action == Action::CopyEmail);
+        assert_eq!(toggle.hint, next_language("en").code.to_uppercase());
+        assert!(toggle.action == Action::ToggleLang);
+        assert!(github.action == Action::Open(CONFIG.github.into()));
+        assert!(linkedin.action == Action::Open(CONFIG.linkedin.into()));
+        assert!(resume.action == Action::Open(format!("/resume/{}", resume_file("en"))));
+        assert!(
+            [copy, toggle, github, linkedin, resume]
+                .iter()
+                .all(|e| e.group == "act")
+        );
+    }
+
+    #[cfg(feature = "server")]
+    mod rendered {
+        use super::*;
+        use crate::ui::test_render::{render, text};
+        use portfolio_data::{Repo, ReposFile};
+        use terrace_legal_model::LegalIndexEntry;
+
+        fn repo(name: &str, fork: bool, archived: bool) -> Repo {
+            Repo {
+                name: name.to_owned(),
+                full_name: format!("owner/{name}"),
+                description: None,
+                html_url: format!("https://github.com/owner/{name}"),
+                language: (name == "kept").then(|| "Rust".to_owned()),
+                stargazers_count: 0,
+                forks_count: 0,
+                updated_at: String::new(),
+                topics: Vec::new(),
+                fork,
+                archived,
+                homepage: None,
+            }
+        }
+
+        fn legal(slug: &str, kind: &str, url: Option<&str>) -> LegalIndexEntry {
+            serde_json::from_value(serde_json::json!({
+                "slug": slug,
+                "title": format!("{slug} title"),
+                "updated": null,
+                "kind": kind,
+                "url": url,
+                "locales": ["en"],
+            }))
+            .expect("a well-formed index entry")
+        }
+
+        /// Renders every entry the palette offers in `en` as `group|label|hint|haystack`.
+        fn entries_html() -> String {
+            render("en", || {
+                let i18n = use_i18n().i18n;
+                let repos = ReposState::Ready(std::sync::Arc::new(ReposFile {
+                    generated_at: String::new(),
+                    user: "owner".to_owned(),
+                    repos: vec![
+                        repo("kept", false, false),
+                        repo("forked", true, false),
+                        repo("shelved", false, true),
+                    ],
+                }));
+                let indexes = crate::legal::PerLanguage(vec![(
+                    "en".to_owned(),
+                    vec![
+                        legal("imprint", "inline", None),
+                        legal("privacy", "external", Some("https://example.com/privacy")),
+                    ],
+                )]);
+                let entries = searchable_entries(i18n, Some(&indexes), &repos);
+                rsx! {
+                    for (haystack, e) in entries {
+                        p { "{e.group}|{e.label}|{e.hint}|{haystack}" }
+                    }
+                }
+            })
+        }
+
+        #[test]
+        fn offers_every_section_then_the_licenses_page() {
+            let html = entries_html();
+            let nav = text("en", "palette.groupNav");
+            for (slug, key) in SECTIONS {
+                let line = format!("{nav}|{}|§ {}|", text("en", key), section_num(slug));
+                assert!(html.contains(&line), "{line} missing");
+            }
+            assert!(html.contains(&format!(
+                "{nav}|{}|/licenses|",
+                text("en", "palette.licenses")
+            )));
+        }
+
+        #[test]
+        fn links_a_hosted_document_by_route_and_an_external_one_by_url() {
+            let html = entries_html();
+            assert!(html.contains("|imprint title|/legal/imprint|"));
+            assert!(html.contains("|privacy title|↗|"));
+        }
+
+        #[test]
+        fn lists_repositories_but_not_forks_or_archived_ones() {
+            let html = entries_html();
+            let work = text("en", "palette.groupWork");
+            assert!(html.contains(&format!("{work}|kept|Rust|")));
+            assert!(!html.contains("|forked|"));
+            assert!(!html.contains("|shelved|"));
+        }
+
+        #[test]
+        fn matches_a_query_against_the_lowercased_label_and_group() {
+            let html = entries_html();
+            let work = text("en", "palette.groupWork").to_lowercase();
+            assert!(html.contains(&format!("|kept\n{work}</p>")));
+        }
+
+        #[test]
+        fn highlights_the_selected_option_and_names_each_group() {
+            let html = render("en", || {
+                let selected = use_signal(|| 1usize);
+                let activate = use_callback(|_: Action| {});
+                let groups = group_in_first_seen_order(&[entry("nav", "a"), entry("nav", "b")]);
+                rsx! {
+                    PaletteResults {
+                        groups,
+                        selected,
+                        activate,
+                        label: "Commands".to_owned(),
+                        empty_text: "Nothing".to_owned(),
+                    }
+                }
+            });
+            assert!(html.contains(r#"aria-label="nav""#));
+            assert_eq!(html.matches(r#"aria-selected="true""#).count(), 1);
+            assert!(html.contains(r#"id="cmdk-opt-1" class="cmdk-item active""#));
+            assert!(!html.contains("Nothing"));
+        }
+
+        #[test]
+        fn says_so_when_nothing_matches() {
+            let html = render("en", || {
+                let selected = use_signal(|| 0usize);
+                let activate = use_callback(|_: Action| {});
+                rsx! {
+                    PaletteResults {
+                        groups: Vec::new(),
+                        selected,
+                        activate,
+                        label: "Commands".to_owned(),
+                        empty_text: "Nothing".to_owned(),
+                    }
+                }
+            });
+            assert!(html.contains("cmdk-empty"));
+            assert!(html.contains("Nothing"));
+        }
+    }
+}
