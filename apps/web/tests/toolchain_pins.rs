@@ -147,7 +147,15 @@ fn every_member_carries_the_workspace_version() {
         .skip_while(|line| line.trim() != "members = [")
         .skip(1)
         .take_while(|line| line.trim() != "]")
-        .filter_map(|line| line.trim().strip_prefix('"')?.strip_suffix("\","))
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(|line| {
+            let entry = line.strip_suffix(',').unwrap_or(line);
+            entry
+                .strip_prefix('"')
+                .and_then(|entry| entry.strip_suffix('"'))
+                .unwrap_or_else(|| panic!("unrecognised `members` entry: {line}"))
+        })
         .collect();
     assert!(
         !members.is_empty(),
