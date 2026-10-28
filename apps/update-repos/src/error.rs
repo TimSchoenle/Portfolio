@@ -99,7 +99,7 @@ mod tests {
     use std::io::{self, ErrorKind};
 
     /// The message has to name the key an operator would actually set, in the
-    /// dialect the loader speaks — the whole point of the migration is that
+    /// dialect the loader speaks. The whole point of the migration is that
     /// there is one spelling, so an error naming a retired variable would send
     /// them to a variable nothing reads.
     #[test]

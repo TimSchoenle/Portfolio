@@ -435,7 +435,7 @@ mod tests {
     }
 
     /// A router whose page handler renders something different on every call, and the number
-    /// of calls it received — so a response that repeats itself, with the count unchanged, can
+    /// of calls it received, so a response that repeats itself, with the count unchanged, can
     /// only have come from the page memo.
     fn counting_page_router(state: PageState) -> (Router, Arc<AtomicUsize>) {
         let renders = Arc::new(AtomicUsize::new(0));

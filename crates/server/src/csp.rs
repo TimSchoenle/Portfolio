@@ -165,7 +165,7 @@ impl SitePolicy {
         headers.insert(header::CONTENT_SECURITY_POLICY, policy);
         // An obligation of the nonce, not a caching preference: a nonce served from a cache is
         // pinned across every reader for the lifetime of that entry, which is `'unsafe-inline'`
-        // with extra steps. It overrides rather than defers to `cache::set_cache_control` — that
+        // with extra steps. It overrides rather than defers to `cache::set_cache_control`. That
         // middleware happens to answer `no-cache` for documents already, and this must not
         // depend on it continuing to.
         if let Some(value) = cache_control {
