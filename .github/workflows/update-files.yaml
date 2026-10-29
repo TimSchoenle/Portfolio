@@ -121,7 +121,7 @@ jobs:
 
       - name: Comment on PR
         if: steps.auto-commit.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@9414b1c665d3676efe832978d4e1728cf53119fd # tag=actions-common-upsert-pr-comment-v1.3.0
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-upsert-pr-comment-v2.0.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           identifier: cargo-lock-updated
@@ -309,7 +309,7 @@ jobs:
       # the `if:` no longer has to repeat both conditions.
       - name: Comment on PR
         if: github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@9414b1c665d3676efe832978d4e1728cf53119fd # tag=actions-common-upsert-pr-comment-v1.3.0
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-upsert-pr-comment-v2.0.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           identifier: render-generated-files
@@ -443,7 +443,7 @@ jobs:
       # commit step's output, and no comment at all when the contract did not move.
       - name: Comment on PR
         if: github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@9414b1c665d3676efe832978d4e1728cf53119fd # tag=actions-common-upsert-pr-comment-v1.3.0
+        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-upsert-pr-comment-v2.0.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           identifier: config-contract-sync
