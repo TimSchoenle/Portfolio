@@ -1,8 +1,8 @@
 //! Identity hero: eyebrow meta card, oversized name, tagline, scroll cue.
 //!
-//! Both motion effects are CSS: the name parallax is a scroll-driven animation and the
-//! hero → about hand-off is `scroll-snap` (`input.css`). Neither needs the wasm client, and
-//! neither takes the wheel away from the reader.
+//! The name parallax is a CSS scroll-driven animation (`input.css`). The hero ↔ about hand-off
+//! is a client-only wheel handler: one wheel notch at the boundary carries the reader the whole
+//! way across it, which CSS `scroll-snap` cannot do.
 
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, EXPERIENCE};
@@ -50,6 +50,91 @@ fn hero_name_lines() -> Element {
     }
 }
 
+/// Where one wheel notch at the hero ↔ about boundary carries the reader.
+#[cfg(any(feature = "web", test))]
+#[derive(Debug, PartialEq, Eq)]
+enum BoundarySnap {
+    /// Down from the upper half of the hero, to the about section.
+    ToAbout,
+    /// Up from the about section's opening screen, back to the hero.
+    ToHero,
+}
+
+/// Returns where a wheel step of `delta_y` at scroll offset `scroll_y` snaps to, or `None` when
+/// it is ordinary scrolling.
+///
+/// Down snaps only from the upper half of the first viewport. Up snaps only between half a
+/// viewport and 1.3 viewports, so a reader further down the page scrolls freely.
+#[cfg(any(feature = "web", test))]
+fn boundary_snap(scroll_y: f64, viewport_height: f64, delta_y: f64) -> Option<BoundarySnap> {
+    let half = viewport_height * 0.5;
+    if delta_y > 0.0 && scroll_y < half {
+        Some(BoundarySnap::ToAbout)
+    } else if delta_y < 0.0 && scroll_y > half && scroll_y < viewport_height * 1.3 {
+        Some(BoundarySnap::ToHero)
+    } else {
+        None
+    }
+}
+
+/// How long after a snap another one is suppressed, so the trailing momentum of the same gesture
+/// does not immediately snap back.
+#[cfg(feature = "web")]
+const SNAP_LOCK_MS: u32 = 900;
+
+/// Registers the wheel handler that snaps across the hero ↔ about boundary, for the component's
+/// lifetime. Off under reduced motion.
+///
+/// While locked the event is not cancelled: cancelling it would freeze the page for the whole
+/// lock and drop the input of a reader who wants to keep going or turn straight back. The lock
+/// only suppresses another snap. A ctrl-wheel is zoom (and a trackpad pinch), never a snap.
+#[cfg(feature = "web")]
+fn use_boundary_snap(about_id: String) {
+    use crate::hooks::{
+        ListenerGuard, add_window_listener, prefers_reduced_motion, scroll_to, scroll_y,
+        viewport_height,
+    };
+    use std::cell::{Cell, RefCell};
+    use std::rc::Rc;
+    use web_sys::wasm_bindgen::JsCast;
+
+    let _wheel: Rc<RefCell<Option<ListenerGuard>>> = use_hook(move || {
+        if prefers_reduced_motion() {
+            return Rc::new(RefCell::new(None));
+        }
+        let locked = Rc::new(Cell::new(false));
+        // Not passive: the handler cancels the event that triggers a snap.
+        Rc::new(RefCell::new(add_window_listener(
+            "wheel",
+            false,
+            move |e| {
+                if locked.get() {
+                    return;
+                }
+                let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {
+                    return;
+                };
+                if wheel.ctrl_key() {
+                    return;
+                }
+                let target = match boundary_snap(scroll_y(), viewport_height(), wheel.delta_y()) {
+                    Some(BoundarySnap::ToAbout) => about_id.as_str(),
+                    Some(BoundarySnap::ToHero) => "top",
+                    None => return,
+                };
+                e.prevent_default();
+                locked.set(true);
+                scroll_to(target);
+                let locked = locked.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    gloo_timers::future::TimeoutFuture::new(SNAP_LOCK_MS).await;
+                    locked.set(false);
+                });
+            },
+        )))
+    });
+}
+
 /// Renders the hero, with the years-of-experience figure derived from [`EXPERIENCE`] and the
 /// current date.
 #[component]
@@ -59,6 +144,9 @@ pub fn Hero() -> Element {
     let years = years_of_experience();
     let identity_num = section_num("identity");
     let about_id = section_id("about");
+
+    #[cfg(feature = "web")]
+    use_boundary_snap(about_id.clone());
 
     rsx! {
         section { id: "top", class: "hero",
@@ -109,5 +197,43 @@ pub fn Hero() -> Element {
                 span { class: "scroll-cue-line" }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{BoundarySnap, boundary_snap};
+
+    const VH: f64 = 800.0;
+
+    #[test]
+    fn the_first_notch_down_from_the_hero_snaps_to_about() {
+        assert_eq!(boundary_snap(0.0, VH, 100.0), Some(BoundarySnap::ToAbout));
+        assert_eq!(boundary_snap(399.0, VH, 1.0), Some(BoundarySnap::ToAbout));
+    }
+
+    #[test]
+    fn the_first_notch_up_from_about_snaps_to_the_hero() {
+        assert_eq!(boundary_snap(VH, VH, -100.0), Some(BoundarySnap::ToHero));
+        assert_eq!(boundary_snap(401.0, VH, -1.0), Some(BoundarySnap::ToHero));
+    }
+
+    #[test]
+    fn scrolling_further_down_the_page_never_snaps() {
+        assert_eq!(boundary_snap(VH * 1.3, VH, -100.0), None);
+        assert_eq!(boundary_snap(VH * 3.0, VH, -100.0), None);
+        assert_eq!(boundary_snap(VH, VH, 100.0), None);
+        assert_eq!(boundary_snap(VH * 3.0, VH, 100.0), None);
+    }
+
+    #[test]
+    fn horizontal_or_empty_steps_never_snap() {
+        assert_eq!(boundary_snap(0.0, VH, 0.0), None);
+        assert_eq!(boundary_snap(VH, VH, 0.0), None);
+    }
+
+    #[test]
+    fn up_at_the_top_of_the_hero_does_nothing() {
+        assert_eq!(boundary_snap(0.0, VH, -100.0), None);
     }
 }

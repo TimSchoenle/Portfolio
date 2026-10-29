@@ -1,4 +1,4 @@
-//! Client-side interaction primitives (viewport queries, one-shot
+//! Client-side interaction primitives (scroll offset, viewport queries, one-shot
 //! in-view detection, global listeners) and small DOM helpers.
 //!
 //! The whole module is `web`-only: it compiles solely into the wasm client,
@@ -16,7 +16,7 @@ use web_sys::wasm_bindgen::{JsCast, JsValue};
 
 /// Reports whether the user has requested reduced motion in the OS or browser.
 ///
-/// The scroll-driven hero motion and the reveal and type-in entrance animations are skipped when
+/// The hero's boundary snap and the reveal and type-in entrance animations are skipped when
 /// this holds.
 pub fn prefers_reduced_motion() -> bool {
     web_sys::window()
@@ -34,6 +34,13 @@ pub fn viewport_height() -> f64 {
         .and_then(|w| w.inner_height().ok())
         .and_then(|v| v.as_f64())
         .unwrap_or(800.0)
+}
+
+/// Returns the current vertical scroll offset in CSS pixels, or `0.0` when it cannot be read.
+pub fn scroll_y() -> f64 {
+    web_sys::window()
+        .and_then(|w| w.scroll_y().ok())
+        .unwrap_or(0.0)
 }
 
 /// Reports whether the element's top edge is above `ratio` of the viewport height, so it is
