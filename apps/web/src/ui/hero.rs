@@ -71,6 +71,10 @@ struct WheelStep {
     delta_y: f64,
     /// Whether ctrl was held, which makes the step a zoom or a trackpad pinch.
     ctrl: bool,
+    /// Whether the reader asks for reduced motion, read per step so a change after load applies.
+    reduced_motion: bool,
+    /// Whether a modal dialog such as the command palette is open, so the step belongs to it.
+    modal_open: bool,
 }
 
 /// Decides which wheel steps snap across the boundary, and holds off another snap until
@@ -89,9 +93,10 @@ struct SnapGate {
 #[cfg(any(feature = "web", test))]
 impl SnapGate {
     /// Returns the snap `step` triggers and locks the gate, or `None` while locked, for a
-    /// ctrl-wheel, and for ordinary scrolling away from the boundary.
+    /// ctrl-wheel, under reduced motion, while a modal is open, and for ordinary scrolling away
+    /// from the boundary.
     fn try_snap(&self, step: &WheelStep) -> Option<BoundarySnap> {
-        if self.locked.get() || step.ctrl {
+        if self.locked.get() || step.ctrl || step.reduced_motion || step.modal_open {
             return None;
         }
         let half = step.viewport_height * 0.5;
@@ -121,7 +126,7 @@ impl SnapGate {
 const SNAP_LOCK_MS: u32 = 900;
 
 /// Registers the wheel handler that snaps across the hero ↔ about boundary, for the component's
-/// lifetime. Off under reduced motion.
+/// lifetime.
 ///
 /// While locked the event is not cancelled: cancelling it would freeze the page for the whole
 /// lock and drop the input of a reader who wants to keep going or turn straight back. The lock
@@ -129,8 +134,8 @@ const SNAP_LOCK_MS: u32 = 900;
 #[cfg(feature = "web")]
 fn use_boundary_snap(about_id: String) {
     use crate::hooks::{
-        ListenerGuard, add_window_listener, prefers_reduced_motion, scroll_to, scroll_y,
-        viewport_height,
+        ListenerGuard, add_window_listener, modal_open, prefers_reduced_motion, scroll_to,
+        scroll_y, viewport_height,
     };
     use std::rc::Rc;
     use web_sys::wasm_bindgen::JsCast;
@@ -146,6 +151,8 @@ fn use_boundary_snap(about_id: String) {
                 viewport_height: viewport_height(),
                 delta_y: wheel.delta_y(),
                 ctrl: wheel.ctrl_key(),
+                reduced_motion: prefers_reduced_motion(),
+                modal_open: modal_open(),
             };
             let Some(snap) = gate.try_snap(&step) else {
                 return;
@@ -162,11 +169,7 @@ fn use_boundary_snap(about_id: String) {
             });
         };
         // Not passive: the handler cancels the event that triggers a snap.
-        Rc::new(
-            (!prefers_reduced_motion())
-                .then(|| add_window_listener("wheel", false, on_wheel))
-                .flatten(),
-        )
+        Rc::new(add_window_listener("wheel", false, on_wheel))
     });
 }
 
@@ -247,6 +250,8 @@ mod tests {
             viewport_height: VH,
             delta_y,
             ctrl: false,
+            reduced_motion: false,
+            modal_open: false,
         }
     }
 
@@ -289,6 +294,25 @@ mod tests {
             ..step(0.0, 100.0)
         };
         assert_eq!(SnapGate::default().try_snap(&zoom), None);
+    }
+
+    #[test]
+    fn reduced_motion_never_snaps() {
+        let step = WheelStep {
+            reduced_motion: true,
+            ..step(0.0, 100.0)
+        };
+        assert_eq!(SnapGate::default().try_snap(&step), None);
+    }
+
+    /// A wheel over the open command palette scrolls its results, not the page.
+    #[test]
+    fn an_open_modal_never_snaps() {
+        let step = WheelStep {
+            modal_open: true,
+            ..step(VH, -100.0)
+        };
+        assert_eq!(SnapGate::default().try_snap(&step), None);
     }
 
     /// The momentum of the gesture that snapped must not snap straight back.

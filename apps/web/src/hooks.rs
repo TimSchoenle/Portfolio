@@ -17,7 +17,7 @@ use web_sys::wasm_bindgen::{JsCast, JsValue};
 /// Reports whether the user has requested reduced motion in the OS or browser.
 ///
 /// The hero's boundary snap and the reveal and type-in entrance animations are skipped when
-/// this holds.
+/// this holds. The snap reads it per wheel step, so a change after load applies there.
 pub fn prefers_reduced_motion() -> bool {
     web_sys::window()
         .and_then(|w| {
@@ -41,6 +41,14 @@ pub fn scroll_y() -> f64 {
     web_sys::window()
         .and_then(|w| w.scroll_y().ok())
         .unwrap_or(0.0)
+}
+
+/// Reports whether a modal dialog (`aria-modal="true"`), such as the command palette, is open.
+pub fn modal_open() -> bool {
+    web_sys::window()
+        .and_then(|w| w.document())
+        .and_then(|d| d.query_selector("[aria-modal='true']").ok().flatten())
+        .is_some()
 }
 
 /// Reports whether the element's top edge is above `ratio` of the viewport height, so it is
