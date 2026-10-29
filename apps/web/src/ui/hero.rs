@@ -67,6 +67,8 @@ struct WheelStep {
     scroll_y: f64,
     /// The viewport height in CSS pixels.
     viewport_height: f64,
+    /// The about section's top edge in document coordinates, in CSS pixels.
+    about_top: f64,
     /// The wheel's vertical delta: positive scrolls down, `0.0` is a horizontal step.
     delta_y: f64,
     /// Whether ctrl was held, which makes the step a zoom or a trackpad pinch.
@@ -80,8 +82,9 @@ struct WheelStep {
 /// Decides which wheel steps snap across the boundary, and holds off another snap until
 /// [`release`](Self::release).
 ///
-/// Down snaps only from the upper half of the first viewport. Up snaps only between half a
-/// viewport and 1.3 viewports, so a reader further down the page scrolls freely.
+/// Down snaps only from the upper half of the first viewport. Up snaps only from half a viewport
+/// to 0.3 viewports past the about section's top, so a reader further down the page scrolls freely
+/// and a hero taller than the viewport, as in a short window, still hands back.
 // Kept apart from the listener so the decision is testable without a browser, like `FrameSlot`
 // in `hooks.rs`.
 #[cfg(any(feature = "web", test))]
@@ -104,7 +107,7 @@ impl SnapGate {
             BoundarySnap::ToAbout
         } else if step.delta_y < 0.0
             && step.scroll_y > half
-            && step.scroll_y < step.viewport_height * 1.3
+            && step.scroll_y < step.about_top + step.viewport_height * 0.3
         {
             BoundarySnap::ToHero
         } else {
@@ -134,8 +137,8 @@ const SNAP_LOCK_MS: u32 = 900;
 #[cfg(feature = "web")]
 fn use_boundary_snap(about_id: String) {
     use crate::hooks::{
-        ListenerGuard, add_window_listener, modal_open, prefers_reduced_motion, scroll_to,
-        scroll_y, viewport_height,
+        ListenerGuard, add_window_listener, document_top, modal_open, prefers_reduced_motion,
+        scroll_to, scroll_y, viewport_height,
     };
     use std::rc::Rc;
     use web_sys::wasm_bindgen::JsCast;
@@ -146,9 +149,11 @@ fn use_boundary_snap(about_id: String) {
             let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {
                 return;
             };
+            let (scroll_y, viewport_height) = (scroll_y(), viewport_height());
             let step = WheelStep {
-                scroll_y: scroll_y(),
-                viewport_height: viewport_height(),
+                scroll_y,
+                viewport_height,
+                about_top: document_top(&about_id).unwrap_or(viewport_height),
                 delta_y: wheel.delta_y(),
                 ctrl: wheel.ctrl_key(),
                 reduced_motion: prefers_reduced_motion(),
@@ -248,6 +253,8 @@ mod tests {
         WheelStep {
             scroll_y,
             viewport_height: VH,
+            // A hero exactly one viewport tall.
+            about_top: VH,
             delta_y,
             ctrl: false,
             reduced_motion: false,
@@ -278,6 +285,20 @@ mod tests {
         assert_eq!(snap(VH * 3.0, -100.0), None);
         assert_eq!(snap(VH, 100.0), None);
         assert_eq!(snap(VH * 3.0, 100.0), None);
+    }
+
+    /// In a short window the hero outgrows the viewport, so the about section starts well below it.
+    #[test]
+    fn a_hero_taller_than_the_viewport_still_snaps_back_up() {
+        // About starts at 1600 px, so up snaps until 1600 + 0.3 * 800 = 1840 px.
+        let tall = |scroll_y| WheelStep {
+            about_top: 1600.0,
+            ..step(scroll_y, -100.0)
+        };
+        let gate = || SnapGate::default();
+        assert_eq!(gate().try_snap(&tall(1528.0)), Some(BoundarySnap::ToHero));
+        assert_eq!(gate().try_snap(&tall(1839.0)), Some(BoundarySnap::ToHero));
+        assert_eq!(gate().try_snap(&tall(1840.0)), None);
     }
 
     #[test]

@@ -51,6 +51,13 @@ pub fn modal_open() -> bool {
         .is_some()
 }
 
+/// Returns the top edge of the element with the given id in document coordinates, in CSS pixels,
+/// or `None` when there is no such element.
+pub fn document_top(id: &str) -> Option<f64> {
+    let el = web_sys::window()?.document()?.get_element_by_id(id)?;
+    Some(el.get_bounding_client_rect().top() + scroll_y())
+}
+
 /// Reports whether the element's top edge is above `ratio` of the viewport height, so it is
 /// already on screen or nearly so.
 ///
