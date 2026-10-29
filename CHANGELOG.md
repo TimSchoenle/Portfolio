@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.2](https://github.com/TimSchoenle/Portfolio/compare/v3.2.1...v3.2.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* **web:** snap across the hero boundary on the first wheel notch again ([#1361](https://github.com/TimSchoenle/Portfolio/issues/1361)) ([c1fa68e](https://github.com/TimSchoenle/Portfolio/commit/c1fa68ef4865a918ac6f10f466698f18824108d2))
+
 ## [3.2.1](https://github.com/TimSchoenle/Portfolio/compare/v3.2.0...v3.2.1) (2026-10-28)
 
 

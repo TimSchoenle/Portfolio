@@ -33,7 +33,7 @@ homepage = "https://tim-schoenle.de"
 # `rust-toolchain.toml` and the Dockerfile's base image.
 [package]
 name = "portfolio-platform"
-version = "3.2.1"
+version = "3.2.2"
 publish = false
 edition = "2024"
 rust-version = "1.99"
