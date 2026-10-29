@@ -1,8 +1,8 @@
 //! Identity hero: eyebrow meta card, oversized name, tagline, scroll cue.
 //!
-//! Both motion effects are CSS: the name parallax is a scroll-driven animation and the
-//! hero → about hand-off is `scroll-snap` (`input.css`). Neither needs the wasm client, and
-//! neither takes the wheel away from the reader.
+//! The name parallax is a CSS scroll-driven animation (`input.css`). The hero ↔ about hand-off
+//! is a client-only wheel handler: one wheel notch at the boundary carries the reader the whole
+//! way across it, which CSS `scroll-snap` cannot do.
 
 use dioxus::prelude::*;
 use portfolio_data::{CONFIG, EXPERIENCE};
@@ -50,6 +50,134 @@ fn hero_name_lines() -> Element {
     }
 }
 
+/// Where one wheel notch at the hero ↔ about boundary carries the reader.
+#[cfg(any(feature = "web", test))]
+#[derive(Debug, PartialEq, Eq)]
+enum BoundarySnap {
+    /// Down from the upper half of the hero, to the about section.
+    ToAbout,
+    /// Up from the about section's opening screen, back to the hero.
+    ToHero,
+}
+
+/// One wheel event, as the boundary snap reads it.
+#[cfg(any(feature = "web", test))]
+struct WheelStep {
+    /// The page's vertical scroll offset in CSS pixels.
+    scroll_y: f64,
+    /// The viewport height in CSS pixels.
+    viewport_height: f64,
+    /// The about section's top edge in document coordinates, in CSS pixels.
+    about_top: f64,
+    /// The wheel's vertical delta: positive scrolls down, `0.0` is a horizontal step.
+    delta_y: f64,
+    /// Whether ctrl was held, which makes the step a zoom or a trackpad pinch.
+    ctrl: bool,
+    /// Whether the reader asks for reduced motion, read per step so a change after load applies.
+    reduced_motion: bool,
+    /// Whether a modal dialog such as the command palette is open, so the step belongs to it.
+    modal_open: bool,
+}
+
+/// Decides which wheel steps snap across the boundary, and holds off another snap until
+/// [`release`](Self::release).
+///
+/// Down snaps only from the upper half of the first viewport. Up snaps only from half a viewport
+/// to 0.3 viewports past the about section's top, so a reader further down the page scrolls freely
+/// and a hero taller than the viewport, as in a short window, still hands back.
+// Kept apart from the listener so the decision is testable without a browser, like `FrameSlot`
+// in `hooks.rs`.
+#[cfg(any(feature = "web", test))]
+#[derive(Default)]
+struct SnapGate {
+    locked: std::cell::Cell<bool>,
+}
+
+#[cfg(any(feature = "web", test))]
+impl SnapGate {
+    /// Returns the snap `step` triggers and locks the gate, or `None` while locked, for a
+    /// ctrl-wheel, under reduced motion, while a modal is open, and for ordinary scrolling away
+    /// from the boundary.
+    fn try_snap(&self, step: &WheelStep) -> Option<BoundarySnap> {
+        if self.locked.get() || step.ctrl || step.reduced_motion || step.modal_open {
+            return None;
+        }
+        let half = step.viewport_height * 0.5;
+        let snap = if step.delta_y > 0.0 && step.scroll_y < half {
+            BoundarySnap::ToAbout
+        } else if step.delta_y < 0.0
+            && step.scroll_y > half
+            && step.scroll_y < step.about_top + step.viewport_height * 0.3
+        {
+            BoundarySnap::ToHero
+        } else {
+            return None;
+        };
+        self.locked.set(true);
+        Some(snap)
+    }
+
+    /// Lets the next wheel step snap again.
+    fn release(&self) {
+        self.locked.set(false);
+    }
+}
+
+/// How long after a snap another one is suppressed, so the trailing momentum of the same gesture
+/// does not immediately snap back.
+#[cfg(feature = "web")]
+const SNAP_LOCK_MS: u32 = 900;
+
+/// Registers the wheel handler that snaps across the hero ↔ about boundary, for the component's
+/// lifetime.
+///
+/// While locked the event is not cancelled: cancelling it would freeze the page for the whole
+/// lock and drop the input of a reader who wants to keep going or turn straight back. The lock
+/// only suppresses another snap.
+#[cfg(feature = "web")]
+fn use_boundary_snap(about_id: String) {
+    use crate::hooks::{
+        ListenerGuard, add_window_listener, document_top, modal_open, prefers_reduced_motion,
+        scroll_to, scroll_y, viewport_height,
+    };
+    use std::rc::Rc;
+    use web_sys::wasm_bindgen::JsCast;
+
+    let _wheel: Rc<Option<ListenerGuard>> = use_hook(move || {
+        let gate = Rc::new(SnapGate::default());
+        let on_wheel = move |e: web_sys::Event| {
+            let Some(wheel) = e.dyn_ref::<web_sys::WheelEvent>() else {
+                return;
+            };
+            let (scroll_y, viewport_height) = (scroll_y(), viewport_height());
+            let step = WheelStep {
+                scroll_y,
+                viewport_height,
+                about_top: document_top(&about_id).unwrap_or(viewport_height),
+                delta_y: wheel.delta_y(),
+                ctrl: wheel.ctrl_key(),
+                reduced_motion: prefers_reduced_motion(),
+                modal_open: modal_open(),
+            };
+            let Some(snap) = gate.try_snap(&step) else {
+                return;
+            };
+            e.prevent_default();
+            scroll_to(match snap {
+                BoundarySnap::ToAbout => &about_id,
+                BoundarySnap::ToHero => "top",
+            });
+            let gate = gate.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                gloo_timers::future::TimeoutFuture::new(SNAP_LOCK_MS).await;
+                gate.release();
+            });
+        };
+        // Not passive: the handler cancels the event that triggers a snap.
+        Rc::new(add_window_listener("wheel", false, on_wheel))
+    });
+}
+
 /// Renders the hero, with the years-of-experience figure derived from [`EXPERIENCE`] and the
 /// current date.
 #[component]
@@ -59,6 +187,9 @@ pub fn Hero() -> Element {
     let years = years_of_experience();
     let identity_num = section_num("identity");
     let about_id = section_id("about");
+
+    #[cfg(feature = "web")]
+    use_boundary_snap(about_id.clone());
 
     rsx! {
         section { id: "top", class: "hero",
@@ -109,5 +240,128 @@ pub fn Hero() -> Element {
                 span { class: "scroll-cue-line" }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{BoundarySnap, SnapGate, WheelStep};
+
+    const VH: f64 = 800.0;
+
+    fn step(scroll_y: f64, delta_y: f64) -> WheelStep {
+        WheelStep {
+            scroll_y,
+            viewport_height: VH,
+            // A hero exactly one viewport tall.
+            about_top: VH,
+            delta_y,
+            ctrl: false,
+            reduced_motion: false,
+            modal_open: false,
+        }
+    }
+
+    /// Runs `step` through a fresh, unlocked gate.
+    fn snap(scroll_y: f64, delta_y: f64) -> Option<BoundarySnap> {
+        SnapGate::default().try_snap(&step(scroll_y, delta_y))
+    }
+
+    #[test]
+    fn the_first_notch_down_from_the_hero_snaps_to_about() {
+        assert_eq!(snap(0.0, 100.0), Some(BoundarySnap::ToAbout));
+        assert_eq!(snap(399.0, 1.0), Some(BoundarySnap::ToAbout));
+    }
+
+    #[test]
+    fn the_first_notch_up_from_about_snaps_to_the_hero() {
+        assert_eq!(snap(VH, -100.0), Some(BoundarySnap::ToHero));
+        assert_eq!(snap(401.0, -1.0), Some(BoundarySnap::ToHero));
+    }
+
+    #[test]
+    fn scrolling_further_down_the_page_never_snaps() {
+        assert_eq!(snap(VH * 1.3, -100.0), None);
+        assert_eq!(snap(VH * 3.0, -100.0), None);
+        assert_eq!(snap(VH, 100.0), None);
+        assert_eq!(snap(VH * 3.0, 100.0), None);
+    }
+
+    /// In a short window the hero outgrows the viewport, so the about section starts well below it.
+    #[test]
+    fn a_hero_taller_than_the_viewport_still_snaps_back_up() {
+        // About starts at 1600 px, so up snaps until 1600 + 0.3 * 800 = 1840 px.
+        let tall = |scroll_y| WheelStep {
+            about_top: 1600.0,
+            ..step(scroll_y, -100.0)
+        };
+        let gate = || SnapGate::default();
+        assert_eq!(gate().try_snap(&tall(1528.0)), Some(BoundarySnap::ToHero));
+        assert_eq!(gate().try_snap(&tall(1839.0)), Some(BoundarySnap::ToHero));
+        assert_eq!(gate().try_snap(&tall(1840.0)), None);
+    }
+
+    #[test]
+    fn horizontal_steps_and_up_at_the_top_never_snap() {
+        assert_eq!(snap(0.0, 0.0), None);
+        assert_eq!(snap(VH, 0.0), None);
+        assert_eq!(snap(0.0, -100.0), None);
+    }
+
+    #[test]
+    fn a_ctrl_wheel_zooms_instead_of_snapping() {
+        let zoom = WheelStep {
+            ctrl: true,
+            ..step(0.0, 100.0)
+        };
+        assert_eq!(SnapGate::default().try_snap(&zoom), None);
+    }
+
+    #[test]
+    fn reduced_motion_never_snaps() {
+        let step = WheelStep {
+            reduced_motion: true,
+            ..step(0.0, 100.0)
+        };
+        assert_eq!(SnapGate::default().try_snap(&step), None);
+    }
+
+    /// A wheel over the open command palette scrolls its results, not the page.
+    #[test]
+    fn an_open_modal_never_snaps() {
+        let step = WheelStep {
+            modal_open: true,
+            ..step(VH, -100.0)
+        };
+        assert_eq!(SnapGate::default().try_snap(&step), None);
+    }
+
+    /// The momentum of the gesture that snapped must not snap straight back.
+    #[test]
+    fn a_snap_locks_the_gate_until_it_is_released() {
+        let gate = SnapGate::default();
+        assert_eq!(
+            gate.try_snap(&step(0.0, 100.0)),
+            Some(BoundarySnap::ToAbout)
+        );
+        assert_eq!(
+            gate.try_snap(&step(VH, -100.0)),
+            None,
+            "a locked gate snapped"
+        );
+
+        gate.release();
+        assert_eq!(gate.try_snap(&step(VH, -100.0)), Some(BoundarySnap::ToHero));
+    }
+
+    /// Only a snap takes the lock, so ordinary scrolling never blocks the next one.
+    #[test]
+    fn a_step_that_does_not_snap_leaves_the_gate_open() {
+        let gate = SnapGate::default();
+        assert_eq!(gate.try_snap(&step(VH * 3.0, 100.0)), None);
+        assert_eq!(
+            gate.try_snap(&step(0.0, 100.0)),
+            Some(BoundarySnap::ToAbout)
+        );
     }
 }
