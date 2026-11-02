@@ -26,7 +26,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -58,7 +58,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -97,7 +97,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -122,13 +122,13 @@ jobs:
 
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@421289db958b620e2772ba46d11d014bf25a371b # tag=actions-common-readme-variables-v2.1.0
+        uses: TimSchoenle/actions/actions/common/readme-variables@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-readme-variables-v2.1.1
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
       - name: Verify README.md is current
-        uses: TimSchoenle/actions/actions/common/render-template@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-render-template-v3.0.0
+        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
         with:
           template: .github/templates/README.md.hbs
           output: README.md
@@ -141,7 +141,7 @@ jobs:
       # reports both.
       - name: Verify config.example.toml is current
         if: ${{ !cancelled() && steps.config-schema.outcome == 'success' }}
-        uses: TimSchoenle/actions/actions/common/render-template@495fd50fd4a5ae3d9fb1496c96eada74c6f2529a # tag=actions-common-render-template-v3.0.0
+        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
@@ -172,7 +172,7 @@ jobs:
       RUSTDOCFLAGS: '-D warnings'
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -208,7 +208,7 @@ jobs:
       id-token: write # Required to authenticate the Codecov upload with OIDC
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -225,7 +225,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -251,7 +251,7 @@ jobs:
       changes_detected: ${{ steps.format.outputs.changes_detected }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -285,7 +285,7 @@ jobs:
       contents: read # Required to fetch the commit the patch applies to
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -307,7 +307,7 @@ jobs:
       # The artifact name is a literal, not the format job's output: that job ran the pull
       # request's code.
       - name: Commit Format
-        uses: TimSchoenle/actions/actions/common/commit-patch@bbc2c5e2a0f9345cb2e84946846736f047a6eae3 # tag=actions-common-commit-patch-v1.1.0
+        uses: TimSchoenle/actions/actions/common/commit-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-commit-patch-v1.1.1
         with:
           token: ${{ steps.generate_token.outputs.token }}
           artifact_name: rust-auto-format
@@ -323,7 +323,7 @@ jobs:
       checks: write # Required to annotate the commit with clippy warnings
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -343,7 +343,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -386,7 +386,7 @@ jobs:
       security-events: write # Required to upload Trivy scan results
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -547,7 +547,7 @@ jobs:
       # code scanning treats each upload for a category as a full replacement, so the two legs
       # must not share one, and a new name would orphan the alerts filed under the old.
       - name: Check Docker image
-        uses: TimSchoenle/actions/actions/docker/image-check@9d5cb31939ace7a3d3d7f452052724337c65f153 # tag=actions-docker-image-check-v1.1.8
+        uses: TimSchoenle/actions/actions/docker/image-check@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-docker-image-check-v1.1.9
         with:
           image: image:test
           platform: ${{ matrix.platform }}
@@ -568,7 +568,7 @@ jobs:
       pull-requests: write # Required to comment on PRs with image size
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -582,7 +582,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
