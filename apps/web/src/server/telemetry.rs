@@ -227,7 +227,11 @@ where
         move |level| accepts(capture, level),
     ));
 
-    spans.and_then(breadcrumbs).and_then(errors)
+    // A `Vec` rather than `Layer::and_then`: a chain of filtered layers built with `and_then`
+    // reports only its outermost filter's level hint once it sits on a `Registry`, which would
+    // disable every callsite more verbose than the capture threshold. A `Vec` takes the most
+    // verbose hint of its members, and notifies them in order.
+    vec![spans.boxed(), breadcrumbs.boxed(), errors.boxed()]
 }
 
 /// Builds the verbosity filter `dioxus_logger::initialize_default` would have installed.
@@ -383,6 +387,63 @@ mod tests {
     use portfolio_config::{SentryConfig, SentryLevel};
     use secrecy::SecretString;
     use tracing::Level;
+
+    /// Wired into a subscriber with a bound client, an `ERROR` event is reported on its own, an
+    /// `INFO` event rides along as its breadcrumb, and a `DEBUG` event is dropped.
+    #[test]
+    fn the_layers_route_each_event_to_one_sink() {
+        // `capture_level = error`, `breadcrumb_level = info`, span attributes off.
+        let config = SentryConfig {
+            enabled: true,
+            ..SentryConfig::default()
+        };
+        let events = capture(super::tracing_layer(&config), || {
+            tracing::debug!("dropped");
+            tracing::info!("trail");
+            tracing::error!("report");
+        });
+
+        assert_eq!(events.len(), 1, "only the error is reported");
+        let trail: Vec<_> = events[0]
+            .breadcrumbs
+            .values
+            .iter()
+            .filter_map(|breadcrumb| breadcrumb.message.as_deref())
+            .collect();
+        assert_eq!(trail, ["trail"]);
+    }
+
+    /// Runs `emit` under `layer` and a client whose transport keeps what it is sent.
+    fn capture<L>(layer: L, emit: impl FnOnce()) -> Vec<::sentry::protocol::Event<'static>>
+    where
+        L: tracing_subscriber::Layer<tracing_subscriber::Registry> + Send + Sync,
+    {
+        use std::sync::{Arc, Mutex};
+        use tracing_subscriber::layer::SubscriberExt as _;
+
+        #[derive(Default)]
+        struct Kept(Mutex<Vec<::sentry::protocol::Event<'static>>>);
+
+        impl ::sentry::Transport for Kept {
+            fn send_envelope(&self, envelope: ::sentry::Envelope) {
+                if let Some(event) = envelope.event() {
+                    self.0.lock().expect("not poisoned").push(event.clone());
+                }
+            }
+        }
+
+        let kept = Arc::new(Kept::default());
+        let mut options = ::sentry::ClientOptions::new();
+        options.dsn = Some("https://key@sentry.invalid/1".parse().expect("a valid DSN"));
+        options.transport = Some(Arc::new(Arc::clone(&kept)));
+        let hub = Arc::new(::sentry::Hub::new_from_top(::sentry::Hub::current()));
+        hub.bind_client(Some(Arc::new(::sentry::Client::from_config(options))));
+
+        let subscriber = tracing_subscriber::registry().with(layer);
+        ::sentry::Hub::run(hub, || tracing::subscriber::with_default(subscriber, emit));
+
+        std::mem::take(&mut *kept.0.lock().expect("not poisoned"))
+    }
 
     /// An event is an issue or a breadcrumb, never both: the error layer would otherwise capture
     /// it with a copy of itself at the end of its own trail.
