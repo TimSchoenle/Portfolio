@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.2.3](https://github.com/TimSchoenle/Portfolio/compare/v3.2.2...v3.2.3) (2026-11-05)
+
+
+### Bug Fixes
+
+* **telemetry:** compose the Sentry layers in a Vec ([#1368](https://github.com/TimSchoenle/Portfolio/issues/1368)) ([c7a8e30](https://github.com/TimSchoenle/Portfolio/commit/c7a8e302d8a49420df3c3f3fc9088a1b933aec34))
+
+
+### Dependencies
+
+* **deps:** update rust crate jsonschema to v0.60.2 ([#1364](https://github.com/TimSchoenle/Portfolio/issues/1364)) ([8eed1d8](https://github.com/TimSchoenle/Portfolio/commit/8eed1d8a0cc023a63bef51d94b672a202a2fd2ff))
+* **deps:** update rust crate sentry to v0.49.5 ([#1365](https://github.com/TimSchoenle/Portfolio/issues/1365)) ([18a921d](https://github.com/TimSchoenle/Portfolio/commit/18a921db62ad690a819decf4b1443ef6db3f79aa))
+* **deps:** update rust crate terrace-config to v0.18.0 ([#1366](https://github.com/TimSchoenle/Portfolio/issues/1366)) ([c845c25](https://github.com/TimSchoenle/Portfolio/commit/c845c256198a32bfc9c2f9a5a8e10832e43f8e78))
+
 ## [3.2.2](https://github.com/TimSchoenle/Portfolio/compare/v3.2.1...v3.2.2) (2026-10-29)
 
 
