@@ -75,18 +75,18 @@ portfolio-server = { path = "crates/server" }
 
 # The layered configuration loader, pinned by tag so an update is a deliberate commit. Only
 # `loader` and `explain` are taken.
-terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.17.0", default-features = false, features = [
+terrace-config = { git = "https://github.com/TimSchoenle/terrace-config", tag = "v0.18.1", default-features = false, features = [
     "loader",
     "explain",
 ] }
 # The legal documents as configuration, pinned by tag like `terrace-config` and at a tag that
 # resolves to the same loader.
-terrace-legal = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.4" }
-terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.4", features = [
+terrace-legal = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.7" }
+terrace-legal-axum = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.7", features = [
     "router",
 ] }
-terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.4" }
-terrace-legal-model = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.4" }
+terrace-legal-dioxus = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.7" }
+terrace-legal-model = { git = "https://github.com/TimSchoenle/terrace-legal", tag = "v0.3.7" }
 # Keeps the GitHub token out of `Debug` output; reading it takes an explicit `expose_secret()`.
 secrecy = { version = "0.10", features = ["serde"] }
 
