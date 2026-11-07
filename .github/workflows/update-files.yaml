@@ -73,7 +73,7 @@ jobs:
       - name: Fail while the patch is uncommitted
         if: steps.patch.outputs.has_changes == 'true'
         run: |
-          echo "::error::Cargo.lock changed; update-files-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          echo "::error::Cargo.lock changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
           exit 1
 
   # `README.md` and `config.example.toml` are both rendered from templates under
@@ -175,7 +175,7 @@ jobs:
       - name: Fail while the patch is uncommitted
         if: steps.patch.outputs.has_changes == 'true'
         run: |
-          echo "::error::README.md config.example.toml changed; update-files-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          echo "::error::README.md config.example.toml changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
           exit 1
 
   # The configuration contract the image publishes, `docs/config.contract.json`, which a chart's
@@ -249,5 +249,5 @@ jobs:
       - name: Fail while the patch is uncommitted
         if: steps.patch.outputs.has_changes == 'true'
         run: |
-          echo "::error::docs/config.contract.json changed; update-files-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          echo "::error::docs/config.contract.json changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
           exit 1
