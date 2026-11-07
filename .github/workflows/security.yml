@@ -18,9 +18,14 @@ concurrency:
 permissions: { }
 
 jobs:
-  zizmor:
-    name: Zizmor
+  # jactionlint audits the workflows themselves: it keeps every actionlint check and has a rule for
+  # every zizmor audit. The shared action runs the pedantic profile offline, so the result depends
+  # on the change alone, uploads the SARIF to code scanning under the category jactionlint and fails
+  # on findings. .github/jactionlint.yaml turns off the rules this repository does not want.
+  action-lint:
+    name: Action Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read # to fetch code
       security-events: write # to upload SARIF results
@@ -35,8 +40,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run Zizmor
-        uses: TimSchoenle/actions/actions/security/zizmor@8da2713994ba2b5f542e7e3334db287b1e22854a # tag=actions-security-zizmor-v1.1.3
+      - name: Run jactionlint
+        uses: TimSchoenle/actions/actions/security/jactionlint@e2799424abd778c41e7f6d1547fd402386ef398e # tag=actions-security-jactionlint-v1.1.0
 
   # RustSec advisories against the committed Cargo.lock. Nothing else covers
   # this: `dependency-review` only inspects dependencies a PR changes, and the
@@ -46,6 +51,7 @@ jobs:
   audit:
     name: Cargo Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read # to fetch code
     steps:
@@ -85,6 +91,7 @@ jobs:
   deny:
     name: Cargo Deny
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read # to fetch code
     steps:
