@@ -62,10 +62,19 @@ jobs:
         run: cargo fetch
 
       - name: Hand the lock file on
+        id: patch
         uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
           artifact_name: cargo-lock
           paths: Cargo.lock
+
+      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
+        run: |
+          echo "::error::Cargo.lock changed; update-files-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          exit 1
 
   # `README.md` and `config.example.toml` are both rendered from templates under
   # `.github/templates/`, and both are interpolated from the same payload: the configuration
@@ -155,10 +164,19 @@ jobs:
           variables: ${{ steps.config-schema.outputs.variables }}
 
       - name: Hand the rendered files on
+        id: patch
         uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
           artifact_name: render-generated-files
           paths: README.md config.example.toml
+
+      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
+        run: |
+          echo "::error::README.md config.example.toml changed; update-files-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          exit 1
 
   # The configuration contract the image publishes, `docs/config.contract.json`, which a chart's
   # CI reads to check that what it renders is what this image loads.
@@ -220,7 +238,16 @@ jobs:
         run: just contract-json
 
       - name: Hand the regenerated contract on
+        id: patch
         uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
           artifact_name: config-contract
           paths: docs/config.contract.json
+
+      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
+        run: |
+          echo "::error::docs/config.contract.json changed; update-files-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          exit 1

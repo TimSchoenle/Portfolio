@@ -70,6 +70,10 @@ jobs:
             exit 0
           fi
           gh run download "${RUN_ID}" --repo "${REPOSITORY}" --name "${ARTIFACT}" --dir "${RUNNER_TEMP}/patch"
+          if [ ! -f "${RUNNER_TEMP}/patch/changes.patch" ]; then
+            echo "::error::The ${ARTIFACT} artifact holds no changes.patch; refusing to read it as empty."
+            exit 1
+          fi
           if [ -s "${RUNNER_TEMP}/patch/changes.patch" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
@@ -120,6 +124,10 @@ jobs:
             exit 0
           fi
           gh run download "${RUN_ID}" --repo "${REPOSITORY}" --name "${ARTIFACT}" --dir "${RUNNER_TEMP}/patch"
+          if [ ! -f "${RUNNER_TEMP}/patch/changes.patch" ]; then
+            echo "::error::The ${ARTIFACT} artifact holds no changes.patch; refusing to read it as empty."
+            exit 1
+          fi
           if [ -s "${RUNNER_TEMP}/patch/changes.patch" ]; then
             touched() {
               if grep -Eq "$1" "${RUNNER_TEMP}/patch/changes.patch"; then echo true; else echo false; fi
@@ -175,6 +183,10 @@ jobs:
             exit 0
           fi
           gh run download "${RUN_ID}" --repo "${REPOSITORY}" --name "${ARTIFACT}" --dir "${RUNNER_TEMP}/patch"
+          if [ ! -f "${RUNNER_TEMP}/patch/changes.patch" ]; then
+            echo "::error::The ${ARTIFACT} artifact holds no changes.patch; refusing to read it as empty."
+            exit 1
+          fi
           if [ -s "${RUNNER_TEMP}/patch/changes.patch" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
