@@ -22,6 +22,7 @@ jobs:
       name: release
       deployment: false
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write # Required to create release commits and tags
       issues: write # Required to create release issues
@@ -42,7 +43,7 @@ jobs:
         id: generate_token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          client-id: ${{ secrets.RELEASE_BOT_APP_ID }}
           private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
           permission-contents: write
           permission-issues: write
@@ -63,6 +64,7 @@ jobs:
     outputs:
       image_digest: ${{ steps.build.outputs.digest }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     permissions:
       contents: read # Required to checkout the code
       id-token: write # Required for OIDC authentication with Cosign
@@ -88,6 +90,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+        with:
+          cache-binary: false
 
       - name: Login to Docker Hub
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
@@ -124,11 +128,6 @@ jobs:
           # that runs during the Docker build.
           secrets: |
             gh_token=${{ secrets.GITHUB_TOKEN }}
-          # Read-only: the layers the pull-request builds on `main` already
-          # produced, per architecture, so a release does not start cold.
-          cache-from: |
-            type=gha,scope=docker-amd64
-            type=gha,scope=docker-arm64
 
       # The image just pushed is a rebuild, not the bytes the pull request
       # tested, so it passes the same smoke test before anything signs it or
@@ -153,6 +152,7 @@ jobs:
           # *and* each per-architecture child manifest, so verification still
           # succeeds for a consumer (or admission controller) that resolved the
           # index down to the amd64 or arm64 image before checking signatures.
+          # shellcheck disable=SC2086 # one argument per image reference, split on purpose
           cosign sign --yes --recursive ${images}
 
   helm-release:
@@ -163,6 +163,7 @@ jobs:
     needs: [ release-please, docker-release ]
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read # Required to checkout the code
     steps:

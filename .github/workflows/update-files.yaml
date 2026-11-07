@@ -36,6 +36,7 @@ jobs:
     name: Sync Cargo.lock with Cargo.toml
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read # to fetch code
     steps:
@@ -72,8 +73,7 @@ jobs:
       name: ci
       deployment: false
     runs-on: ubuntu-latest
-    outputs:
-      changes_detected: ${{ steps.auto-commit.outputs.changes_detected }}
+    timeout-minutes: 10
     permissions:
       contents: write # to push build artifacts
       pull-requests: write # to comment on PRs
@@ -87,7 +87,7 @@ jobs:
         id: generate_token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
           private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
@@ -141,6 +141,7 @@ jobs:
     name: Generate the Payloads the Documents are Rendered from
     needs: update-lock-file
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read # to fetch code
     steps:
@@ -227,6 +228,7 @@ jobs:
       name: ci
       deployment: false
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write # to push the rendered files
       pull-requests: write # to comment on PRs
@@ -240,7 +242,7 @@ jobs:
         id: generate_token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
           private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
@@ -346,6 +348,7 @@ jobs:
     name: Regenerate the Config Contract and its Labels
     needs: render-generated-files
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read # to fetch code
     steps:
@@ -392,6 +395,7 @@ jobs:
       name: ci
       deployment: false
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write # to push the regenerated contract
       pull-requests: write # to comment on PRs
@@ -405,7 +409,7 @@ jobs:
         id: generate_token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
           private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
