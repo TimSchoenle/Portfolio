@@ -22,7 +22,7 @@ jobs:
       name: release
       deployment: false
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: write # Required to create release commits and tags
       issues: write # Required to create release issues
@@ -163,7 +163,7 @@ jobs:
     needs: [ release-please, docker-release ]
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: read # Required to checkout the code
     steps:
