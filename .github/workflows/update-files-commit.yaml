@@ -209,6 +209,8 @@ jobs:
         uses: TimSchoenle/actions/actions/common/upsert-pr-comment@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-upsert-pr-comment-v2.0.1
         with:
           token: ${{ steps.generate_token.outputs.token }}
+          # Only this App's own comment is updated; a pasted marker cannot redirect the edit.
+          author: '${{ steps.generate_token.outputs.app-slug }}[bot]'
           pr_url: ${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.workflow_run.pull_requests[0].number }}
           identifier: cargo-lock-updated
           body: 'Cargo.lock has been updated to match Cargo.toml.'
@@ -275,6 +277,8 @@ jobs:
         uses: TimSchoenle/actions/actions/common/upsert-pr-comment@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-upsert-pr-comment-v2.0.1
         with:
           token: ${{ steps.generate_token.outputs.token }}
+          # Only this App's own comment is updated; a pasted marker cannot redirect the edit.
+          author: '${{ steps.generate_token.outputs.app-slug }}[bot]'
           pr_url: ${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.workflow_run.pull_requests[0].number }}
           identifier: render-generated-files
           header: 'Re-rendered from the configuration types in `crates/config`:'
@@ -343,6 +347,8 @@ jobs:
         uses: TimSchoenle/actions/actions/common/upsert-pr-comment@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-upsert-pr-comment-v2.0.1
         with:
           token: ${{ steps.generate_token.outputs.token }}
+          # Only this App's own comment is updated; a pasted marker cannot redirect the edit.
+          author: '${{ steps.generate_token.outputs.app-slug }}[bot]'
           pr_url: ${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.workflow_run.pull_requests[0].number }}
           identifier: config-contract-sync
           header: 'Regenerated from the configuration types in `crates/config`:'
