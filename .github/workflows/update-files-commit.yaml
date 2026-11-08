@@ -51,35 +51,18 @@ jobs:
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
+            *.actions.githubusercontent.com:443
             *.blob.core.windows.net:443
 
-      # Only the patch's size is read; nothing in the artifact is executed.
-      - name: Look For A Non-Empty Patch
+      # Validates the patch exactly as commit-patch will, against the head the pull_request run
+      # checked out, and reports whether it holds anything to commit. Nothing in it is executed.
+      - name: Find The Patch
         id: patch
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          ARTIFACT: cargo-lock
-        run: |
-          set -euo pipefail
-          count="$(gh api "repos/${REPOSITORY}/actions/runs/${RUN_ID}/artifacts?name=${ARTIFACT}" --jq '[.artifacts[] | select(.expired | not)] | length')"
-          if [ "${count}" = "0" ]; then
-            echo "The run uploaded no ${ARTIFACT} artifact: the job that makes it did not run."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          gh run download "${RUN_ID}" --repo "${REPOSITORY}" --name "${ARTIFACT}" --dir "${RUNNER_TEMP}/patch"
-          if [ ! -f "${RUNNER_TEMP}/patch/changes.patch" ]; then
-            echo "::error::The ${ARTIFACT} artifact holds no changes.patch; refusing to read it as empty."
-            exit 1
-          fi
-          if [ -s "${RUNNER_TEMP}/patch/changes.patch" ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "The ${ARTIFACT} patch is empty: nothing changed."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          fi
+        uses: TimSchoenle/actions/actions/common/find-patch@7b20a67f0b18a6e64c30e5f47c92636729f6ad41 # tag=actions-common-find-patch-v1.1.0
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          artifact_name: cargo-lock
+          expected_head_sha: ${{ github.event.workflow_run.head_sha }}
 
   find-rendered-files-patch:
     name: Find The Rendered Files Patch
@@ -96,8 +79,8 @@ jobs:
       actions: read # to list and download the pull_request run's artifacts
     outputs:
       has_changes: ${{ steps.patch.outputs.has_changes }}
-      readme_changed: ${{ steps.patch.outputs.readme_changed }}
-      config_changed: ${{ steps.patch.outputs.config_changed }}
+      readme_changed: ${{ steps.touched.outputs.readme_changed }}
+      config_changed: ${{ steps.touched.outputs.config_changed }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -105,42 +88,34 @@ jobs:
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
+            *.actions.githubusercontent.com:443
             *.blob.core.windows.net:443
 
-      # Only the patch's size and the paths it names are read; nothing in the artifact is executed.
-      - name: Look For A Non-Empty Patch
+      # Validates the patch exactly as commit-patch will, against the head the pull_request run
+      # checked out, and reports whether it holds anything to commit. Nothing in it is executed.
+      - name: Find The Patch
         id: patch
+        uses: TimSchoenle/actions/actions/common/find-patch@7b20a67f0b18a6e64c30e5f47c92636729f6ad41 # tag=actions-common-find-patch-v1.1.0
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          artifact_name: render-generated-files
+          expected_head_sha: ${{ github.event.workflow_run.head_sha }}
+
+      # Only the paths the validated patch names are read; nothing in it is executed.
+      - name: Note Which Files The Patch Touches
+        id: touched
+        if: steps.patch.outputs.has_changes == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          ARTIFACT: render-generated-files
+          PATCH: ${{ steps.patch.outputs.directory }}/changes.patch
         run: |
           set -euo pipefail
-          count="$(gh api "repos/${REPOSITORY}/actions/runs/${RUN_ID}/artifacts?name=${ARTIFACT}" --jq '[.artifacts[] | select(.expired | not)] | length')"
-          if [ "${count}" = "0" ]; then
-            echo "The run uploaded no ${ARTIFACT} artifact: the job that makes it did not run."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          gh run download "${RUN_ID}" --repo "${REPOSITORY}" --name "${ARTIFACT}" --dir "${RUNNER_TEMP}/patch"
-          if [ ! -f "${RUNNER_TEMP}/patch/changes.patch" ]; then
-            echo "::error::The ${ARTIFACT} artifact holds no changes.patch; refusing to read it as empty."
-            exit 1
-          fi
-          if [ -s "${RUNNER_TEMP}/patch/changes.patch" ]; then
-            touched() {
-              if grep -Eq "$1" "${RUNNER_TEMP}/patch/changes.patch"; then echo true; else echo false; fi
-            }
-            {
-              echo "has_changes=true"
-              echo "readme_changed=$(touched '^diff --git a/README\.md ')"
-              echo "config_changed=$(touched '^diff --git a/config\.example\.toml ')"
-            } >> "$GITHUB_OUTPUT"
-          else
-            echo "The ${ARTIFACT} patch is empty: nothing changed."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          fi
+          touched() {
+            if grep -Eq "$1" "${PATCH}"; then echo true; else echo false; fi
+          }
+          {
+            echo "readme_changed=$(touched '^diff --git a/README\.md ')"
+            echo "config_changed=$(touched '^diff --git a/config\.example\.toml ')"
+          } >> "$GITHUB_OUTPUT"
 
   find-config-contract-patch:
     name: Find The Config Contract Patch
@@ -164,35 +139,18 @@ jobs:
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
+            *.actions.githubusercontent.com:443
             *.blob.core.windows.net:443
 
-      # Only the patch's size is read; nothing in the artifact is executed.
-      - name: Look For A Non-Empty Patch
+      # Validates the patch exactly as commit-patch will, against the head the pull_request run
+      # checked out, and reports whether it holds anything to commit. Nothing in it is executed.
+      - name: Find The Patch
         id: patch
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          ARTIFACT: config-contract
-        run: |
-          set -euo pipefail
-          count="$(gh api "repos/${REPOSITORY}/actions/runs/${RUN_ID}/artifacts?name=${ARTIFACT}" --jq '[.artifacts[] | select(.expired | not)] | length')"
-          if [ "${count}" = "0" ]; then
-            echo "The run uploaded no ${ARTIFACT} artifact: the job that makes it did not run."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          gh run download "${RUN_ID}" --repo "${REPOSITORY}" --name "${ARTIFACT}" --dir "${RUNNER_TEMP}/patch"
-          if [ ! -f "${RUNNER_TEMP}/patch/changes.patch" ]; then
-            echo "::error::The ${ARTIFACT} artifact holds no changes.patch; refusing to read it as empty."
-            exit 1
-          fi
-          if [ -s "${RUNNER_TEMP}/patch/changes.patch" ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "The ${ARTIFACT} patch is empty: nothing changed."
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          fi
+        uses: TimSchoenle/actions/actions/common/find-patch@7b20a67f0b18a6e64c30e5f47c92636729f6ad41 # tag=actions-common-find-patch-v1.1.0
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          artifact_name: config-contract
+          expected_head_sha: ${{ github.event.workflow_run.head_sha }}
 
   update-lock-file:
     name: Ensure Cargo Lock File is Up-to-Date
@@ -234,7 +192,7 @@ jobs:
       # moved past the head the patch was made from is left alone: the run on the new head decides.
       - name: Commit the patch
         id: commit
-        uses: TimSchoenle/actions/actions/common/commit-patch@95d5504ec41c354a35ce0414234107a8eaf921b9 # tag=actions-common-commit-patch-v1.2.0
+        uses: TimSchoenle/actions/actions/common/commit-patch@7b20a67f0b18a6e64c30e5f47c92636729f6ad41 # tag=actions-common-commit-patch-v1.3.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           run_id: ${{ github.event.workflow_run.id }}
@@ -298,7 +256,7 @@ jobs:
       # moved past the head the patch was made from is left alone: the run on the new head decides.
       - name: Commit the patch
         id: commit
-        uses: TimSchoenle/actions/actions/common/commit-patch@95d5504ec41c354a35ce0414234107a8eaf921b9 # tag=actions-common-commit-patch-v1.2.0
+        uses: TimSchoenle/actions/actions/common/commit-patch@7b20a67f0b18a6e64c30e5f47c92636729f6ad41 # tag=actions-common-commit-patch-v1.3.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           run_id: ${{ github.event.workflow_run.id }}
@@ -368,7 +326,7 @@ jobs:
       # moved past the head the patch was made from is left alone: the run on the new head decides.
       - name: Commit the patch
         id: commit
-        uses: TimSchoenle/actions/actions/common/commit-patch@95d5504ec41c354a35ce0414234107a8eaf921b9 # tag=actions-common-commit-patch-v1.2.0
+        uses: TimSchoenle/actions/actions/common/commit-patch@7b20a67f0b18a6e64c30e5f47c92636729f6ad41 # tag=actions-common-commit-patch-v1.3.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
           run_id: ${{ github.event.workflow_run.id }}
