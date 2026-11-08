@@ -16,22 +16,26 @@ jobs:
   # The first half builds the pull request's code: `cargo fetch`, `cargo run`, `just`. That is
   # code the pull request controls — every build script and proc macro in the graph, and the
   # toolchain `rust-toolchain.toml` names — so the half that runs it holds no secret and a
-  # read-only `GITHUB_TOKEN`, and hands on only data: a file as an artifact, or a payload as a job
-  # output.
+  # read-only `GITHUB_TOKEN`, and hands on only data: a `create-patch` artifact of the files it
+  # changed, against the head this run was started for.
   #
-  # The second half holds the maintenance App's private key and the write token minted from it,
-  # and runs nothing from the checkout: it copies the files it was handed into place, renders
-  # templates, commits and comments. Were both halves one job, anything the first ran could read
-  # the key out of the runner's memory (the runner user has passwordless `sudo`) or leave a
-  # process behind to collect the token once it was minted — a compromised crate arriving in a
-  # Renovate pull request would be enough.
+  # The second half lives in update-files-commit.yaml, a workflow_run workflow that runs the default
+  # branch's copy of itself, so a pull request cannot edit it. It holds the maintenance App's
+  # private key and the write token minted from it, and runs nothing from the branch: commit-patch
+  # applies the patch, refuses any path outside the job's `allowed_paths`, and commits only while
+  # the branch still points at the head the patch was made from. Were both halves one job,
+  # anything the first ran could read the key out of the runner's memory (the runner user has
+  # passwordless `sudo`) or leave a process behind to collect the token once it was minted — a
+  # compromised crate arriving in a Renovate pull request would be enough.
   #
   # A pull request from a fork gets no secrets, and its branch does not exist in this repository,
-  # so every checkout of `github.head_ref` below would fail. The jobs form one chain, and this
-  # first one is skipped for a fork, which skips the rest. The three that hold the App token carry
-  # the same condition so that reordering the chain cannot run them for a fork. The gates in
-  # `build.yaml` still run, and report a stale README, example configuration or contract on a
-  # fork.
+  # so there is nothing to commit to; each generator is skipped for a fork, and the commit half
+  # skips a run from one. The gates in `build.yaml` still run, and report a stale README, example
+  # configuration or contract on a fork.
+  #
+  # The three generators run side by side against the head this run was started for. The commit
+  # half commits their results in order, each only when the one before committed nothing: a commit
+  # starts a new run on the new head, which regenerates the later files against it.
   generate-lock-file:
     name: Sync Cargo.lock with Cargo.toml
     if: github.event.pull_request.head.repo.full_name == github.repository
@@ -49,7 +53,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
@@ -58,74 +62,19 @@ jobs:
         run: cargo fetch
 
       - name: Hand the lock file on
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: patch
+        uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
-          name: cargo-lock
-          path: Cargo.lock
-          if-no-files-found: error
-          retention-days: 1
+          artifact_name: cargo-lock
+          paths: Cargo.lock
 
-  update-lock-file:
-    name: Ensure Cargo Lock File is Up-to-Date
-    needs: generate-lock-file
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    environment:
-      name: ci
-      deployment: false
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write # to push build artifacts
-      pull-requests: write # to comment on PRs
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
-        with:
-          egress-policy: audit
-
-      - name: Generate Bot Token
-        id: generate_token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
-          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
-          permission-contents: write
-          permission-pull-requests: write
-
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-          token: ${{ steps.generate_token.outputs.token }}
-
-      # Outside the checkout, then copied by name, so the artifact can only ever write the one
-      # file this job commits.
-      - name: Receive the lock file
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: cargo-lock
-          path: ${{ runner.temp }}/cargo-lock
-
-      - name: Put the lock file in place
-        run: cp "$RUNNER_TEMP/cargo-lock/Cargo.lock" Cargo.lock
-
-      - name: Commit and Push if changed
-        id: auto-commit
-        uses: TimSchoenle/actions/actions/common/commit-changes@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-commit-changes-v3.0.1
-        with:
-          commit_message: 'build: update Cargo.lock'
-          file_pattern: 'Cargo.lock'
-          token: ${{ steps.generate_token.outputs.token }}
-
-      - name: Comment on PR
-        if: steps.auto-commit.outputs.changes_detected == 'true' && github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-upsert-pr-comment-v2.0.1
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
-          identifier: cargo-lock-updated
-          body: 'Cargo.lock has been updated to match Cargo.toml.'
+      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
+        run: |
+          echo "::error::Cargo.lock changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
+          exit 1
 
   # `README.md` and `config.example.toml` are both rendered from templates under
   # `.github/templates/`, and both are interpolated from the same payload: the configuration
@@ -133,13 +82,13 @@ jobs:
   # drift from the types — renaming a key renames it in the tables, in the prose that names it,
   # and in the example file, all in the same pull request.
   #
-  # A job of its own rather than more steps above, and `needs:` rather than parallel, for one
-  # reason: both push to the head branch, and two jobs racing on one ref is a lost commit or a
-  # rejected push. Sequencing also means this renders against the tree the lock-file commit left
-  # behind, so a dependency bump that changes nothing here still produces no second commit.
+  # A job of its own rather than more steps above. Its commit waits for the lock file's: the two
+  # push to the head branch, and two jobs racing on one ref is a lost commit or a rejected push.
+  # When the lock file was committed, the run on that commit renders against it instead, so a
+  # dependency bump that changes nothing here still produces no second commit.
   generate-rendered-files:
-    name: Generate the Payloads the Documents are Rendered from
-    needs: update-lock-file
+    name: Render the Documents from their Templates
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -154,7 +103,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
@@ -166,8 +115,8 @@ jobs:
       # fails on a reference the payload does not define, never on a definition nothing reads.
       #
       # The generator reads nothing from the environment, so it produces the same payload here as
-      # on a developer's machine, which is what lets the steps below skip their commits when the
-      # configuration has not changed. Cargo's progress goes to stderr, so stdout is the payload
+      # on a developer's machine, which is what keeps the patch empty, and the commit skipped, when
+      # the configuration has not changed. Cargo's progress goes to stderr, so stdout is the payload
       # and nothing else; it is already strict JSON on one line, and `$(…)` drops the newline
       # `println!` puts after it.
       - name: Generate the configuration payload
@@ -197,128 +146,37 @@ jobs:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
-      # The payloads travel as an artifact rather than as job outputs: the runner drops any job
-      # output whose value contains a string it has registered as a mask ("Skip output … since it
-      # may contain secret"), and a payload that quotes the README and `docs/` index can contain
-      # one by coincidence. The values reach the files through the environment, never through
-      # template expansion inside the script.
-      - name: Write the payloads
-        env:
-          CONFIG_VARIABLES: ${{ steps.config-schema.outputs.variables }}
-          README_VARIABLES: ${{ steps.readme-variables.outputs.variables }}
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/render-payloads"
-          printf '%s' "$CONFIG_VARIABLES" > "$RUNNER_TEMP/render-payloads/config.json"
-          printf '%s' "$README_VARIABLES" > "$RUNNER_TEMP/render-payloads/readme.json"
-
-      - name: Upload the payloads
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: render-payloads
-          path: ${{ runner.temp }}/render-payloads
-          if-no-files-found: error
-          retention-days: 1
-
-  render-generated-files:
-    name: Ensure the Generated Files are Rendered from their Templates
-    needs: generate-rendered-files
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    environment:
-      name: ci
-      deployment: false
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write # to push the rendered files
-      pull-requests: write # to comment on PRs
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
-        with:
-          egress-policy: audit
-
-      - name: Generate Bot Token
-        id: generate_token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
-          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
-          permission-contents: write
-          permission-pull-requests: write
-
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-          ref: ${{ github.head_ref }}
-          token: ${{ steps.generate_token.outputs.token }}
-
-      - name: Download the payloads
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: render-payloads
-          path: ${{ runner.temp }}/render-payloads
-
-      # Step outputs, unlike job outputs, are not filtered against masks. Each value is written
-      # with a random heredoc delimiter, so no content in the payload can end it early and inject
-      # an output of its own.
-      - name: Load the payloads
-        id: payloads
-        run: |
-          set -euo pipefail
-          dir="$RUNNER_TEMP/render-payloads"
-          for name in config readme; do
-            delimiter="EOF_$(openssl rand -hex 16)"
-            {
-              echo "${name}<<${delimiter}"
-              cat "${dir}/${name}.json"
-              echo
-              echo "${delimiter}"
-            } >> "$GITHUB_OUTPUT"
-          done
-
-      # Each render commits only its own output — `file_pattern` defaults to it — so a document
-      # that did not change produces no commit, and neither can carry the other along. The example
-      # configuration stays on the raw generator payload: it interpolates nothing the merge adds.
-      - name: Render and commit the README
-        id: readme
-        uses: TimSchoenle/actions/actions/common/render-template-and-commit@ea4465fbe2bec98efad19b63849f8d1ac67b5c88 # tag=actions-common-render-template-and-commit-v1.1.18
+      # The example configuration stays on the raw generator payload: it interpolates nothing
+      # the merge adds. The payloads stay step outputs, which the runner does not filter against
+      # its masks the way it filters job outputs.
+      - name: Render the README
+        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
         with:
           template: .github/templates/README.md.hbs
           output: README.md
-          variables: ${{ steps.payloads.outputs.readme }}
-          token: ${{ steps.generate_token.outputs.token }}
-          commit_message: 'docs: render README from its template'
+          variables: ${{ steps.readme-variables.outputs.variables }}
 
-      - name: Render and commit the example configuration
-        id: example-config
-        uses: TimSchoenle/actions/actions/common/render-template-and-commit@ea4465fbe2bec98efad19b63849f8d1ac67b5c88 # tag=actions-common-render-template-and-commit-v1.1.18
+      - name: Render the example configuration
+        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
-          variables: ${{ steps.payloads.outputs.config }}
-          token: ${{ steps.generate_token.outputs.token }}
-          commit_message: 'docs: render the example configuration from its template'
+          variables: ${{ steps.config-schema.outputs.variables }}
 
-      # One comment for both, naming only what actually changed. Two comment steps would post
-      # twice on the pull request that renames a key, which is precisely the one where both
-      # documents move together.
-      #
-      # Each line is literal text gated on a commit step's own output, so nothing a contributor
-      # controls reaches the body. A line whose document did not change evaluates to empty and is
-      # dropped; when neither changed, no line survives and the action posts nothing, which is why
-      # the `if:` no longer has to repeat both conditions.
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-upsert-pr-comment-v2.0.1
+      - name: Hand the rendered files on
+        id: patch
+        uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
-          token: ${{ steps.generate_token.outputs.token }}
-          identifier: render-generated-files
-          header: 'Re-rendered from the configuration types in `crates/config`:'
-          body_lines: |
-            ${{ steps.readme.outputs.changes_detected == 'true' && '- `README.md`, from `.github/templates/README.md.hbs`' || '' }}
-            ${{ steps.example-config.outputs.changes_detected == 'true' && '- `config.example.toml`, from `.github/templates/config.example.toml.hbs`' || '' }}
+          artifact_name: render-generated-files
+          paths: README.md config.example.toml
+
+      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
+        run: |
+          echo "::error::README.md config.example.toml changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
+          exit 1
 
   # The configuration contract the image publishes, `docs/config.contract.json`, which a chart's
   # CI reads to check that what it renders is what this image loads.
@@ -341,12 +199,12 @@ jobs:
   # documents above: the generator reads nothing from the environment, so a pull request that did
   # not touch the configuration surface produces no commit.
   #
-  # A job of its own, after `render-generated-files`, for the reason given there — one pusher on
-  # the head ref at a time. The gate in `build.yaml` stays: this makes the branch converge, that
+  # A job of its own, committed after the rendered files for the reason given there — one pusher
+  # on the head ref at a time. The gate in `build.yaml` stays: this makes the branch converge, that
   # refuses to let it merge before it has.
   generate-config-contract:
     name: Regenerate the Config Contract and its Labels
-    needs: render-generated-files
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -361,7 +219,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
@@ -379,79 +237,17 @@ jobs:
       - name: Regenerate the configuration contract
         run: just contract-json
 
-      - name: Hand the regenerated files on
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Hand the regenerated contract on
+        id: patch
+        uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
-          name: config-contract
-          path: docs/config.contract.json
-          if-no-files-found: error
-          retention-days: 1
+          artifact_name: config-contract
+          paths: docs/config.contract.json
 
-  sync-config-contract:
-    name: Ensure the Config Contract and its Labels Match the Types
-    needs: generate-config-contract
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    environment:
-      name: ci
-      deployment: false
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write # to push the regenerated contract
-      pull-requests: write # to comment on PRs
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
-        with:
-          egress-policy: audit
-
-      - name: Generate Bot Token
-        id: generate_token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
-          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
-          permission-contents: write
-          permission-pull-requests: write
-
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-          ref: ${{ github.head_ref }}
-          token: ${{ steps.generate_token.outputs.token }}
-
-      # Outside the checkout, then copied by name, for the reason given in `update-lock-file`.
-      - name: Receive the regenerated files
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: config-contract
-          path: ${{ runner.temp }}/config-contract
-
-      # A single uploaded file lands at the artifact's root, not under `docs/`.
-      - name: Put the regenerated files in place
+      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
         run: |
-          set -euo pipefail
-          cp "$RUNNER_TEMP/config-contract/config.contract.json" docs/config.contract.json
-
-      # `file_pattern` keeps the commit to the contract, whatever else the checkout holds.
-      - name: Commit the regenerated contract
-        id: contract
-        uses: TimSchoenle/actions/actions/common/commit-changes@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-commit-changes-v3.0.1
-        with:
-          commit_message: 'docs: regenerate the configuration contract'
-          file_pattern: 'docs/config.contract.json'
-          token: ${{ steps.generate_token.outputs.token }}
-
-      # On the same terms as the comment in `render-generated-files`: a literal line gated on the
-      # commit step's output, and no comment at all when the contract did not move.
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: TimSchoenle/actions/actions/common/upsert-pr-comment@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-upsert-pr-comment-v2.0.1
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
-          identifier: config-contract-sync
-          header: 'Regenerated from the configuration types in `crates/config`:'
-          body_lines: |
-            ${{ steps.contract.outputs.changes_detected == 'true' && '- `docs/config.contract.json`, from `config-schema --format contract`' || '' }}
-          footer: 'The `Config Contract` job in **Build** gates it, and runs again on this push.'
+          echo "::error::docs/config.contract.json changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
+          exit 1
