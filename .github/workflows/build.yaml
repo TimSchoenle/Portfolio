@@ -39,7 +39,7 @@ jobs:
   # diffing makes a configuration change visible in the pull request that makes it: a removed key
   # shows up in the diff, next to the chart it is about to break.
   #
-  # The gate stays now that `update-files.yaml` regenerates the contract and commits it: the two
+  # The gate stays now that `generate.yaml` regenerates the contract and commits it: the two
   # answer different questions. The Dockerfile's label region is never written by a bot, so for
   # that half this gate is the only check, and `just regenerate` locally is the fix. That workflow makes a pull request converge on the contract
   # its types produce; this one refuses to let one merge before it has. A copy that arrives a
@@ -84,12 +84,12 @@ jobs:
           features: config-schema
           image: ''
 
-  # The same arrangement as `contract` above, for the other generated document. Update Files
+  # The same arrangement as `contract` above, for the other generated document. Generate
   # renders `README.md` on a pull request and commits it back to the branch; this re-renders it
   # from the same two payloads and fails when the committed file differs, so a README edited by
   # hand cannot merge and a template change cannot merge without its output.
   #
-  # It lives here rather than in Update Files because that workflow only runs on `pull_request`,
+  # It lives here rather than in Generate because that workflow only runs on `pull_request`,
   # and a gate that never sees `main` is not a gate. The convergence and the refusal are two jobs
   # on purpose: that one makes the branch right, this one declines to let it merge before it is.
   readme:
@@ -112,7 +112,7 @@ jobs:
       - name: Install pinned toolchain
         uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
 
-      # The two steps Update Files runs, with the same inputs. `branch` is the default branch in
+      # The two steps Generate runs, with the same inputs. `branch` is the default branch in
       # both places: left at its `github.ref_name` default it would be `<number>/merge` on a pull
       # request and `main` here, and the badge URLs alone would then fail every merge.
       - name: Generate the configuration payload
@@ -138,7 +138,7 @@ jobs:
           variables: ${{ steps.readme-variables.outputs.variables }}
           check: 'true'
 
-      # Update Files renders the example configuration beside the README, from the configuration
+      # Generate renders the example configuration beside the README, from the configuration
       # payload alone. That job is skipped for a fork's pull request, so this is the only check
       # that reports a stale example there. It runs after a failed README check, so one push
       # reports both.
@@ -236,56 +236,6 @@ jobs:
 
       - name: Run Test
         uses: TimSchoenle/actions/actions/rust/test@e16a1e466faf8ec751b26289c1898143a253269f # tag=actions-rust-test-v1.1.2
-
-  # Auto-format comes in two halves, like the jobs in `update-files.yaml`. `cargo fmt` runs the
-  # toolchain `rust-toolchain.toml` names and honours any `rustfmt.toml`, both of which the pull
-  # request controls, so the half that runs it holds no secret and a read-only `GITHUB_TOKEN` and
-  # hands on only a patch artifact. The second half, `fmt-commit` in build-commit.yaml, runs in the
-  # `ci` environment from the default branch's copy, mints the maintenance App's token and commits
-  # that patch; it runs nothing from the checkout, and `allowed_paths` refuses any path that is not
-  # Rust source.
-  #
-  # Pull requests only: the patch is committed to the pull request's branch, and a push to `main`
-  # has none. Code reaches `main` through a pull request that already went through this.
-  fmt:
-    name: Auto Format
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read # Required to checkout the code
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
-        with:
-          egress-policy: audit
-
-      # The pull request head, not the default merge commit: the patch is committed to the branch,
-      # so it has to be computed against the commit the branch points at.
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Auto Format
-        id: format
-        uses: TimSchoenle/actions/actions/rust/auto-format@e4229b81c3c3c880b9561dc4d53bd87ccf49eaf3 # tag=actions-rust-auto-format-v2.0.1
-        with:
-          artifact_name: rust-auto-format
-
-      # `cargo fmt` reformats rather than fails, and build-commit.yaml commits the patch only after
-      # this whole run has finished, when every other required check on this head may already be
-      # green. Failing here keeps the unformatted head from merging; the run on the formatting
-      # commit decides. Nothing commits to a fork's branch, so a fork's pull request is not held,
-      # as it was not before the commit moved out of this run.
-      - name: Fail while a formatting commit is pending
-        if: >-
-          steps.format.outputs.changes_detected == 'true' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          echo "::error::cargo fmt changed files; build-commit.yaml commits them and the run on that commit decides. If no bot commit appears, run cargo fmt locally and push."
-          exit 1
 
   clippy:
     name: Clippy

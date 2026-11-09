@@ -19,9 +19,8 @@ prose below names. The two tables are two on purpose: one list of every key read
 deployment needs a GitHub token, and it does not, because `github.*` belongs to a build-time tool
 that exits during the image build.
 
-The `generate-rendered-files` job in .github/workflows/update-files.yaml renders this on every
-pull request, and .github/workflows/update-files-commit.yaml commits the result back to the
-branch. The `readme` job in .github/workflows/build.yaml re-renders with `check: true` and fails
+The `generate-rendered-files` job in .github/workflows/generate.yaml renders this on every pull
+request, and .github/workflows/generate-commit.yaml commits the result back to the branch. The `readme` job in .github/workflows/build.yaml re-renders with `check: true` and fails
 when the committed file does not match it, so a README edited by hand does not merge.
 
 Prefer an injected value to a typed one anywhere the two would say the same thing. A rename in

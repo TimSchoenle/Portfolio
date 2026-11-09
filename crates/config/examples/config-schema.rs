@@ -5,7 +5,7 @@
 //!   -- --format markdown --scope server
 //! ```
 //!
-//! `.github/workflows/update-files.yaml` runs it once, feeds the result to the templates under
+//! `.github/workflows/generate.yaml` runs it once, feeds the result to the templates under
 //! `.github/templates/`, and commits the rendered `README.md` and `config.example.toml` back to
 //! the pull request. Neither document can drift from the types: a key renamed in `crates/config`
 //! is a key renamed in both, in the same commit.
