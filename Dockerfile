@@ -18,7 +18,7 @@ ARG CARGO_CHEF_VERSION=0.1.78
 # ── shared build tools ────────────────────────────────────────────────────────
 # Every build stage runs natively on $BUILDPLATFORM and cross-compiles the SSR server to
 # $TARGETPLATFORM. Only the server binary is architecture-dependent.
-FROM --platform=$BUILDPLATFORM rust:1.99-slim@sha256:b8e062b1c3a80183df83d9ba187cadd2b5ab84bc78d453dbfeb2fccd5f982247 AS tools
+FROM --platform=$BUILDPLATFORM rust:1.99-slim@sha256:f6c4a35d21dbb3c89d7a8d056c193e94fc09037f2b58dd858b09c39a47dd02d7 AS tools
 
 ARG DIOXUS_CLI_VERSION
 ARG CARGO_ABOUT_VERSION
