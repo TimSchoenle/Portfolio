@@ -237,7 +237,7 @@ jobs:
   # of which the pull request controls, so it is a generator like the others above: a read-only
   # token, and only a patch handed on.
   fmt:
-    name: Auto Format
+    name: Rust Format
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
