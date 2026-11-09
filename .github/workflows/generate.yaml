@@ -1,7 +1,8 @@
-name: Update Files
+name: Generate
 
 on:
   pull_request:
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,30 +20,34 @@ jobs:
   # read-only `GITHUB_TOKEN`, and hands on only data: a `create-patch` artifact of the files it
   # changed, against the head this run was started for.
   #
-  # The second half lives in update-files-commit.yaml, a workflow_run workflow that runs the default
+  # The second half lives in generate-commit.yaml, a workflow_run workflow that runs the default
   # branch's copy of itself, so a pull request cannot edit it. It holds the maintenance App's
   # private key and the write token minted from it, and runs nothing from the branch: commit-patch
-  # applies the patch, refuses any path outside the job's `allowed_paths`, and commits only while
+  # applies the merged patch, refuses any path outside its `allowed_paths`, and commits only while
   # the branch still points at the head the patch was made from. Were both halves one job,
   # anything the first ran could read the key out of the runner's memory (the runner user has
   # passwordless `sudo`) or leave a process behind to collect the token once it was minted — a
   # compromised crate arriving in a Renovate pull request would be enough.
   #
   # A pull request from a fork gets no secrets, and its branch does not exist in this repository,
-  # so there is nothing to commit to; each generator is skipped for a fork, and the commit half
-  # skips a run from one. The gates in `build.yaml` still run, and report a stale README, example
-  # configuration or contract on a fork.
+  # so there is nothing to commit to: the commit half skips a run from one, and Generated Files
+  # stays red on a fork until its author commits the files. The gates in `build.yaml` also run, and
+  # report a stale README, example configuration or contract on a fork.
   #
-  # The three generators run side by side against the head this run was started for. The commit
-  # half commits their results in order, each only when the one before committed nothing: a commit
-  # starts a new run on the new head, which regenerates the later files against it.
+  # The generators run side by side against the head this run was started for and write disjoint
+  # files. The Generated Files job merges their patches, and the commit half commits them as one
+  # commit, which starts a new run on the new head.
+  #
+  # No `paths` filter: the Generated Files check has to report on every pull request to be required.
   generate-lock-file:
     name: Sync Cargo.lock with Cargo.toml
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read # to fetch code
+    outputs:
+      has_changes: ${{ steps.patch.outputs.has_changes }}
+      artifact_name: ${{ steps.patch.outputs.artifact_name }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -68,31 +73,22 @@ jobs:
           artifact_name: cargo-lock
           paths: Cargo.lock
 
-      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
-      # non-empty this head is not the one to merge: the run on the bot commit decides.
-      - name: Fail while the patch is uncommitted
-        if: steps.patch.outputs.has_changes == 'true'
-        run: |
-          echo "::error::Cargo.lock changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
-          exit 1
-
   # `README.md` and `config.example.toml` are both rendered from templates under
   # `.github/templates/`, and both are interpolated from the same payload: the configuration
   # reference generated out of the `Describe` derives in `crates/config`. Neither document can
   # drift from the types — renaming a key renames it in the tables, in the prose that names it,
   # and in the example file, all in the same pull request.
   #
-  # A job of its own rather than more steps above. Its commit waits for the lock file's: the two
-  # push to the head branch, and two jobs racing on one ref is a lost commit or a rejected push.
-  # When the lock file was committed, the run on that commit renders against it instead, so a
-  # dependency bump that changes nothing here still produces no second commit.
+  # A job of its own rather than more steps above, so it runs beside the lock file sync.
   generate-rendered-files:
     name: Render the Documents from their Templates
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read # to fetch code
+    outputs:
+      has_changes: ${{ steps.patch.outputs.has_changes }}
+      artifact_name: ${{ steps.patch.outputs.artifact_name }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -170,14 +166,6 @@ jobs:
           artifact_name: render-generated-files
           paths: README.md config.example.toml
 
-      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
-      # non-empty this head is not the one to merge: the run on the bot commit decides.
-      - name: Fail while the patch is uncommitted
-        if: steps.patch.outputs.has_changes == 'true'
-        run: |
-          echo "::error::README.md config.example.toml changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
-          exit 1
-
   # The configuration contract the image publishes, `docs/config.contract.json`, which a chart's
   # CI reads to check that what it renders is what this image loads.
   #
@@ -199,16 +187,17 @@ jobs:
   # documents above: the generator reads nothing from the environment, so a pull request that did
   # not touch the configuration surface produces no commit.
   #
-  # A job of its own, committed after the rendered files for the reason given there — one pusher
-  # on the head ref at a time. The gate in `build.yaml` stays: this makes the branch converge, that
-  # refuses to let it merge before it has.
+  # The gate in `build.yaml` stays: this makes the branch converge, that refuses to let it merge
+  # before it has.
   generate-config-contract:
     name: Regenerate the Config Contract and its Labels
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read # to fetch code
+    outputs:
+      has_changes: ${{ steps.patch.outputs.has_changes }}
+      artifact_name: ${{ steps.patch.outputs.artifact_name }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -244,10 +233,60 @@ jobs:
           artifact_name: config-contract
           paths: docs/config.contract.json
 
-      # The patch is committed by update-files-commit.yaml after this run has finished. While it is
-      # non-empty this head is not the one to merge: the run on the bot commit decides.
-      - name: Fail while the patch is uncommitted
-        if: steps.patch.outputs.has_changes == 'true'
-        run: |
-          echo "::error::docs/config.contract.json changed; update-files-commit.yaml commits the patch and the run on that commit decides. If no bot commit appears, regenerate the files locally and push."
-          exit 1
+  # `cargo fmt` runs the toolchain `rust-toolchain.toml` names and honours any `rustfmt.toml`, both
+  # of which the pull request controls, so it is a generator like the others above: a read-only
+  # token, and only a patch handed on.
+  fmt:
+    name: Auto Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # Required to checkout the code
+    outputs:
+      has_changes: ${{ steps.format.outputs.changes_detected }}
+      artifact_name: ${{ steps.format.outputs.artifact_name }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      # The pull request head, not the default merge commit: the patch is committed to the branch,
+      # so it has to be computed against the commit the branch points at.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Auto Format
+        id: format
+        uses: TimSchoenle/actions/actions/rust/auto-format@e4229b81c3c3c880b9561dc4d53bd87ccf49eaf3 # tag=actions-rust-auto-format-v2.0.1
+        with:
+          artifact_name: rust-auto-format
+
+  # The required check. It needs every generator above and runs whatever their result, so it
+  # reports on every pull request.
+  verdict:
+    name: Generated Files
+    needs: [ generate-lock-file, generate-rendered-files, generate-config-contract, fmt ]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # to check out the commit the merged patch is made from
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+
+      - name: Generated Files Verdict
+        uses: TimSchoenle/actions/actions/common/generated-files-verdict@ad314497a72ffde698037b8547e0aedcceff7475 # tag=actions-common-generated-files-verdict-v1.1.0
+        with:
+          needs: ${{ toJSON(needs) }}

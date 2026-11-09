@@ -27,7 +27,7 @@ LICENSE      text eol=lf linguist-documentation
 **/LICENSE*  text eol=lf linguist-documentation
 
 # ---------- Templates ----------
-# Handlebars sources rendered by the `update-files` workflow into README.md
+# Handlebars sources rendered by the `Generate` workflow into README.md
 # and config.example.toml.
 *.hbs text eol=lf linguist-language=Handlebars
 
