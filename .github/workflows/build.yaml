@@ -27,12 +27,12 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
       - name: Run Check
-        uses: TimSchoenle/actions/actions/rust/cargo-check@88e964d440835fd99f7e9d17b4ba1b48544303ba # tag=actions-rust-cargo-check-v1.1.7
+        uses: TimSchoenle/actions/actions/rust/cargo-check@be7a69175612d9de514acc14bf55dda8e7ad2e57 # tag=actions-rust-cargo-check-v1.1.8
 
   # The committed contract is what a deployment pipeline reads to check that what a chart renders
   # is what this image loads, so it has to be the contract these types produce. Regenerating and
@@ -60,7 +60,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -78,7 +78,7 @@ jobs:
       # job stays the cheap half — the labels an image actually carries are a question for a job
       # that has one.
       - name: Verify the configuration contract
-        uses: TimSchoenle/actions/actions/rust/config-contract@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-rust-config-contract-v2.0.1
+        uses: TimSchoenle/actions/actions/rust/config-contract@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-rust-config-contract-v2.0.3
         with:
           package: portfolio-config
           features: config-schema
@@ -100,7 +100,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -125,13 +125,13 @@ jobs:
 
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-readme-variables-v2.1.1
+        uses: TimSchoenle/actions/actions/common/readme-variables@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-readme-variables-v2.1.3
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
       - name: Verify README.md is current
-        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
+        uses: TimSchoenle/actions/actions/common/render-template@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-render-template-v3.0.3
         with:
           template: .github/templates/README.md.hbs
           output: README.md
@@ -144,7 +144,7 @@ jobs:
       # reports both.
       - name: Verify config.example.toml is current
         if: ${{ !cancelled() && steps.config-schema.outcome == 'success' }}
-        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
+        uses: TimSchoenle/actions/actions/common/render-template@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-render-template-v3.0.3
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
@@ -176,7 +176,7 @@ jobs:
       RUSTDOCFLAGS: '-D warnings'
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -212,12 +212,12 @@ jobs:
       id-token: write # Required to authenticate the Codecov upload with OIDC
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
       - name: Run Coverage
-        uses: TimSchoenle/actions/actions/rust/coverage-codecov@e4229b81c3c3c880b9561dc4d53bd87ccf49eaf3 # tag=actions-rust-coverage-codecov-v2.0.5
+        uses: TimSchoenle/actions/actions/rust/coverage-codecov@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-rust-coverage-codecov-v2.0.8
         with:
           test_arguments: '--workspace --all-features'
           flags: rust
@@ -230,12 +230,12 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
       - name: Run Test
-        uses: TimSchoenle/actions/actions/rust/test@e16a1e466faf8ec751b26289c1898143a253269f # tag=actions-rust-test-v1.1.2
+        uses: TimSchoenle/actions/actions/rust/test@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-rust-test-v1.1.4
 
   clippy:
     name: Clippy
@@ -246,13 +246,13 @@ jobs:
       checks: write # Required to annotate the commit with clippy warnings
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
       # The shared action only annotates findings; `-D warnings` is what fails the job on them.
       - name: Run Clippy
-        uses: TimSchoenle/actions/actions/rust/clippy@ea4465fbe2bec98efad19b63849f8d1ac67b5c88 # tag=actions-rust-clippy-v1.1.13
+        uses: TimSchoenle/actions/actions/rust/clippy@be7a69175612d9de514acc14bf55dda8e7ad2e57 # tag=actions-rust-clippy-v1.1.14
         with:
           clippy_arguments: '--all-features --all-targets -- -D warnings'
 
@@ -267,7 +267,7 @@ jobs:
       contents: read # Required to checkout the code
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -311,7 +311,7 @@ jobs:
       security-events: write # Required to upload Trivy scan results
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -472,7 +472,7 @@ jobs:
       # code scanning treats each upload for a category as a full replacement, so the two legs
       # must not share one, and a new name would orphan the alerts filed under the old.
       - name: Check Docker image
-        uses: TimSchoenle/actions/actions/docker/image-check@e2799424abd778c41e7f6d1547fd402386ef398e # tag=actions-docker-image-check-v1.1.10
+        uses: TimSchoenle/actions/actions/docker/image-check@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-docker-image-check-v1.1.13
         with:
           image: image:test
           platform: ${{ matrix.platform }}
@@ -494,12 +494,12 @@ jobs:
       pull-requests: write # Required to comment on PRs with image size
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
       - name: Comment image sizes on PR
-        uses: TimSchoenle/actions/actions/docker/image-check-summary@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-docker-image-check-summary-v2.0.1
+        uses: TimSchoenle/actions/actions/docker/image-check-summary@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-docker-image-check-summary-v2.0.3
 
   dependency-review:
     name: Dependency Review
@@ -509,7 +509,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
