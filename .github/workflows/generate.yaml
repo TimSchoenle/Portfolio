@@ -67,7 +67,7 @@ jobs:
 
       - name: Hand the lock file on
         id: patch
-        uses: TimSchoenle/actions/actions/common/create-patch@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-create-patch-v2.0.0
+        uses: TimSchoenle/actions/actions/common/create-patch@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-create-patch-v2.0.1
         with:
           artifact_name: cargo-lock
           paths: Cargo.lock
@@ -129,7 +129,7 @@ jobs:
 
       - name: Hand the lock file on
         id: patch
-        uses: TimSchoenle/actions/actions/common/create-patch@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-create-patch-v2.0.0
+        uses: TimSchoenle/actions/actions/common/create-patch@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-create-patch-v2.0.1
         with:
           artifact_name: npm-lock
           paths: apps/web/package-lock.json
@@ -198,7 +198,7 @@ jobs:
       # fail that gate for a reason absent from its diff.
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-readme-variables-v2.1.3
+        uses: TimSchoenle/actions/actions/common/readme-variables@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-readme-variables-v2.1.4
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
@@ -207,14 +207,14 @@ jobs:
       # the merge adds. The payloads stay step outputs, which the runner does not filter against
       # its masks the way it filters job outputs.
       - name: Render the README
-        uses: TimSchoenle/actions/actions/common/render-template@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-render-template-v3.0.3
+        uses: TimSchoenle/actions/actions/common/render-template@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-render-template-v3.0.4
         with:
           template: .github/templates/README.md.hbs
           output: README.md
           variables: ${{ steps.readme-variables.outputs.variables }}
 
       - name: Render the example configuration
-        uses: TimSchoenle/actions/actions/common/render-template@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-render-template-v3.0.3
+        uses: TimSchoenle/actions/actions/common/render-template@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-render-template-v3.0.4
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
@@ -222,7 +222,7 @@ jobs:
 
       - name: Hand the rendered files on
         id: patch
-        uses: TimSchoenle/actions/actions/common/create-patch@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-create-patch-v2.0.0
+        uses: TimSchoenle/actions/actions/common/create-patch@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-create-patch-v2.0.1
         with:
           artifact_name: render-generated-files
           paths: README.md config.example.toml
@@ -289,7 +289,7 @@ jobs:
 
       - name: Hand the regenerated contract on
         id: patch
-        uses: TimSchoenle/actions/actions/common/create-patch@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-create-patch-v2.0.0
+        uses: TimSchoenle/actions/actions/common/create-patch@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-create-patch-v2.0.1
         with:
           artifact_name: config-contract
           paths: docs/config.contract.json
@@ -348,6 +348,6 @@ jobs:
             *.blob.core.windows.net:443
 
       - name: Generated Files Verdict
-        uses: TimSchoenle/actions/actions/common/generated-files-verdict@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-common-generated-files-verdict-v1.2.2
+        uses: TimSchoenle/actions/actions/common/generated-files-verdict@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-generated-files-verdict-v1.2.3
         with:
           needs: ${{ toJSON(needs) }}
