@@ -137,7 +137,7 @@ serde_json = "1"
 schemars = "1"
 # Test-only. Default features off: they resolve remote `$ref`s over `reqwest`, and the contract
 # has none.
-jsonschema = { version = "0.60", default-features = false }
+jsonschema = { version = "0.61", default-features = false }
 
 axum = "0.8"
 # `util` brings `ServiceExt::oneshot` for the router tests.
