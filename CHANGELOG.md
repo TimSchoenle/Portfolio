@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.2.3](https://github.com/TimSchoenle/Portfolio/compare/v3.2.2...v3.2.3) (2026-11-12)
+
+
+### Bug Fixes
+
+* **telemetry:** compose the Sentry layers in a Vec ([#1368](https://github.com/TimSchoenle/Portfolio/issues/1368)) ([c7a8e30](https://github.com/TimSchoenle/Portfolio/commit/c7a8e302d8a49420df3c3f3fc9088a1b933aec34))
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1385](https://github.com/TimSchoenle/Portfolio/issues/1385)) ([86d06eb](https://github.com/TimSchoenle/Portfolio/commit/86d06eb9c0ed539f97d135c47fd29c441047da09))
+* **deps:** lock file maintenance ([#1389](https://github.com/TimSchoenle/Portfolio/issues/1389)) ([5cd04de](https://github.com/TimSchoenle/Portfolio/commit/5cd04de5f2d4eefd3fc588fb85fc26ab37d8fa4a))
+* **deps:** update rust crate jsonschema to 0.61 ([#1388](https://github.com/TimSchoenle/Portfolio/issues/1388)) ([d67abce](https://github.com/TimSchoenle/Portfolio/commit/d67abce0b7490a1f09bd4095e518e84a59a43855))
+* **deps:** update rust crate jsonschema to v0.60.2 ([#1364](https://github.com/TimSchoenle/Portfolio/issues/1364)) ([8eed1d8](https://github.com/TimSchoenle/Portfolio/commit/8eed1d8a0cc023a63bef51d94b672a202a2fd2ff))
+* **deps:** update rust crate sentry to v0.49.5 ([#1365](https://github.com/TimSchoenle/Portfolio/issues/1365)) ([18a921d](https://github.com/TimSchoenle/Portfolio/commit/18a921db62ad690a819decf4b1443ef6db3f79aa))
+* **deps:** update rust crate terrace-config to v0.18.0 ([#1366](https://github.com/TimSchoenle/Portfolio/issues/1366)) ([c845c25](https://github.com/TimSchoenle/Portfolio/commit/c845c256198a32bfc9c2f9a5a8e10832e43f8e78))
+* **deps:** update rust crate ureq to v3.5.1 ([#1378](https://github.com/TimSchoenle/Portfolio/issues/1378)) ([a9b31f0](https://github.com/TimSchoenle/Portfolio/commit/a9b31f0c291a46b911eb35c8e05f3854e4bb1d6a))
+* **deps:** update rust:1.99-slim docker digest to f6c4a35 ([#1370](https://github.com/TimSchoenle/Portfolio/issues/1370)) ([0fbeac0](https://github.com/TimSchoenle/Portfolio/commit/0fbeac059e2af9cfcc847c21ead8b34568c9b2e8))
+
 ## [3.2.2](https://github.com/TimSchoenle/Portfolio/compare/v3.2.1...v3.2.2) (2026-10-29)
 
 
