@@ -24,7 +24,7 @@ resolver = "2"
 [workspace.package]
 edition = "2024"
 publish = false
-rust-version = "1.99"
+rust-version = "1.100"
 homepage = "https://tim-schoenle.de"
 
 # The README payload action reads this table alone and does not resolve `.workspace = true`, so
@@ -36,7 +36,7 @@ name = "portfolio-platform"
 version = "3.2.3"
 publish = false
 edition = "2024"
-rust-version = "1.99"
+rust-version = "1.100"
 description = "Dioxus fullstack (SSR + hydration) portfolio served by Axum."
 homepage = "https://tim-schoenle.de"
 license = "LicenseRef-Proprietary"

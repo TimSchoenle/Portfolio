@@ -6,27 +6,44 @@ use terrace_legal_dioxus::{LegalProvider, Shared, SharedTransport};
 use crate::embedded::repos::ReposState;
 use crate::i18n::use_i18n;
 use crate::legal::{LegalIndexes, SiteRouting, SiteSkin, SiteText, SiteTransport, legal_indexes};
-use crate::pages::{Home, LegalDocument, Licenses, NotFound};
 use crate::ui::footer::Footer;
 use crate::ui::masthead::Masthead;
 use crate::ui::palette::CommandPalette;
 
-/// The site's routes, each wrapped in the `Shell` layout, with a trailing catch-all for the 404 page.
-#[derive(Routable, Clone, PartialEq)]
-pub enum Route {
-    #[layout(Shell)]
-    #[route("/")]
-    Home {},
-    /// A hosted legal document.
-    ///
-    /// Which slugs exist is configuration, so an unknown one renders the 404 page from inside the
-    /// route instead of being refused by the router.
-    #[route("/legal/:slug")]
-    LegalDocument { slug: String },
-    #[route("/licenses")]
-    Licenses {},
-    #[route("/:..segments")]
-    NotFound { segments: Vec<String> },
+pub use route::Route;
+
+/// Holds only the `Route` enum, so that the lint exception below covers the code `Routable`
+/// derives and nothing written by hand.
+// Rust 1.100 reports the derive's error mapping for the catch-all route as an unreachable call:
+// `Vec<String>` parses from segments with `Infallible` as its error, so that arm can never run.
+// The code belongs to `dioxus-router-macro` 0.7.10 and cannot be changed from here.
+#[allow(
+    unreachable_code,
+    reason = "dioxus-router-macro maps the catch-all's Infallible parse error"
+)]
+mod route {
+    use dioxus::prelude::*;
+
+    use super::Shell;
+    use crate::pages::{Home, LegalDocument, Licenses, NotFound};
+
+    /// The site's routes, each wrapped in the `Shell` layout, with a trailing catch-all for the 404 page.
+    #[derive(Routable, Clone, PartialEq)]
+    pub enum Route {
+        #[layout(Shell)]
+        #[route("/")]
+        Home {},
+        /// A hosted legal document.
+        ///
+        /// Which slugs exist is configuration, so an unknown one renders the 404 page from inside the
+        /// route instead of being refused by the router.
+        #[route("/legal/:slug")]
+        LegalDocument { slug: String },
+        #[route("/licenses")]
+        Licenses {},
+        #[route("/:..segments")]
+        NotFound { segments: Vec<String> },
+    }
 }
 
 /// Renders the chrome around every page: the masthead, the routed page content, the footer and,
