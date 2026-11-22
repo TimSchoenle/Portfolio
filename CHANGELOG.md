@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.2.4](https://github.com/TimSchoenle/Portfolio/compare/v3.2.3...v3.2.4) (2026-11-22)
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1403](https://github.com/TimSchoenle/Portfolio/issues/1403)) ([7d0f5f1](https://github.com/TimSchoenle/Portfolio/commit/7d0f5f18fc8c96f97a21601c060e1c364a7da96d))
+* **deps:** update rust crate gloo-timers to v0.4.1 ([#1402](https://github.com/TimSchoenle/Portfolio/issues/1402)) ([b6a1023](https://github.com/TimSchoenle/Portfolio/commit/b6a1023a618244d308f9c6a4df5d4b5999e8d6fe))
+* **deps:** update rust crate jsonschema to v0.61.2 ([#1397](https://github.com/TimSchoenle/Portfolio/issues/1397)) ([9d54b4b](https://github.com/TimSchoenle/Portfolio/commit/9d54b4b86a5a81aaf11eaeac1f17def251b799a0))
+* **deps:** update rust crate sentry to v0.49.6 ([#1400](https://github.com/TimSchoenle/Portfolio/issues/1400)) ([6755115](https://github.com/TimSchoenle/Portfolio/commit/6755115beb03cdbffc2c12f796636a263faa533e))
+* **deps:** update rust crate ureq to v3.5.2 ([#1398](https://github.com/TimSchoenle/Portfolio/issues/1398)) ([2577cc8](https://github.com/TimSchoenle/Portfolio/commit/2577cc8662ac96865eabe2350f1738a824b98ffe))
+* **deps:** update rust toolchain (minor) ([#1399](https://github.com/TimSchoenle/Portfolio/issues/1399)) ([fa61078](https://github.com/TimSchoenle/Portfolio/commit/fa61078f62d491e2b1aad5bcd8aa26b3627f9b5c))
+* **deps:** update tailwindcss monorepo to v4.3.4 ([#1379](https://github.com/TimSchoenle/Portfolio/issues/1379)) ([4265eb4](https://github.com/TimSchoenle/Portfolio/commit/4265eb4431a3262a830a75212a9df907dbc15123))
+
 ## [3.2.3](https://github.com/TimSchoenle/Portfolio/compare/v3.2.2...v3.2.3) (2026-11-15)
 
 
