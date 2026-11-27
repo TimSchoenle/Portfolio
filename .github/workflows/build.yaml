@@ -78,7 +78,7 @@ jobs:
       # job stays the cheap half — the labels an image actually carries are a question for a job
       # that has one.
       - name: Verify the configuration contract
-        uses: TimSchoenle/actions/actions/rust/config-contract@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-rust-config-contract-v2.0.7
+        uses: TimSchoenle/actions/actions/rust/config-contract@7594d1c64de290a99195e47fc6d7b5699243b951 # tag=actions-rust-config-contract-v2.0.8
         with:
           package: portfolio-config
           features: config-schema
@@ -125,13 +125,13 @@ jobs:
 
       - name: Collect the README payload
         id: readme-variables
-        uses: TimSchoenle/actions/actions/common/readme-variables@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-common-readme-variables-v2.1.7
+        uses: TimSchoenle/actions/actions/common/readme-variables@7594d1c64de290a99195e47fc6d7b5699243b951 # tag=actions-common-readme-variables-v2.1.8
         with:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config-schema.outputs.variables }}
 
       - name: Verify README.md is current
-        uses: TimSchoenle/actions/actions/common/render-template@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-common-render-template-v3.0.7
+        uses: TimSchoenle/actions/actions/common/render-template@7594d1c64de290a99195e47fc6d7b5699243b951 # tag=actions-common-render-template-v3.0.8
         with:
           template: .github/templates/README.md.hbs
           output: README.md
@@ -144,7 +144,7 @@ jobs:
       # reports both.
       - name: Verify config.example.toml is current
         if: ${{ !cancelled() && steps.config-schema.outcome == 'success' }}
-        uses: TimSchoenle/actions/actions/common/render-template@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-common-render-template-v3.0.7
+        uses: TimSchoenle/actions/actions/common/render-template@7594d1c64de290a99195e47fc6d7b5699243b951 # tag=actions-common-render-template-v3.0.8
         with:
           template: .github/templates/config.example.toml.hbs
           output: config.example.toml
@@ -217,7 +217,7 @@ jobs:
           egress-policy: audit
 
       - name: Run Coverage
-        uses: TimSchoenle/actions/actions/rust/coverage-codecov@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-rust-coverage-codecov-v2.1.1
+        uses: TimSchoenle/actions/actions/rust/coverage-codecov@7594d1c64de290a99195e47fc6d7b5699243b951 # tag=actions-rust-coverage-codecov-v2.1.2
         with:
           test_arguments: '--workspace --all-features'
           flags: rust
@@ -235,7 +235,7 @@ jobs:
           egress-policy: audit
 
       - name: Run Test
-        uses: TimSchoenle/actions/actions/rust/test@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-rust-test-v2.0.1
+        uses: TimSchoenle/actions/actions/rust/test@7594d1c64de290a99195e47fc6d7b5699243b951 # tag=actions-rust-test-v2.0.2
 
   clippy:
     name: Clippy
