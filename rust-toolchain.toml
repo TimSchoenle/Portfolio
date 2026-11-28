@@ -11,7 +11,7 @@
 # `rust toolchain` group moves all three in one pull request, and `apps/web/tests/toolchain_pins.rs`
 # fails the test suite if they ever drift apart.
 [toolchain]
-channel = "1.100.0"
+channel = "1.100.1"
 # What the `cargo fmt --check` and `cargo clippy -- -D warnings` gates run.
 components = ["rustfmt", "clippy"]
 # The hydrated client is built for wasm on every machine that builds the site. The musl targets
