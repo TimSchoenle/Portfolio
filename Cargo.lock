@@ -4011,7 +4011,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde_json",
- "terrace-config",
+ "terrace-config 0.18.3",
  "terrace-legal",
 ]
 
@@ -5556,22 +5556,45 @@ dependencies = [
 
 [[package]]
 name = "terrace-config"
-version = "0.18.1"
-source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.18.1#da7d54b6290348a9a8e4728286fc3ce54bce6adc"
+version = "0.18.2"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.18.2#f5055b02d8aae20b82eceb9551b277059c808e39"
 dependencies = [
  "figment",
  "regex",
  "serde",
  "serde_json",
- "terrace-config-macros",
+ "terrace-config-macros 0.18.2",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "terrace-config"
+version = "0.18.3"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.18.3#f74afde7a6cff6faa43eac2ea6ee645ee91e43e4"
+dependencies = [
+ "figment",
+ "regex",
+ "serde",
+ "serde_json",
+ "terrace-config-macros 0.18.3",
  "thiserror 2.0.21",
  "tokio",
 ]
 
 [[package]]
 name = "terrace-config-macros"
-version = "0.18.1"
-source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.18.1#da7d54b6290348a9a8e4728286fc3ce54bce6adc"
+version = "0.18.2"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.18.2#f5055b02d8aae20b82eceb9551b277059c808e39"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.10",
+]
+
+[[package]]
+name = "terrace-config-macros"
+version = "0.18.3"
+source = "git+https://github.com/TimSchoenle/terrace-config?tag=v0.18.3#f74afde7a6cff6faa43eac2ea6ee645ee91e43e4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5580,13 +5603,13 @@ dependencies = [
 
 [[package]]
 name = "terrace-legal"
-version = "0.3.7"
-source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.7#e99a40654a549862fc1259de81ad8ae78ab4365f"
+version = "0.3.8"
+source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.8#4a9471e1688cb96e5255ec22ed1245ec3be48b2e"
 dependencies = [
  "base64 0.23.1",
  "serde",
  "sha2 0.11.1",
- "terrace-config",
+ "terrace-config 0.18.2",
  "terrace-legal-model",
  "thiserror 2.0.21",
  "url",
@@ -5594,8 +5617,8 @@ dependencies = [
 
 [[package]]
 name = "terrace-legal-axum"
-version = "0.3.7"
-source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.7#e99a40654a549862fc1259de81ad8ae78ab4365f"
+version = "0.3.8"
+source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.8#4a9471e1688cb96e5255ec22ed1245ec3be48b2e"
 dependencies = [
  "axum",
  "http",
@@ -5607,8 +5630,8 @@ dependencies = [
 
 [[package]]
 name = "terrace-legal-dioxus"
-version = "0.3.7"
-source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.7#e99a40654a549862fc1259de81ad8ae78ab4365f"
+version = "0.3.8"
+source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.8#4a9471e1688cb96e5255ec22ed1245ec3be48b2e"
 dependencies = [
  "dioxus",
  "terrace-legal-markdown",
@@ -5617,8 +5640,8 @@ dependencies = [
 
 [[package]]
 name = "terrace-legal-markdown"
-version = "0.3.7"
-source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.7#e99a40654a549862fc1259de81ad8ae78ab4365f"
+version = "0.3.8"
+source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.8#4a9471e1688cb96e5255ec22ed1245ec3be48b2e"
 dependencies = [
  "dioxus",
  "pulldown-cmark",
@@ -5626,8 +5649,8 @@ dependencies = [
 
 [[package]]
 name = "terrace-legal-model"
-version = "0.3.7"
-source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.7#e99a40654a549862fc1259de81ad8ae78ab4365f"
+version = "0.3.8"
+source = "git+https://github.com/TimSchoenle/terrace-legal?tag=v0.3.8#4a9471e1688cb96e5255ec22ed1245ec3be48b2e"
 dependencies = [
  "serde",
  "thiserror 2.0.21",
