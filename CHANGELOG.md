@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.2.5](https://github.com/TimSchoenle/Portfolio/compare/v3.2.4...v3.2.5) (2026-11-28)
+
+
+### Dependencies
+
+* **deps:** lock file maintenance ([#1408](https://github.com/TimSchoenle/Portfolio/issues/1408)) ([d695aa9](https://github.com/TimSchoenle/Portfolio/commit/d695aa9af906c176e288ca1dd0a2eba8e490764e))
+* **deps:** update docker/dockerfile:1 docker digest to 572cebb ([#1411](https://github.com/TimSchoenle/Portfolio/issues/1411)) ([321f098](https://github.com/TimSchoenle/Portfolio/commit/321f098672609f207ccf941416a163ca864f64de))
+* **deps:** update rust crate jsonschema to 0.63 ([#1414](https://github.com/TimSchoenle/Portfolio/issues/1414)) ([f6e742d](https://github.com/TimSchoenle/Portfolio/commit/f6e742dabc328263a0af561a7bdd81c021dbb3f7))
+* **deps:** update rust crate qrcode to 0.15 ([#1407](https://github.com/TimSchoenle/Portfolio/issues/1407)) ([905f4cf](https://github.com/TimSchoenle/Portfolio/commit/905f4cf403802de56c88728bbae2ae1807536114))
+* **deps:** update rust to v1.100.1 ([#1416](https://github.com/TimSchoenle/Portfolio/issues/1416)) ([aadedb3](https://github.com/TimSchoenle/Portfolio/commit/aadedb3efa9f787d163afcbf7c5fbe5a2038995b))
+
 ## [3.2.4](https://github.com/TimSchoenle/Portfolio/compare/v3.2.3...v3.2.4) (2026-11-22)
 
 

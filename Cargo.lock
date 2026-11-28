@@ -4026,7 +4026,7 @@ dependencies = [
 
 [[package]]
 name = "portfolio-platform"
-version = "3.2.4"
+version = "3.2.5"
 
 [[package]]
 name = "portfolio-resume"
